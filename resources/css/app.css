@@ -6,6 +6,8 @@
 }
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source './storage/framework/views/*.php';
+@source './resources/views/**/*.blade.php';
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
 
 /* Theme toggle */
