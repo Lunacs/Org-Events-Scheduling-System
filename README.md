@@ -62,7 +62,7 @@ cp .env.example .env
 
 Edit the `.env` file with your configuration:
 
-```env
+````env
 APP_NAME="PLV Event Scheduling System"
 APP_ENV=local
 APP_KEY=
@@ -71,7 +71,6 @@ APP_TIMEZONE=Asia/Manila
 APP_URL=http://localhost
 
 # Database Configuration
-# Option 1: MySQL/MariaDB
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -79,21 +78,12 @@ DB_DATABASE=org_events_db
 DB_USERNAME=root
 DB_PASSWORD=
 
-# Option 2: SQLite (for development)
-# DB_CONNECTION=sqlite
-# DB_DATABASE=/absolute/path/to/database.sqlite
-
-# Session Configuration
-SESSION_DRIVER=database
-SESSION_LIFETIME=120
-SESSION_ENCRYPT=false
-```
 
 ### 5. Generate Application Key
 
 ```bash
 php artisan key:generate
-```
+````
 
 ### 6. Database Setup
 
