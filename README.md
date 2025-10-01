@@ -1,61 +1,345 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Organization Events Scheduling System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive event scheduling and management system built with Laravel for managing student organization events, approvals, and notifications.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+-   **Multi-role System**: SuperAdmin, OSA Admin, GSO Admin, and Student Organization roles
+-   **Event Request Management**: Submit, track, and manage event requests
+-   **Approval Workflow**: Multi-level approval system (OSA & GSO)
+-   **Calendar Integration**: Visual event calendar with scheduling
+-   **Notifications Center**: Real-time notifications for event updates
+-   **Reschedule Requests**: Handle event rescheduling with approval workflow
+-   **Reports & Analytics**: Generate reports on events and activities
+-   **Archive Management**: Maintain historical event records
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   **Framework**: Laravel 11.x
+-   **Frontend**: Livewire 3, TailwindCSS 4, DaisyUI
+-   **UI Components**: Mary UI
+-   **Database**: MySQL/MariaDB or SQLite
+-   **Build Tool**: Vite
 
-## Learning Laravel
+## Prerequisites
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Before you begin, ensure you have the following installed:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+-   PHP 8.2 or higher
+-   Composer
+-   Node.js 18+ and npm
+-   MySQL 8.0+ or MariaDB 10.3+ (or use SQLite for development)
+-   Git
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Installation & Setup
 
-## Laravel Sponsors
+### 1. Clone the Repository
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone <repository-url>
+cd org-events-scheduling-system
+```
 
-### Premium Partners
+### 2. Install PHP Dependencies
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer install
+```
 
-## Contributing
+### 3. Install Node Dependencies
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+npm install
+```
 
-## Code of Conduct
+### 4. Environment Configuration
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Copy the example environment file and configure it:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Edit the `.env` file with your configuration:
+
+```env
+APP_NAME="PLV Event Scheduling System"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_TIMEZONE=Asia/Manila
+APP_URL=http://localhost
+
+# Database Configuration
+# Option 1: MySQL/MariaDB
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=org_events_db
+DB_USERNAME=root
+DB_PASSWORD=
+
+# Option 2: SQLite (for development)
+# DB_CONNECTION=sqlite
+# DB_DATABASE=/absolute/path/to/database.sqlite
+
+# Session Configuration
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+```
+
+### 5. Generate Application Key
+
+```bash
+php artisan key:generate
+```
+
+### 6. Database Setup
+
+#### For MySQL/MariaDB:
+
+Create the database:
+
+```bash
+mysql -u root -p
+CREATE DATABASE org_events_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT;
+```
+
+#### For SQLite:
+
+Create the database file:
+
+```bash
+touch database/database.sqlite
+```
+
+### 7. Run Migrations
+
+```bash
+php artisan migrate
+```
+
+### 8. Seed the Database (Optional)
+
+If seeders are available, run:
+
+```bash
+php artisan db:seed
+```
+
+### 9. Create Storage Link
+
+```bash
+php artisan storage:link
+```
+
+### 10. Build Frontend Assets
+
+For development:
+
+```bash
+npm run dev
+```
+
+For production:
+
+```bash
+npm run build
+```
+
+### 11. Start the Development Server
+
+```bash
+php artisan serve
+```
+
+Visit `http://localhost:8000` in your browser.
+
+## Default User Accounts
+
+After running seeders, you can login with these default accounts:
+
+-   **SuperAdmin**: superadmin@plv.edu.ph / password
+-   **OSA Admin**: osa@plv.edu.ph / password
+-   **GSO Admin**: gso@plv.edu.ph / password
+-   **Student Org**: student@plv.edu.ph / password
+
+> **Note**: Change these passwords immediately in production!
+
+## Running in Development
+
+### Concurrent Development Servers
+
+For the best development experience, run both Laravel and Vite servers:
+
+```bash
+# Terminal 1 - Laravel server
+php artisan serve
+
+# Terminal 2 - Vite dev server
+npm run dev
+```
+
+### Alternative: Single Command
+
+If using Laragon or similar, the servers may start automatically.
+
+## Project Structure
+
+```
+org-events-scheduling-system/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   └── Middleware/
+│   ├── Models/
+│   └── Providers/
+├── bootstrap/
+├── config/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── public/
+│   └── images/
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+│       ├── layouts/
+│       ├── osa/
+│       ├── student-orgs/
+│       └── superadmin/
+├── routes/
+│   └── web.php
+├── storage/
+├── tests/
+└── vite.config.js
+```
+
+## Available Routes
+
+### Public Routes
+
+-   `/` - Landing page
+-   `/login` - Login page
+-   `/register` - Registration page
+
+### Student Organization Routes
+
+-   `/student-org/dashboard` - Dashboard
+-   `/student-org/submit-ticket` - Submit event request
+-   `/student-org/my-tickets` - View submitted tickets
+-   `/student-org/calendar` - Event calendar
+-   `/student-org/notifications` - Notifications center
+-   `/student-org/reschedule` - Reschedule requests
+-   `/student-org/history` - Event history
+
+### OSA Admin Routes
+
+-   `/admin/dashboard` - OSA dashboard
+-   `/admin/event-req` - Manage event requests
+-   `/admin/calendar` - Calendar view
+-   `/admin/archive` - Archived events
+-   `/admin/reports` - Reports and analytics
+-   `/admin/accounts` - User management
+
+### SuperAdmin Routes
+
+-   `/superadmin/dashboard` - SuperAdmin dashboard
+-   `/superadmin/users` - User management
+-   `/superadmin/roles` - Roles & permissions
+-   `/superadmin/settings` - System settings
+-   `/superadmin/logs` - Transaction logs
+
+## Troubleshooting
+
+### Issue: "Vite manifest not found"
+
+```bash
+npm run build
+```
+
+### Issue: "Class not found"
+
+```bash
+composer dump-autoload
+```
+
+### Issue: "Permission denied" on storage
+
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+### Issue: Database connection error
+
+-   Verify database credentials in `.env`
+-   Ensure database server is running
+-   Check if database exists
+
+### Issue: NPM packages not installing
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## Development Guidelines
+
+### Code Style
+
+-   Follow PSR-12 coding standards for PHP
+-   Use Laravel's conventions and best practices
+-   Keep components modular and reusable
+
+### Git Workflow
+
+1. Create a feature branch from `main`
+2. Make your changes
+3. Test thoroughly
+4. Submit a pull request
+
+### Committing
+
+```bash
+git add .
+git commit -m "feat: add new feature description"
+git push origin feature-branch-name
+```
+
+## Testing
+
+Run tests with:
+
+```bash
+php artisan test
+```
+
+## Deployment
+
+### Production Checklist
+
+-   [ ] Set `APP_ENV=production` in `.env`
+-   [ ] Set `APP_DEBUG=false` in `.env`
+-   [ ] Generate production app key
+-   [ ] Run `composer install --optimize-autoloader --no-dev`
+-   [ ] Run `npm run build`
+-   [ ] Run migrations: `php artisan migrate --force`
+-   [ ] Clear and cache config: `php artisan config:cache`
+-   [ ] Clear and cache routes: `php artisan route:cache`
+-   [ ] Clear and cache views: `php artisan view:cache`
+-   [ ] Clear all cache: `php artisan optimize:clear`
+-   [ ] Set proper file permissions
+-   [ ] Configure SSL certificate
+-   [ ] Set up backup system
+-   [ ] Configure queue workers if using queues
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary software developed for Pamantasan ng Lungsod ng Valenzuela.
+
+## Credits
+
+Developed by PARENTECH - 2025
