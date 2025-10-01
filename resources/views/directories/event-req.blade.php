@@ -8,9 +8,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-accent rounded-field font-body">
-                <i class="fas fa-plus"></i> Add niggers
-            </button>
+            <x-mary-button icon="o-plus" class="btn-accent">Add Request</x-mary-button>
         </div>
 
     </div>
