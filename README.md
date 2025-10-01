@@ -62,7 +62,7 @@ cp .env.example .env
 
 Edit the `.env` file with your configuration:
 
-````env
+```env
 APP_NAME="PLV Event Scheduling System"
 APP_ENV=local
 APP_KEY=
@@ -77,13 +77,13 @@ DB_PORT=3306
 DB_DATABASE=org_events_db
 DB_USERNAME=root
 DB_PASSWORD=
-
+```
 
 ### 5. Generate Application Key
 
 ```bash
 php artisan key:generate
-````
+```
 
 ### 6. Database Setup
 
