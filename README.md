@@ -107,14 +107,6 @@ CREATE DATABASE org_events_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 EXIT;
 ```
 
-#### For SQLite:
-
-Create the database file:
-
-```bash
-touch database/database.sqlite
-```
-
 ### 7. Run Migrations
 
 ```bash
