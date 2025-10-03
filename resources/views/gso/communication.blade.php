@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.gso-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Communication Center') }}
@@ -539,4 +539,4 @@
             }
         }
     </script>
-</x-app-layout>
+</x-layouts.gso-layout>

@@ -57,8 +57,7 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full" type="password"
-                name="password" required autocomplete="current-password" />
+            <x-password-input class="w-full" />
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
@@ -86,31 +85,4 @@ new #[Layout('layouts.guest')] class extends Component {
         </div>
     </form>
 
-    <!-- Links to other login portals -->
-    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">Access other portals:</p>
-        <div class="flex justify-center space-x-4">
-            <a href="{{ route('admin.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                OSA Portal
-            </a>
-            <a href="{{ route('gso.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                GSO Portal
-            </a>
-            <a href="{{ route('student-org.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                Student Organization
-            </a>
-        </div>
-
-        <div class="mt-4 text-center">
-            <p class="text-xs text-gray-500 dark:text-gray-500">
-                System Administrator Portal - Restricted Access
-            </p>
-        </div>
-    </div>
 </div>

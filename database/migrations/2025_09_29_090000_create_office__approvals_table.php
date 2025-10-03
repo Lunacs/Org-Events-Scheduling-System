@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('office__approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('ticket_id')->references('ticket_id')->on('tickets')->onDelete('cascade');
+            $table->foreignId('office_id')->references('office_id')->on('offices')->onDelete('cascade');
+            $table->foreignId('user_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->enum('decision', ['pending', 'approved', 'rejected']);
             $table->string('remarks', 255)->nullable();
             $table->timestamps();

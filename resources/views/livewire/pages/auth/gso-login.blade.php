@@ -39,7 +39,7 @@ new #[Layout('layouts.guest')] class extends Component {
 <div>
     <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">GSO Login</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Graduate School Office Portal</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">General Services Office Portal</p>
     </div>
 
     <!-- Session Status -->
@@ -57,8 +57,7 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full" type="password"
-                name="password" required autocomplete="current-password" />
+            <x-password-input class="w-full" />
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
@@ -86,31 +85,4 @@ new #[Layout('layouts.guest')] class extends Component {
         </div>
     </form>
 
-    <!-- Links to other login portals -->
-    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">Access other portals:</p>
-        <div class="flex justify-center space-x-4">
-            <a href="{{ route('admin.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                OSA Portal
-            </a>
-            <a href="{{ route('student-org.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                Student Organization
-            </a>
-            <a href="{{ route('superadmin.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                Super Admin
-            </a>
-        </div>
-
-        <div class="mt-4 text-center">
-            <p class="text-xs text-gray-500 dark:text-gray-500">
-                Need an account? Contact your system administrator.
-            </p>
-        </div>
-    </div>
 </div>

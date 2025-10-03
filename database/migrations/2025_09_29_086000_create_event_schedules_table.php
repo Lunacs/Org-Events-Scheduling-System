@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('event_schedules', function (Blueprint $table) {
             $table->id('schedule_id');
-            $table->foreignId('event_id')->constrained('events')->onDelete('cascade');
+            $table->foreignId('event_id')->references('event_id')->on('events')->onDelete('cascade');
             $table->dateTime('schedule_date');
             $table->string('schedule_venue');
             $table->enum('status', ['pending', 'approved', 'rejected']);
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event__schedules');
+        Schema::dropIfExists('event_schedules');
     }
 };

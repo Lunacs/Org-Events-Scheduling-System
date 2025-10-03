@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create(table: 'o_s_a__approvals', callback: function (Blueprint $table) {
             $table->id('osa_approval_id');
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('ticket_id')->references('ticket_id')->on('tickets')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->references('user_id')->on('users')->onDelete('cascade');
             $table->enum('decision', ['pending', 'approved', 'rejected']);
             $table->string('remarks', 255)->nullable();
             $table->timestamps();

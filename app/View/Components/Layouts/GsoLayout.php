@@ -5,13 +5,13 @@ namespace App\View\Components\Layouts;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
-class StudentOrgLayout extends Component
+class GsoLayout extends Component
 {
     /**
      * Get the view / contents that represents the component.
      */
     public function render(): View
     {
-        return view('layouts.student-org-layout');
+        return view('layouts.gso-layout');
     }
 }

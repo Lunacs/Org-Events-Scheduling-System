@@ -57,8 +57,7 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full" type="password"
-                name="password" required autocomplete="current-password" />
+            <x-password-input class="w-full" />
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
@@ -87,7 +86,7 @@ new #[Layout('layouts.guest')] class extends Component {
     </form>
 
     <!-- Links to other login portals -->
-    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+    {{-- <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
         <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">Access other portals:</p>
         <div class="flex justify-center space-x-4">
             <a href="{{ route('gso.login') }}"
@@ -112,5 +111,5 @@ new #[Layout('layouts.guest')] class extends Component {
                 Need an account? Contact your system administrator.
             </p>
         </div>
-    </div>
+    </div> --}}
 </div>

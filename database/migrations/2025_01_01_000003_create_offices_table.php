@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaction_logs', function (Blueprint $table) {
-            $table->id('log_id');
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('action');
-            $table->string('details');
+        Schema::create('offices', function (Blueprint $table) {
+            $table->id('office_id');
+            $table->string('office_code');
+            $table->string('office_name');
+            $table->string('description');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transaction__logs');
+        Schema::dropIfExists('offices');
     }
 };

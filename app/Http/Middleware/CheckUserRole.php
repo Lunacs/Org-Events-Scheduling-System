@@ -40,6 +40,14 @@ class CheckUserRole
                     ]);
                 }
                 break;
+            case 'gso':
+                if (!$user->isGSO()) {
+                    Auth::guard()->logout();
+                    return redirect()->route('gso.login')->withErrors([
+                        'email' => 'You are not authorized to access this area.'
+                    ]);
+                }
+                break;
             case 'student_org':
                 if (!$user->isStudentOrg()) {
                     Auth::guard()->logout();
@@ -48,6 +56,7 @@ class CheckUserRole
                     ]);
                 }
                 break;
+
             default:
                 return redirect()->route('login');
         }
