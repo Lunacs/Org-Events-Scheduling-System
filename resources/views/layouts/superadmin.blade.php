@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>SuperAdmin • {{ config('app.name', 'Laravel') }}</title>
+    <title>{{ isset($title) ? $title . ' - ' . config('app.name') : config('app.name') }}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -52,7 +56,7 @@
                     <x-mary-menu-item title="User Management" icon="o-users" link="/superadmin/users" wire:navigate />
                     <x-mary-menu-item title="Roles & Permissions" icon="o-key" link="/superadmin/roles"
                         wire:navigate />
-                    <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth" link="/superadmin/settings"
+                    <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth" link="/superadmin/system-settings"
                         wire:navigate />
                     <x-mary-menu-item title="Transaction Logs" icon="o-clipboard-document-list" link="/superadmin/logs"
                         wire:navigate />

@@ -8,6 +8,10 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -22,17 +26,28 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
+    <div class="flex min-h-screen w-full bg-white p-10">
+        <!-- Left side - Image -->
+        <div class="hidden lg:flex lg:w-[55%] relative">
+            <div class="absolute inset-0">
+                <img src="{{ asset('images/suhay husay.png') }}"
+                    class="w-full h-full object-cover opacity-80 rounded-xl" alt="PLV Background">
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+        </div>
+
+        <!-- Right side - Login Form -->
         <div
-            class="bg-white flex justify-center items-center flex-col dark:bg-gray-800 shadow-xl w-full sm:max-w-md px-6 py-4 rounded-lg">
-            <div>
+            class="flex flex-col justify-center items-center w-full lg:w-[40%] bg-white rounded-xl shadow-xl dark:bg-gray-800 p-6">
+            <!-- Logo -->
+            <div class="mb-8">
                 <a href="/" wire:navigate>
-                    {{--                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" /> --}}
-                    <img src="{{ asset('images/osa-logo.jpg') }}" class="w-20 h-20 ">
+                    <img src="{{ asset('images/osa-logo.jpg') }}" class="w-20 h-20 rounded-lg shadow-md" alt="OSA Logo">
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 dark:bg-gray-800 overflow-hidden sm:rounded-lg">
+            <!-- Login Form Container -->
+            <div class="w-full max-w-md">
                 {{ $slot }}
             </div>
         </div>

@@ -2,7 +2,6 @@
 @plugin '@tailwindcss/forms';
 @plugin "daisyui";
 
-
 @plugin "daisyui/theme" {
     name: "emerald";
     default: true;
@@ -95,6 +94,16 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentcolor);
     }
+
+    /* Add these rules inside @layer base to override browser defaults */
+    .mary-select select:focus,
+    .mary-input input:focus,
+    .mary-textarea textarea:focus,
+    [class*="mary-"] :focus {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: inherit !important;
+    }
 }
 
 @layer utilities {
@@ -112,5 +121,36 @@
 
 .mary-active-menu,
 .mary-active-menu svg {
+    color: white !important;
+}
+
+/* Add global styles outside of layers for maximum specificity */
+/* Remove focus styles from Mary components */
+.mary-select select:focus-visible,
+.mary-select select:focus,
+.mary-input input:focus-visible,
+.mary-input input:focus,
+.mary-textarea textarea:focus-visible,
+.mary-textarea textarea:focus,
+[class*="mary-"] :focus,
+[class*="mary-"] :focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* Ensure white text on colored backgrounds */
+.bg-primary,
+[class*="bg-primary"],
+.btn-primary,
+[class*="btn-primary"],
+.bg-secondary,
+[class*="bg-secondary"],
+.btn-secondary,
+[class*="btn-secondary"],
+.bg-accent,
+[class*="bg-accent"],
+.btn-accent,
+[class*="btn-accent"] {
     color: white !important;
 }

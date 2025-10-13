@@ -26,7 +26,7 @@ new #[Layout('layouts.guest')] class extends Component {
         if (!$user->isOSA()) {
             Auth::guard()->logout();
             throw ValidationException::withMessages([
-                'form.email' => 'You are not authorized to access the OSA portal.',
+                'form.email' => 'Access denied. This portal is restricted to OSA staff only. Please use the correct portal for your account type.',
             ]);
         }
 
@@ -37,79 +37,68 @@ new #[Layout('layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-6 text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">OSA Login</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Office of Student Affairs Portal</p>
+    <div class="mb-8 text-center">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Log In</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Office of Student Affairs Portal</p>
     </div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="login">
+    <form wire:submit="login" class="space-y-6">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email"
-                required autofocus autocomplete="username" />
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-envelope text-gray-400"></i>
+                </div>
+                <input wire:model="form.email" id="email" type="email" name="email" placeholder="Email" required
+                    autofocus autocomplete="username"
+                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+            </div>
             <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-password-input class="w-full" />
+        <div>
+            <div class="relative" x-data="{ showPassword: false }">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-lock text-gray-400"></i>
+                </div>
+                <input wire:model="form.password" id="password" :type="showPassword ? 'text' : 'password'"
+                    name="password" placeholder="Password" required autocomplete="current-password"
+                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <button type="button" @click="showPassword = !showPassword"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <i class="fas fa-eye text-gray-400 hover:text-gray-600" x-show="!showPassword"></i>
+                    <i class="fas fa-eye-slash text-gray-400 hover:text-gray-600" x-show="showPassword"></i>
+                </button>
+            </div>
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember" class="inline-flex items-center">
+        <!-- Remember Me and Forgot Password -->
+        <div class="flex items-center justify-between">
+            <label for="remember" class="flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox"
-                    class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
-                    name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
-        </div>
 
-        <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                    href="{{ route('password.request') }}" wire:navigate>
-                    {{ __('Forgot your password?') }}
+                <a href="{{ route('password.request') }}" wire:navigate
+                    class="text-sm text-blue-600 hover:text-blue-500">
+                    Forgot Password?
                 </a>
             @endif
+        </div>
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
+        <!-- Login Button -->
+        <div>
+            <button type="submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-secondary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                Log in
+            </button>
         </div>
     </form>
-
-    <!-- Links to other login portals -->
-    {{-- <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">Access other portals:</p>
-        <div class="flex justify-center space-x-4">
-            <a href="{{ route('gso.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                GSO Portal
-            </a>
-            <a href="{{ route('student-org.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                Student Organization
-            </a>
-            <a href="{{ route('superadmin.login') }}"
-                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                wire:navigate>
-                Super Admin
-            </a>
-        </div>
-
-        <div class="mt-4 text-center">
-            <p class="text-xs text-gray-500 dark:text-gray-500">
-                Need an account? Contact your system administrator.
-            </p>
-        </div>
-    </div> --}}
 </div>

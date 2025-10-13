@@ -1,7 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\StudentOrg\SubmitTicket;
+use App\Livewire\Superadmin\Roles;
+use App\Livewire\Superadmin\Users;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use App\Livewire\Superadmin\Dashboard;
+use App\Livewire\Superadmin\Logs;
+use App\Livewire\Superadmin\SystemSettings;
 
 Route::view('/', 'osa.welcome');
 
@@ -31,16 +38,25 @@ Route::prefix('admin')
     });
 
 // SuperAdmin routes
+// Route::prefix('superadmin')
+//     ->middleware(['auth', 'verified', 'role:superadmin'])
+//     ->group(function () {
+//         Route::view('/dashboard', 'livewire.superadmin.dashboard')->name('superadmin.dashboard');
+//         Route::view('/users', 'superadmin.users')->name('superadmin.users');
+//         Route::view('/roles', 'superadmin.roles')->name('superadmin.roles');
+//         Route::view('/settings', 'superadmin.settings')->name('superadmin.settings');
+//         Route::view('/logs', 'superadmin.logs')->name('superadmin.logs');
+//         Route::view('/archive', 'superadmin.archive')->name('superadmin.archive');
+//         Route::view('/reports', 'superadmin.reports')->name('superadmin.reports');
+//     });
 Route::prefix('superadmin')
     ->middleware(['auth', 'verified', 'role:superadmin'])
     ->group(function () {
-        Route::view('/dashboard', 'superadmin.dashboard')->name('superadmin.dashboard');
-        Route::view('/users', 'superadmin.users')->name('superadmin.users');
-        Route::view('/roles', 'superadmin.roles')->name('superadmin.roles');
-        Route::view('/settings', 'superadmin.settings')->name('superadmin.settings');
-        Route::view('/logs', 'superadmin.logs')->name('superadmin.logs');
-        Route::view('/archive', 'superadmin.archive')->name('superadmin.archive');
-        Route::view('/reports', 'superadmin.reports')->name('superadmin.reports');
+        Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
+        Route::get('/users', Users::class)->name('superadmin.users');
+        Route::get('/roles', Roles::class)->name('superadmin.roles');
+        Route::get('/system-settings', SystemSettings::class)->name('superadmin.system-settings');
+        Route::get('/logs', Logs::class)->name('superadmin.logs');
     });
 
 // GSO/Offices routes
@@ -60,8 +76,8 @@ Route::prefix('gso')
 Route::prefix('student-org')
     ->middleware(['auth', 'verified', 'role:student_org'])
     ->group(function () {
-        Route::view('/dashboard', 'student-orgs.dashboard')->name('student-org.dashboard');
-        Route::view('/submit-ticket', 'student-orgs.submit-ticket')->name('student-org.submit-ticket');
+        Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
+        Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
         Route::view('/my-tickets', 'student-orgs.my-tickets')->name('student-org.my-tickets');
         Route::view('/calendar', 'student-orgs.calendar')->name('student-org.calendar');
         Route::view('/reschedule', 'student-orgs.reschedule')->name('student-org.reschedule');

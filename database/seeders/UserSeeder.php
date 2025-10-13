@@ -78,7 +78,7 @@ class UserSeeder extends Seeder
             User::create([
                 'name' => 'Student Organization Leader',
                 'email' => 'student@plv.edu.ph',
-                'email_verified_at' => now(),
+                'email_verified_at' => null,
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_STUDENT_ORG,
                 'org_id' => $studentOrgs->first()->org_id,
@@ -88,7 +88,7 @@ class UserSeeder extends Seeder
             User::create([
                 'name' => 'Ana Dela Cruz',
                 'email' => 'ana.delacruz@plv.edu.ph',
-                'email_verified_at' => now(),
+                'email_verified_at' => now(), // Verified
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_STUDENT_ORG,
                 'org_id' => $studentOrgs->first()->org_id,
@@ -100,7 +100,7 @@ class UserSeeder extends Seeder
                 User::create([
                     'name' => 'John Martinez',
                     'email' => 'john.martinez@plv.edu.ph',
-                    'email_verified_at' => now(),
+                    'email_verified_at' => null,
                     'password' => Hash::make('password'),
                     'role' => User::ROLE_STUDENT_ORG,
                     'org_id' => $studentOrgs->get(1)->org_id,
@@ -124,8 +124,18 @@ class UserSeeder extends Seeder
         // Create additional test users
         User::create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
-            'email_verified_at' => now(),
+            'email' => 'test_user@plv.edu.ph',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_STUDENT_ORG,
+            'org_id' => $studentOrgs->first()?->org_id,
+            'office_id' => null,
+        ]);
+
+        User::create([
+            'name' => 'Elliot Anderson',
+            'email' => 'johnreygabon@plv.edu.ph',
+            'email_verified_at' => null,
             'password' => Hash::make('password'),
             'role' => User::ROLE_STUDENT_ORG,
             'org_id' => $studentOrgs->first()?->org_id,

@@ -19,6 +19,7 @@ class AuthenticatedSessionController extends Controller
         $redirectRoute = match ($user->role ?? null) {
             User::ROLE_SUPERADMIN => 'superadmin.login',
             User::ROLE_OSA => 'admin.login',
+            User::ROLE_GSO => 'gso.login',
             User::ROLE_STUDENT_ORG => 'student-org.login',
             default => 'admin.login',
         };

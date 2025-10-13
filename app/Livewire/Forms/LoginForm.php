@@ -22,6 +22,41 @@ class LoginForm extends Form
     public bool $remember = false;
 
     /**
+     * Get custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Please enter your email address.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.ends_with' => 'Only PLV email addresses (@plv.edu.ph) are allowed for student organization accounts.',
+            'password.required' => 'Please enter your password.',
+        ];
+    }
+
+    /**
+     * Get custom attribute names for validation errors.
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => 'email address',
+            'password' => 'password',
+        ];
+    }
+
+    /**
+     * Validate email for student organization login.
+     */
+    public function validateStudentOrgEmail(): void
+    {
+        $this->validate([
+            'email' => ['required', 'string', 'email', 'ends_with:@plv.edu.ph'],
+            'password' => ['required', 'string'],
+        ]);
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -34,7 +69,7 @@ class LoginForm extends Form
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'form.email' => trans('auth.failed'),
+                'form.email' => 'These credentials do not match our records. Please check your email and password and try again.',
             ]);
         }
 
@@ -55,10 +90,7 @@ class LoginForm extends Form
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'form.email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'form.email' => 'Too many login attempts. Please try again in ' . ceil($seconds / 60) . ' minutes.',
         ]);
     }
 
@@ -67,6 +99,6 @@ class LoginForm extends Form
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
     }
 }

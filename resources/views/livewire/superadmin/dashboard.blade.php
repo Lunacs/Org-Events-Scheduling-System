@@ -1,4 +1,4 @@
-<x-layouts.superadmin>
+<div>
     <div class="p-6">
         <h1 class="text-2xl font-bold mb-4">SuperAdmin Dashboard</h1>
 
@@ -36,14 +36,17 @@
                 </x-mary-table>
             </x-mary-card>
 
-            <x-mary-card title="Recent Logs">
+            <x-mary-card shadow separator title="Recent Logs">
                 <ul class="space-y-2">
-                    <li><x-mary-list-item title="admin@plv.edu" subtitle="Approved event #123" icon="o-check-circle" />
+                    <li>
+                        <x-mary-list-item :item="['title' => 'admin@plv.edu', 'subtitle' => 'Approved event #123']" value="title" sub-value="subtitle" icon="o-check-circle" />
                     </li>
-                    <li><x-mary-list-item title="osa@plv.edu" subtitle="Updated user role" icon="o-pencil-square" />
+                    <li>
+                        <x-mary-list-item :item="['title' => 'osa@plv.edu', 'subtitle' => 'Updated user role']" value="title" sub-value="subtitle"
+                            icon="o-pencil-square" />
                     </li>
                 </ul>
             </x-mary-card>
         </div>
     </div>
-</x-layouts.superadmin>
+</div>
