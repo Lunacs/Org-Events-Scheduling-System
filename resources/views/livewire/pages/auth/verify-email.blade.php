@@ -3,6 +3,7 @@
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -31,6 +32,20 @@ new #[Layout('layouts.guest')] class extends Component {
             $this->redirectToDashboard($user);
             return;
         }
+
+        // Rate limiting key based on user ID
+        $key = 'verification-email:' . $user->id;
+
+        // Check if rate limit exceeded
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            Session::flash('error', 'Please wait ' . $seconds . ' seconds before requesting another verification email.');
+            return;
+        }
+
+        // Hit the rate limiter (1 attempt allowed per 60 seconds)
+        RateLimiter::hit($key, 60);
 
         $user->sendEmailVerificationNotification();
         Session::flash('status', 'verification-link-sent');
@@ -71,6 +86,12 @@ new #[Layout('layouts.guest')] class extends Component {
     @if (session('status') == 'verification-link-sent')
         <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
             {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 font-medium text-sm text-red-600 dark:text-red-400">
+            {{ session('error') }}
         </div>
     @endif
 

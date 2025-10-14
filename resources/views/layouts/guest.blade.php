@@ -26,7 +26,7 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="flex min-h-screen w-full bg-white p-10">
+    <div class="flex min-h-screen w-full bg-white p-20">
         <!-- Left side - Image -->
         <div class="hidden lg:flex lg:w-[55%] relative">
             <div class="absolute inset-0">

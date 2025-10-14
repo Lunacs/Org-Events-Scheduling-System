@@ -1,14 +1,19 @@
 <?php
 
-use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
-use App\Livewire\StudentOrg\SubmitTicket;
+use App\Livewire\StudentOrg\History;
+use App\Livewire\Superadmin\Logs;
 use App\Livewire\Superadmin\Roles;
 use App\Livewire\Superadmin\Users;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\StudentOrg\Calendar;
+use App\Livewire\StudentOrg\MyTicket;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Superadmin\Dashboard;
-use App\Livewire\Superadmin\Logs;
+use App\Livewire\StudentOrg\Reschedule;
+use App\Livewire\StudentOrg\SubmitTicket;
+use App\Livewire\StudentOrg\Notifications;
 use App\Livewire\Superadmin\SystemSettings;
+use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 
 Route::view('/', 'osa.welcome');
 
@@ -78,11 +83,12 @@ Route::prefix('student-org')
     ->group(function () {
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
-        Route::view('/my-tickets', 'student-orgs.my-tickets')->name('student-org.my-tickets');
-        Route::view('/calendar', 'student-orgs.calendar')->name('student-org.calendar');
-        Route::view('/reschedule', 'student-orgs.reschedule')->name('student-org.reschedule');
-        Route::view('/notifications', 'student-orgs.notifications')->name('student-org.notifications');
-        Route::view('/history', 'student-orgs.history')->name('student-org.history');
+        Route::get('/my-tickets', MyTicket::class)->name('student-org.my-tickets');
+        Route::get('/calendar', Calendar::class)->name('student-org.calendar');
+        Route::get('/reschedule', Reschedule::class)->name('student-org.reschedule');
+        Route::get('/notifications', Notifications::class)->name('student-org.notifications');
+        Route::get('/history', History::class)->name('student-org.history');
+        Route::view('/profile', 'student-orgs.profile')->name('student-org.profile');
         Route::view('/settings', 'student-orgs.settings')->name('student-org.settings');
     });
 

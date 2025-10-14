@@ -56,7 +56,7 @@ new #[Layout('layouts.guest')] class extends Component {
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth-session-status class="mb-4" :status="session('status')"/>
 
     <form wire:submit="login" class="space-y-6">
         <!-- Email Address -->
@@ -66,10 +66,10 @@ new #[Layout('layouts.guest')] class extends Component {
                     <i class="fas fa-envelope text-gray-400"></i>
                 </div>
                 <input wire:model="form.email" id="email" type="email" name="email" placeholder="Email" required
-                    autofocus autocomplete="username"
-                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                       autofocus autocomplete="username"
+                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"/>
             </div>
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+            <x-input-error :messages="$errors->get('form.email')" class="mt-2"/>
         </div>
 
         <!-- Password -->
@@ -79,28 +79,28 @@ new #[Layout('layouts.guest')] class extends Component {
                     <i class="fas fa-lock text-gray-400"></i>
                 </div>
                 <input wire:model="form.password" id="password" :type="showPassword ? 'text' : 'password'"
-                    name="password" placeholder="Password" required autocomplete="current-password"
-                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                       name="password" placeholder="Password" required autocomplete="current-password"
+                       class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"/>
                 <button type="button" @click="showPassword = !showPassword"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <i class="fas fa-eye text-gray-400 hover:text-gray-600" x-show="!showPassword"></i>
                     <i class="fas fa-eye-slash text-gray-400 hover:text-gray-600" x-show="showPassword"></i>
                 </button>
             </div>
-            <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
+            <x-input-error :messages="$errors->get('form.password')" class="mt-2"/>
         </div>
 
         <!-- Remember Me and Forgot Password -->
         <div class="flex items-center justify-between">
             <label for="remember" class="flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                 <span class="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
 
             @if (Route::has('password.request'))
                 <a href="{{ route('password.request') }}" wire:navigate
-                    class="text-sm text-blue-600 hover:text-blue-500">
+                   class="text-sm text-blue-600 hover:text-blue-500">
                     Forgot Password?
                 </a>
             @endif

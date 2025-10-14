@@ -1,376 +1,216 @@
 <div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('My Tickets') }}
+            {{ __('Submit Event Ticket (Digital Proposal)') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-            {{-- Header Actions --}}
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-lg font-semibold">All Event Requests</h3>
-                    <p class="text-sm text-gray-600">Track the progress of your submitted tickets</p>
-                </div>
-                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary tooltip tooltip-top"
-                    link="/student-org/submit-ticket" data-tip="Submit new ticket" wire:navigate />
-            </div>
-
-            {{-- Filter and Search --}}
-            <x-mary-card>
-                <div class="flex flex-wrap gap-4 items-end">
-                    <x-mary-input label="Search Tickets" wire:model.live="search"
-                        placeholder="Search by title, ID, or description..." icon="s-magnifying-glass"
-                        class="flex-1 min-w-64" />
-
-                    <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
-                        ['id' => '', 'name' => 'All Status'],
-                        ['id' => 'draft', 'name' => 'Draft'],
-                        ['id' => 'submitted', 'name' => 'Submitted'],
-                        ['id' => 'under_review', 'name' => 'Under Review'],
-                        ['id' => 'pending_osa', 'name' => 'Pending OSA Approval'],
-                        ['id' => 'pending_gso', 'name' => 'Pending GSO Approval'],
-                        ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'rejected', 'name' => 'Rejected'],
-                        ['id' => 'requires_revision', 'name' => 'Requires Revision'],
-                    ]"
-                        placeholder="Filter by status" />
-
-                    <x-mary-select label="Date Range" wire:model.live="dateFilter" :options="[
-                        ['id' => '', 'name' => 'All Time'],
-                        ['id' => 'last_week', 'name' => 'Last Week'],
-                        ['id' => 'last_month', 'name' => 'Last Month'],
-                        ['id' => 'last_3_months', 'name' => 'Last 3 Months'],
-                        ['id' => 'this_year', 'name' => 'This Year'],
-                    ]"
-                        placeholder="Filter by date" />
-
-                    {{-- Replace your current button with: --}}
-                    <x-mary-button icon="s-funnel" class="btn-ghost tooltip tooltip-top" wire:click="clearFilters"
-                        data-tip="Clear filters" />
-                </div>
-            </x-mary-card>
-
-            {{-- Tickets List --}}
-            <x-mary-card>
-                <div class="space-y-4">
-                    {{-- Ticket Item 1 --}}
-                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <h4 class="text-lg font-semibold">Annual Organization Meeting</h4>
-                                    <x-mary-badge value="Under Review" class="badge-info" />
-                                    <span class="text-sm text-gray-500">#TKT-001</span>
-                                </div>
-                                <p class="text-gray-600 mb-3">General assembly meeting for all organization members to
-                                    discuss yearly activities and elect new officers.</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-calendar" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">Oct 15, 2025 • 2:00 PM</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-map-pin" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">Student Center Room 201</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-users" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">50 attendees expected</span>
-                                    </div>
-                                </div>
-
-                                {{-- Progress Steps --}}
-                                <div class="mb-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">Submitted</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-success"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-warning rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-clock" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">OSA Review</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-gray-200"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-clock" class="w-4 h-4 text-gray-400" />
-                                            </div>
-                                            <span class="text-sm text-gray-400">GSO Review</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-gray-200"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check-circle" class="w-4 h-4 text-gray-400" />
-                                            </div>
-                                            <span class="text-sm text-gray-400">Approved</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col space-y-2">
-                                <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details" />
-                                <x-mary-button icon="s-pencil" class="btn-sm btn-ghost" tooltip="Edit" />
-                                <x-mary-button icon="s-chat-bubble-left-right" class="btn-sm btn-ghost"
-                                    tooltip="Comments" />
-                            </div>
+            {{-- Instructions Card --}}
+            <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
+                class="mb-6">
+                <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
+                    <div class="flex items-start space-x-2">
+                        <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
+                        <div class="text-sm">
+                            <p class="font-medium mb-2">Important Guidelines:</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                <li>Submit your request at least 14 days before your event date</li>
+                                <li>All required fields must be completed</li>
+                                <li>Upload all necessary attachments (permit forms, venue reservations, etc.)</li>
+                                <li>Events must comply with university policies and guidelines</li>
+                                <li>You will receive notifications about approval status via email</li>
+                            </ul>
                         </div>
-
-                        {{-- Latest Comment/Remark --}}
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <div class="bg-blue-50 p-3 rounded-lg">
-                                <div class="flex items-start space-x-3">
-                                    <x-mary-icon name="s-chat-bubble-left" class="w-5 h-5 text-blue-500 mt-0.5" />
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-blue-700">Latest Update from OSA</p>
-                                        <p class="text-sm text-blue-600 mt-1">Your event proposal looks good. Please
-                                            provide the list of expected attendees with their contact information for
-                                            security purposes.</p>
-                                        <p class="text-xs text-blue-500 mt-2">2 days ago</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 text-sm text-gray-500">
-                            Submitted on September 28, 2025 • Last updated October 1, 2025
-                        </div>
-                    </div>
-
-                    {{-- Ticket Item 2 --}}
-                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <h4 class="text-lg font-semibold">Fundraising Concert</h4>
-                                    <x-mary-badge value="Approved" class="badge-success" />
-                                    <span class="text-sm text-gray-500">#TKT-002</span>
-                                </div>
-                                <p class="text-gray-600 mb-3">Musical concert event to raise funds for our community
-                                    outreach programs and scholarship fund.</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-calendar" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">Nov 1, 2025 • 6:00 PM</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-map-pin" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">University Auditorium</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-users" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">300 attendees expected</span>
-                                    </div>
-                                </div>
-
-                                {{-- Progress Steps - Completed --}}
-                                <div class="mb-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">Submitted</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-success"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">OSA Review</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-success"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">GSO Review</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-success"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check-circle" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">Approved</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col space-y-2">
-                                <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details" />
-                                <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost"
-                                    tooltip="Download Approval" />
-                                <x-mary-button icon="s-chat-bubble-left-right" class="btn-sm btn-ghost"
-                                    tooltip="Comments" />
-                            </div>
-                        </div>
-
-                        {{-- Approval Notice --}}
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <div class="bg-green-50 p-3 rounded-lg">
-                                <div class="flex items-start space-x-3">
-                                    <x-mary-icon name="s-check-circle" class="w-5 h-5 text-green-500 mt-0.5" />
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-green-700">Event Approved!</p>
-                                        <p class="text-sm text-green-600 mt-1">Congratulations! Your event has been
-                                            approved by both OSA and GSO. You may now proceed with your preparations.
-                                            Please ensure to follow all safety guidelines and submit a post-event
-                                            report.</p>
-                                        <p class="text-xs text-green-500 mt-2">1 week ago</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 text-sm text-gray-500">
-                            Submitted on September 25, 2025 • Approved on September 29, 2025
-                        </div>
-                    </div>
-
-                    {{-- Ticket Item 3 --}}
-                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <h4 class="text-lg font-semibold">Skills Workshop Series</h4>
-                                    <x-mary-badge value="Requires Revision" class="badge-warning" />
-                                    <span class="text-sm text-gray-500">#TKT-003</span>
-                                </div>
-                                <p class="text-gray-600 mb-3">Three-day workshop series focusing on leadership,
-                                    communication, and project management skills for students.</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-calendar" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">Oct 20-22, 2025 • 9:00 AM</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-map-pin" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">Building A, Room 301</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <x-mary-icon name="s-users" class="w-4 h-4 text-gray-400" />
-                                        <span class="text-sm">40 attendees expected</span>
-                                    </div>
-                                </div>
-
-                                {{-- Progress Steps - Requires Action --}}
-                                <div class="mb-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check" class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">Submitted</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-warning"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-warning rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-exclamation-triangle"
-                                                    class="w-4 h-4 text-white" />
-                                            </div>
-                                            <span class="text-sm font-medium">Needs Revision</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-gray-200"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-clock" class="w-4 h-4 text-gray-400" />
-                                            </div>
-                                            <span class="text-sm text-gray-400">GSO Review</span>
-                                        </div>
-                                        <div class="flex-1 h-0.5 bg-gray-200"></div>
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                                <x-mary-icon name="s-check-circle" class="w-4 h-4 text-gray-400" />
-                                            </div>
-                                            <span class="text-sm text-gray-400">Approved</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col space-y-2">
-                                <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details" />
-                                <x-mary-button icon="s-pencil" class="btn-sm btn-primary" tooltip="Revise" />
-                                <x-mary-button icon="s-chat-bubble-left-right" class="btn-sm btn-ghost"
-                                    tooltip="Comments" />
-                            </div>
-                        </div>
-
-                        {{-- Revision Request --}}
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <div class="bg-orange-50 p-3 rounded-lg">
-                                <div class="flex items-start space-x-3">
-                                    <x-mary-icon name="s-exclamation-triangle"
-                                        class="w-5 h-5 text-orange-500 mt-0.5" />
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-orange-700">Revision Required</p>
-                                        <p class="text-sm text-orange-600 mt-1">Please provide more details about the
-                                            workshop facilitators, their qualifications, and a detailed schedule for
-                                            each day. Also, include the registration process for participants and
-                                            maximum capacity per session.</p>
-                                        <p class="text-xs text-orange-500 mt-2">3 days ago</p>
-                                        <x-mary-button label="Submit Revision" icon="s-arrow-up"
-                                            class="btn-sm btn-primary mt-2" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 text-sm text-gray-500">
-                            Submitted on September 27, 2025 • Revision requested October 2, 2025
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Pagination --}}
-                <div class="mt-6 flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        Showing 3 of 12 tickets
-                    </div>
-                    <div class="flex space-x-2">
-                        <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" disabled />
-                        <x-mary-button label="1" class="btn-sm btn-primary" />
-                        <x-mary-button label="2" class="btn-sm btn-ghost" />
-                        <x-mary-button label="3" class="btn-sm btn-ghost" />
-                        <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" />
                     </div>
                 </div>
             </x-mary-card>
 
-            {{-- Quick Stats --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <x-mary-stat title="Total Submitted" value="12" icon="s-document-text" color="text-primary" />
+            {{-- Main Form --}}
+            <x-mary-form wire:submit="save">
+                {{-- Organization Information --}}
+                <x-mary-card title="Organization Information" subtitle="Details about your student organization">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-mary-input label="Organization Name" wire:model="organizationName"
+                            placeholder="Enter your organization name" required />
 
-                <x-mary-stat title="Under Review" value="4" icon="s-clock" color="text-warning" />
+                        <x-mary-input label="Organization Type" wire:model="organizationType"
+                            placeholder="e.g., Academic, Cultural, Sports" required />
 
-                <x-mary-stat title="Approved" value="7" icon="s-check-circle" color="text-success" />
+                        <x-mary-input label="Contact Person" wire:model="contactPerson"
+                            placeholder="Name of primary contact" required />
 
-                <x-mary-stat title="Need Action" value="1" icon="s-exclamation-triangle" color="text-error" />
-            </div>
+                        <x-mary-input label="Contact Email" type="email" wire:model="contactEmail"
+                            placeholder="contact@example.com" required />
+
+                        <x-mary-input label="Contact Phone" wire:model="contactPhone" placeholder="09XX XXX XXXX"
+                            required />
+
+                        <x-mary-input label="Organization Adviser" wire:model="adviser"
+                            placeholder="Name of faculty adviser" required />
+                    </div>
+                </x-mary-card>
+
+                {{-- Event Details --}}
+                <x-mary-card title="Event Details" subtitle="Information about your proposed event">
+                    <div class="space-y-4">
+                        <x-mary-input label="Event Title" wire:model="eventTitle" placeholder="Enter your event title"
+                            required />
+
+                        <x-mary-textarea label="Event Description" wire:model="eventDescription"
+                            placeholder="Provide a detailed description of your event, including objectives and activities"
+                            rows="4" required />
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <x-mary-select label="Event Type" wire:model="eventType" :options="[
+                                ['id' => 'academic', 'name' => 'Academic'],
+                                ['id' => 'cultural', 'name' => 'Cultural'],
+                                ['id' => 'sports', 'name' => 'Sports'],
+                                ['id' => 'fundraising', 'name' => 'Fundraising'],
+                                ['id' => 'meeting', 'name' => 'Meeting'],
+                                ['id' => 'workshop', 'name' => 'Workshop/Seminar'],
+                                ['id' => 'competition', 'name' => 'Competition'],
+                                ['id' => 'social', 'name' => 'Social Event'],
+                            ]"
+                                placeholder="Select event type" required />
+
+                            <x-mary-input label="Expected Participants" type="number" wire:model="expectedParticipants"
+                                placeholder="Number of attendees" required />
+
+                            <x-mary-select label="Target Audience" wire:model="targetAudience" :options="[
+                                ['id' => 'students', 'name' => 'Students Only'],
+                                ['id' => 'faculty', 'name' => 'Faculty Only'],
+                                ['id' => 'both', 'name' => 'Students & Faculty'],
+                                ['id' => 'public', 'name' => 'General Public'],
+                                ['id' => 'members', 'name' => 'Organization Members'],
+                            ]"
+                                placeholder="Select target audience" required />
+                        </div>
+                    </div>
+                </x-mary-card>
+
+                {{-- Schedule & Venue --}}
+                <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-mary-datetime label="Event Start Date & Time" wire:model="eventStartDateTime" required />
+
+                        <x-mary-datetime label="Event End Date & Time" wire:model="eventEndDateTime" required />
+
+                        <x-mary-input label="Preferred Venue" wire:model="preferredVenue"
+                            placeholder="e.g., Student Center Auditorium" required />
+
+                        <x-mary-input label="Alternative Venue" wire:model="alternativeVenue"
+                            placeholder="Backup venue option" />
+                    </div>
+
+                    <div class="mt-4">
+                        <x-mary-textarea label="Special Requirements" wire:model="specialRequirements"
+                            placeholder="Audio/visual equipment, seating arrangement, catering, etc." rows="3" />
+                    </div>
+                </x-mary-card>
+
+                {{-- Budget Information --}}
+                <x-mary-card title="Budget Information" subtitle="Financial details of your event">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-mary-input label="Estimated Total Budget" type="number" step="0.01"
+                            wire:model="totalBudget" placeholder="0.00" prefix="₱" />
+
+                        <x-mary-select label="Funding Source" wire:model="fundingSource" :options="[
+                            ['id' => 'org_funds', 'name' => 'Organization Funds'],
+                            ['id' => 'fundraising', 'name' => 'Fundraising'],
+                            ['id' => 'sponsorship', 'name' => 'Sponsorship'],
+                            ['id' => 'university_grant', 'name' => 'University Grant'],
+                            ['id' => 'mixed', 'name' => 'Mixed Sources'],
+                        ]"
+                            placeholder="Select funding source" />
+                    </div>
+
+                    <div class="mt-4">
+                        <x-mary-textarea label="Budget Breakdown" wire:model="budgetBreakdown"
+                            placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
+                            rows="4" />
+                    </div>
+                </x-mary-card>
+
+                {{-- File Attachments --}}
+                <x-mary-card title="Attachments" subtitle="Upload required documents and supporting files">
+                    <div class="space-y-4">
+                        <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
+                            <div class="flex items-start space-x-2">
+                                <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
+                                <div class="text-sm">
+                                    <p class="font-medium mb-1">Required Documents:</p>
+                                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                        <li>Event proposal document (PDF format preferred)</li>
+                                        <li>Organization registration certificate</li>
+                                        <li>Venue reservation form (if applicable)</li>
+                                        <li>Budget worksheet or financial plan</li>
+                                        <li>List of event organizers and volunteers</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <x-mary-file wire:model="attachments" multiple
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
+                            hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file." />
+                    </div>
+                </x-mary-card>
+
+                {{-- Additional Information --}}
+                <x-mary-card title="Additional Information" subtitle="Any other relevant details">
+                    <div class="space-y-4">
+                        <x-mary-checkbox label="This event involves external participants or guests"
+                            wire:model="hasExternalGuests" />
+
+                        <x-mary-checkbox label="This event requires security arrangements"
+                            wire:model="requiresSecurity" />
+
+                        <x-mary-checkbox label="This event involves food service or catering"
+                            wire:model="involvesCatering" />
+
+                        <x-mary-checkbox label="This event requires parking arrangements"
+                            wire:model="requiresParking" />
+
+                        <x-mary-textarea label="Additional Notes" wire:model="additionalNotes"
+                            placeholder="Any other information you'd like to share about your event" rows="3" />
+                    </div>
+                </x-mary-card>
+
+                {{-- Agreement & Submission --}}
+                <x-mary-card title="Agreement & Submission" subtitle="Please review and agree to the terms">
+                    <div class="space-y-4">
+                        <div class="bg-base-200 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-2">Terms and Conditions:</h4>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p>• I certify that all information provided is accurate and complete</p>
+                                <p>• The event will comply with all university policies and guidelines</p>
+                                <p>• I understand that approval is subject to availability and review</p>
+                                <p>• I agree to follow all safety protocols and requirements</p>
+                                <p>• Changes to approved events must be requested through proper channels</p>
+                            </div>
+                        </div>
+
+                        <x-mary-checkbox label="I agree to the terms and conditions above" wire:model="agreeToTerms"
+                            required />
+                    </div>
+                </x-mary-card>
+
+                {{-- Form Actions --}}
+                <div class="flex justify-between items-center pt-6">
+                    <x-mary-button label="Save as Draft" icon="s-document" class="btn-secondary"
+                        wire:click="saveDraft" />
+
+                    <div class="space-x-3">
+                        <x-mary-button label="Preview" icon="s-eye" class="btn-accent" />
+
+                        <x-mary-button label="Submit Ticket" icon="s-paper-airplane" class="btn-primary"
+                            type="submit" />
+                    </div>
+                </div>
+            </x-mary-form>
         </div>
     </div>
 </div>

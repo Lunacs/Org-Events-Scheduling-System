@@ -73,14 +73,10 @@
 
                 {{-- MENU --}}
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
-                    @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
+                    @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history'], ['title' => 'Profile', 'icon' => 's-user-circle', 'link' => '/profile'], ['title' => 'Settings', 'icon' => 's-cog-6-tooth', 'link' => '/student-org/settings']] as $item)
                         <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
                     @endforeach
 
-
-                    <x-mary-menu-separator />
-                    <x-mary-menu-item title="Profile" icon="s-user-circle" link="/profile"></x-mary-menu-item>
-                    <x-mary-menu-item title="Settings" icon="s-cog-6-tooth" link="/student-org/settings"></x-mary-menu-item>
                     {{-- Logout Menu Item --}}
                     <x-mary-menu-separator />
                     <form method="POST" action="{{ route('logout') }}" class="w-full">

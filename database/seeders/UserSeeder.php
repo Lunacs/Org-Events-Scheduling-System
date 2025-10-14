@@ -142,6 +142,26 @@ class UserSeeder extends Seeder
             'office_id' => null,
         ]);
 
+        User::create([
+            'name' => 'Michael Silva',
+            'email' => 'maykellsilva070@gmail.com',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_STUDENT_ORG,
+            'org_id' => $studentOrgs->first()?->org_id,
+            'office_id' => null,
+        ]);
+
+        User::create([
+            'name' => 'Adrian Acob',
+            'email' => 'adrianacob@plv.edu.ph',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_STUDENT_ORG,
+            'org_id' => $studentOrgs->first()?->org_id,
+            'office_id' => null,
+        ]);
+
         // Create office staff users if offices exist
         $offices = Office::limit(2)->get();
         foreach ($offices as $office) {
