@@ -9,7 +9,18 @@ use Livewire\Attributes\Layout;
 class MyTicket extends Component
 {
     #[Title('My Ticket - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
+
+    public $search = '';
+    public $statusFilter = '';
+    public $dateFilter = '';
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->dateFilter = '';
+    }
     public function render()
     {
         return view('livewire.student-org.my-ticket');

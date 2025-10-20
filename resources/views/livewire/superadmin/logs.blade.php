@@ -1,39 +1,62 @@
 <div>
     <div class="p-6 space-y-6">
-        <h1 class="text-2xl font-bold">Transaction Logs</h1>
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold font-heading">Transaction Logs</h1>
+            <div class="flex gap-2">
+                <x-mary-button icon="o-arrow-down-tray" class="btn-outline" wire:click="exportLogs">
+                    Export
+                </x-mary-button>
+                <x-mary-button icon="o-trash" class="btn-error" wire:click="clearLogs">
+                    Clear Old Logs
+                </x-mary-button>
+            </div>
+        </div>
 
         <x-mary-card>
-            <div class="flex items-center gap-2">
-                <x-mary-input placeholder="Search logs..." class="w-full" />
-                <x-mary-select :options="[
-                    ['id' => 1, 'name' => 'All'],
-                    ['id' => 2, 'name' => 'Info'],
-                    ['id' => 3, 'name' => 'Warning'],
-                    ['id' => 4, 'name' => 'Error'],
-                ]" />
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <x-mary-input label="Search Logs" wire:model.live.debounce.300ms="search"
+                    placeholder="Search by action, user, or details..." icon="o-magnifying-glass" />
+
+                <x-mary-input label="From Date" wire:model.live="dateFrom" type="date" />
+
+                <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
             </div>
-            <x-mary-table :headers="[
-                ['key' => 'when', 'label' => 'When'],
-                ['key' => 'who', 'label' => 'Who'],
-                ['key' => 'action', 'label' => 'Action'],
-                ['key' => 'target', 'label' => 'Target'],
-                ['key' => 'details', 'label' => 'Details'],
-            ]" :rows="[
-                [
-                    'when' => '2025-09-26 21:11',
-                    'who' => 'admin@plv.edu',
-                    'action' => 'APPROVED',
-                    'target' => 'Event #123',
-                    'details' => 'OSA approval',
-                ],
-                [
-                    'when' => '2025-09-26 20:45',
-                    'who' => 'osa@plv.edu',
-                    'action' => 'UPDATED',
-                    'target' => 'User #456',
-                    'details' => 'Role changed to GSO',
-                ],
-            ]">
+
+            <x-mary-table :headers="$headers" :rows="$logs" with-pagination>
+                @scope('cell_when', $log)
+                    <div class="text-sm">
+                        <div class="font-medium">{{ $log->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
+                        <div class="text-gray-500">{{ $log->created_at->setTimezone('Asia/Manila')->format('g:i A') }}</div>
+                    </div>
+                @endscope
+
+                @scope('cell_who', $log)
+                    @if ($log->user)
+                        <div class="text-sm">
+                            <div class="font-medium">{{ $log->user->name }}</div>
+                            <div class="text-gray-500">{{ $log->user->email }}</div>
+                        </div>
+                    @else
+                        <span class="text-gray-500">System</span>
+                    @endif
+                @endscope
+
+                @scope('cell_action', $log)
+                    <x-mary-badge :value="$log->action" :class="match ($log->action) {
+                        'CREATE' => 'badge-success',
+                        'UPDATE' => 'badge-info',
+                        'DELETE' => 'badge-error',
+                        'APPROVE' => 'badge-success',
+                        'REJECT' => 'badge-warning',
+                        default => 'badge-ghost',
+                    }" />
+                @endscope
+
+                @scope('cell_details', $log)
+                    <div class="text-sm max-w-xs truncate" title="{{ $log->details }}">
+                        {{ $log->details ?: 'No details' }}
+                    </div>
+                @endscope
             </x-mary-table>
         </x-mary-card>
     </div>

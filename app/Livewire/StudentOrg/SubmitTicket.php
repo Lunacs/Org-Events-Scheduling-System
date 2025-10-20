@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 class SubmitTicket extends Component
 {
     #[Title('Submit Ticket - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
 
 
     public $search = '';

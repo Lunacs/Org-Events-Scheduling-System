@@ -26,8 +26,8 @@
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
-    <div class="flex min-h-screen w-full bg-white p-20">
-        <!-- Left side - Image -->
+    <div class="flex min-h-screen w-full bg-white p-4 sm:p-8 md:p-12 lg:p-20">
+        <!-- Left side - Image (Hidden on mobile) -->
         <div class="hidden lg:flex lg:w-[55%] relative">
             <div class="absolute inset-0">
                 <img src="{{ asset('images/suhay husay.png') }}"
@@ -38,16 +38,17 @@
 
         <!-- Right side - Login Form -->
         <div
-            class="flex flex-col justify-center items-center w-full lg:w-[40%] bg-white rounded-xl shadow-xl dark:bg-gray-800 p-6">
+            class="flex flex-col justify-center items-center w-full lg:w-[40%] bg-white rounded-xl shadow-xl dark:bg-gray-800 p-4 sm:p-6 md:p-8">
             <!-- Logo -->
-            <div class="mb-8">
+            <div class="mb-6 sm:mb-8">
                 <a href="/" wire:navigate>
-                    <img src="{{ asset('images/osa-logo.jpg') }}" class="w-20 h-20 rounded-lg shadow-md" alt="OSA Logo">
+                    <img src="{{ asset('images/osa-logo.jpg') }}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shadow-md"
+                        alt="OSA Logo">
                 </a>
             </div>
 
             <!-- Login Form Container -->
-            <div class="w-full max-w-md">
+            <div class="w-full max-w-md px-2 sm:px-0">
                 {{ $slot }}
             </div>
         </div>

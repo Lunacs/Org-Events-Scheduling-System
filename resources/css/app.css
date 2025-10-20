@@ -133,10 +133,39 @@
 .mary-textarea textarea:focus-visible,
 .mary-textarea textarea:focus,
 [class*="mary-"] :focus,
-[class*="mary-"] :focus-visible {
+[class*="mary-"] :focus-visible,
+[class*="mary-"] input:focus,
+[class*="mary-"] input:focus-visible,
+[class*="mary-"] select:focus,
+[class*="mary-"] select:focus-visible,
+[class*="mary-"] textarea:focus,
+[class*="mary-"] textarea:focus-visible {
     outline: none !important;
     box-shadow: none !important;
     border-color: transparent !important;
+    ring: none !important;
+}
+
+/* More specific targeting for input elements */
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    ring: none !important;
+}
+
+/* Remove Tailwind focus ring classes */
+.focus\:ring-2:focus,
+.focus\:ring:focus,
+.focus\:outline-none:focus,
+[class*="focus:ring"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    ring: none !important;
 }
 
 /* Ensure white text on colored backgrounds */

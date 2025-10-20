@@ -18,6 +18,13 @@ class Event_Type extends Model
     protected $table = 'event__types';
 
     /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'event_type_id';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array

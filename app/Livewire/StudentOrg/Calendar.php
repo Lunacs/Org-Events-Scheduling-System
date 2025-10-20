@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 class Calendar extends Component
 {
     #[Title('Event Calendar - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
 
     public $eventTypeFilter = '';
     public $venueFilter = '';

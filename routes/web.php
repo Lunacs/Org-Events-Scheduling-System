@@ -2,8 +2,6 @@
 
 use App\Livewire\StudentOrg\History;
 use App\Livewire\Superadmin\Logs;
-use App\Livewire\Superadmin\Roles;
-use App\Livewire\Superadmin\Users;
 use Illuminate\Support\Facades\Auth;
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\MyTicket;
@@ -12,7 +10,9 @@ use App\Livewire\Superadmin\Dashboard;
 use App\Livewire\StudentOrg\Reschedule;
 use App\Livewire\StudentOrg\SubmitTicket;
 use App\Livewire\StudentOrg\Notifications;
-use App\Livewire\Superadmin\SystemSettings;
+use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use App\Livewire\Superadmin\Roles\Index as RolesIndex;
+use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 
 Route::view('/', 'osa.welcome');
@@ -43,24 +43,13 @@ Route::prefix('admin')
     });
 
 // SuperAdmin routes
-// Route::prefix('superadmin')
-//     ->middleware(['auth', 'verified', 'role:superadmin'])
-//     ->group(function () {
-//         Route::view('/dashboard', 'livewire.superadmin.dashboard')->name('superadmin.dashboard');
-//         Route::view('/users', 'superadmin.users')->name('superadmin.users');
-//         Route::view('/roles', 'superadmin.roles')->name('superadmin.roles');
-//         Route::view('/settings', 'superadmin.settings')->name('superadmin.settings');
-//         Route::view('/logs', 'superadmin.logs')->name('superadmin.logs');
-//         Route::view('/archive', 'superadmin.archive')->name('superadmin.archive');
-//         Route::view('/reports', 'superadmin.reports')->name('superadmin.reports');
-//     });
 Route::prefix('superadmin')
     ->middleware(['auth', 'verified', 'role:superadmin'])
     ->group(function () {
         Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
-        Route::get('/users', Users::class)->name('superadmin.users');
-        Route::get('/roles', Roles::class)->name('superadmin.roles');
-        Route::get('/system-settings', SystemSettings::class)->name('superadmin.system-settings');
+        Route::get('/users', UsersIndex::class)->name('superadmin.users');
+        Route::get('/roles', RolesIndex::class)->name('superadmin.roles');
+        Route::get('/system-settings', SystemSettingsIndex::class)->name('superadmin.system-settings');
         Route::get('/logs', Logs::class)->name('superadmin.logs');
     });
 
@@ -91,6 +80,5 @@ Route::prefix('student-org')
         Route::view('/profile', 'student-orgs.profile')->name('student-org.profile');
         Route::view('/settings', 'student-orgs.settings')->name('student-org.settings');
     });
-
 
 require __DIR__ . '/auth.php';

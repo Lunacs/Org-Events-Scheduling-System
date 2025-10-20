@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 class History extends Component
 {
     #[Title('Event History - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
 
     public $search = '';
     public $statusFilter = '';

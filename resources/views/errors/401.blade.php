@@ -32,7 +32,8 @@
             <div class="bg-base-100 rounded-box shadow-xl overflow-hidden">
                 <!-- Header Section with Icon -->
                 <div class="bg-warning px-6 py-8 sm:px-10 sm:py-12 text-center">
-                    <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
+                    <div
+                        class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
                         <i class="fas fa-user-lock text-warning text-4xl sm:text-5xl"></i>
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-heading font-bold text-warning-content mb-2">
@@ -67,11 +68,12 @@
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ route('login') }}" class="btn btn-primary">
+                        <a href="{{ route('login') }}"
+                            class="btn btn-outline bg-primary ring-1 hover:ring-primary transition-all duration-500">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Login Now
                         </a>
-                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary text-black">
+                        <a href="{{ url('/') }}" class="btn btn-outline">
                             <i class="fas fa-home mr-2"></i>
                             Go to Home
                         </a>
@@ -90,4 +92,3 @@
 </body>
 
 </html>
-

@@ -1,4 +1,3 @@
-{{-- filepath: d:\Coding\laragon\www\org-events-scheduling-system\resources\views\emails\verify-email.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 

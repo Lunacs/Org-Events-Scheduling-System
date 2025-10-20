@@ -15,7 +15,7 @@ class Transaction_Logs extends Model
      *
      * @var string
      */
-    protected $table = 'transaction__logs';
+    protected $table = 'transaction_logs';
 
     /**
      * The primary key for the model.
@@ -31,10 +31,8 @@ class Transaction_Logs extends Model
      */
     protected $fillable = [
         'user_id',
-        'ticket_id',
-        'activity_type',
-        'activity_description',
-        'created_at',
+        'action',
+        'details',
     ];
 
     /**
@@ -52,13 +50,5 @@ class Transaction_Logs extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * Ticket associated with this log entry
-     */
-    public function ticket()
-    {
-        return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 }

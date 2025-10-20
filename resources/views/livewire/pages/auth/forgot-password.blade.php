@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('components.layouts.guest')] class extends Component {
     public string $email = '';
 
     /**
@@ -54,7 +54,7 @@ new #[Layout('layouts.guest')] class extends Component {
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-ui.auth-session-status class="mb-4" :status="session('status')" />
 
     @if (session('error'))
         <div class="mb-4 font-medium text-sm text-red-600 dark:text-red-400">
@@ -66,12 +66,12 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required
-                autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-text-input wire:model="email" id="email" class="block mt-1 w-full sm-w-auto" type="email" name="email"
+                required autofocus />
+            <x-ui.input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-end mt-4 w-full sm:w-auto"">
             <x-primary-button>
                 {{ __('Email Password Reset Link') }}
             </x-primary-button>

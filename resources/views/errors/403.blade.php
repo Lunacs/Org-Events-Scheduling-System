@@ -32,7 +32,8 @@
             <div class="bg-base-100 rounded-box shadow-xl overflow-hidden">
                 <!-- Header Section with Icon -->
                 <div class="bg-error px-6 py-8 sm:px-10 sm:py-12 text-center">
-                    <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
+                    <div
+                        class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
                         <i class="fas fa-shield-halved text-error text-4xl sm:text-5xl"></i>
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-heading font-bold text-error-content mb-2">
@@ -60,13 +61,14 @@
                         <div>
                             <h3 class="font-semibold">Why am I seeing this?</h3>
                             <div class="text-sm opacity-90">
-                                You may be trying to access a restricted area or perform an action you're not authorized for.
+                                You may be trying to access a restricted area or perform an action you're not authorized
+                                for.
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    {{-- <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <a href="{{ url()->previous() }}" class="btn btn-outline btn-primary">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Go Back
@@ -74,6 +76,16 @@
                         <a href="{{ route('login') }}" class="btn btn-primary">
                             <i class="fas fa-home mr-2"></i>
                             Go to Login
+                        </a>
+                    </div> --}}
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary bg-primary">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Login Now
+                        </a>
+                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary text-black">
+                            <i class="fas fa-home mr-2"></i>
+                            Go to Home
                         </a>
                     </div>
 
@@ -101,4 +113,3 @@
 </body>
 
 </html>
-

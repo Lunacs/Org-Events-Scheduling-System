@@ -1,13 +1,14 @@
 <?php
 
 use App\Livewire\Actions\Logout;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('components.layouts.guest')] class extends Component {
     /**
      * Mount the component and check if user is already verified.
      */
@@ -45,9 +46,10 @@ new #[Layout('layouts.guest')] class extends Component {
         }
 
         // Hit the rate limiter (1 attempt allowed per 60 seconds)
-        RateLimiter::hit($key, 60);
+        RateLimiter::hit($key, 90);
 
         $user->sendEmailVerificationNotification();
+
         Session::flash('status', 'verification-link-sent');
     }
 
@@ -57,10 +59,10 @@ new #[Layout('layouts.guest')] class extends Component {
     private function redirectToDashboard($user): void
     {
         $dashboardRoute = match ($user->role) {
-            \App\Models\User::ROLE_SUPERADMIN => 'superadmin.dashboard',
-            \App\Models\User::ROLE_OSA => 'admin.dashboard',
-            \App\Models\User::ROLE_GSO => 'gso.dashboard',
-            \App\Models\User::ROLE_STUDENT_ORG => 'student-org.dashboard',
+            User::ROLE_SUPERADMIN => 'superadmin.dashboard',
+            User::ROLE_OSA => 'admin.dashboard',
+            User::ROLE_GSO => 'gso.dashboard',
+            User::ROLE_STUDENT_ORG => 'student-org.dashboard',
             default => 'dashboard',
         };
 
@@ -95,14 +97,13 @@ new #[Layout('layouts.guest')] class extends Component {
         </div>
     @endif
 
-    <div class="mt-4 flex items-center justify-between">
-        <x-primary-button wire:click="sendVerification">
+    <div class="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
+        <x-mary-button class="bg-neutral w-full sm:w-auto" wire:click="sendVerification">
             {{ __('Resend Verification Email') }}
-        </x-primary-button>
+        </x-mary-button>
 
-        <button wire:click="logout" type="submit"
-            class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+        <x-mary-button class="ring-1 text-base-200 bg-white w-full sm:w-auto" wire:click="logout" type="submit">
             {{ __('Log Out') }}
-        </button>
+        </x-mary-button>
     </div>
 </div>

@@ -11,14 +11,21 @@ class Office extends Model
     use HasFactory;
 
     /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'office_id';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
+        'office_code',
         'office_name',
-        'office_description',
-        'office_head',
+        'description',
     ];
 
     /**

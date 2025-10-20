@@ -12,7 +12,7 @@ class Reschedule extends Component
     use WithFileUploads;
 
     #[Title('Reschedule Request - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
 
     public $selectedEventId = '';
     public $changeDate = false;

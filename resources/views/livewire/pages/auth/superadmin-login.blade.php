@@ -5,10 +5,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
+use App\Services\TransactionLogService;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('components.layouts.guest')] class extends Component {
     public LoginForm $form;
 
     /**
@@ -19,16 +20,27 @@ new #[Layout('layouts.guest')] class extends Component {
         $this->validate();
 
         // Attempt authentication
-        $this->form->authenticate();
+        try {
+            $this->form->authenticate();
+        } catch (ValidationException $e) {
+            // Log failed login attempt
+            TransactionLogService::logAuthEvent('login_failed', null, "Failed login attempt for email: {$this->form->email}");
+            throw $e;
+        }
 
         // Check if the authenticated user has the correct role
         $user = Auth::user();
         if (!$user->isSuperAdmin()) {
+            // Log unauthorized access attempt
+            TransactionLogService::logAuthEvent('unauthorized_access', $user, 'Non-superadmin user attempted superadmin login');
             Auth::guard()->logout();
             throw ValidationException::withMessages([
                 'form.email' => 'Access denied. System Administrator access required. Please contact your administrator if you believe this is an error.',
             ]);
         }
+
+        // Log successful login
+        TransactionLogService::logAuthEvent('login', $user, 'Superadmin portal login');
 
         Session::regenerate();
 
@@ -43,7 +55,7 @@ new #[Layout('layouts.guest')] class extends Component {
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-ui.auth-session-status class="mb-4" :status="session('status')" />
 
     <form wire:submit="login" class="space-y-6">
         <!-- Email Address -->
@@ -52,11 +64,11 @@ new #[Layout('layouts.guest')] class extends Component {
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fas fa-envelope text-gray-400"></i>
                 </div>
-                <input wire:model="form.email" id="email" type="email" name="email" placeholder="Email" required
-                    autofocus autocomplete="username"
+                <input wire:model.blur="form.email" id="email" type="email" name="email" placeholder="Email"
+                    required autofocus autocomplete="username"
                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
             </div>
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+            <x-ui.input-error :messages="$errors->get('form.email')" class="mt-2" />
         </div>
 
         <!-- Password -->
@@ -74,7 +86,7 @@ new #[Layout('layouts.guest')] class extends Component {
                     <i class="fas fa-eye-slash text-gray-400 hover:text-gray-600" x-show="showPassword"></i>
                 </button>
             </div>
-            <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
+            <x-ui.input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
         <!-- Remember Me and Forgot Password -->

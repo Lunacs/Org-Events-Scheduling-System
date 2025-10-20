@@ -2,13 +2,14 @@
 
 use App\Livewire\Forms\LoginForm;
 use App\Models\User;
+use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('components.layouts.guest')] class extends Component {
     public LoginForm $form;
 
     /**
@@ -22,11 +23,19 @@ new #[Layout('layouts.guest')] class extends Component {
         $this->form->validateStudentOrgEmail();
 
         // Attempt authentication
-        $this->form->authenticate();
+        try {
+            $this->form->authenticate();
+        } catch (ValidationException $e) {
+            // Log failed login attempt
+            TransactionLogService::logAuthEvent('login_failed', null, "Failed Student Org login attempt for email: {$this->form->email}");
+            throw $e;
+        }
 
         // Check if the authenticated user has the correct role
         $user = Auth::user();
         if (!$user->isStudentOrg()) {
+            // Log unauthorized access attempt
+            TransactionLogService::logAuthEvent('unauthorized_access', $user, 'Non-student org user attempted student org login');
             Auth::guard()->logout();
             throw ValidationException::withMessages([
                 'form.email' => 'Access denied. This portal is for Student Organizations only. Please contact OSA if you need a student organization account.',
@@ -35,6 +44,9 @@ new #[Layout('layouts.guest')] class extends Component {
 
         // Check if email is verified
         if (!$user->hasVerifiedEmail()) {
+            // Log email verification required
+            TransactionLogService::logAuthEvent('email_verification_required', $user, 'Student org login blocked - email not verified');
+
             // Send verification email
             $user->sendEmailVerificationNotification();
 
@@ -42,6 +54,9 @@ new #[Layout('layouts.guest')] class extends Component {
             $this->redirect(route('verification.notice'), navigate: true);
             return;
         }
+
+        // Log successful login
+        TransactionLogService::logAuthEvent('login', $user, 'Student Organization portal login');
 
         Session::regenerate();
 
@@ -56,7 +71,7 @@ new #[Layout('layouts.guest')] class extends Component {
     </div>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')"/>
+    <x-ui.auth-session-status class="mb-4" :status="session('status')" />
 
     <form wire:submit="login" class="space-y-6">
         <!-- Email Address -->
@@ -66,10 +81,10 @@ new #[Layout('layouts.guest')] class extends Component {
                     <i class="fas fa-envelope text-gray-400"></i>
                 </div>
                 <input wire:model="form.email" id="email" type="email" name="email" placeholder="Email" required
-                       autofocus autocomplete="username"
-                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"/>
+                    autofocus autocomplete="username"
+                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
             </div>
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2"/>
+            <x-ui.input-error :messages="$errors->get('form.email')" class="mt-2" />
         </div>
 
         <!-- Password -->
@@ -79,28 +94,28 @@ new #[Layout('layouts.guest')] class extends Component {
                     <i class="fas fa-lock text-gray-400"></i>
                 </div>
                 <input wire:model="form.password" id="password" :type="showPassword ? 'text' : 'password'"
-                       name="password" placeholder="Password" required autocomplete="current-password"
-                       class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"/>
+                    name="password" placeholder="Password" required autocomplete="current-password"
+                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 <button type="button" @click="showPassword = !showPassword"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <i class="fas fa-eye text-gray-400 hover:text-gray-600" x-show="!showPassword"></i>
                     <i class="fas fa-eye-slash text-gray-400 hover:text-gray-600" x-show="showPassword"></i>
                 </button>
             </div>
-            <x-input-error :messages="$errors->get('form.password')" class="mt-2"/>
+            <x-ui.input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
         <!-- Remember Me and Forgot Password -->
         <div class="flex items-center justify-between">
             <label for="remember" class="flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox"
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                 <span class="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
 
             @if (Route::has('password.request'))
                 <a href="{{ route('password.request') }}" wire:navigate
-                   class="text-sm text-blue-600 hover:text-blue-500">
+                    class="text-sm text-blue-600 hover:text-blue-500">
                     Forgot Password?
                 </a>
             @endif

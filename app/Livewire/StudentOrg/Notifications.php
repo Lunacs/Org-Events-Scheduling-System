@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 class Notifications extends Component
 {
     #[Title('Notifications - Student Organization')]
-    #[Layout('layouts.student-org-layout')]
+    #[Layout('components.layouts.student-org-layout')]
 
     public $search = '';
     public $typeFilter = '';

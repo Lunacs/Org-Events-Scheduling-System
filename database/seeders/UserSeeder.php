@@ -124,7 +124,7 @@ class UserSeeder extends Seeder
         // Create additional test users
         User::create([
             'name' => 'Test User',
-            'email' => 'test_user@plv.edu.ph',
+            'email' => 'mrrobot1946@gmail.com',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
             'role' => User::ROLE_STUDENT_ORG,
@@ -135,6 +135,15 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Elliot Anderson',
             'email' => 'johnreygabon@plv.edu.ph',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_STUDENT_ORG,
+            'org_id' => $studentOrgs->first()?->org_id,
+            'office_id' => null,
+        ]);
+        User::create([
+            'name' => 'Hackerman Anderson',
+            'email' => 'gabon.245958@caloocan.sti.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
             'role' => User::ROLE_STUDENT_ORG,

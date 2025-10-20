@@ -12,6 +12,6 @@ class StudentOrgLayout extends Component
      */
     public function render(): View
     {
-        return view('layouts.student-org-layout');
+        return view('components.layouts.student-org-layout');
     }
 }
