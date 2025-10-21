@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Access Denied - {{ config('app.name', 'Laravel') }}</title>
+    <title>Server Error - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
@@ -34,13 +34,13 @@
                 <div class="bg-error px-6 py-8 sm:px-10 sm:py-12 text-center">
                     <div
                         class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
-                        <i class="fas fa-shield-halved text-error text-4xl sm:text-5xl"></i>
+                        <i class="fas fa-server text-error text-4xl sm:text-5xl"></i>
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-heading font-bold text-error-content mb-2">
-                        Access Denied
+                        Server Error
                     </h1>
                     <p class="text-lg sm:text-xl text-error-content opacity-90">
-                        Error 403 - Forbidden
+                        Error 500 - Internal Server Error
                     </p>
                 </div>
 
@@ -48,64 +48,53 @@
                 <div class="px-6 py-8 sm:px-10 sm:py-10">
                     <div class="text-center mb-8">
                         <p class="text-base-content text-lg mb-4">
-                            You don't have permission to access this resource.
+                            Oops! Something went wrong on our end.
                         </p>
                         <p class="text-base-content/70 text-base">
-                            {{ $exception->getMessage() ?: 'This action is unauthorized. Please contact your administrator if you believe this is an error.' }}
+                            We're experiencing technical difficulties. Our team has been notified and is working on a fix.
                         </p>
                     </div>
 
                     <!-- Info Alert -->
-                    <div class="alert alert-warning mb-6">
-                        <i class="fas fa-info-circle text-xl"></i>
+                    <div class="alert alert-error mb-6">
+                        <i class="fas fa-exclamation-triangle text-xl"></i>
                         <div>
-                            <h3 class="font-semibold">Why am I seeing this?</h3>
+                            <h3 class="font-semibold">What happened?</h3>
                             <div class="text-sm opacity-90">
-                                You may be trying to access a restricted area or perform an action you're not authorized
-                                for.
+                                An unexpected error occurred while processing your request. This issue has been automatically logged.
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <a href="{{ url()->previous() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Go Back
                         </a>
-                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary">
+                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary">
                             <i class="fas fa-home mr-2"></i>
-                            Go to Login
+                            Go to Home
                         </a>
                     </div>
-{{--                    <div class="flex flex-col sm:flex-row gap-3 justify-center">--}}
-{{--                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary bg-primary">--}}
-{{--                            <i class="fas fa-sign-in-alt mr-2"></i>--}}
-{{--                            Login Now--}}
-{{--                        </a>--}}
-{{--                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary text-black">--}}
-{{--                            <i class="fas fa-home mr-2"></i>--}}
-{{--                            Go to Home--}}
-{{--                        </a>--}}
-{{--                    </div>--}}
 
                     <!-- Additional Help -->
                     <div class="mt-8 pt-6 border-t border-base-300 text-center">
                         <p class="text-sm text-base-content/60">
-                            Need help? Contact your system administrator or
+                            If this problem persists, please
                             <a href="mailto:support@example.com" class="text-primary hover:underline font-medium">
-                                support team
+                                contact our support team
                             </a>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Security Notice -->
+            <!-- Technical Notice -->
             <div class="mt-6 text-center">
                 <div class="inline-flex items-center gap-2 text-sm text-base-content/50">
-                    <i class="fas fa-lock"></i>
-                    <span>This access attempt has been logged for security purposes</span>
+                    <i class="fas fa-tools"></i>
+                    <span>Our technical team has been automatically notified of this error</span>
                 </div>
             </div>
         </div>
@@ -113,3 +102,4 @@
 </body>
 
 </html>
+

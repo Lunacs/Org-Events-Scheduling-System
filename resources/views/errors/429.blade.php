@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Access Denied - {{ config('app.name', 'Laravel') }}</title>
+    <title>Too Many Requests - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
@@ -34,13 +34,13 @@
                 <div class="bg-error px-6 py-8 sm:px-10 sm:py-12 text-center">
                     <div
                         class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-base-100 rounded-full mb-4">
-                        <i class="fas fa-shield-halved text-error text-4xl sm:text-5xl"></i>
+                        <i class="fas fa-gauge-high text-error text-4xl sm:text-5xl"></i>
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-heading font-bold text-error-content mb-2">
-                        Access Denied
+                        Too Many Requests
                     </h1>
                     <p class="text-lg sm:text-xl text-error-content opacity-90">
-                        Error 403 - Forbidden
+                        Error 429 - Rate Limit Exceeded
                     </p>
                 </div>
 
@@ -48,10 +48,10 @@
                 <div class="px-6 py-8 sm:px-10 sm:py-10">
                     <div class="text-center mb-8">
                         <p class="text-base-content text-lg mb-4">
-                            You don't have permission to access this resource.
+                            You've made too many requests in a short period.
                         </p>
                         <p class="text-base-content/70 text-base">
-                            {{ $exception->getMessage() ?: 'This action is unauthorized. Please contact your administrator if you believe this is an error.' }}
+                            Please wait a moment before trying again to help us maintain service quality for everyone.
                         </p>
                     </div>
 
@@ -61,40 +61,37 @@
                         <div>
                             <h3 class="font-semibold">Why am I seeing this?</h3>
                             <div class="text-sm opacity-90">
-                                You may be trying to access a restricted area or perform an action you're not authorized
-                                for.
+                                Our system limits the number of requests to prevent abuse and ensure fair usage for all users.
                             </div>
                         </div>
                     </div>
 
+                    <!-- Countdown Timer (optional enhancement) -->
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-base-200 rounded-lg">
+                            <i class="fas fa-hourglass-half text-warning"></i>
+                            <span class="text-sm font-medium">Please wait a few moments before retrying</span>
+                        </div>
+                    </div>
+
                     <!-- Actions -->
-                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ url()->previous() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Go Back
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a href="{{ url()->current() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
+                            <i class="fas fa-refresh mr-2"></i>
+                            Try Again
                         </a>
-                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary">
+                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary">
                             <i class="fas fa-home mr-2"></i>
-                            Go to Login
+                            Go to Home
                         </a>
                     </div>
-{{--                    <div class="flex flex-col sm:flex-row gap-3 justify-center">--}}
-{{--                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary bg-primary">--}}
-{{--                            <i class="fas fa-sign-in-alt mr-2"></i>--}}
-{{--                            Login Now--}}
-{{--                        </a>--}}
-{{--                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary text-black">--}}
-{{--                            <i class="fas fa-home mr-2"></i>--}}
-{{--                            Go to Home--}}
-{{--                        </a>--}}
-{{--                    </div>--}}
 
                     <!-- Additional Help -->
                     <div class="mt-8 pt-6 border-t border-base-300 text-center">
                         <p class="text-sm text-base-content/60">
-                            Need help? Contact your system administrator or
+                            If you continue experiencing this issue,
                             <a href="mailto:support@example.com" class="text-primary hover:underline font-medium">
-                                support team
+                                contact support
                             </a>
                         </p>
                     </div>
@@ -104,8 +101,8 @@
             <!-- Security Notice -->
             <div class="mt-6 text-center">
                 <div class="inline-flex items-center gap-2 text-sm text-base-content/50">
-                    <i class="fas fa-lock"></i>
-                    <span>This access attempt has been logged for security purposes</span>
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Rate limiting helps protect our system and ensure availability for everyone</span>
                 </div>
             </div>
         </div>
@@ -113,3 +110,4 @@
 </body>
 
 </html>
+
