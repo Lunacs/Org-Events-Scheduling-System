@@ -28,9 +28,19 @@ class Ticket extends Model
         'event_type_id',
         'title',
         'description',
-        'venue-requested',
+        'venue_requested',
         'date-requested',
         'status',
+        'plv_participants',
+        'external_participants',
+        'total_participants',
+        'sponsoring_body',
+        'alternate_venue',
+        'special_requirements',
+        'date-from',
+        'date-to',
+        'time-from',
+        'time-to',
     ];
 
     /**
