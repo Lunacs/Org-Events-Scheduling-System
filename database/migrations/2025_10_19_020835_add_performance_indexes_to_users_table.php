@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Add indexes for commonly queried columns
-            $table->index('role', 'idx_users_role');
+            $table->index('role_id', 'idx_users_role');
             $table->index('email_verified_at', 'idx_users_email_verified_at');
-            $table->index(['role', 'email_verified_at'], 'idx_users_role_verified');
-            
+            $table->index(['role_id', 'email_verified_at'], 'idx_users_role_verified');
+
             // Add indexes for foreign keys if not already indexed
             if (!Schema::hasColumn('users', 'org_id')) {
                 return;

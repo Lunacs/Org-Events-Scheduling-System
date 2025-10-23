@@ -23,6 +23,9 @@ class MyTicket extends Component
     }
     public function render()
     {
-        return view('livewire.student-org.my-ticket');
+        $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc');
+        return view('livewire.student-org.my-ticket', [
+            'tickets' => $tickets->get(),
+        ]);
     }
 }

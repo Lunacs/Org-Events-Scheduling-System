@@ -15,10 +15,10 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     // User roles constants
-    const ROLE_SUPERADMIN = 'superadmin';
-    const ROLE_OSA = 'osa';
-    const ROLE_GSO = 'gso';
-    const ROLE_STUDENT_ORG = 'student_org';
+    const ROLE_SUPERADMIN = 1;
+    const ROLE_OSA = 2;
+    const ROLE_GSO = 3;
+    const ROLE_STUDENT_ORG = 4;
 
     /**
      * The primary key for the model.
@@ -36,7 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'role',
+        'role_id',
         'org_id',
         'office_id',
         'avatar',
@@ -72,7 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role === self::ROLE_SUPERADMIN;
+        return $this->role_id === self::ROLE_SUPERADMIN;
     }
 
     /**
@@ -82,7 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isOSA(): bool
     {
-        return $this->role === self::ROLE_OSA;
+        return $this->role_id === self::ROLE_OSA;
     }
 
     /**
@@ -92,7 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isGSO(): bool
     {
-        return $this->role === self::ROLE_GSO;
+        return $this->role_id === self::ROLE_GSO;
     }
 
     /**
@@ -102,7 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isStudentOrg(): bool
     {
-        return $this->role === self::ROLE_STUDENT_ORG;
+        return $this->role_id === self::ROLE_STUDENT_ORG;
     }
 
     /**
@@ -127,6 +127,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function studentOrganization()
     {
         return $this->belongsTo(Student_Organization::class, 'org_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Roles::class, 'role_id');
+    }
+
+    public function position()
+    {
+        return $this->belongsTo(Positions::class, 'position_id');
     }
 
     /**

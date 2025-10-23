@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             CourseSeeder::class,
             StudentOrganizationSeeder::class,
             OfficeSeeder::class,
+            PositionsSeeder::class,
+            RolesSeeder::class,
             UserSeeder::class,
             EventTypeSeeder::class,
             TicketSeeder::class,

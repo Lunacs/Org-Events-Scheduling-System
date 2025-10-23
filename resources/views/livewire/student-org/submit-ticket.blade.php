@@ -34,22 +34,22 @@
                 <x-mary-card title="Organization Information" subtitle="Details about your student organization">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-input label="Organization Name" wire:model="organizationName"
-                            placeholder="Enter your organization name" required />
+                            placeholder="Enter your organization name" readonly />
 
-                        <x-mary-input label="Organization Type" wire:model="organizationType"
-                            placeholder="e.g., Academic, Cultural, Sports" required />
+                        <x-mary-input label="Organization Course" wire:model="organizationCourse"
+                            placeholder="e.g., Academic, Cultural, Sports" readonly />
 
-                        <x-mary-input label="Contact Person" wire:model="contactPerson"
-                            placeholder="Name of primary contact" required />
+                        <x-mary-input label="Name of Proponent" wire:model="proponentName"
+                            placeholder="Name of primary contact" readonly />
 
                         <x-mary-input label="Contact Email" type="email" wire:model="contactEmail"
-                            placeholder="contact@example.com" required />
+                            placeholder="contact@example.com" readonly />
 
-                        <x-mary-input label="Contact Phone" wire:model="contactPhone" placeholder="09XX XXX XXXX"
-                            required />
+                        <x-mary-input label="Proponent Position" wire:model="proponentPosition" placeholder="Position" readonly
+                             />
 
                         <x-mary-input label="Organization Adviser" wire:model="adviser"
-                            placeholder="Name of faculty adviser" required />
+                            placeholder="Name of faculty adviser" readonly />
                     </div>
                 </x-mary-card>
 
@@ -63,7 +63,7 @@
                             placeholder="Provide a detailed description of your event, including objectives and activities"
                             rows="4" required />
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-select label="Event Type" wire:model="eventType" :options="[
                                 ['id' => 'academic', 'name' => 'Academic'],
                                 ['id' => 'cultural', 'name' => 'Cultural'],
@@ -76,9 +76,6 @@
                             ]"
                                 placeholder="Select event type" required />
 
-                            <x-mary-input label="Expected Participants" type="number" wire:model="expectedParticipants"
-                                placeholder="Number of attendees" required />
-
                             <x-mary-select label="Target Audience" wire:model="targetAudience" :options="[
                                 ['id' => 'students', 'name' => 'Students Only'],
                                 ['id' => 'faculty', 'name' => 'Faculty Only'],
@@ -87,6 +84,17 @@
                                 ['id' => 'members', 'name' => 'Organization Members'],
                             ]"
                                 placeholder="Select target audience" required />
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                            <x-mary-input label="Number of PLV Participants" type="number" wire:model.live="expectedPLVParticipants"
+                                          placeholder="Number of attendees" required />
+
+                            <x-mary-input label="Number of non PLV Participants" type="number" wire:model.live="expectedNonPLVParticipants"
+                                          placeholder="Number of attendees" required />
+
+                            <x-mary-input label="Expected Participants" type="number" value="{{ $this->expectedParticipants }}"
+                                          placeholder="Number of attendees" readonly />
                         </div>
                     </div>
                 </x-mary-card>
