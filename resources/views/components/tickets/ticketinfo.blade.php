@@ -14,7 +14,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="flex items-center space-x-2">
                     <x-mary-icon name="s-calendar" class="w-4 h-4 text-gray-400" />
-                    <span class="text-sm">Oct 15, 2025 • 2:00 PM</span>
+                    <span class="text-sm">{{ \Carbon\Carbon::parse($tickets->date_from)->format('M j, Y') }} • {{ \Carbon\Carbon::parse($tickets->time_from)->format('h:i A') }}</span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <x-mary-icon name="s-map-pin" class="w-4 h-4 text-gray-400" />
@@ -89,6 +89,6 @@
     </div>
 
     <div class="mt-3 text-sm text-gray-500">
-        Submitted on September 28, 2025 • Last updated October 1, 2025
+        Submitted on {{ \Carbon\Carbon::parse($tickets->created_at)->format('F j, Y') }} • Last updated {{ \Carbon\Carbon::parse($tickets->updated_at)->format('F j, Y') }}
     </div>
 </div>

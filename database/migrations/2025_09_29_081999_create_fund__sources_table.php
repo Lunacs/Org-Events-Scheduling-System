@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attachments', function (Blueprint $table) {
-            $table->id('attachment_id');
-            $table->foreignId('ticket_id')->references('ticket_id')->on('tickets')->onDelete('cascade');
-            $table->string('file_name');
-            $table->string('file_path');
-            $table->string('file_type');
+        Schema::create('fund__sources', function (Blueprint $table) {
+            $table->id('source_id');
+            $table->string('source_name');
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attachments');
+        Schema::dropIfExists('fund__sources');
     }
 };

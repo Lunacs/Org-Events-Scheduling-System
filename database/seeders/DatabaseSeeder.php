@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             OfficeApprovalSeeder::class,
             AttachmentSeeder::class,
             TransactionLogsSeeder::class,
+            FundSourcesSeeder::class,
         ]);
     }
 }

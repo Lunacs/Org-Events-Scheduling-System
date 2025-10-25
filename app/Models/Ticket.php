@@ -37,10 +37,24 @@ class Ticket extends Model
         'sponsoring_body',
         'alternate_venue',
         'special_requirements',
-        'date-from',
-        'date-to',
-        'time-from',
-        'time-to',
+        'date_from',
+        'date_to',
+        'time_from',
+        'time_to',
+        'estimated_budget',
+        'budget_breakdown',
+        'additional_notes',
+        'proponent_contact',
+        'adviser_contact',
+        'igp_requested',
+        'igp_details',
+        'oc_accommodation',
+        'oc_tsp',
+        'oc_driver_name',
+        'oc_vehicle_type',
+        'oc_vehicle_plate_number',
+        'oc_driver_contact_number',
+        'fund_source_id',
     ];
 
     /**
@@ -98,5 +112,10 @@ class Ticket extends Model
     public function attachments()
     {
         return $this->hasMany(Attachment::class, 'ticket_id');
+    }
+
+    public function fundSources()
+    {
+        return $this->hasMany(Fund_Sources::class, 'fund_source_id');
     }
 }
