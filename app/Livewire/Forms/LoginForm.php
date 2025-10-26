@@ -12,7 +12,7 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email')]
+    #[Validate('required|string|email|ends_with:@plv.edu.ph')]
     public string $email = '';
 
     #[Validate('required|string')]
@@ -31,6 +31,7 @@ class LoginForm extends Form
             'email.email' => 'Please enter a valid email address.',
             'email.ends_with' => 'Only PLV email addresses (@plv.edu.ph) are allowed for student organization accounts.',
             'password.required' => 'Please enter your password.',
+            'email.exists' => 'No account found with this email address.',
         ];
     }
 
@@ -46,20 +47,9 @@ class LoginForm extends Form
     }
 
     /**
-     * Validate email for student organization login.
-     */
-    public function validateStudentOrgEmail(): void
-    {
-        $this->validate([
-            'email' => ['required', 'string', 'email', 'ends_with:@plv.edu.ph'],
-            'password' => ['required', 'string'],
-        ]);
-    }
-
-    /**
      * Attempt to authenticate the request's credentials.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function authenticate(): void
     {
@@ -69,7 +59,7 @@ class LoginForm extends Form
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'form.email' => 'These credentials do not match our records. Please check your email and password and try again.',
+                'form.password' => 'These credentials do not match our records. Please check your email and password and try again.',
             ]);
         }
 

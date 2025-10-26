@@ -29,22 +29,10 @@
 <body class="font-sans antialiased">
     <div class="min-h-screen">
 
-        {{-- NAVBAR mobile only --}}
-        <x-mary-nav sticky class="lg:hidden">
-            <x-slot:brand>
-                <div class="ml-5 pt-5">App</div>
-            </x-slot:brand>
-            <x-slot:actions>
-                <label for="main-drawer" class="lg:hidden mr-3">
-                    <i class="fas fa-burger cursor-pointer"></i>
-                </label>
-            </x-slot:actions>
-        </x-mary-nav>
-
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100  lg:bg-inherit rounded-r-xl mx-10">
+            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl mx-10">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -66,11 +54,6 @@
                     <x-mary-menu-item title="Communication" icon="s-building-office" link="/gso/communication"
                         wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate />
-                    <x-mary-menu-sub title="Settings" icon="s-cog-6-tooth">
-                        <x-mary-menu-item title="Profile" icon="o-user-circle" link="/gso/profile" wire:navigate />
-                        <x-mary-menu-item title="Preferences" icon="o-cog-6-tooth" link="/gso/preferences"
-                            wire:navigate />
-                    </x-mary-menu-sub>
                 </x-mary-menu>
 
                 {{-- Logout Menu Item --}}
@@ -88,6 +71,10 @@
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
+                {{-- Top Navigation Bar --}}
+                <livewire:layout.navigation />
+
+                {{-- Page Content --}}
                 {{ $slot }}
             </x-slot:content>
         </x-mary-main>
@@ -96,8 +83,8 @@
         <x-mary-toast />
     </div>
 
-    <h2 class="bg-accent">niga im home</h2>
-
+    {{-- Scripts Stack --}}
+    @stack('scripts')
 </body>
 
 </html>

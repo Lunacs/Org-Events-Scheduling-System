@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Notifications\CustomVerifyEmail;
-use Illuminate\Notifications\Notifiable;
 use App\Notifications\CustomResetPassword;
+use App\Notifications\CustomVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -37,9 +37,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role_id',
+        'phone',
         'org_id',
         'office_id',
         'avatar',
+        'avatar_style',
+        'avatar_seed',
     ];
 
     /**
@@ -177,6 +180,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function transactionLogs()
     {
         return $this->hasMany(Transaction_Logs::class, 'user_id');
+    }
+
+    /**
+     * Get the user's last login from transaction logs
+     *
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getLastLoginAttribute()
+    {
+        $lastLogin = $this->transactionLogs()
+            ->where('action', 'AUTH_LOGIN')
+            ->latest('created_at')
+            ->first();
+
+        return $lastLogin?->created_at;
+    }
+
+    /**
+     * Get the user's avatar URL using DiceBear
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $style = $this->avatar_style ?? 'big-ears';
+        $seed = $this->avatar_seed ?? $this->email;
+
+        return "dicebear:{$style}:{$seed}";
     }
 
     /**

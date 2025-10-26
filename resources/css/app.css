@@ -183,3 +183,173 @@ textarea:focus-visible {
 [class*="btn-accent"] {
     color: white !important;
 }
+
+/* Make toast text white */
+.alert,
+[class*="alert-"],
+.alert-info,
+.alert-success,
+.alert-warning,
+.alert-error {
+    color: white !important;
+}
+
+.alert *,
+[class*="alert-"] *,
+.alert-info *,
+.alert-success *,
+.alert-warning *,
+.alert-error * {
+    color: white !important;
+}
+
+/* FullCalendar Custom Styles */
+.fc {
+    --fc-border-color: oklch(86% 0 0);
+    --fc-button-bg-color: oklch(76.662% 0.135 153.45);
+    --fc-button-border-color: oklch(76.662% 0.135 153.45);
+    --fc-button-hover-bg-color: oklch(70% 0.135 153.45);
+    --fc-button-hover-border-color: oklch(70% 0.135 153.45);
+    --fc-button-active-bg-color: oklch(65% 0.135 153.45);
+    --fc-button-active-border-color: oklch(65% 0.135 153.45);
+    --fc-today-bg-color: oklch(76.662% 0.135 153.45 / 0.1);
+    --fc-highlight-color: oklch(76.662% 0.135 153.45 / 0.1);
+    --fc-event-bg-color: oklch(76.662% 0.135 153.45);
+    --fc-event-border-color: oklch(76.662% 0.135 153.45);
+    --fc-event-text-color: #ffffff;
+    --fc-non-business-color: oklch(93% 0 0);
+    --fc-bg-event-color: oklch(76.662% 0.135 153.45 / 0.3);
+    --fc-neutral-bg-color: oklch(100% 0 0);
+    --fc-list-event-hover-bg-color: oklch(93% 0 0);
+}
+
+/* Dark mode FullCalendar styles */
+.dark .fc {
+    --fc-border-color: oklch(18% 0.015 262.988);
+    --fc-button-bg-color: oklch(76.662% 0.135 153.45);
+    --fc-button-border-color: oklch(76.662% 0.135 153.45);
+    --fc-button-hover-bg-color: oklch(80% 0.135 153.45);
+    --fc-button-hover-border-color: oklch(80% 0.135 153.45);
+    --fc-button-active-bg-color: oklch(85% 0.135 153.45);
+    --fc-button-active-border-color: oklch(85% 0.135 153.45);
+    --fc-today-bg-color: oklch(76.662% 0.135 153.45 / 0.2);
+    --fc-highlight-color: oklch(76.662% 0.135 153.45 / 0.2);
+    --fc-event-bg-color: oklch(76.662% 0.135 153.45);
+    --fc-event-border-color: oklch(76.662% 0.135 153.45);
+    --fc-event-text-color: oklch(15% 0.02 153.45);
+    --fc-non-business-color: oklch(18% 0.015 262.988);
+    --fc-bg-event-color: oklch(76.662% 0.135 153.45 / 0.4);
+    --fc-neutral-bg-color: oklch(22% 0.015 262.988);
+    --fc-list-event-hover-bg-color: oklch(18% 0.015 262.988);
+}
+
+/* Custom FullCalendar styling */
+.fc-theme-standard .fc-scrollgrid {
+    border: 1px solid var(--fc-border-color);
+    border-radius: 0.5rem;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: var(--fc-border-color);
+}
+
+.fc-daygrid-day-number {
+    color: oklch(35.519% 0.032 262.988);
+    font-weight: 500;
+}
+
+.dark .fc-daygrid-day-number {
+    color: oklch(90% 0.01 262.988);
+}
+
+.fc-day-today {
+    background-color: var(--fc-today-bg-color) !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+    color: oklch(76.662% 0.135 153.45);
+    font-weight: 700;
+}
+
+.fc-event {
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+    font-weight: 500;
+}
+
+.fc-event:hover {
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.fc-timegrid-slot {
+    height: 2.5rem;
+}
+
+.fc-timegrid-slot-label {
+    font-size: 0.75rem;
+    color: oklch(35.519% 0.032 262.988);
+}
+
+.dark .fc-timegrid-slot-label {
+    color: oklch(90% 0.01 262.988);
+}
+
+.fc-col-header-cell {
+    background-color: oklch(93% 0 0);
+    color: oklch(35.519% 0.032 262.988);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.75rem 0.5rem;
+}
+
+.dark .fc-col-header-cell {
+    background-color: oklch(18% 0.015 262.988);
+    color: oklch(90% 0.01 262.988);
+}
+
+.fc-list-event:hover td {
+    background-color: var(--fc-list-event-hover-bg-color) !important;
+}
+
+.fc-list-event-time {
+    color: oklch(35.519% 0.032 262.988);
+    font-weight: 500;
+}
+
+.dark .fc-list-event-time {
+    color: oklch(90% 0.01 262.988);
+}
+
+.fc-list-event-title {
+    color: oklch(35.519% 0.032 262.988);
+    font-weight: 500;
+}
+
+.dark .fc-list-event-title {
+    color: oklch(90% 0.01 262.988);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fc-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+    }
+
+    .fc-daygrid-day-number {
+        font-size: 0.75rem;
+    }
+
+    .fc-event {
+        font-size: 10px !important;
+        padding: 1px 2px !important;
+    }
+}

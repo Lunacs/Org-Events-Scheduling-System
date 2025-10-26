@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\StudentOrganizationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Student_Organization extends Model
 {
-    /** @use HasFactory<\Database\Factories\StudentOrganizationFactory> */
+    /** @use HasFactory<StudentOrganizationFactory> */
     use HasFactory;
 
     /**
@@ -35,12 +39,13 @@ class Student_Organization extends Model
         'course_id',
         'adviser_name',
         'user_id',
+        'status',
     ];
 
     /**
      * Course that this organization belongs to
      */
-    public function course()
+    public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
@@ -48,7 +53,7 @@ class Student_Organization extends Model
     /**
      * User assigned to this organization
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -56,8 +61,16 @@ class Student_Organization extends Model
     /**
      * Users who belong to this organization
      */
-    public function users()
+    public function users() : HasMany
     {
         return $this->hasMany(User::class, 'org_id');
+    }
+
+    /**
+     * Tickets created by users in this organization
+     */
+    public function tickets() : HasManyThrough
+    {
+        return $this->hasManyThrough(Ticket::class, User::class, 'org_id', 'user_id', 'org_id', 'user_id');
     }
 }

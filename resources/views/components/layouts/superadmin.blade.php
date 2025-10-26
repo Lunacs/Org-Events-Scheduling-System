@@ -27,18 +27,6 @@
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
 
-        {{-- NAVBAR mobile only --}}
-        <x-mary-nav sticky class="lg:hidden">
-            <x-slot:brand>
-                <div class="ml-5 pt-5">SuperAdmin</div>
-            </x-slot:brand>
-            <x-slot:actions>
-                <label for="superadmin-drawer" class="lg:hidden mr-3">
-                    <i class="fas fa-burger cursor-pointer"></i>
-                </label>
-            </x-slot:actions>
-        </x-mary-nav>
-
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
@@ -94,12 +82,19 @@
 
             {{-- Content --}}
             <x-slot:content>
+                {{-- Top Navigation Bar --}}
+                <livewire:layout.navigation />
+
+                {{-- Page Content --}}
                 {{ $slot }}
             </x-slot:content>
         </x-mary-main>
 
         <x-mary-toast />
     </div>
+
+    {{-- Scripts Stack --}}
+    @stack('scripts')
 </body>
 
 </html>

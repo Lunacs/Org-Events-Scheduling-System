@@ -19,9 +19,6 @@ new #[Layout('components.layouts.guest')] class extends Component {
     {
         $this->validate();
 
-        //verify student org email
-        $this->form->validateStudentOrgEmail();
-
         // Attempt authentication
         try {
             $this->form->authenticate();
