@@ -46,10 +46,10 @@ class EventSchedulesSeeder extends Seeder
         foreach ($events as $event) {
             // Get the ticket's requested date and venue
             $ticket = $event->ticket;
-            $scheduleDate = $ticket && $ticket->date_from 
-                ? $ticket->date_from 
+            $scheduleDate = $ticket && $ticket->date_from
+                ? $ticket->date_from
                 : now()->addDays(rand(7, 60))->format('Y-m-d');
-            
+
             $scheduleVenue = $ticket && $ticket->venue_requested
                 ? $ticket->venue_requested
                 : fake()->randomElement($venues);

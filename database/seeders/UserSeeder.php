@@ -174,6 +174,16 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
+            'name' => 'Johnrel Parente',
+            'email' => 'johnrelparente@plv.edu.ph',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'role_id' => User::ROLE_STUDENT_ORG,
+            'org_id' => $studentOrgs->first()?->org_id,
+            'office_id' => null,
+        ]);
+
+        User::create([
             'name' => 'Lanoira Cutie',
             'email' => 'lexerichsontalavera@plv.edu.ph',
             'email_verified_at' => null,

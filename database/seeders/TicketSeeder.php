@@ -92,7 +92,7 @@ class TicketSeeder extends Seeder
             $fundSource = $fundSources->random();
             $plvParticipants = rand(50, 300);
             $externalParticipants = rand(0, 100);
-            
+
             \App\Models\Ticket::create([
                 'ticket_number' => 'TKT-' . date('Y') . '-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
                 'user_id' => $user->user_id,

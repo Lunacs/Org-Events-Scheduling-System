@@ -1,5 +1,6 @@
 <?php
 
+<<<<<<< HEAD
 use App\Livewire\Osa\Approvals;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
@@ -8,6 +9,14 @@ use App\Livewire\Osa\Reports;
 use App\Livewire\Osa\TicketManagement;
 use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
 use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
+=======
+use App\Livewire\Gso\Approvals as GsoApprovals;
+use App\Livewire\Gso\Calendar as GsoCalendar;
+use App\Livewire\Gso\Dashboard as GsoDashboard;
+use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\Reports as GsoReports;
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
+>>>>>>> origin/gso-dashboard_functionalities
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 use App\Livewire\StudentOrg\History;
@@ -66,7 +75,6 @@ Route::prefix('admin')
 
 // SuperAdmin routes
 Route::prefix('superadmin')
-    ->middleware(['auth', 'verified', 'role:superadmin'])
     ->group(function () {
         Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
         Route::get('/users', UsersIndex::class)->name('superadmin.users');
@@ -78,20 +86,24 @@ Route::prefix('superadmin')
 
 // GSO/Offices routes
 Route::prefix('gso')
-    ->middleware(['auth', 'verified', 'role:gso'])
     ->group(function () {
-        Route::view('/dashboard', 'gso.dashboard')->name('gso.dashboard');
-        Route::view('/ticket-review', 'gso.ticket-review')->name('gso.ticket-review');
-        Route::view('/approvals', 'gso.approvals')->name('gso.approvals');
-        Route::view('/calendar', 'gso.calendar')->name('gso.calendar');
+        Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard');
+        Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
+        Route::get('/tickets/{ticket}', GsoDetails::class)->name('gso.ticket-details');
+        Route::get('/approvals', GsoApprovals::class)->name('gso.approvals');
+        Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');
+<<<<<<< HEAD
         Route::view('/reports', 'gso.reports')->name('gso.reports');
         Route::get('/profile', \App\Livewire\Gso\Profile::class)->name('gso.profile');
+=======
+    Route::get('/reports', GsoReports::class)->name('gso.reports');
+        Route::view('/profile', 'gso.profile')->name('gso.profile');
+>>>>>>> origin/gso-dashboard_functionalities
     });
 
 // Student Organization routes
 Route::prefix('student-org')
-    ->middleware(['auth', 'verified', 'role:student_org'])
     ->group(function () {
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');

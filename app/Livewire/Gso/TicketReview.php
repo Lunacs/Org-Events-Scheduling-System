@@ -1,0 +1,223 @@
+<?php
+
+namespace App\Livewire\Gso;
+
+use App\Models\Office_Approval;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+class TicketReview extends Component
+{
+    #[Title('Ticket Review - GSO')]
+    #[Layout('components.layouts.gso-layout')]
+    public string $filterType = '';
+
+    public string $filterPriority = '';
+
+    public string $filterStatus = '';
+
+    public string $search = '';
+
+    public function render()
+    {
+        $user = Auth::user();
+        $officeId = $user?->office_id;
+
+        $baseQuery = $this->baseQuery($officeId);
+
+        $stats = [
+            'pending' => (clone $baseQuery)->where('decision', 'pending')->count(),
+            'approvedToday' => (clone $baseQuery)
+                ->where('decision', 'approved')
+                ->whereDate('updated_at', Carbon::today())
+                ->count(),
+            'urgent' => (clone $baseQuery)
+                ->where('decision', 'pending')
+                ->whereHas('ticket', fn(Builder $query) => $query->where('total_participants', '>=', 200))
+                ->count(),
+        ];
+
+        $totalTickets = (clone $baseQuery)->count();
+
+        $tickets = $this->filteredQuery($officeId)
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(fn(Office_Approval $approval) => $this->formatTicket($approval));
+
+        return view('livewire.gso.ticket-review', [
+            'tickets' => $tickets,
+            'stats' => $stats,
+            'totalTickets' => $totalTickets,
+            'statusDefinitions' => $this->statusDefinitions(),
+        ]);
+    }
+
+    protected function baseQuery(?int $officeId): Builder
+    {
+        return Office_Approval::query()
+            ->with([
+                'ticket.eventType',
+                'ticket.user.studentOrganization',
+            ])
+            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+    }
+
+    protected function filteredQuery(?int $officeId): Builder
+    {
+        return $this->baseQuery($officeId)
+            ->when($this->filterStatus !== '', fn(Builder $query) => $this->applyStatusFilter($query, $this->filterStatus))
+            ->when($this->filterType !== '', function (Builder $query) {
+                $type = $this->mapTypeFilter($this->filterType);
+
+                if ($type) {
+                    $query->whereHas('ticket.eventType', fn(Builder $typeQuery) => $typeQuery->whereRaw('LOWER(type_name) = ?', [Str::lower($type)]));
+                }
+            })
+            ->when($this->filterPriority !== '', function (Builder $query) {
+                $priority = $this->filterPriority;
+
+                $query->whereHas('ticket', function (Builder $ticketQuery) use ($priority) {
+                    if ($priority === 'high') {
+                        $ticketQuery->where('total_participants', '>=', 200);
+                    } elseif ($priority === 'medium') {
+                        $ticketQuery->whereBetween('total_participants', [100, 199]);
+                    } elseif ($priority === 'low') {
+                        $ticketQuery->where('total_participants', '<', 100);
+                    }
+                });
+            })
+            ->when($this->search !== '', function (Builder $query) {
+                $term = '%' . Str::of($this->search)->trim() . '%';
+
+                $query->whereHas('ticket', function (Builder $ticketQuery) use ($term) {
+                    $ticketQuery
+                        ->where('title', 'like', $term)
+                        ->orWhere('ticket_number', 'like', $term)
+                        ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
+                });
+            });
+    }
+
+    protected function formatTicket(Office_Approval $approval): array
+    {
+        $ticket = $approval->ticket;
+
+        $eventDate = $this->parseDate($ticket?->getAttribute('date-from'));
+        $dueDate = $this->parseDate($ticket?->getAttribute('date-to'));
+
+        $requirements = collect(preg_split('/[,\n]+/', (string) ($ticket?->special_requirements ?? '')))
+            ->map(fn(string $item) => trim($item))
+            ->filter()
+            ->values()
+            ->all();
+
+        $priority = $this->resolvePriority($ticket?->total_participants);
+        [$statusKey, $statusLabel] = $this->resolveStatusAttributes($approval);
+
+        return [
+            'approval_id' => $approval->id,
+            'ticket_id' => $ticket?->ticket_id,
+            'ticket_number' => $ticket?->ticket_number ?? 'N/A',
+            'event_name' => $ticket?->title ?? 'N/A',
+            'organization' => $ticket?->user?->studentOrganization?->org_name
+                ?? $ticket?->user?->name
+                ?? 'N/A',
+            'request_type' => $ticket?->eventType?->type_name ?? 'N/A',
+            'event_date' => $eventDate?->format('M d, Y') ?? 'N/A',
+            'venue' => $ticket?->venue_requested ?? 'TBD',
+            'priority' => strtolower($priority),
+            'priority_label' => $priority,
+            'status' => $statusKey,
+            'status_label' => $statusLabel,
+            'attendees' => $ticket?->total_participants,
+            'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',
+            'due_date' => $dueDate?->format('M d, Y') ?? '—',
+            'description' => $ticket?->description ?? 'No description provided.',
+            'requirements' => $requirements,
+        ];
+    }
+
+    protected function resolvePriority(?int $totalParticipants): string
+    {
+        if ($totalParticipants === null) {
+            return 'Low';
+        }
+
+        return match (true) {
+            $totalParticipants >= 200 => 'High',
+            $totalParticipants >= 100 => 'Medium',
+            default => 'Low',
+        };
+    }
+
+    protected function parseDate(?string $value): ?Carbon
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function mapTypeFilter(string $value): ?string
+    {
+        return match ($value) {
+            'venue' => 'Venue Booking',
+            'equipment' => 'Equipment',
+            'logistics' => 'Logistics',
+            'catering' => 'Catering',
+            default => null,
+        };
+    }
+
+    protected function normalizeStatus(string $value): string
+    {
+        $value = Str::of($value)->snake()->toString();
+
+        return array_key_exists($value, $this->statusDefinitions()) ? $value : 'pending';
+    }
+
+    protected function applyStatusFilter(Builder $query, string $status): Builder
+    {
+        $normalized = $this->normalizeStatus($status);
+
+        return $query->where('decision', $normalized);
+    }
+
+    protected function resolveStatusAttributes(Office_Approval $approval): array
+    {
+        $decision = $approval->decision;
+
+        if ($decision === 'approved') {
+            return ['approved', 'Approved'];
+        }
+
+        if ($decision === 'rejected') {
+            return ['rejected', 'Rejected'];
+        }
+
+        $definitions = $this->statusDefinitions();
+        $key = $definitions[$decision]['key'] ?? 'pending';
+        $label = $definitions[$decision]['label'] ?? ucfirst($key);
+
+        return [$key, $label];
+    }
+
+    protected function statusDefinitions(): array
+    {
+        return [
+            'pending' => ['key' => 'pending', 'label' => 'Pending'],
+            'approved' => ['key' => 'approved', 'label' => 'Approved'],
+            'rejected' => ['key' => 'rejected', 'label' => 'Rejected'],
+        ];
+    }
+}

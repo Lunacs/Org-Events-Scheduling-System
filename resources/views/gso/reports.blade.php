@@ -12,16 +12,6 @@
                 <div class="p-6">
                     <div class="flex flex-wrap justify-between items-end gap-4">
                         <div class="flex items-end space-x-4">
-                            <div>
-                                <x-mary-select label="Report Type" :options="[
-                                    ['id' => 'approvals', 'name' => 'Approval History'],
-                                    ['id' => 'performance', 'name' => 'Performance Metrics'],
-                                    ['id' => 'workload', 'name' => 'Workload Analysis'],
-                                    ['id' => 'trends', 'name' => 'Trend Analysis'],
-                                ]" option-value="id"
-                                    option-label="name" x-model="selectedReport" @change="generateReport()"
-                                    class="select-emerald" />
-                            </div>
 
                             <div>
                                 <x-mary-select label="Time Period" :options="[
@@ -96,20 +86,6 @@
                         <div class="stat-title text-red-700 dark:text-red-300">Total Rejected</div>
                         <div class="stat-value text-red-600" x-text="stats.totalRejected"></div>
                         <div class="stat-desc text-red-600" x-text="timePeriodLabel"></div>
-                    </div>
-                </div>
-
-                <div class="stats shadow bg-blue-50 dark:bg-blue-900/20">
-                    <div class="stat">
-                        <div class="stat-figure text-blue-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="stat-title text-blue-700 dark:text-blue-300">Avg Response Time</div>
-                        <div class="stat-value text-blue-600" x-text="stats.avgResponseTime"></div>
-                        <div class="stat-desc text-blue-600">Hours</div>
                     </div>
                 </div>
 
