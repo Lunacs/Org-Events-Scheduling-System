@@ -1,19 +1,23 @@
 <?php
 
-use App\Livewire\StudentOrg\History;
-use App\Livewire\Superadmin\Logs;
-use Illuminate\Support\Facades\Auth;
+use App\Livewire\Gso\Approvals as GsoApprovals;
+use App\Livewire\Gso\Dashboard as GsoDashboard;
+use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\StudentOrg\Calendar;
+use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\StudentOrg\History;
 use App\Livewire\StudentOrg\MyTicket;
-use Illuminate\Support\Facades\Route;
-use App\Livewire\Superadmin\Dashboard;
+use App\Livewire\StudentOrg\Notifications;
 use App\Livewire\StudentOrg\Reschedule;
 use App\Livewire\StudentOrg\SubmitTicket;
-use App\Livewire\StudentOrg\Notifications;
-use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use App\Livewire\Superadmin\Dashboard;
+use App\Livewire\Superadmin\Logs;
 use App\Livewire\Superadmin\Roles\Index as RolesIndex;
 use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
-use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'osa.welcome');
 
@@ -57,9 +61,10 @@ Route::prefix('superadmin')
 Route::prefix('gso')
     ->middleware(['auth', 'verified', 'role:gso'])
     ->group(function () {
-        Route::view('/dashboard', 'gso.dashboard')->name('gso.dashboard');
-        Route::view('/ticket-review', 'gso.ticket-review')->name('gso.ticket-review');
-        Route::view('/approvals', 'gso.approvals')->name('gso.approvals');
+        Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard');
+        Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
+        Route::get('/tickets/{ticket}', GsoDetails::class)->name('gso.ticket-details');
+        Route::get('/approvals', GsoApprovals::class)->name('gso.approvals');
         Route::view('/calendar', 'gso.calendar')->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');
         Route::view('/reports', 'gso.reports')->name('gso.reports');
@@ -68,7 +73,7 @@ Route::prefix('gso')
 
 // Student Organization routes
 Route::prefix('student-org')
-    ->middleware(['auth', 'verified', 'role:student_org'])
+    ->middleware(['auth', 'verified', 'role:student-org'])
     ->group(function () {
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');

@@ -23,28 +23,6 @@ class TicketReview extends Component
 
     public string $search = '';
 
-    public bool $showDetailsModal = false;
-
-    public ?array $modalTicket = null;
-
-    public function showDetails(int $approvalId): void
-    {
-        $ticket = $this->formattedTicket($approvalId);
-
-        if (! $ticket) {
-            return;
-        }
-
-        $this->modalTicket = $ticket;
-        $this->showDetailsModal = true;
-    }
-
-    public function closeDetailsModal(): void
-    {
-        $this->showDetailsModal = false;
-        $this->modalTicket = null;
-    }
-
     public function render()
     {
         $user = Auth::user();
@@ -232,28 +210,6 @@ class TicketReview extends Component
         $label = $definitions[$decision]['label'] ?? ucfirst($key);
 
         return [$key, $label];
-    }
-
-    protected function formattedTicket(int $approvalId): ?array
-    {
-        $approval = $this->approvalForUser($approvalId);
-
-        if (! $approval) {
-            return null;
-        }
-
-        $approval->loadMissing(['ticket.eventType', 'ticket.user.studentOrganization']);
-
-        return $this->formatTicket($approval);
-    }
-
-    protected function approvalForUser(int $approvalId): ?Office_Approval
-    {
-        $officeId = Auth::user()?->office_id;
-
-        return Office_Approval::query()
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId))
-            ->find($approvalId);
     }
 
     protected function statusDefinitions(): array

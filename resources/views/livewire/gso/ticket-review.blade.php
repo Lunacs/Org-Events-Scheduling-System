@@ -152,8 +152,8 @@
                                         </div>
                                     </td>
                                     <td class="align-top pt-4">
-                                        <button class="btn btn-sm btn-outline btn-emerald"
-                                            wire:click="showDetails({{ $ticket['approval_id'] }})">
+                                        <a href="{{ route('gso.ticket-details', ['ticket' => $ticket['ticket_id']]) }}"
+                                            class="btn btn-sm btn-outline btn-emerald" wire:navigate>
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -162,7 +162,7 @@
                                                 </path>
                                             </svg>
                                             View
-                                        </button>
+                                        </a>
                                     </td>
                                 </tr>
                             @empty
@@ -187,81 +187,4 @@
             </div>
         </div>
     </div>
-
-    @if ($showDetailsModal && $modalTicket)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeDetailsModal">
-                </div>
-
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <div
-                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                Ticket Details - {{ $modalTicket['ticket_number'] }}
-                            </h3>
-                            <button class="text-gray-400 hover:text-gray-600" wire:click="closeDetailsModal">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="font-semibold text-emerald-700 dark:text-emerald-300 mb-3">Event Information</h4>
-                                <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                                    <div><strong>Event Name:</strong> {{ $modalTicket['event_name'] }}</div>
-                                    <div><strong>Organization:</strong> {{ $modalTicket['organization'] }}</div>
-                                    <div><strong>Event Date:</strong> {{ $modalTicket['event_date'] }}</div>
-                                    <div><strong>Venue:</strong> {{ $modalTicket['venue'] }}</div>
-                                    <div><strong>Total Participants:</strong>
-                                        {{ number_format($modalTicket['attendees'] ?? 0) }}</div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 class="font-semibold text-emerald-700 dark:text-emerald-300 mb-3">Request Details</h4>
-                                <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                                    <div><strong>Request Type:</strong> {{ $modalTicket['request_type'] }}</div>
-                                    <div><strong>Status:</strong>
-                                        {{ $modalTicket['status_label'] ?? str_replace('_', ' ', $modalTicket['status']) }}
-                                    </div>
-                                    <div><strong>Submitted:</strong> {{ $modalTicket['submitted_date'] }}</div>
-                                    <div><strong>Due Date:</strong> {{ $modalTicket['due_date'] }}</div>
-                                    <div><strong>Remarks:</strong> {{ $modalTicket['remarks'] ?: '—' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <h4 class="font-semibold text-emerald-700 dark:text-emerald-300 mb-3">Description</h4>
-                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $modalTicket['description'] }}</p>
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <h4 class="font-semibold text-emerald-700 dark:text-emerald-300 mb-3">Requirements</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    @forelse ($modalTicket['requirements'] as $requirement)
-                                        <span class="badge badge-outline badge-sm">{{ $requirement }}</span>
-                                    @empty
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">No special requirements
-                                            provided.</span>
-                                    @endforelse
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" class="btn btn-emerald w-full sm:w-auto" wire:click="closeDetailsModal">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>
