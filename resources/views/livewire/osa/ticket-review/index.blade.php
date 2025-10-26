@@ -75,18 +75,18 @@
                         <div class="space-y-2 mb-4">
                             <div class="flex items-center gap-2 text-sm">
                                 <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
-                                <span>{{ $ticket->events->first()->eventSchedules->first()->schedule_date?->format('M d, Y') ?? 'TBD' }}</span>
+                                <span>{{ $ticket->events->first()->eventSchedules->first()->start_date?->format('M d, Y') ?? 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
                                 <x-mary-icon name="o-map-pin" class="w-4 h-4 text-primary" />
-                                <span>{{ $ticket->events->first()->eventSchedules->first()->schedule_venue ?? 'TBD' }}</span>
+                                <span>{{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</span>
                             </div>
                         </div>
                     @elseif($ticket->events->isNotEmpty())
                         <div class="space-y-2 mb-4">
                             <div class="flex items-center gap-2 text-sm">
                                 <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
-                                <span>{{ $ticket->date_requested ? \Carbon\Carbon::parse($ticket->date_requested)->format('M d, Y') : 'TBD' }}</span>
+                                <span>{{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y') : 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
                                 <x-mary-icon name="o-map-pin" class="w-4 h-4 text-primary" />

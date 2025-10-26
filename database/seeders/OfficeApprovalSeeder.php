@@ -15,7 +15,7 @@ class OfficeApprovalSeeder extends Seeder
         // Get approved tickets and offices
         $approvedTickets = \App\Models\Ticket::where('status', 'approved')->get();
         $offices = \App\Models\Office::all();
-        $gsoUsers = \App\Models\User::where('role', 'gso')->get();
+        $gsoUsers = \App\Models\User::where('role_id', \App\Models\User::ROLE_GSO)->get();
 
         if ($approvedTickets->isEmpty() || $offices->isEmpty()) {
             $this->command->warn('No approved tickets or offices found. Skipping office approval seeder.');

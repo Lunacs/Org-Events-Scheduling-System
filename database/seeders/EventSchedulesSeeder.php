@@ -46,18 +46,25 @@ class EventSchedulesSeeder extends Seeder
         foreach ($events as $event) {
             // Get the ticket's requested date and venue
             $ticket = $event->ticket;
-            $scheduleDate = $ticket && $ticket->getAttribute('date-requested') 
-                ? $ticket->getAttribute('date-requested') 
-                : now()->addDays(rand(7, 60));
+            $scheduleDate = $ticket && $ticket->date_from 
+                ? $ticket->date_from 
+                : now()->addDays(rand(7, 60))->format('Y-m-d');
             
-            $scheduleVenue = $ticket && $ticket->getAttribute('venue-requested')
-                ? $ticket->getAttribute('venue-requested')
+            $scheduleVenue = $ticket && $ticket->venue_requested
+                ? $ticket->venue_requested
                 : fake()->randomElement($venues);
+
+            // Generate realistic event times
+            $startTime = fake()->randomElement(['08:00', '09:00', '10:00', '13:00', '14:00']);
+            $endTime = fake()->randomElement(['12:00', '15:00', '16:00', '17:00', '18:00']);
 
             \App\Models\Event_Schedule::create([
                 'event_id' => $event->event_id,
-                'schedule_date' => $scheduleDate,
-                'schedule_venue' => $scheduleVenue,
+                'start_date' => $scheduleDate,
+                'end_date' => $ticket && $ticket->date_to ? $ticket->date_to : $scheduleDate,
+                'start_time' => $ticket && $ticket->time_from ? $ticket->time_from : $startTime,
+                'end_time' => $ticket && $ticket->time_to ? $ticket->time_to : $endTime,
+                'venue' => $scheduleVenue,
                 'status' => fake()->randomElement($statuses),
                 'remarks' => fake()->optional(0.6)->randomElement($remarks),
             ]);

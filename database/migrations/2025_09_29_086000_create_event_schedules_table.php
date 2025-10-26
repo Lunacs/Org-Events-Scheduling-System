@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('event_schedules', function (Blueprint $table) {
             $table->id('schedule_id');
             $table->foreignId('event_id')->references('event_id')->on('events')->onDelete('cascade');
-            $table->dateTime('schedule_date');
-            $table->string('schedule_venue');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->string('venue');
             $table->enum('status', ['pending', 'approved', 'rejected']);
             $table->string('remarks', 255)->nullable();
             $table->timestamps();

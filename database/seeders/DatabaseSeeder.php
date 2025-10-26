@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             UserSeeder::class,
             EventTypeSeeder::class,
+            FundSourcesSeeder::class, // Must run before TicketSeeder
             TicketSeeder::class,
             EventSeeder::class,
             EventSchedulesSeeder::class,
@@ -36,7 +37,6 @@ class DatabaseSeeder extends Seeder
             OfficeApprovalSeeder::class,
             AttachmentSeeder::class,
             TransactionLogsSeeder::class,
-            FundSourcesSeeder::class,
         ]);
     }
 }

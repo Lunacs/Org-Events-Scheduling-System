@@ -4,8 +4,7 @@ use App\Livewire\Actions\Logout;
 use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $user;
 
     public function mount()
@@ -119,7 +118,7 @@ new class extends Component
                                         @if ($user->role)
                                             <div class="mt-1">
                                                 <span
-                                                    class="badge badge-primary badge-xs">{{ ucfirst(str_replace('_', ' ', $user->role)) }}</span>
+                                                    class="badge badge-primary badge-xs">{{ $user->role_display }}</span>
                                             </div>
                                         @endif
                                     </div>

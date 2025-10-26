@@ -52,13 +52,21 @@ class EventSchedulesFactory extends Factory
             'Requires additional setup time.',
         ];
 
-        // Generate a datetime between 1 week and 3 months from now
-        $scheduleDate = fake()->dateTimeBetween('+1 week', '+3 months');
+        // Generate a date between 1 week and 3 months from now
+        $startDate = fake()->dateTimeBetween('+1 week', '+3 months');
+        $endDate = (clone $startDate)->modify('+'.rand(0, 3).' days');
+
+        // Generate realistic event times
+        $startTime = fake()->randomElement(['08:00', '09:00', '10:00', '13:00', '14:00']);
+        $endTime = fake()->randomElement(['12:00', '15:00', '16:00', '17:00', '18:00']);
 
         return [
             'event_id' => \App\Models\Event::factory(),
-            'schedule_date' => $scheduleDate,
-            'schedule_venue' => fake()->randomElement($venues),
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'venue' => fake()->randomElement($venues),
             'status' => fake()->randomElement($statuses),
             'remarks' => fake()->optional(0.6)->randomElement($remarks),
         ];
@@ -69,7 +77,7 @@ class EventSchedulesFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'pending',
         ]);
     }
@@ -79,7 +87,7 @@ class EventSchedulesFactory extends Factory
      */
     public function approved(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'approved',
         ]);
     }
@@ -89,7 +97,7 @@ class EventSchedulesFactory extends Factory
      */
     public function rejected(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'rejected',
         ]);
     }

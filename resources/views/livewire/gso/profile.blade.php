@@ -11,7 +11,7 @@
                     <p class="text-primary-content/80 mt-1">{{ $user->email }}</p>
                     <div class="flex gap-2 mt-2">
                         <span class="badge badge-lg bg-base-100/20 text-primary-content border-0">
-                            {{ ucfirst(str_replace('_', ' ', $user->role)) }}
+                            {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
                             <span class="badge badge-lg badge-success">
