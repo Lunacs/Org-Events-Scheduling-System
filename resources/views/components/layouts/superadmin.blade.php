@@ -24,14 +24,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased scroll-smooth">
     <div class="min-h-screen bg-gray-100">
 
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
             <x-slot:sidebar drawer="superadmin-drawer" collapsible
-                class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl">
+                class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl lg:pl-10">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">

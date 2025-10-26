@@ -1,8 +1,8 @@
 <?php
 
-use App\Livewire\Osa\Approvals;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
+use App\Livewire\Osa\Notifications as OsaNotifications;
 use App\Livewire\Osa\Profile as OsaProfile;
 use App\Livewire\Osa\Reports;
 use App\Livewire\Osa\TicketManagement;
@@ -56,8 +56,8 @@ Route::prefix('admin')
         Route::get('/tickets', TicketManagement::class)->name('admin.ticket');
         Route::get('/ticket-review', TicketReviewIndex::class)->name('osa.ticket-review.index');
         Route::get('/ticket-review/{ticketNumber}', TicketReviewShow::class)->name('osa.ticket-review.show');
-        Route::get('/approvals', Approvals::class)->name('admin.approvals');
         Route::get('/calendar', EventCalendar::class)->name('admin.calendar');
+        Route::get('/notifications', OsaNotifications::class)->name('admin.notifications');
         //        Route::view('/student-organizations', 'osa.organizations')->name('admin.organizations');
         Route::get('/reports', Reports::class)->name('admin.reports');
         Route::view('/accounts', 'osa.accounts')->name('admin.accounts');

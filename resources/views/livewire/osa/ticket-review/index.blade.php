@@ -4,8 +4,8 @@
         <div class="bg-base-100 rounded-box shadow-lg p-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-base-content">Ticket Review & Attachments</h1>
-                    <p class="text-base-content/70 mt-1">Review event proposals and check attached documents</p>
+                    <h1 class="text-3xl font-bold text-base-content">Ticket Review & Approvals</h1>
+                    <p class="text-base-content/70 mt-1">Review event proposals and final approvals</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <x-mary-badge value="{{ $tickets->total() }} Tickets" class="badge-primary" />
@@ -21,9 +21,13 @@
                 icon="o-magnifying-glass" clearable />
 
             <x-mary-select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
-                ['id' => 'pending', 'name' => 'Pending Review'],
-                ['id' => 'under_review', 'name' => 'Under Review'],
-                ['id' => 'pending_osa_approval', 'name' => 'Pending OSA Approval'],
+                ['id' => 'received', 'name' => 'Received'],
+                ['id' => 'gso_review', 'name' => 'GSO Review'],
+                ['id' => 'pending_osa_approval', 'name' => 'Pending Final Approval'],
+                ['id' => 'for_rescheduling', 'name' => 'For Rescheduling'],
+                ['id' => 'rescheduled', 'name' => 'Rescheduled'],
+                ['id' => 'needs_revision', 'name' => 'Needs Revision'],
+                ['id' => 'amended', 'name' => 'Amended'],
                 ['id' => 'approved', 'name' => 'Approved'],
                 ['id' => 'rejected', 'name' => 'Rejected'],
             ]"
@@ -54,10 +58,13 @@
                         </div>
                         @php
                             $statusClasses = [
-                                'pending' => 'badge-warning',
-                                'under_review' => 'badge-info',
-                                'pending_osa_approval' => 'badge-secondary',
-                                'pending_gso_approval' => 'badge-secondary',
+                                'received' => 'badge-info',
+                                'gso_review' => 'badge-secondary',
+                                'pending_osa_approval' => 'badge-warning',
+                                'for_rescheduling' => 'badge-warning',
+                                'rescheduled' => 'badge-success',
+                                'needs_revision' => 'badge-warning',
+                                'amended' => 'badge-info',
                                 'approved' => 'badge-success',
                                 'rejected' => 'badge-error',
                             ];
@@ -71,29 +78,31 @@
 
 
                     {{-- Event Details --}}
-                    @if ($ticket->events->isNotEmpty() && $ticket->events->first()->eventSchedules->isNotEmpty())
-                        <div class="space-y-2 mb-4">
+                    <div class="space-y-2 mb-4">
+                        @if ($ticket->events->isNotEmpty() && $ticket->events->first()->eventSchedules->isNotEmpty())
+                            {{-- Show approved event schedule --}}
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
-                                <span>{{ $ticket->events->first()->eventSchedules->first()->start_date?->format('M d, Y') ?? 'TBD' }}</span>
+                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-success" />
+                                <span
+                                    class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->start_date?->format('M d, Y') ?? 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-primary" />
-                                <span>{{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</span>
+                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-success" />
+                                <span
+                                    class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</span>
                             </div>
-                        </div>
-                    @elseif($ticket->events->isNotEmpty())
-                        <div class="space-y-2 mb-4">
+                        @else
+                            {{-- Show requested dates --}}
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
+                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-base-content/70" />
                                 <span>{{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y') : 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-primary" />
+                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-base-content/70" />
                                 <span>{{ $ticket->venue_requested ?? 'TBD' }}</span>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                     {{-- Spacer to push bottom content down --}}
                     <div class="flex-1"></div>

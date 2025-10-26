@@ -24,8 +24,8 @@ class EventCalendar extends Component
     public $selectedEvent = null;
     public $showModal = false;
     
-    #[Url(except: '')]
-    public $statusFilter = '';
+    #[Url(except: 'approved')]
+    public $statusFilter = 'approved';
     
     #[Url(except: '')]
     public $organizationFilter = '';
@@ -55,9 +55,15 @@ class EventCalendar extends Component
 
     public function viewEvent($eventId)
     {
-        $this->selectedEvent = Event::select(['event_id', 'title', 'ticket_id', 'event__type_id'])
+        \Log::info('ViewEvent called with ID: ' . $eventId);
+        
+        // Reset modal state first
+        $this->showModal = false;
+        $this->selectedEvent = null;
+        
+        $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
                         'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name')
@@ -66,6 +72,16 @@ class EventCalendar extends Component
                 'eventType:event_type_id,type_name'
             ])
             ->find($eventId);
+            
+        \Log::info('Selected Event: ' . ($this->selectedEvent ? 'Found' : 'Not Found'));
+        
+        if (!$this->selectedEvent) {
+            \Log::error('Event not found with ID: ' . $eventId);
+            $this->dispatch('toast-error', message: 'Event not found');
+            return;
+        }
+        
+        \Log::info('Event found, opening modal...');
         $this->showModal = true;
     }
 
@@ -73,6 +89,8 @@ class EventCalendar extends Component
     {
         $this->showModal = false;
         $this->selectedEvent = null;
+        // Don't dispatch calendar-refetch when closing modal
+        // This prevents the calendar from resetting to current month
     }
 
     public function setViewMode($mode)
@@ -83,7 +101,7 @@ class EventCalendar extends Component
 
     public function clearFilters()
     {
-        $this->statusFilter = '';
+        $this->statusFilter = 'approved';
         $this->organizationFilter = '';
         $this->eventTypeFilter = '';
         $this->dispatch('calendar-refetch');
@@ -107,33 +125,41 @@ class EventCalendar extends Component
     #[Computed]
     public function eventsForCalendar()
     {
-        $events = Event::select(['event_id', 'ticket_id', 'event__type_id'])
+        // Fetch only approved event schedules (from Event_Schedules table)
+        $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name')
-                    ]),
-                'eventSchedules:schedule_id,event_id,start_date,start_time,end_time',
-                'eventType:event_type_id,type_name'
+                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                            ->with([
+                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                    ->with('studentOrganization:org_id,org_name')
+                            ]),
+                        'eventType:event_type_id,type_name'
+                    ])
             ])
-            ->whereHas('ticket', fn($query) => $query->where('status', 'approved'))
-            ->when($this->statusFilter, fn($query) => $query->where('status', $this->statusFilter))
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
+            // Always show only approved event schedules
+            ->where('status', 'approved')
+            // Filter by ticket status (approved or rescheduled)
+            ->whereHas('event.ticket', fn($query) => $query->where('status', $this->statusFilter))
+            // Apply organization filter if set
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            // Apply event type filter if set
+            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             ->get();
 
-        return $events->map(function ($event) {
-            $schedule = $event->eventSchedules->first();
-            $startDate = $schedule ? $schedule->start_date : now();
-            $startTime = $schedule ? $schedule->start_time : '09:00';
-            $endTime = $schedule ? $schedule->end_time : '17:00';
+        return $eventSchedules->map(function ($schedule) {
+            $event = $schedule->event;
+            $startDate = $schedule->start_date->format('Y-m-d');
+            $endDate = $schedule->end_date ? $schedule->end_date->format('Y-m-d') : $startDate;
+            $startTime = $schedule->start_time ?? '09:00';
+            $endTime = $schedule->end_time ?? '17:00';
             
             return [
                 'id' => $event->event_id,
                 'title' => $event->ticket->title,
                 'start' => $startDate . 'T' . $startTime,
-                'end' => $startDate . 'T' . $endTime,
+                'end' => $endDate . 'T' . $endTime,
                 'allDay' => false,
                 'backgroundColor' => $this->getEventColor($event),
                 'borderColor' => $this->getEventColor($event),
@@ -141,7 +167,7 @@ class EventCalendar extends Component
                 'extendedProps' => [
                     'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
                     'eventType' => $event->eventType?->type_name ?? 'N/A',
-                    'venue' => $event->ticket->venue_requested ?? 'TBD',
+                    'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
                     'description' => $event->ticket->description,
                     'ticketNumber' => $event->ticket->ticket_number,
                 ]

@@ -23,19 +23,19 @@ class TicketReview extends Component
     #[Url(except: '')]
     public $search = '';
     
-    #[Url(except: 'pending')]
-    public $statusFilter = 'pending';
+    #[Url(except: 'received')]
+    public $statusFilter = 'received';
 
     public function viewTicket($ticketId)
     {
         $this->selectedTicket = Ticket::select([
                 'ticket_id', 'ticket_number', 'title', 'description', 'status',
-                'venue_requested', 'user_id', 'event_type_id'
+                'venue_requested', 'total_participants', 'user_id', 'event_type_id'
             ])
             ->with([
                 'user' => fn($q) => $q->select(['user_id', 'org_id'])
                     ->with('studentOrganization:org_id,org_name'),
-                'events:event_id,ticket_id,title,expected_attendees,venue',
+                'events:event_id,ticket_id,event__type_id,notes',
                 'attachments:attachment_id,ticket_id,file_path,file_name',
                 'eventType:event_type_id,type_name'
             ])
@@ -62,7 +62,7 @@ class TicketReview extends Component
     public function clearFilters()
     {
         $this->search = '';
-        $this->statusFilter = 'pending';
+        $this->statusFilter = 'received';
         $this->resetPage();
     }
 
@@ -84,6 +84,6 @@ class TicketReview extends Component
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('livewire.osa.ticket-review', compact('tickets'));
+        return view('livewire.osa.ticket-review.index', compact('tickets'));
     }
 }

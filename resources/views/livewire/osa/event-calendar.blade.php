@@ -22,7 +22,7 @@
                 <div class="flex items-center gap-2">
                     <x-mary-button onclick="window.fullCalendar?.prev(); updateCalendarTitle();"
                         class="btn-ghost btn-sm" icon="o-chevron-left" />
-                    <h2 class="text-lg font-semibold min-w-[200px] text-center" id="calendar-title">
+                    <h2 class="text-lg font-semibold min-w-[200px] text-center" id="calendar-title" wire:ignore>
                         Loading...
                     </h2>
                     <x-mary-button onclick="window.fullCalendar?.next(); updateCalendarTitle();"
@@ -55,21 +55,19 @@
                     </x-mary-button>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <x-mary-select wire:model.live="statusFilter" placeholder="Status" :options="[
-                        ['id' => '', 'name' => 'All Statuses'],
-                        ['id' => 'scheduled', 'name' => 'Scheduled'],
-                        ['id' => 'ongoing', 'name' => 'Ongoing'],
-                        ['id' => 'completed', 'name' => 'Completed'],
-                        ['id' => 'cancelled', 'name' => 'Cancelled'],
+                        ['id' => 'approved', 'name' => 'Approved'],
+                        ['id' => 'rescheduled', 'name' => 'Rescheduled'],
                     ]"
-                        option-value="id" option-label="name" class="select-sm" />
+                        option-value="id" option-label="name" class="select-sm min-w-[140px]" />
 
                     <x-mary-select wire:model.live="organizationFilter" placeholder="Organization" :options="$organizations"
-                        option-value="org_id" option-label="org_name" class="select-sm text-xs" />
+                        option-value="org_id" option-label="org_name"
+                        class="select-sm text-xs min-w-[200px] max-w-[300px]" />
 
                     <x-mary-select wire:model.live="eventTypeFilter" placeholder="Event Type" :options="$eventTypes"
-                        option-value="event_type_id" option-label="type_name" class="select-sm" />
+                        option-value="event_type_id" option-label="type_name" class="select-sm min-w-[150px]" />
 
                     <x-mary-button wire:click="clearFilters" class="btn-ghost btn-sm" icon="o-x-mark"
                         tooltip="Clear Filters" />
@@ -79,13 +77,14 @@
     </div>
 
     {{-- FullCalendar --}}
-    <div class="bg-base-100 rounded-box shadow-lg overflow-hidden p-6">
-        <div id="calendar" wire:ignore></div>
+    <div class="bg-base-100 rounded-box shadow-lg overflow-hidden p-6"
+        wire:key="calendar-{{ $statusFilter }}-{{ $organizationFilter }}-{{ $eventTypeFilter }}">
+        <div id="calendar" wire:ignore class="min-h-[600px] lg:min-h-[750px]"></div>
     </div>
 
     {{-- Event Details Modal --}}
     <x-mary-modal wire:model="showModal" title="Event Details" class="modal-lg">
-        @if ($selectedEvent)
+        @if ($selectedEvent && $selectedEvent->ticket)
             <div class="space-y-6">
                 {{-- Event Header --}}
                 <div class="border-b border-base-300 pb-4">
@@ -96,7 +95,15 @@
                                 {{ $selectedEvent->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
                             </p>
                         </div>
-                        <x-mary-badge value="{{ ucfirst($selectedEvent->ticket->status) }}" class="badge-primary" />
+                        @php
+                            $badgeClass = match ($selectedEvent->ticket->status) {
+                                'approved' => 'badge-success',
+                                'rescheduled' => 'badge-warning',
+                                default => 'badge-primary',
+                            };
+                        @endphp
+                        <x-mary-badge value="{{ str_replace('_', ' ', ucwords($selectedEvent->ticket->status, '_')) }}"
+                            class="{{ $badgeClass }}" />
                     </div>
                 </div>
 
@@ -147,6 +154,18 @@
                     </div>
                 @endif
             </div>
+        @else
+            <div class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <div class="loading loading-spinner loading-lg text-primary mb-4"></div>
+                    <p class="text-base-content/70">Loading event details...</p>
+                    @if ($selectedEvent)
+                        <p class="text-xs text-base-content/50 mt-2">Debug: Event loaded but ticket missing</p>
+                    @else
+                        <p class="text-xs text-base-content/50 mt-2">Debug: No event selected</p>
+                    @endif
+                </div>
+            </div>
         @endif
 
         <x-slot:actions>
@@ -154,20 +173,67 @@
         </x-slot:actions>
     </x-mary-modal>
 
+    {{-- Custom Calendar Styles --}}
+    @push('styles')
+        <style>
+            /* Custom scrollbar styling for calendar */
+            .fc-scroller {
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+
+            .fc-scroller::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .fc-scroller::-webkit-scrollbar-track {
+                background: oklch(var(--b2));
+                border-radius: 4px;
+            }
+
+            .fc-scroller::-webkit-scrollbar-thumb {
+                background: oklch(var(--bc) / 0.3);
+                border-radius: 4px;
+            }
+
+            .fc-scroller::-webkit-scrollbar-thumb:hover {
+                background: oklch(var(--bc) / 0.5);
+            }
+
+            /* Improve calendar appearance on large screens */
+            @media (min-width: 1024px) {
+                .fc .fc-timegrid-slot {
+                    height: 3em;
+                }
+
+                .fc .fc-timegrid-slot-label {
+                    font-size: 0.95em;
+                }
+            }
+
+            /* Ensure list view has proper spacing */
+            .fc-list-event {
+                cursor: pointer;
+            }
+
+            .fc-list-event:hover {
+                background: oklch(var(--b3)) !important;
+            }
+        </style>
+    @endpush
+
     {{-- FullCalendar Scripts --}}
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/index.global.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.10/index.global.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.10/index.global.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.10/index.global.min.js"></script>
-
         <script>
+            // Flag to prevent unnecessary reinitialization
+            let calendarInitialized = false;
+
             // Helper function to update calendar title
             window.updateCalendarTitle = function() {
                 const titleEl = document.getElementById('calendar-title');
                 if (titleEl && window.fullCalendar) {
                     titleEl.textContent = window.fullCalendar.view.title;
+                    console.log('Title updated to:', window.fullCalendar.view.title);
                 }
             };
 
@@ -196,11 +262,11 @@
             };
 
             function initializeCalendar() {
-                console.log('Initializing FullCalendar...');
+                console.log('Initializing FullCalendar from npm packages...');
 
-                // Check if FullCalendar is loaded
-                if (typeof FullCalendar === 'undefined') {
-                    console.error('FullCalendar is not loaded!');
+                // Check if FullCalendar is loaded from npm
+                if (typeof window.FullCalendar === 'undefined' || typeof window.FullCalendarPlugins === 'undefined') {
+                    console.error('FullCalendar npm packages not loaded! Make sure to run: npm install && npm run dev');
                     return;
                 }
 
@@ -211,17 +277,41 @@
                 }
 
                 try {
-                    const calendar = new FullCalendar.Calendar(calendarEl, {
+                    // Destroy existing calendar if it exists
+                    if (window.fullCalendar) {
+                        console.log('Destroying existing calendar...');
+                        window.fullCalendar.destroy();
+                        window.fullCalendar = null;
+                    }
+
+                    // Determine calendar height based on screen size
+                    const calendarHeight = window.innerWidth >= 1024 ? 750 : 600;
+
+                    // Create calendar using npm packages
+                    const calendar = new window.FullCalendar.Calendar(calendarEl, {
+                        plugins: [
+                            window.FullCalendarPlugins.dayGridPlugin,
+                            window.FullCalendarPlugins.timeGridPlugin,
+                            window.FullCalendarPlugins.listPlugin,
+                            window.FullCalendarPlugins.interactionPlugin
+                        ],
                         initialView: '{{ $viewMode }}',
                         headerToolbar: false, // Use our custom controls
-                        height: 'auto',
+                        height: calendarHeight,
                         events: @json($events),
 
-                        // Theme colors matching DaisyUI
+                        // Theme system - using standard for custom CSS control
                         themeSystem: 'standard',
+
+                        // Enable now indicator
+                        nowIndicator: true,
 
                         // Event interactions
                         eventClick: function(info) {
+                            console.log('Event clicked:', info.event.id, info.event);
+                            console.log('Event data:', info.event.extendedProps);
+                            console.log('Livewire component:', @this);
+                            // Use Livewire's $wire to call the method
                             @this.viewEvent(info.event.id);
                         },
 
@@ -230,10 +320,14 @@
                         eventTextColor: '#ffffff',
 
                         // Time settings
-                        slotMinTime: '08:00:00',
-                        slotMaxTime: '20:00:00',
+                        slotMinTime: '07:00:00',
+                        slotMaxTime: '22:00:00',
                         slotDuration: '01:00:00',
                         slotLabelInterval: '01:00:00',
+                        scrollTime: '08:00:00', // Initial scroll position
+
+                        // Enable scrolling for time views
+                        scrollTimeReset: true,
 
                         // Week settings
                         firstDay: 1, // Monday
@@ -245,9 +339,6 @@
                             day: 'numeric'
                         },
                         listDaySideFormat: false,
-
-                        // Responsive
-                        aspectRatio: 1.8,
 
                         // Event tooltip
                         eventDidMount: function(info) {
@@ -269,6 +360,7 @@
                             const titleEl = document.getElementById('calendar-title');
                             if (titleEl) {
                                 titleEl.textContent = info.view.title;
+                                console.log('View mounted, title set to:', info.view.title);
                             }
                         }
                     });
@@ -276,42 +368,78 @@
                     calendar.render();
                     console.log('Calendar rendered successfully!');
 
+                    // Store calendar globally for Livewire access
+                    window.fullCalendar = calendar;
+
                     // Update title immediately after render
                     const titleEl = document.getElementById('calendar-title');
                     if (titleEl) {
                         titleEl.textContent = calendar.view.title;
+                        console.log('Calendar title updated to:', calendar.view.title);
                     }
 
-                    // Store calendar globally for Livewire access
-                    window.fullCalendar = calendar;
+                    // Add a more robust title update function
+                    window.updateCalendarTitle = function() {
+                        const titleEl = document.getElementById('calendar-title');
+                        if (titleEl && window.fullCalendar) {
+                            titleEl.textContent = window.fullCalendar.view.title;
+                            console.log('Title updated via helper function:', window.fullCalendar.view.title);
+                        }
+                    };
 
                     // Livewire event listeners
                     Livewire.on('calendar-prev', () => {
                         calendar.prev();
-                        const titleEl = document.getElementById('calendar-title');
-                        if (titleEl) titleEl.textContent = calendar.view.title;
+                        window.updateCalendarTitle();
                     });
 
                     Livewire.on('calendar-next', () => {
                         calendar.next();
-                        const titleEl = document.getElementById('calendar-title');
-                        if (titleEl) titleEl.textContent = calendar.view.title;
+                        window.updateCalendarTitle();
                     });
 
                     Livewire.on('calendar-today', () => {
                         calendar.today();
-                        const titleEl = document.getElementById('calendar-title');
-                        if (titleEl) titleEl.textContent = calendar.view.title;
+                        window.updateCalendarTitle();
                     });
 
                     Livewire.on('calendar-change-view', (data) => {
                         calendar.changeView(data.view);
-                        const titleEl = document.getElementById('calendar-title');
-                        if (titleEl) titleEl.textContent = calendar.view.title;
+                        window.updateCalendarTitle();
                     });
 
+                    // Re-initialize calendar when filters change
                     Livewire.on('calendar-refetch', () => {
-                        calendar.refetchEvents();
+                        // Store current date before destroying calendar
+                        let currentDate = null;
+                        if (window.fullCalendar) {
+                            currentDate = window.fullCalendar.getDate();
+                            window.fullCalendar.destroy();
+                        }
+                        // Small delay to ensure Livewire has updated
+                        setTimeout(() => {
+                            initializeCalendar();
+                            // Restore the previous date after reinitializing
+                            if (currentDate && window.fullCalendar) {
+                                window.fullCalendar.gotoDate(currentDate);
+                                // Update title using the helper function
+                                setTimeout(() => {
+                                    window.updateCalendarTitle();
+                                }, 100);
+                            }
+                        }, 100);
+                    });
+
+                    // Handle window resize to update calendar height
+                    let resizeTimeout;
+                    window.addEventListener('resize', () => {
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(() => {
+                            if (window.fullCalendar) {
+                                const newHeight = window.innerWidth >= 1024 ? 750 : 600;
+                                window.fullCalendar.setOption('height', newHeight);
+                            }
+                        }, 250);
                     });
 
                 } catch (error) {
@@ -320,7 +448,21 @@
             }
 
             // Initialize when Livewire is ready
-            document.addEventListener('livewire:initialized', initializeCalendar);
+            document.addEventListener('livewire:initialized', () => {
+                console.log('Livewire initialized, starting calendar initialization...');
+                initializeCalendar();
+            });
+
+            // Handle Livewire navigation (when navigating to this page)
+            document.addEventListener('livewire:navigated', () => {
+                console.log('Livewire navigated, checking calendar...');
+                if (!window.fullCalendar && document.getElementById('calendar')) {
+                    initializeCalendar();
+                }
+            });
+
+            // Only reinitialize calendar when filters change, not on every component update
+            // This prevents the calendar from resetting to current month when modal closes
 
             // Fallback: Initialize after DOM is fully loaded
             if (document.readyState === 'complete') {

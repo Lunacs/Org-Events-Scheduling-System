@@ -42,7 +42,7 @@ return new class extends Migration
             $table->string('budget_breakdown')->nullable();
             $table->string('additional_notes')->nullable();
             $table->foreignId('fund_source_id')->references('source_id')->on('fund__sources')->onDelete('cascade');
-            $table->enum('status', ['received', 'gso_review', 'rejected', 'approved', 'for_rescheduling', 'rescheduled', 'needs_revision', 'amended'])->default('received');
+            $table->enum('status', ['received', 'gso_review', 'pending_osa_approval', 'rejected', 'approved', 'for_rescheduling', 'rescheduled', 'needs_revision', 'amended'])->default('received');
             $table->timestamps();
         });
     }

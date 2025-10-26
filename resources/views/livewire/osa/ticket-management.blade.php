@@ -1,4 +1,28 @@
 <div>
+    <x-mary-toast />
+
+    <style>
+        [data-tip] {
+            position: relative;
+        }
+
+        [data-tip]:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+
     {{-- Header --}}
     @persist('ticket-management-header')
         <div class="mb-8">
@@ -25,9 +49,12 @@
 
             <x-mary-select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
                 ['id' => '', 'name' => 'All Statuses'],
-                ['id' => 'pending', 'name' => 'Pending'],
-                ['id' => 'under_review', 'name' => 'Under Review'],
-                ['id' => 'pending_osa_approval', 'name' => 'Pending OSA Approval'],
+                ['id' => 'received', 'name' => 'Received'],
+                ['id' => 'gso_review', 'name' => 'GSO Review'],
+                ['id' => 'for_rescheduling', 'name' => 'For Rescheduling'],
+                ['id' => 'rescheduled', 'name' => 'Rescheduled'],
+                ['id' => 'needs_revision', 'name' => 'Needs Revision'],
+                ['id' => 'amended', 'name' => 'Amended'],
                 ['id' => 'approved', 'name' => 'Approved'],
                 ['id' => 'rejected', 'name' => 'Rejected'],
             ]"
@@ -58,13 +85,14 @@
                         <th>Organization</th>
                         <th>Status</th>
                         <th>Date Submitted</th>
-                        <th>Priority</th>
-                        <th>Actions</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($tickets as $ticket)
-                        <tr class="hover" wire:key="ticket-{{ $ticket->ticket_id }}">
+                        <tr class="hover:cursor-pointer hover:border-l-2 hover:border-l-primary"
+                            wire:key="ticket-{{ $ticket->ticket_id }}"
+                            onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
                             <td>
                                 <span class="font-mono text-sm">#{{ $ticket->ticket_number }}</span>
                             </td>
@@ -91,9 +119,12 @@
                             <td>
                                 @php
                                     $statusClasses = [
-                                        'pending' => 'badge-warning',
-                                        'under_review' => 'badge-info',
-                                        'pending_osa_approval' => 'badge-secondary',
+                                        'received' => 'badge-info',
+                                        'gso_review' => 'badge-secondary',
+                                        'for_rescheduling' => 'badge-warning',
+                                        'rescheduled' => 'badge-success',
+                                        'needs_revision' => 'badge-warning',
+                                        'amended' => 'badge-info',
                                         'approved' => 'badge-success',
                                         'rejected' => 'badge-error',
                                     ];
@@ -107,33 +138,31 @@
                                     {{ $ticket->created_at?->format('h:i A') ?? '' }}
                                 </div>
                             </td>
-                            <td>
-                                @php
-                                    $priorityClasses = [
-                                        'low' => 'badge-ghost',
-                                        'normal' => 'badge-neutral',
-                                        'high' => 'badge-warning',
-                                        'urgent' => 'badge-error',
-                                    ];
-                                @endphp
-                                <x-mary-badge value="{{ ucfirst($ticket->priority ?? 'Normal') }}"
-                                    class="{{ $priorityClasses[$ticket->priority ?? 'normal'] }}" />
-                            </td>
-                            <td>
-                                <div class="flex gap-1">
-                                    <x-mary-button icon="o-eye" class="btn-sm btn-ghost" tooltip="View Details"
-                                        link="{{ route('osa.ticket-review.index') }}?ticket={{ $ticket->ticket_id }}" />
-                                    @if ($ticket->status === 'pending_osa_approval')
-                                        <x-mary-button icon="o-check-circle" class="btn-sm btn-success"
-                                            tooltip="Process Approval"
-                                            link="{{ route('admin.approvals') }}?ticket={{ $ticket->ticket_id }}" />
-                                    @endif
+                            <td onclick="event.stopPropagation()">
+                                <div class="flex gap-1 justify-center">
+                                    <button wire:click="approveTicket({{ $ticket->ticket_id }})"
+                                        class="btn btn-sm btn-success btn-circle" data-tip="Approve"
+                                        onclick="event.stopPropagation()">
+                                        <x-mary-icon name="o-check" class="w-4 h-4" />
+                                    </button>
+
+                                    <button wire:click="rejectTicket({{ $ticket->ticket_id }})"
+                                        class="btn btn-sm btn-error btn-circle" data-tip="Reject"
+                                        onclick="event.stopPropagation()">
+                                        <x-mary-icon name="o-x-mark" class="w-4 h-4" />
+                                    </button>
+
+                                    <button wire:click="rescheduleTicket({{ $ticket->ticket_id }})"
+                                        class="btn btn-sm btn-warning btn-circle" data-tip="Reschedule"
+                                        onclick="event.stopPropagation()">
+                                        <x-mary-icon name="o-calendar" class="w-4 h-4" />
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-8">
+                            <td colspan="6" class="text-center py-8">
                                 <div class="flex flex-col items-center gap-2">
                                     <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
                                     <span class="text-base-content/70">No tickets found</span>

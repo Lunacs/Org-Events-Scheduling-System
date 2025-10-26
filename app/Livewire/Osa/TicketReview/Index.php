@@ -21,12 +21,12 @@ class Index extends Component
     public $search = '';
 
     #[Url(except: 'pending')]
-    public $statusFilter = 'pending';
+    public $statusFilter = 'received';
 
     public function clearFilters()
     {
         $this->search = '';
-        $this->statusFilter = 'pending';
+        $this->statusFilter = 'received';
         $this->resetPage();
     }
 
@@ -59,6 +59,9 @@ class Index extends Component
                     $q->where('title', 'like', '%'.$this->search.'%')
                         ->orWhere('description', 'like', '%'.$this->search.'%')
                         ->orWhere('ticket_number', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('user.studentOrganization', function ($orgQuery) {
+                            $orgQuery->where('org_code', 'like', '%'.$this->search.'%');
+                        })
                         ->orWhereHas('user.studentOrganization', function ($orgQuery) {
                             $orgQuery->where('org_name', 'like', '%'.$this->search.'%');
                         });
