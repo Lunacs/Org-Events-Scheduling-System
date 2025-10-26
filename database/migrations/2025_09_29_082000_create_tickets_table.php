@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('venue-requested');
             $table->string('date-requested');
-            $table->enum('status', ['pending', 'approved', 'rejected']);
+            $table->enum('status', ['pending', 'pending_gso_approval', 'approved', 'rejected']);
             $table->timestamps();
         });
     }

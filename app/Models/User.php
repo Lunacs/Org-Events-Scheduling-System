@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Notifications\CustomVerifyEmail;
-use Illuminate\Notifications\Notifiable;
 use App\Notifications\CustomResetPassword;
+use App\Notifications\CustomVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -16,8 +16,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // User roles constants
     const ROLE_SUPERADMIN = 'superadmin';
+
     const ROLE_OSA = 'osa';
+
     const ROLE_GSO = 'gso';
+
     const ROLE_STUDENT_ORG = 'student_org';
 
     /**
@@ -36,10 +39,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'phone',
         'role',
         'org_id',
         'office_id',
         'avatar',
+        'avatar_style',
+        'avatar_seed',
     ];
 
     /**
@@ -67,8 +73,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a superadmin
-     *
-     * @return bool
      */
     public function isSuperAdmin(): bool
     {
@@ -77,8 +81,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is an OSA admin
-     *
-     * @return bool
      */
     public function isOSA(): bool
     {
@@ -87,8 +89,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a GSO admin
-     *
-     * @return bool
      */
     public function isGSO(): bool
     {
@@ -97,8 +97,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a student organization member
-     *
-     * @return bool
      */
     public function isStudentOrg(): bool
     {
@@ -107,8 +105,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the user's dashboard route based on their role
-     *
-     * @return string
      */
     public function getDashboardRoute(): string
     {
@@ -167,6 +163,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function transactionLogs()
     {
         return $this->hasMany(Transaction_Logs::class, 'user_id');
+    }
+
+    /**
+     * Get the user's last login from transaction logs
+     *
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getLastLoginAttribute()
+    {
+        $lastLogin = $this->transactionLogs()
+            ->where('action', 'AUTH_LOGIN')
+            ->latest('created_at')
+            ->first();
+
+        return $lastLogin?->created_at;
+    }
+
+    /**
+     * Get the user's avatar URL using DiceBear
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $style = $this->avatar_style ?? 'big-ears';
+        $seed = $this->avatar_seed ?? $this->email;
+
+        return "dicebear:{$style}:{$seed}";
     }
 
     /**

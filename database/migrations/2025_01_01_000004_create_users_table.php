@@ -17,10 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone')->nullable();
             $table->string('role');
             $table->foreignId('org_id')->nullable()->references('org_id')->on('student__organizations')->onDelete('cascade');
             $table->foreignId('office_id')->nullable()->references('office_id')->on('offices')->onDelete('cascade');
-            $table->string('avatar')->nullable();
+            $table->string('avatar')->nullable(); // Legacy field for uploaded avatars
+            $table->string('avatar_style')->default(value: 'big-ears'); // DiceBear style
+            $table->string('avatar_seed')->nullable(); // Unique seed for avatar generation
             $table->rememberToken();
             $table->timestamps();
         });

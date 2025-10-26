@@ -89,4 +89,12 @@ class Ticket extends Model
     {
         return $this->hasMany(Attachment::class, 'ticket_id');
     }
+
+    /**
+     * Comments for this ticket
+     */
+    public function comments()
+    {
+        return $this->hasMany(TicketComment::class, 'ticket_id');
+    }
 }

@@ -10,4 +10,24 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            external: [
+                "@fullcalendar/core",
+                "@fullcalendar/daygrid",
+                "@fullcalendar/timegrid",
+                "@fullcalendar/interaction",
+                "@fullcalendar/list",
+            ],
+            output: {
+                globals: {
+                    "@fullcalendar/core": "FullCalendar",
+                    "@fullcalendar/daygrid": "FullCalendarDayGrid",
+                    "@fullcalendar/timegrid": "FullCalendarTimeGrid",
+                    "@fullcalendar/interaction": "FullCalendarInteraction",
+                    "@fullcalendar/list": "FullCalendarList",
+                },
+            },
+        },
+    },
 });

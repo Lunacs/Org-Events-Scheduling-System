@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ isset($title) ? $title . ' - ' . config('app.name') : config('app.name') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
@@ -29,22 +29,10 @@
 <body class="font-sans antialiased">
     <div class="min-h-screen">
 
-        {{-- NAVBAR mobile only --}}
-        <x-mary-nav sticky class="lg:hidden">
-            <x-slot:brand>
-                <div class="ml-5 pt-5">App</div>
-            </x-slot:brand>
-            <x-slot:actions>
-                <label for="main-drawer" class="lg:hidden mr-3">
-                    <i class="fas fa-burger cursor-pointer"></i>
-                </label>
-            </x-slot:actions>
-        </x-mary-nav>
-
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100  lg:bg-inherit rounded-r-xl mx-10">
+            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:px-3">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -59,19 +47,14 @@
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
                     <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard" wire:navigate />
-                    <x-mary-menu-item title="Event Requests" icon="s-calendar-days" link="/admin/event-req"
+                    <x-mary-menu-item title="Ticket Management" icon="s-calendar-days" link="/admin/tickets"
                         wire:navigate />
-                    <x-mary-menu-item title="Calendar" icon="s-calendar" link="/admin/calendar" wire:navigate />
-                    <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate />
-                    <x-mary-menu-item title="Student Organizations" icon="s-building-office"
-                        link="/admin/student-organizations" wire:navigate />
+                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days" link="/admin/ticket-review"
+                        wire:navigate />
+                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="/admin/approvals" wire:navigate />
+                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="/admin/calendar"
+                        wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
-                    <x-mary-menu-item title="Users/Accounts" icon="s-users" link="/admin/accounts" wire:navigate />
-
-                    <x-mary-menu-sub title="Settings" icon="s-cog-6-tooth">
-                        <x-mary-menu-item title="Profile" icon="o-user-circle" link="/admin/profile" wire:navigate />
-                        <x-mary-menu-item title="Preferences" icon="o-cog-6-tooth" link="/profile" wire:navigate />
-                    </x-mary-menu-sub>
                 </x-mary-menu>
             </x-slot:sidebar>
             <x-slot:footer>
@@ -82,6 +65,10 @@
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
+                {{-- Top Navigation Bar --}}
+                <livewire:layout.navigation />
+
+                {{-- Page Content --}}
                 {{ $slot }}
             </x-slot:content>
         </x-mary-main>
@@ -90,8 +77,8 @@
         <x-mary-toast />
     </div>
 
-    <h2 class="bg-accent">niga im home</h2>
-
+    {{-- Scripts Stack --}}
+    @stack('scripts')
 </body>
 
 </html>

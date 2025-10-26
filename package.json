@@ -18,5 +18,14 @@
         "postcss": "^8.4.31",
         "tailwindcss": "^4.1.13",
         "vite": "^7.0.4"
+    },
+    "dependencies": {
+        "@dicebear/collection": "^9.2.4",
+        "@dicebear/core": "^9.2.4",
+        "@fullcalendar/core": "^6.1.19",
+        "@fullcalendar/daygrid": "^6.1.19",
+        "@fullcalendar/interaction": "^6.1.19",
+        "@fullcalendar/list": "^6.1.19",
+        "@fullcalendar/timegrid": "^6.1.19"
     }
 }

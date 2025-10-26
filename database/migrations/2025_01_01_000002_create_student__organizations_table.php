@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('org_name');
             $table->foreignId('course_id')->references('course_id')->on('courses')->onDelete('cascade');
             $table->string('adviser_name');
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+
             $table->timestamps();
         });
     }
