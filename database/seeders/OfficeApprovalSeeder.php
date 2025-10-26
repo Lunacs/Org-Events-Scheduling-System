@@ -41,10 +41,10 @@ class OfficeApprovalSeeder extends Seeder
 
         $approvals = [
             ['ticket_number' => 'TKT-001', 'decision' => 'pending', 'remarks' => 'Awaiting venue inspection.', 'updated_at' => Carbon::now()->subMinutes(15)],
-            ['ticket_number' => 'TKT-002', 'decision' => 'pending', 'remarks' => 'Equipment availability confirmation pending.', 'updated_at' => Carbon::now()->subHour()],
-            ['ticket_number' => 'TKT-003', 'decision' => 'pending', 'remarks' => 'Logistics coordination in progress.', 'updated_at' => Carbon::now()->subHours(2)],
-            ['ticket_number' => 'TKT-004', 'decision' => 'pending', 'remarks' => 'Approved within SLA.', 'updated_at' => Carbon::today()->addHours(9)],
-            ['ticket_number' => 'TKT-005', 'decision' => 'rejected', 'remarks' => 'Requirements incomplete.', 'updated_at' => Carbon::today()->addHours(10)],
+            ['ticket_number' => 'TKT-002', 'decision' => 'approved', 'remarks' => 'Equipment availability confirmation pending.', 'updated_at' => Carbon::now()->subHour()],
+            ['ticket_number' => 'TKT-003', 'decision' => 'rejected', 'remarks' => 'Logistics coordination in progress.', 'updated_at' => Carbon::now()->subHours(2)],
+            ['ticket_number' => 'TKT-004', 'decision' => 'approved', 'remarks' => 'Approved within SLA.', 'updated_at' => Carbon::today()->addHours(9)],
+            ['ticket_number' => 'TKT-005', 'decision' => 'approved', 'remarks' => 'Requirements incomplete.', 'updated_at' => Carbon::today()->addHours(10)],
         ];
 
         foreach ($approvals as $data) {

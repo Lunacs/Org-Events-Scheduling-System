@@ -58,17 +58,17 @@
                 {{-- MENU --}}
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
-                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/gso/dashboard" wire:navigate />
-                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days" link="/gso/ticket-review"
+                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="{{ route('gso.dashboard') }}" wire:navigate />
+                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days" link="{{ route('gso.ticket-review') }}"
                         wire:navigate />
-                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="/gso/approvals" wire:navigate />
-                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="/gso/calendar" wire:navigate />
-                    <x-mary-menu-item title="Communication" icon="s-building-office" link="/gso/communication"
+                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="{{ route('gso.approvals') }}" wire:navigate />
+                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="{{ route('gso.calendar') }}" wire:navigate />
+                    <x-mary-menu-item title="Communication" icon="s-building-office" link="{{ route('gso.communication') }}"
                         wire:navigate />
-                    <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate />
+                    <x-mary-menu-item title="Reports" icon="s-chart-bar" link="{{ route('gso.reports') }}" wire:navigate />
                     <x-mary-menu-sub title="Settings" icon="s-cog-6-tooth">
-                        <x-mary-menu-item title="Profile" icon="o-user-circle" link="/gso/profile" wire:navigate />
-                        <x-mary-menu-item title="Preferences" icon="o-cog-6-tooth" link="/gso/preferences"
+                        <x-mary-menu-item title="Profile" icon="o-user-circle" link="{{ route('gso.profile') }}" wire:navigate />
+                        <x-mary-menu-item title="Preferences" icon="o-cog-6-tooth" link="{{ url('/gso/preferences') }}"
                             wire:navigate />
                     </x-mary-menu-sub>
                 </x-mary-menu>

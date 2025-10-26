@@ -1,8 +1,10 @@
 <?php
 
 use App\Livewire\Gso\Approvals as GsoApprovals;
+use App\Livewire\Gso\Calendar as GsoCalendar;
 use App\Livewire\Gso\Dashboard as GsoDashboard;
 use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\Reports as GsoReports;
 use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
@@ -65,9 +67,9 @@ Route::prefix('gso')
         Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
         Route::get('/tickets/{ticket}', GsoDetails::class)->name('gso.ticket-details');
         Route::get('/approvals', GsoApprovals::class)->name('gso.approvals');
-        Route::view('/calendar', 'gso.calendar')->name('gso.calendar');
+        Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');
-        Route::view('/reports', 'gso.reports')->name('gso.reports');
+    Route::get('/reports', GsoReports::class)->name('gso.reports');
         Route::view('/profile', 'gso.profile')->name('gso.profile');
     });
 

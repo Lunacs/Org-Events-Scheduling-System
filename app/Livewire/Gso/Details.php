@@ -16,6 +16,8 @@ class Details extends Component
     #[Layout('components.layouts.gso-layout')]
     public Ticket $ticket;
 
+    public ?int $ticketId = null;
+
     /**
      * View model segments consumed by the Blade template.
      *
@@ -31,9 +33,36 @@ class Details extends Component
     public array $osaApprovals = [];
     public array $officeApprovals = [];
 
-    public function mount(Ticket $ticket): void
+    public function mount(Ticket $ticket = null, ?int $ticketId = null): void
     {
-        $ticket->load([
+        $resolved = $this->resolveTicket($ticket, $ticketId);
+
+        $this->hydrateFromTicket($resolved);
+    }
+
+    public function loadTicket(int $ticketId): void
+    {
+        $this->hydrateFromTicket($this->resolveTicket(null, $ticketId));
+    }
+
+    public function render()
+    {
+        return view('livewire.gso.details');
+    }
+
+    protected function resolveTicket(?Ticket $ticket, ?int $ticketId): Ticket
+    {
+        $resolved = $ticket;
+
+        if ($resolved === null && $ticketId !== null) {
+            $resolved = Ticket::query()->findOrFail($ticketId);
+        }
+
+        if ($resolved === null) {
+            abort(404);
+        }
+
+        $resolved->load([
             'eventType',
             'user.studentOrganization.course',
             'user.position',
@@ -44,7 +73,13 @@ class Details extends Component
             'officeApprovals.user',
         ]);
 
+        return $resolved;
+    }
+
+    protected function hydrateFromTicket(Ticket $ticket): void
+    {
         $this->ticket = $ticket;
+        $this->ticketId = $ticket->getAttribute('ticket_id');
 
         $this->requirements = $this->buildRequirements();
         $this->overview = $this->buildOverview();
@@ -55,11 +90,6 @@ class Details extends Component
         $this->attachments = $this->buildAttachments();
         $this->osaApprovals = $this->buildOsaApprovals();
         $this->officeApprovals = $this->buildOfficeApprovals();
-    }
-
-    public function render()
-    {
-        return view('livewire.gso.details');
     }
 
     /**

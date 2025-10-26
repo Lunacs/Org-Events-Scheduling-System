@@ -22,6 +22,59 @@
                 icon="s-calendar-days" color="text-info" />
         </div>
 
+        @php
+            $defaultRequestTypeBadge = 'badge-ghost text-base-content';
+
+            $requestTypeBadgeDefaults = [
+                'venue booking' => 'badge-primary text-primary-content',
+                'venue' => 'badge-primary text-primary-content',
+                'equipment' => 'badge-info text-info-content',
+                'logistics' => 'badge-secondary text-secondary-content',
+                'catering' => 'badge-accent text-accent-content',
+            ];
+
+            $requestTypeBadgePalette = [
+                'badge-success text-success-content',
+                'badge-warning text-warning-content',
+                'badge-error text-error-content',
+                'badge-neutral text-neutral-content',
+                'badge-info text-info-content',
+                'badge-secondary text-secondary-content',
+                'badge-accent text-accent-content',
+                'badge-primary text-primary-content',
+            ];
+
+            $requestTypeBadgeMap = $requestTypeBadgeDefaults;
+            $paletteIndex = 0;
+
+            foreach (
+                collect($pendingApprovals)
+                    ->map(fn ($row) => is_array($row) ? $row : (array) $row)
+                    ->pluck('request_type')
+                    ->filter()
+                    ->unique()
+                    ->values() as $typeLabel
+            ) {
+                $lookupKey = \Illuminate\Support\Str::of($typeLabel)->lower()->toString();
+
+                if (! array_key_exists($lookupKey, $requestTypeBadgeMap)) {
+                    $requestTypeBadgeMap[$lookupKey] = $requestTypeBadgePalette[$paletteIndex % count($requestTypeBadgePalette)];
+                    $paletteIndex++;
+                }
+            }
+
+            $pendingApprovalRows = collect($pendingApprovals)
+                ->map(fn ($row) => is_array($row) ? $row : (array) $row)
+                ->map(function ($row) use ($requestTypeBadgeMap, $defaultRequestTypeBadge) {
+                    $typeKey = \Illuminate\Support\Str::of($row['request_type'] ?? '')->lower()->toString();
+                    $row['request_type_badge_class'] = $requestTypeBadgeMap[$typeKey] ?? $defaultRequestTypeBadge;
+
+                    return $row;
+                })
+                ->values()
+                ->all();
+        @endphp
+
         <x-mary-card title="Pending Approvals" subtitle="Tickets awaiting action">
             <x-slot:menu>
                 <x-mary-button label="View All" icon="s-arrow-right" class="btn-sm btn-ghost"
@@ -36,32 +89,24 @@
                     ['key' => 'request_type', 'label' => 'Request Type'],
                     ['key' => 'event_date', 'label' => 'Date'],
                     ['key' => 'priority', 'label' => 'Priority'],
-                ]" :rows="$pendingApprovals">
+                ]" :rows="$pendingApprovalRows">
                     @scope('cell_request_type', $row)
-                        @php
-                            $typeKey = \Illuminate\Support\Str::of($row['request_type'] ?? '')->lower()->toString();
-                            $typeClass = match ($typeKey) {
-                                'venue booking' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-                                'equipment' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                'logistics' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                                default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-                            };
-                        @endphp
                         <x-mary-badge :value="$row['request_type'] ?? 'N/A'"
-                            class="{{ $typeClass }} border-none" />
+                            class="{{ $row['request_type_badge_class'] ?? 'badge-ghost text-base-content' }} border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1" />
                     @endscope
 
                     @scope('cell_priority', $row)
                         @php
                             $priorityKey = \Illuminate\Support\Str::of($row['priority'] ?? 'low')->lower()->toString();
                             $priorityClass = match ($priorityKey) {
-                                'high' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                'medium' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+                                'high' => 'badge-error text-error-content',
+                                'medium' => 'badge-warning text-warning-content',
+                                'low' => 'badge-success text-success-content',
+                                default => 'badge-ghost text-base-content',
                             };
                         @endphp
                         <x-mary-badge :value="\Illuminate\Support\Str::title($priorityKey)"
-                            class="{{ $priorityClass }} border-none" />
+                            class="{{ $priorityClass }} border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1" />
                     @endscope
                 </x-mary-table>
             @else
