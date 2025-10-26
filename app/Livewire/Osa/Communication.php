@@ -92,10 +92,10 @@ class Communication extends Component
     #[Computed]
     public function users()
     {
-        return User::select(['user_id', 'first_name', 'last_name', 'email', 'org_id'])
-            ->where('role', 'student_org')
+        return User::select(['user_id', 'name', 'email', 'org_id'])
+            ->where('role_id', User::ROLE_STUDENT_ORG)
             ->with('studentOrganization:org_id,org_name')
-            ->orderBy('first_name')
+            ->orderBy('name')
             ->get();
     }
 }

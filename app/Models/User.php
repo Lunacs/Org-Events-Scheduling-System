@@ -115,7 +115,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getDashboardRoute(): string
     {
-        return match ($this->role) {
+        return match ($this->role_id) {
             self::ROLE_SUPERADMIN => 'superadmin.dashboard',
             self::ROLE_OSA => 'admin.dashboard',
             self::ROLE_GSO => 'gso.dashboard',
@@ -206,6 +206,23 @@ class User extends Authenticatable implements MustVerifyEmail
         $seed = $this->avatar_seed ?? $this->email;
 
         return "dicebear:{$style}:{$seed}";
+    }
+
+    /**
+     * Get the user's role name
+     */
+    public function getRoleNameAttribute(): string
+    {
+        return $this->role?->role_name ?? 'Unknown';
+    }
+
+    /**
+     * Get the user's formatted role name (for display)
+     */
+    public function getRoleDisplayAttribute(): string
+    {
+        $roleName = $this->role?->role_name ?? 'unknown';
+        return ucfirst(str_replace('-', ' ', $roleName));
     }
 
     /**

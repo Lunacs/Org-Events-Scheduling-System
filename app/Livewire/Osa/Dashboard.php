@@ -103,24 +103,24 @@ class Dashboard extends Component
     public function upcomingEvents(): array
     {
         return Cache::remember('osa_dashboard_upcoming_events', $this->cacheDuration, function () {
-            return Ticket::select(['ticket_id', 'title', 'date-requested', 'venue-requested', 'user_id'])
+            return Ticket::select(['ticket_id', 'title', 'date_from', 'venue_requested', 'user_id'])
                 ->with([
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name')
                 ])
                 ->where('status', 'approved')
-                ->where('date-requested', '>=', now())
-                ->orderBy('date-requested', 'asc')
+                ->where('date_from', '>=', now())
+                ->orderBy('date_from', 'asc')
                 ->limit(5)
                 ->get()
                 ->map(function ($ticket) {
                     return [
                         'title' => $ticket->title,
                         'organization' => $ticket->user?->studentOrganization?->org_name ?? 'N/A',
-                        'date' => $ticket->{'date-requested'}
-                            ? \Carbon\Carbon::parse($ticket->{'date-requested'})->format('M d, Y')
+                        'date' => $ticket->date_from
+                            ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y')
                             : 'TBD',
-                        'venue' => $ticket->{'venue-requested'} ?? 'TBD',
+                        'venue' => $ticket->venue_requested ?? 'TBD',
                     ];
                 })
                 ->toArray();

@@ -31,8 +31,11 @@ class Event_Schedule extends Model
      */
     protected $fillable = [
         'event_id',
-        'schedule_date',
-        'schedule_venue',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
+        'venue',
         'status',
         'remarks',
     ];
@@ -43,7 +46,8 @@ class Event_Schedule extends Model
      * @var array
      */
     protected $casts = [
-        'schedule_date' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**

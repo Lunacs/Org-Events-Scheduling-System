@@ -43,7 +43,7 @@ class Profile extends Component
         $this->name = $this->user->name;
         $this->email = $this->user->email;
         $this->phone = $this->user->phone ?? '';
-        $this->organization = $this->user->studentOrganization->name ?? 'N/A';
+        $this->organization = $this->user->studentOrganization->org_name ?? 'N/A';
     }
 
     /**

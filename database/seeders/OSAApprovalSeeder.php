@@ -14,7 +14,7 @@ class OSAApprovalSeeder extends Seeder
     {
         // Get all tickets and OSA users
         $tickets = \App\Models\Ticket::all();
-        $osaUsers = \App\Models\User::where('role', 'osa')->get();
+        $osaUsers = \App\Models\User::where('role_id', \App\Models\User::ROLE_OSA)->get();
 
         if ($tickets->isEmpty() || $osaUsers->isEmpty()) {
             $this->command->warn('No tickets or OSA users found. Skipping OSA approval seeder.');

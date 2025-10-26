@@ -115,7 +115,7 @@
                             </div>
                             <div>
                                 <span class="font-medium text-base-content/70">Venue:</span>
-                                <span>{{ $selectedEvent->ticket->{'venue-requested'} ?? 'TBD' }}</span>
+                                <span>{{ $selectedEvent->ticket->venue_requested ?? 'TBD' }}</span>
                             </div>
                         </div>
                     </div>

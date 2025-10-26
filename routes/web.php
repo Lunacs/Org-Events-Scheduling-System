@@ -31,11 +31,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', function () {
         $user = Auth::user();
 
-        return redirect()->route(match ($user->role) {
-            'superadmin' => 'superadmin.profile',
-            'osa' => 'admin.profile',
-            'gso' => 'gso.profile',
-            'student_org' => 'student-org.profile',
+        return redirect()->route(match ($user->role_id) {
+            \App\Models\User::ROLE_SUPERADMIN => 'superadmin.profile',
+            \App\Models\User::ROLE_OSA => 'admin.profile',
+            \App\Models\User::ROLE_GSO => 'gso.profile',
+            \App\Models\User::ROLE_STUDENT_ORG => 'student-org.profile',
             default => 'admin.profile',
         });
     })->name('profile');
@@ -101,7 +101,6 @@ Route::prefix('student-org')
         Route::get('/notifications', Notifications::class)->name('student-org.notifications');
         Route::get('/history', History::class)->name('student-org.history');
         Route::get('/profile', \App\Livewire\StudentOrg\Profile::class)->name('student-org.profile');
-        Route::view('/settings', 'student-orgs.settings')->name('student-org.settings');
     });
 
 require __DIR__.'/auth.php';

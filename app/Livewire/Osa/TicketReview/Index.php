@@ -45,7 +45,7 @@ class Index extends Component
     {
         return Ticket::select([
             'ticket_id', 'ticket_number', 'title', 'description', 'status',
-            'date-requested', 'venue-requested', 'user_id', 'event_type_id', 'created_at',
+            'venue_requested', 'user_id', 'event_type_id', 'created_at',
         ])
             ->with([
                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])

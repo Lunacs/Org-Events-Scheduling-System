@@ -45,13 +45,18 @@ class TicketFactory extends Factory
         ];
 
         $statuses = [
-            'pending',
+            'received',
+            'gso_review',
             'approved',
             'rejected',
+            'needs_revision',
         ];
 
         // Generate realistic ticket number (e.g., TKT-2024-0001)
         $ticketNumber = 'TKT-' . date('Y') . '-' . str_pad(fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT);
+
+        $plvParticipants = fake()->numberBetween(20, 200);
+        $externalParticipants = fake()->numberBetween(0, 50);
 
         return [
             'ticket_number' => $ticketNumber,
@@ -59,19 +64,41 @@ class TicketFactory extends Factory
             'event_type_id' => \App\Models\Event_Type::factory(),
             'title' => fake()->randomElement($eventTitles),
             'description' => fake()->paragraph(3),
-            'venue-requested' => fake()->randomElement($venues),
-            'date-requested' => fake()->dateTimeBetween('+1 week', '+3 months'),
+            'proponent_contact' => fake()->phoneNumber(),
+            'adviser_contact' => fake()->phoneNumber(),
+            'plv_participants' => $plvParticipants,
+            'external_participants' => $externalParticipants,
+            'total_participants' => $plvParticipants + $externalParticipants,
+            'venue_requested' => fake()->randomElement($venues),
+            'alternate_venue' => fake()->optional()->randomElement($venues),
+            'special_requirements' => fake()->optional()->sentence(),
+            'igp_requested' => fake()->boolean(30),
+            'igp_details' => fake()->optional()->sentence(),
+            'oc_accommodation' => fake()->optional()->sentence(),
+            'oc_tsp' => fake()->optional()->randomElement(['in-house', 'outsourced']),
+            'oc_driver_name' => fake()->optional()->name(),
+            'oc_vehicle_type' => fake()->optional()->word(),
+            'oc_vehicle_plate_number' => fake()->optional()->bothify('???-####'),
+            'oc_driver_contact_number' => fake()->optional()->phoneNumber(),
+            'date_from' => fake()->dateTimeBetween('+1 week', '+2 months')->format('Y-m-d'),
+            'date_to' => fake()->dateTimeBetween('+1 week', '+2 months')->format('Y-m-d'),
+            'time_from' => fake()->time('H:i'),
+            'time_to' => fake()->time('H:i'),
+            'estimated_budget' => fake()->randomFloat(2, 5000, 50000),
+            'budget_breakdown' => fake()->optional()->paragraph(),
+            'additional_notes' => fake()->optional()->paragraph(),
+            'fund_source_id' => \App\Models\Fund_Sources::factory(),
             'status' => fake()->randomElement($statuses),
         ];
     }
 
     /**
-     * Indicate that the ticket is pending.
+     * Indicate that the ticket is received.
      */
-    public function pending(): static
+    public function received(): static
     {
         return $this->state(fn(array $attributes) => [
-            'status' => 'pending',
+            'status' => 'received',
         ]);
     }
 

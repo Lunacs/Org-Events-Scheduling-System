@@ -20,7 +20,6 @@ return new class extends Migration
             $table->foreignId('role_id')->references('role_id')->on('roles')->onDelete('cascade');
             $table->foreignId('position_id')->nullable()->references('position_id')->on('positions')->onDelete('cascade');
             $table->string('phone')->nullable();
-            $table->string('role');
             $table->foreignId('org_id')->nullable()->references('org_id')->on('student__organizations')->onDelete('cascade');
             $table->foreignId('office_id')->nullable()->references('office_id')->on('offices')->onDelete('cascade');
             $table->string('avatar')->nullable(); // Legacy field for uploaded avatars

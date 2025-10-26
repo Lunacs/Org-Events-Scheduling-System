@@ -28,24 +28,14 @@ class Ticket extends Model
         'event_type_id',
         'title',
         'description',
-        'venue_requested',
-        'date-requested',
-        'status',
+        'proponent_contact',
+        'adviser_contact',
         'plv_participants',
         'external_participants',
         'total_participants',
-        'sponsoring_body',
+        'venue_requested',
         'alternate_venue',
         'special_requirements',
-        'date_from',
-        'date_to',
-        'time_from',
-        'time_to',
-        'estimated_budget',
-        'budget_breakdown',
-        'additional_notes',
-        'proponent_contact',
-        'adviser_contact',
         'igp_requested',
         'igp_details',
         'oc_accommodation',
@@ -54,7 +44,15 @@ class Ticket extends Model
         'oc_vehicle_type',
         'oc_vehicle_plate_number',
         'oc_driver_contact_number',
+        'date_from',
+        'date_to',
+        'time_from',
+        'time_to',
+        'estimated_budget',
+        'budget_breakdown',
+        'additional_notes',
         'fund_source_id',
+        'status',
     ];
 
     /**
@@ -63,7 +61,8 @@ class Ticket extends Model
      * @var array
      */
     protected $casts = [
-        'date-requested' => 'date',
+        'igp_requested' => 'boolean',
+        'estimated_budget' => 'float',
     ];
 
     /**
@@ -114,9 +113,9 @@ class Ticket extends Model
         return $this->hasMany(Attachment::class, 'ticket_id');
     }
 
-    public function fundSources()
+    public function fundSource()
     {
-        return $this->hasMany(Fund_Sources::class, 'fund_source_id');
+        return $this->belongsTo(Fund_Sources::class, 'fund_source_id', 'source_id');
     }
 
     /**

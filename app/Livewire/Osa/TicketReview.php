@@ -30,7 +30,7 @@ class TicketReview extends Component
     {
         $this->selectedTicket = Ticket::select([
                 'ticket_id', 'ticket_number', 'title', 'description', 'status',
-                'date-requested', 'venue-requested', 'user_id', 'event_type_id'
+                'venue_requested', 'user_id', 'event_type_id'
             ])
             ->with([
                 'user' => fn($q) => $q->select(['user_id', 'org_id'])

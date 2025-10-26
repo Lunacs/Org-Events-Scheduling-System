@@ -63,21 +63,26 @@
                         <div>
                             <label class="text-sm font-medium text-base-content/70">Event Date</label>
                             <p class="text-base-content">
-                                {{ $ticket->events->first()->eventSchedules->first()->schedule_date?->format('F d, Y') ?? 'TBD' }}
+                                {{ $ticket->events->first()->eventSchedules->first()->start_date?->format('F d, Y') ?? 'TBD' }}
                             </p>
                         </div>
 
                         <div>
                             <label class="text-sm font-medium text-base-content/70">Event Time</label>
                             <p class="text-base-content">
-                                {{ $ticket->events->first()->eventSchedules->first()->schedule_date?->format('g:i A') ?? 'TBD' }}
+                                @php
+                                    $schedule = $ticket->events->first()->eventSchedules->first();
+                                    $startTime = $schedule->start_time ?? null;
+                                    $endTime = $schedule->end_time ?? null;
+                                @endphp
+                                {{ $startTime && $endTime ? \Carbon\Carbon::parse($startTime)->format('g:i A') . ' - ' . \Carbon\Carbon::parse($endTime)->format('g:i A') : 'TBD' }}
                             </p>
                         </div>
 
                         <div>
                             <label class="text-sm font-medium text-base-content/70">Venue</label>
                             <p class="text-base-content">
-                                {{ $ticket->events->first()->eventSchedules->first()->schedule_venue ?? 'TBD' }}</p>
+                                {{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</p>
                         </div>
 
                         <div>
@@ -89,7 +94,7 @@
                         <div>
                             <label class="text-sm font-medium text-base-content/70">Requested Date</label>
                             <p class="text-base-content">
-                                {{ $ticket->date_requested ? \Carbon\Carbon::parse($ticket->date_requested)->format('F d, Y') : 'TBD' }}
+                                {{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('F d, Y') : 'TBD' }}
                             </p>
                         </div>
 

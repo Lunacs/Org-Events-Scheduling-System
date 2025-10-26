@@ -67,7 +67,7 @@ class Index extends Component
     {
         return User::query()
             ->with(['studentOrganization:org_id,org_name', 'office:office_id,office_name'])
-            ->select(['user_id', 'name', 'email', 'role', 'email_verified_at', 'org_id', 'office_id'])
+            ->select(['user_id', 'name', 'email', 'role_id', 'email_verified_at', 'org_id', 'office_id'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%'.$this->search.'%')
@@ -75,7 +75,7 @@ class Index extends Component
                 });
             })
             ->when($this->roleFilter !== 'all', function ($query) {
-                $query->where('role', $this->roleFilter);
+                $query->where('role_id', $this->roleFilter);
             })
             ->orderBy(...array_values($this->sortBy))
             ->paginate(10);
@@ -114,7 +114,7 @@ class Index extends Component
 
     public function loadEditForm($userId)
     {
-        $user = User::select(['user_id', 'name', 'email', 'role'])->findOrFail($userId);
+        $user = User::select(['user_id', 'name', 'email', 'role_id'])->findOrFail($userId);
 
         $this->editForm = [
             'user_id' => $user->user_id,
@@ -122,8 +122,8 @@ class Index extends Component
             'email' => $user->email,
             'password' => '',
             'password_confirmation' => '',
-            'role' => $user->role,
-            'is_superadmin' => $user->role === User::ROLE_SUPERADMIN,
+            'role' => $user->role_id,
+            'is_superadmin' => $user->role_id === User::ROLE_SUPERADMIN,
         ];
     }
 
@@ -148,7 +148,7 @@ class Index extends Component
             'name' => $this->createForm['name'],
             'email' => $this->createForm['email'],
             'password' => Hash::make($this->createForm['password']),
-            'role' => $this->createForm['role'],
+            'role_id' => $this->createForm['role'],
         ]);
 
         // Log the user creation
@@ -185,7 +185,7 @@ class Index extends Component
         ];
 
         // Only add role validation if not editing a superadmin
-        if ($user->role !== User::ROLE_SUPERADMIN) {
+        if ($user->role_id !== User::ROLE_SUPERADMIN) {
             $rules['editForm.role'] = 'required|in:osa,gso,student_org';
         }
 
@@ -208,8 +208,8 @@ class Index extends Component
         if ($originalUser['email'] !== $this->editForm['email']) {
             $changes[] = "Email: {$originalUser['email']} → {$this->editForm['email']}";
         }
-        if ($user->role !== User::ROLE_SUPERADMIN && $originalUser['role'] !== $this->editForm['role']) {
-            $changes[] = "Role: {$originalUser['role']} → {$this->editForm['role']}";
+        if ($user->role_id !== User::ROLE_SUPERADMIN && $originalUser['role_id'] !== $this->editForm['role']) {
+            $changes[] = "Role: {$originalUser['role_id']} → {$this->editForm['role']}";
         }
 
         // Update user data
@@ -217,8 +217,8 @@ class Index extends Component
         $user->email = $this->editForm['email'];
 
         // Only update role if not superadmin
-        if ($user->role !== User::ROLE_SUPERADMIN) {
-            $user->role = $this->editForm['role'];
+        if ($user->role_id !== User::ROLE_SUPERADMIN) {
+            $user->role_id = $this->editForm['role'];
         }
 
         // Only update password if provided
@@ -274,7 +274,7 @@ class Index extends Component
     public function loadUserForDeletion($userId)
     {
         // Optimize query by only selecting needed fields
-        $this->deletingUser = User::select(['user_id', 'name', 'role'])->find($userId);
+        $this->deletingUser = User::select(['user_id', 'name', 'role_id'])->find($userId);
         if ($this->deletingUser) {
             $this->deletingUserId = $userId;
             $this->deletingUserName = $this->deletingUser->name;
@@ -295,7 +295,7 @@ class Index extends Component
 
     public function confirmDelete()
     {
-        if ($this->deletingUser && $this->deletingUser->role !== User::ROLE_SUPERADMIN) {
+        if ($this->deletingUser && $this->deletingUser->role_id !== User::ROLE_SUPERADMIN) {
             // Log the user deletion before deleting
             TransactionLogService::logUserOperation('deleted', $this->deletingUser);
 

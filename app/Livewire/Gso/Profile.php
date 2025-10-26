@@ -50,7 +50,7 @@ class Profile extends Component
         $this->name = $this->user->name;
         $this->email = $this->user->email;
         $this->phone = $this->user->phone ?? '';
-        $this->office = $this->user->office->name ?? 'N/A';
+        $this->office = $this->user->office->office_name ?? 'N/A';
     }
 
     /**

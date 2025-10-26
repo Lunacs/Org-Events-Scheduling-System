@@ -57,7 +57,7 @@ class EventCalendar extends Component
     {
         $this->selectedEvent = Event::select(['event_id', 'title', 'ticket_id', 'event__type_id'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue-requested', 'user_id'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id'])
                     ->with([
                         'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name')
@@ -109,7 +109,7 @@ class EventCalendar extends Component
     {
         $events = Event::select(['event_id', 'ticket_id', 'event__type_id'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue-requested', 'user_id', 'status', 'ticket_number'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                     ->with([
                         'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name')
@@ -141,7 +141,7 @@ class EventCalendar extends Component
                 'extendedProps' => [
                     'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
                     'eventType' => $event->eventType?->type_name ?? 'N/A',
-                    'venue' => $event->ticket->{'venue-requested'} ?? 'TBD',
+                    'venue' => $event->ticket->venue_requested ?? 'TBD',
                     'description' => $event->ticket->description,
                     'ticketNumber' => $event->ticket->ticket_number,
                 ]
