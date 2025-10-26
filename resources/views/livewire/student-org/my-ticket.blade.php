@@ -28,13 +28,12 @@
                     <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
                         ['id' => 'draft', 'name' => 'Draft'],
-                        ['id' => 'submitted', 'name' => 'Submitted'],
-                        ['id' => 'under_review', 'name' => 'Under Review'],
+                        ['id' => 'received', 'name' => 'Under Review'],
                         ['id' => 'pending_osa', 'name' => 'Pending OSA Approval'],
                         ['id' => 'pending_gso', 'name' => 'Pending GSO Approval'],
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'rejected', 'name' => 'Rejected'],
-                        ['id' => 'requires_revision', 'name' => 'Requires Revision'],
+                        ['id' => 'needs_revision', 'name' => 'Requires Revision'],
                     ]"
                                    placeholder="Filter by status"/>
 
@@ -64,27 +63,41 @@
                 {{-- Pagination --}}
                 <div class="mt-6 flex justify-between items-center">
                     <div class="text-sm text-gray-600">
-                        Showing 3 of 12 tickets
+                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }} of {{ $tickets->total() }} tickets
                     </div>
+
                     <div class="flex space-x-2">
-                        <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" disabled/>
-                        <x-mary-button label="1" class="btn-sm btn-primary"/>
-                        <x-mary-button label="2" class="btn-sm btn-ghost"/>
-                        <x-mary-button label="3" class="btn-sm btn-ghost"/>
-                        <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost"/>
+                        <x-mary-button
+                            icon="s-chevron-left"
+                            class="btn-sm btn-ghost"
+                            wire:click="previousPage"
+                            :disabled="!$tickets->previousPageUrl()" />
+
+                        @foreach($tickets->getUrlRange(1, $tickets->lastPage()) as $page => $url)
+                            <x-mary-button
+                                :label="$page"
+                                class="btn-sm {{ $page == $tickets->currentPage() ? 'btn-primary' : 'btn-ghost' }}"
+                                wire:click="gotoPage({{ $page }})" />
+                        @endforeach
+
+                        <x-mary-button
+                            icon="s-chevron-right"
+                            class="btn-sm btn-ghost"
+                            wire:click="nextPage"
+                            :disabled="!$tickets->nextPageUrl()" />
                     </div>
                 </div>
             </x-mary-card>
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <x-mary-stat title="Total Submitted" value="12" icon="s-document-text" color="text-primary"/>
+                <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text" color="text-primary"/>
 
-                <x-mary-stat title="Under Review" value="4" icon="s-clock" color="text-warning"/>
+                <x-mary-stat title="Under Review" value="{{ $allTickets->whereNotIn('status', ['approved', 'rejected', 'needs_revision', 'for_rescheduling'])->count() }}" icon="s-clock" color="text-warning"/>
 
-                <x-mary-stat title="Approved" value="7" icon="s-check-circle" color="text-success"/>
+                <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}" icon="s-check-circle" color="text-success"/>
 
-                <x-mary-stat title="Need Action" value="1" icon="s-exclamation-triangle" color="text-error"/>
+                <x-mary-stat title="Need Action" value="{{ $allTickets->whereIn('status', ['needs_revision', 'for_rescheduling'])->count() }}" icon="s-exclamation-triangle" color="text-error"/>
             </div>
         </div>
     </div>
