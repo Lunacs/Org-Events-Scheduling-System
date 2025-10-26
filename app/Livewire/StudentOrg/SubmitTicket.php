@@ -40,7 +40,7 @@ class SubmitTicket extends Component
     public $adviser_contact = '';
     #[Validate('required|integer|min:1')]
     public $expectedPLVParticipants = 0;
-    #[Validate('required|integer|min:1')]
+    #[Validate('nullable|integer|min:1')]
     public $expectedNonPLVParticipants = 0;
     #[Validate('required|string|max:255')]
     public $eventTitle = '';
