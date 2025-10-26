@@ -50,7 +50,6 @@ Route::prefix('admin')
 
 // SuperAdmin routes
 Route::prefix('superadmin')
-    ->middleware(['auth', 'verified', 'role:superadmin'])
     ->group(function () {
         Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
         Route::get('/users', UsersIndex::class)->name('superadmin.users');
@@ -61,7 +60,6 @@ Route::prefix('superadmin')
 
 // GSO/Offices routes
 Route::prefix('gso')
-    ->middleware(['auth', 'verified', 'role:gso'])
     ->group(function () {
         Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard');
         Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
@@ -75,7 +73,6 @@ Route::prefix('gso')
 
 // Student Organization routes
 Route::prefix('student-org')
-    ->middleware(['auth', 'verified', 'role:student-org'])
     ->group(function () {
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
