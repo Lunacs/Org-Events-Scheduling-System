@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }} - Student Organization</title>
+    <title>{{ isset($title) ? $title . ' - ' . config('app.name') : config('app.name') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
@@ -26,13 +26,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
-    <div class="min-h-screen pl-10 pr-5">
+<body class="font-sans antialiased scroll-smooth">
+    <div class="min-h-screen">
 
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit rounded-r-xl">
+            <x-slot:sidebar drawer="main-drawer" collapsible
+                class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -44,15 +45,7 @@
 
                 {{-- MENU --}}
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
-                    @foreach ([
-                        ['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'],
-                        ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'],
-                        ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'],
-                        ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'],
-                        ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'],
-                        ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'],
-                        ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']
-                    ] as $item)
+                    @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
                         <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
                     @endforeach
                 </x-mary-menu>

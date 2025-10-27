@@ -90,19 +90,41 @@ class Ticket extends Model
     }
 
     /**
-     * OSA approvals for this ticket
+     * OSA approvals for this ticket (history of all OSA actions)
+     * Ordered by most recent first
      */
     public function osaApprovals()
     {
-        return $this->hasMany(OSA_Approval::class, 'ticket_id');
+        return $this->hasMany(OSA_Approval::class, 'ticket_id')
+                    ->orderBy('created_at', 'desc');
     }
 
     /**
-     * Office approvals for this ticket
+     * Get the latest OSA approval decision
+     */
+    public function latestOsaApproval()
+    {
+        return $this->hasOne(OSA_Approval::class, 'ticket_id')
+                    ->latestOfMany();
+    }
+
+    /**
+     * Office approvals for this ticket (history of all office actions)
+     * Ordered by most recent first
      */
     public function officeApprovals()
     {
-        return $this->hasMany(Office_Approval::class, 'ticket_id');
+        return $this->hasMany(Office_Approval::class, 'ticket_id')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get the latest office approval decision
+     */
+    public function latestOfficeApproval()
+    {
+        return $this->hasOne(Office_Approval::class, 'ticket_id')
+                    ->latestOfMany();
     }
 
     /**
@@ -124,5 +146,77 @@ class Ticket extends Model
     public function comments()
     {
         return $this->hasMany(TicketComment::class, 'ticket_id');
+    }
+
+    /**
+     * Check if ticket is ready for final OSA approval
+     */
+    public function isReadyForFinalApproval()
+    {
+        return $this->status === 'pending_osa_approval';
+    }
+
+    /**
+     * Check if ticket needs GSO approval
+     */
+    public function needsGsoApproval()
+    {
+        return in_array($this->status, ['received', 'amended']) && 
+               ($this->venue_requested || $this->special_requirements);
+    }
+
+    /**
+     * Get the complete approval history combining OSA and Office approvals
+     * Sorted by most recent first
+     */
+    public function getApprovalHistoryAttribute()
+    {
+        $allApprovals = collect();
+
+        // Add OSA approvals
+        foreach ($this->osaApprovals as $approval) {
+            $allApprovals->push([
+                'type' => 'OSA',
+                'office_name' => 'Office of Student Affairs',
+                'user' => $approval->user,
+                'decision' => $approval->decision,
+                'remarks' => $approval->remarks,
+                'created_at' => $approval->created_at,
+            ]);
+        }
+
+        // Add Office approvals
+        foreach ($this->officeApprovals as $approval) {
+            $allApprovals->push([
+                'type' => 'Office',
+                'office_name' => $approval->office->office_name ?? 'Unknown Office',
+                'user' => $approval->user,
+                'decision' => $approval->decision,
+                'remarks' => $approval->remarks,
+                'created_at' => $approval->created_at,
+            ]);
+        }
+
+        return $allApprovals->sortByDesc('created_at');
+    }
+
+    /**
+     * Check if ticket has been forwarded to GSO
+     */
+    public function hasBeenForwardedToGso()
+    {
+        return $this->osaApprovals()
+                    ->where('decision', 'forwarded')
+                    ->exists();
+    }
+
+    /**
+     * Check if ticket has revision requests
+     */
+    public function hasRevisionRequests()
+    {
+        return $this->osaApprovals()
+                    ->where('decision', 'revision_requested')
+                    ->exists();
     }
 }

@@ -2,15 +2,14 @@
 
 namespace App\Livewire\Osa;
 
-use Livewire\Component;
+use App\Models\Event;
+use Carbon\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Event;
-use App\Models\Ticket;
-use Carbon\Carbon;
 
 class Archive extends Component
 {
@@ -21,20 +20,21 @@ class Archive extends Component
 
     #[Url(except: '')]
     public $search = '';
-    
+
     #[Url(except: '')]
     public $statusFilter = '';
-    
+
     #[Url(except: '')]
     public $organizationFilter = '';
-    
+
     #[Url(except: '')]
     public $yearFilter = '';
-    
+
     #[Url(except: '')]
     public $eventTypeFilter = '';
-    
+
     public $selectedEvent = null;
+
     public $showModal = false;
 
     public function mount()
@@ -44,15 +44,15 @@ class Archive extends Component
 
     public function viewArchivedEvent($eventId)
     {
-        $this->selectedEvent = Event::select(['event_id', 'title', 'ticket_id', 'event__type_id', 'created_at'])
+        $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
             ->with([
-                'ticket:ticket_id,ticket_number,title,description,status,user_id' => fn($q) => $q->with([
-                    'user:user_id,org_id' => fn($q) => $q->with('studentOrganization:org_id,org_name'),
+                'ticket:ticket_id,ticket_number,title,description,status,user_id,venue_requested,total_participants,created_at' => fn ($q) => $q->with([
+                    'user:user_id,org_id' => fn ($q) => $q->with('studentOrganization:org_id,org_name'),
                     'osaApprovals:osa_approval_id,ticket_id,status,comments,approved_at',
-                    'attachments:attachment_id,ticket_id,file_path,file_name'
+                    'attachments:attachment_id,ticket_id,file_path,file_name',
                 ]),
-                'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
-                'eventType:event_type_id,type_name'
+                'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
+                'eventType:event_type_id,type_name',
             ])
             ->find($eventId);
         $this->showModal = true;
@@ -96,28 +96,29 @@ class Archive extends Component
 
     public function render()
     {
-        $archivedEvents = Event::select(['event_id', 'title', 'ticket_id', 'event__type_id', 'created_at'])
+        $archivedEvents = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'status', 'user_id'])
+                'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name')
+                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                            ->with('studentOrganization:org_id,org_name'),
+                        'attachments:attachment_id,ticket_id',
                     ]),
-                'eventSchedules:schedule_id,event_id,start_date,start_time',
-                'eventType:event_type_id,type_name'
+                'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
+                'eventType:event_type_id,type_name',
             ])
-            ->whereHas('ticket', fn($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
-            ->when($this->search, fn($query) => $query->where('title', 'like', '%' . $this->search . '%'))
-            ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
-            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
+            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
+            ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
+            ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
+            ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->yearFilter, fn ($query) => $query->whereYear('created_at', $this->yearFilter))
+            ->when($this->eventTypeFilter, fn ($query) => $query->where('event__type_id', $this->eventTypeFilter))
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return view('livewire.osa.archive', [
             'archivedEvents' => $archivedEvents,
-            'availableYears' => $this->availableYears
+            'availableYears' => $this->availableYears,
         ]);
     }
 

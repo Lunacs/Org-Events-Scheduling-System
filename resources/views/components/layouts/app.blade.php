@@ -26,13 +26,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased scroll-smooth">
     <div class="min-h-screen">
 
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:px-3">
+            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -49,11 +49,11 @@
                     <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard" wire:navigate />
                     <x-mary-menu-item title="Ticket Management" icon="s-calendar-days" link="/admin/tickets"
                         wire:navigate />
-                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days" link="/admin/ticket-review"
-                        wire:navigate />
-                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="/admin/approvals" wire:navigate />
+                    <x-mary-menu-item title="Ticket Review & Approvals" icon="s-calendar-days"
+                        link="/admin/ticket-review" wire:navigate />
                     <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="/admin/calendar"
                         wire:navigate />
+                    <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
                 </x-mary-menu>
             </x-slot:sidebar>

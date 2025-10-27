@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Osa;
 
+use App\Models\OSA_Approval;
 use App\Models\Ticket;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -50,6 +51,96 @@ class TicketManagement extends Component
         $this->organizationFilter = '';
         $this->dateFilter = '';
         $this->resetPage();
+    }
+
+    public function approveTicket($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $oldStatus = $ticket->status;
+
+        $ticket->update(['status' => 'approved']);
+
+        // Create OSA approval record
+        OSA_Approval::create([
+            'ticket_id' => $ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'approved',
+            'remarks' => 'Ticket approved from ticket management.',
+        ]);
+
+        // Notify ticket owner about status change
+        $ticket->user->notify(new \App\Notifications\TicketStatusUpdatedNotification(
+            $ticket,
+            $oldStatus,
+            'approved',
+            'Ticket approved from ticket management.'
+        ));
+
+        $this->dispatch('toast', [
+            'type' => 'success',
+            'title' => 'Success',
+            'description' => 'Ticket has been approved successfully.',
+        ]);
+    }
+
+    public function rejectTicket($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $oldStatus = $ticket->status;
+
+        $ticket->update(['status' => 'rejected']);
+
+        // Create OSA approval record
+        OSA_Approval::create([
+            'ticket_id' => $ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'rejected',
+            'remarks' => 'Ticket rejected from ticket management.',
+        ]);
+
+        // Notify ticket owner about status change
+        $ticket->user->notify(new \App\Notifications\TicketStatusUpdatedNotification(
+            $ticket,
+            $oldStatus,
+            'rejected',
+            'Ticket rejected from ticket management.'
+        ));
+
+        $this->dispatch('toast', [
+            'type' => 'error',
+            'title' => 'Rejected',
+            'description' => 'Ticket has been rejected.',
+        ]);
+    }
+
+    public function rescheduleTicket($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $oldStatus = $ticket->status;
+
+        $ticket->update(['status' => 'for_rescheduling']);
+
+        // Create OSA approval record
+        OSA_Approval::create([
+            'ticket_id' => $ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'for_rescheduling',
+            'remarks' => 'Reschedule requested from ticket management.',
+        ]);
+
+        // Notify ticket owner about status change
+        $ticket->user->notify(new \App\Notifications\TicketStatusUpdatedNotification(
+            $ticket,
+            $oldStatus,
+            'for_rescheduling',
+            'Reschedule requested from ticket management.'
+        ));
+
+        $this->dispatch('toast', [
+            'type' => 'info',
+            'title' => 'Reschedule Requested',
+            'description' => 'Ticket has been marked for rescheduling.',
+        ]);
     }
 
     public function render()

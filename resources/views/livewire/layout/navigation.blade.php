@@ -67,9 +67,9 @@ new class extends Component {
                     </svg>
                 </label>
 
-                <h2 class="text-lg font-semibold text-base-content hidden lg:block">
+                {{-- <h2 class="text-lg font-semibold text-base-content hidden lg:block">
                     Event Scheduling System
-                </h2>
+                </h2> --}}
             </div>
 
             <!-- Right Side -->
@@ -80,13 +80,8 @@ new class extends Component {
                         class="btn btn-ghost btn-sm btn-circle" />
                 </div>
 
-                <!-- Notifications -->
-                <div class="tooltip tooltip-bottom" data-tip="Notifications">
-                    <button class="btn btn-ghost btn-sm btn-circle relative">
-                        <x-heroicon-s-bell class="h-5 w-5" />
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
-                    </button>
-                </div>
+                <!-- Notifications Dropdown -->
+                <livewire:notification-dropdown />
 
                 <!-- Profile Dropdown -->
                 <div class="dropdown dropdown-end" data-tip="Profile" wire:key="nav-profile-dropdown">
@@ -115,12 +110,21 @@ new class extends Component {
                                         <h4 class="font-bold text-base text-base-content truncate">{{ $user->name }}
                                         </h4>
                                         <p class="text-xs text-base-content/70 truncate">{{ $user->email }}</p>
-                                        @if ($user->role)
-                                            <div class="mt-1">
-                                                <span
-                                                    class="badge badge-primary badge-xs">{{ $user->role_display }}</span>
-                                            </div>
-                                        @endif
+                                        <div class="flex gap-2">
+                                            @if ($user->role)
+                                                <div class="mt-1">
+                                                    <span
+                                                        class="badge badge-primary badge-xs">{{ $user->role_display }}</span>
+                                                </div>
+                                            @endif
+                                            @if ($user->position)
+                                                <div class="mt-1">
+                                                    <span
+                                                        class="badge badge-info badge-xs">{{ $user->position->position_name }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+
                                     </div>
                                 </div>
                             </li>

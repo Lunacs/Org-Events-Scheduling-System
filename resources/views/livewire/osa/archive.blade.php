@@ -114,13 +114,14 @@
                         <tr class="hover">
                             <td>
                                 <div>
-                                    <div class="font-semibold">{{ $event->title }}</div>
-                                    <div class="text-sm text-base-content/70">{{ Str::limit($event->description, 60) }}
+                                    <div class="font-semibold">{{ $event->ticket->title }}</div>
+                                    <div class="text-sm text-base-content/70">
+                                        {{ Str::limit($event->ticket->description, 60) }}
                                     </div>
-                                    @if ($event->venue)
+                                    @if ($event->ticket->venue_requested || $event->eventSchedules->first()?->venue)
                                         <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
                                             <x-mary-icon name="o-map-pin" class="w-3 h-3" />
-                                            {{ $event->venue }}
+                                            {{ $event->ticket->venue_requested ?? $event->eventSchedules->first()->venue }}
                                         </div>
                                     @endif
                                 </div>
@@ -209,7 +210,7 @@
                 <div class="border-b border-base-300 pb-4">
                     <div class="flex items-start justify-between">
                         <div>
-                            <h2 class="text-xl font-bold">{{ $selectedEvent->title }}</h2>
+                            <h2 class="text-xl font-bold">{{ $selectedEvent->ticket->title }}</h2>
                             <p class="text-base-content/70">
                                 {{ $selectedEvent->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
                             </p>
@@ -233,15 +234,15 @@
                         <div class="space-y-2 text-sm">
                             <div>
                                 <span class="font-medium text-base-content/70">Event Type:</span>
-                                <span>{{ $selectedEvent->event_type?->name ?? 'N/A' }}</span>
+                                <span>{{ $selectedEvent->eventType?->type_name ?? 'N/A' }}</span>
                             </div>
                             <div>
                                 <span class="font-medium text-base-content/70">Expected Attendees:</span>
-                                <span>{{ $selectedEvent->expected_attendees ?? 'N/A' }}</span>
+                                <span>{{ $selectedEvent->ticket->total_participants ?? 'N/A' }}</span>
                             </div>
                             <div>
                                 <span class="font-medium text-base-content/70">Venue:</span>
-                                <span>{{ $selectedEvent->venue ?? 'N/A' }}</span>
+                                <span>{{ $selectedEvent->ticket->venue_requested ?? ($selectedEvent->eventSchedules->first()?->venue ?? 'N/A') }}</span>
                             </div>
                             <div>
                                 <span class="font-medium text-base-content/70">Submitted:</span>
@@ -304,11 +305,11 @@
                 @endif
 
                 {{-- Description --}}
-                @if ($selectedEvent->description)
+                @if ($selectedEvent->ticket->description)
                     <div>
                         <h3 class="font-semibold mb-3">Description</h3>
                         <p class="text-sm text-base-content/80 bg-base-200 rounded-lg p-4">
-                            {{ $selectedEvent->description }}</p>
+                            {{ $selectedEvent->ticket->description }}</p>
                     </div>
                 @endif
 
