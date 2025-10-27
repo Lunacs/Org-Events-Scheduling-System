@@ -5,9 +5,12 @@ namespace App\Livewire\StudentOrg;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use Livewire\WithPagination;
 
 class MyTicket extends Component
 {
+    use WithPagination;
+
     #[Title('My Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
 
@@ -23,9 +26,21 @@ class MyTicket extends Component
     }
     public function render()
     {
-        $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc');
+        $ticketsQuery = auth()->user()->tickets()->with('eventType')
+            ->when($this->search, function($query) {
+                $query->where(function($q) {
+                    $q->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('ticket_number', 'like', '%' . $this->search . '%')
+                        ->orWhere('description', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->statusFilter, function($query) {
+                $query->where('status', $this->statusFilter);
+            })
+            ->orderBy('created_at', 'desc');
         return view('livewire.student-org.my-ticket', [
-            'tickets' => $tickets->get(),
+            'allTickets' => clone $ticketsQuery->get(),
+            'tickets' => $ticketsQuery->paginate(10),
         ]);
     }
 }

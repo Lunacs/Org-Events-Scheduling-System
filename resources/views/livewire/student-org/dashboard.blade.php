@@ -21,16 +21,16 @@
 
             {{-- Stats Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <x-mary-stat title="Total Tickets" description="Submitted requests" value="12" icon="s-ticket"
+                <x-mary-stat title="Total Tickets" description="Submitted requests" value="{{ $tickets->count() }}" icon="s-ticket"
                     color="text-primary" />
 
-                <x-mary-stat title="Pending" description="Awaiting approval" value="3" icon="s-clock"
+                <x-mary-stat title="Pending" description="Awaiting approval" value="{{ $tickets->whereNotIn('status', ['approved'])->count() }}" icon="s-clock"
                     color="text-warning" />
 
-                <x-mary-stat title="Approved" description="Ready to proceed" value="7" icon="s-check-circle"
+                <x-mary-stat title="Approved" description="Ready to proceed" value="{{ $tickets->where('status', 'approved')->count() }}" icon="s-check-circle"
                     color="text-success" />
 
-                <x-mary-stat title="Upcoming Events" description="Next 30 days" value="2" icon="s-calendar-days"
+                <x-mary-stat title="Upcoming Events" description="Next 30 days" value="{{ $upcomingEvents->count() }}" icon="s-calendar-days"
                     color="text-info" />
             </div>
 
@@ -47,37 +47,25 @@
                     ['key' => 'date', 'label' => 'Requested Date'],
                     ['key' => 'status', 'label' => 'Status'],
                     ['key' => 'submitted', 'label' => 'Submitted'],
-                ]" :rows="[
-                    [
-                        'id' => 'TKT-001',
-                        'title' => 'Annual Org Meeting',
-                        'date' => '2025-10-15',
-                        'status' => 'Pending',
-                        'submitted' => '2025-09-28',
-                    ],
-                    [
-                        'id' => 'TKT-002',
-                        'title' => 'Fundraising Event',
-                        'date' => '2025-11-01',
-                        'status' => 'Approved',
-                        'submitted' => '2025-09-25',
-                    ],
-                    [
-                        'id' => 'TKT-003',
-                        'title' => 'Workshop Series',
-                        'date' => '2025-10-20',
-                        'status' => 'Under Review',
-                        'submitted' => '2025-09-27',
-                    ],
-                ]">
-                    @scope('cell_status', $row)
-                        @if ($row['status'] === 'Approved')
-                            <x-mary-badge value="{{ $row['status'] }}" class="badge-success" />
-                        @elseif($row['status'] === 'Pending')
-                            <x-mary-badge value="{{ $row['status'] }}" class="badge-warning" />
-                        @else
-                            <x-mary-badge value="{{ $row['status'] }}" class="badge-info" />
-                        @endif
+                ]" :rows="$tickets">
+                    @scope('cell_id', $ticket)
+                    {{ $ticket->ticket_number }}
+                    @endscope
+
+                    @scope('cell_title', $ticket)
+                    {{ $ticket->event_name ?? $ticket->title }}
+                    @endscope
+
+                    @scope('cell_date', $ticket)
+                    {{ \Carbon\Carbon::parse($ticket->date_from)->format('M j, Y') ?? 'N/A' }}
+                    @endscope
+
+                    @scope('cell_status', $ticket)
+                    <x-tickets.progress-badge :status="$ticket->status" />
+                    @endscope
+
+                    @scope('cell_submitted', $ticket)
+                    {{ $ticket->created_at->format('Y-m-d') }}
                     @endscope
                 </x-mary-table>
             </x-mary-card>
@@ -90,33 +78,9 @@
                 </x-slot:menu>
 
                 <div class="space-y-4">
-                    <div class="flex items-center space-x-4 p-4 bg-base-200 rounded-lg">
-                        <div class="flex-shrink-0">
-                            <x-mary-icon name="s-calendar-days" class="w-6 h-6 text-success" />
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-semibold">Fundraising Event</h4>
-                            <p class="text-sm text-gray-600">November 1, 2025 • 2:00 PM - 6:00 PM</p>
-                            <p class="text-sm text-gray-500">Student Center Auditorium</p>
-                        </div>
-                        <div>
-                            <x-mary-badge value="Confirmed" class="badge-success" />
-                        </div>
-                    </div>
-
-                    <div class="flex items-center space-x-4 p-4 bg-base-200 rounded-lg">
-                        <div class="flex-shrink-0">
-                            <x-mary-icon name="s-calendar-days" class="w-6 h-6 text-info" />
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-semibold">Workshop Series</h4>
-                            <p class="text-sm text-gray-600">October 20, 2025 • 10:00 AM - 12:00 PM</p>
-                            <p class="text-sm text-gray-500">Room 301, Building A</p>
-                        </div>
-                        <div>
-                            <x-mary-badge value="Pending Final Approval" class="badge-warning" />
-                        </div>
-                    </div>
+                    @foreach($upcomingEvents as $event)
+                        <x-tickets.upc-events-card :ticket="$event" />
+                    @endforeach
                 </div>
             </x-mary-card>
 

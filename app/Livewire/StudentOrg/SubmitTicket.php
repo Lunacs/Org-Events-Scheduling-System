@@ -5,10 +5,11 @@ namespace App\Livewire\StudentOrg;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
 use App\Models\Ticket;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
+use Livewire\Attributes\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
 
@@ -17,11 +18,8 @@ class SubmitTicket extends Component
     #[Title('Submit Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
     public $search = '';
-
     public $statusFilter = '';
-
     public $dateFilter = '';
-
     public $organizationName = '';
 
     #[Validate('required|boolean')]
@@ -50,8 +48,7 @@ class SubmitTicket extends Component
 
     #[Validate('required|integer|min:1')]
     public $expectedPLVParticipants = 0;
-
-    #[Validate('required|integer|min:1')]
+    #[Validate('nullable|integer|min:1')]
     public $expectedNonPLVParticipants = 0;
 
     #[Validate('required|string|max:255')]
@@ -120,8 +117,8 @@ class SubmitTicket extends Component
     #[Validate('nullable|string|max:2000')]
     public $additionalNotes = '';
 
-    use Toast;
     use WithFileUploads;
+    use Toast;
 
     #[Validate('nullable|array', 'attachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
     public $attachments = [];
@@ -184,7 +181,7 @@ class SubmitTicket extends Component
             if ($this->attachments) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
-                    $filename = time().'_'.uniqid().'_'.$originalName;
+                    $filename = time() . '_' . uniqid() . '_' . $originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
                         $filename

@@ -10,9 +10,17 @@ class Dashboard extends Component
 {
     #[Title('Dashboard - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
-
     public function render()
     {
-        return view('livewire.student-org.dashboard');
+        $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc');
+        $upcomingEvents = auth()->user()->tickets()
+            ->where('status', 'approved')
+            ->whereBetween('date_to', [now(), now()->addDays(30)])
+            ->orderBy('date_from', 'asc')
+            ->get();
+        return view('livewire.student-org.dashboard', [
+            'tickets' => $tickets->get(),
+            'upcomingEvents' => $upcomingEvents,
+        ]);
     }
 }

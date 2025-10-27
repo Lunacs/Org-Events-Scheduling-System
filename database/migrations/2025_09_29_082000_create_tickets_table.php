@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('proponent_contact');
             $table->string('adviser_contact');
             $table->integer('plv_participants');
-            $table->integer('external_participants');
+            $table->integer('external_participants')->nullable();
             $table->integer('total_participants');
             $table->string('venue_requested');
             $table->string('alternate_venue')->nullable();
