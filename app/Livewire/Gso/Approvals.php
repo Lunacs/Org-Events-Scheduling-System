@@ -23,6 +23,11 @@ class Approvals extends Component
 
     public array $selectedRequests = [];
 
+    public bool $showConfirmationModal = false;
+    public ?int $selectedApprovalId = null;
+    public string $actionType = '';
+    public string $confirmationInput = '';
+
     public function render()
     {
         $user = Auth::user();
@@ -59,6 +64,11 @@ class Approvals extends Component
             'statusDefinitions' => $this->statusDefinitions(),
         ]);
     }
+
+    protected $listeners = [
+        // allow external callers or self to trigger a re-render
+        'refreshApprovals' => '$refresh',
+    ];
 
     protected function baseQuery(?int $officeId): Builder
     {
@@ -195,5 +205,66 @@ class Approvals extends Component
         }
 
         return ['key' => 'low', 'label' => 'Low Priority'];
+    }
+
+    public function confirmAction(int $approvalId, string $action)
+    {
+    // reset any previous confirmation input/errors and open modal
+    $this->resetValidation();
+    $this->confirmationInput = '';
+    $this->selectedApprovalId = $approvalId;
+    $this->actionType = $action;
+    $this->showConfirmationModal = true;
+    }
+
+    public function cancelConfirmation()
+    {
+        // reset modal state and confirmation input
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->resetValidation();
+    }
+
+    public function performAction()
+    {
+    if (! $this->selectedApprovalId) {
+        return;
+    }
+
+    $approval = \App\Models\Office_Approval::find($this->selectedApprovalId);
+    if (! $approval) {
+        return;
+    }
+
+    // Figure out the required confirmation word depending on action
+    $requiredWord = null;
+    if ($this->actionType === 'approve') {
+        $requiredWord = 'approve';
+    } elseif ($this->actionType === 'reject') {
+        $requiredWord = 'reject';
+    }
+
+    if ($requiredWord) {
+        if (strtolower(trim($this->confirmationInput)) !== $requiredWord) {
+            $this->addError('confirmationInput', 'Type "' . $requiredWord . '" to proceed.');
+            return;
+        }
+    }
+
+    // Determine final decision and persist
+    $decision = $this->actionType === 'approve'
+        ? 'approved'
+        : ($this->actionType === 'reject' ? 'rejected' : $this->actionType);
+
+    $approval->decision = $decision;
+    $approval->updated_at = now();
+    $approval->save();
+    // trigger component refresh so UI reflects updated status immediately
+    // Livewire v3 provides a server-side dispatch() for events
+    $this->dispatch('refreshApprovals');
+
+    // Reset modal state and show a clear success message using the persisted decision
+    $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+    $this->resetValidation();
+    session()->flash('message', 'Request ' . $decision . ' successfully.');
     }
 }
