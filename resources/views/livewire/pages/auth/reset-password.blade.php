@@ -103,32 +103,32 @@ new #[Layout('components.layouts.guest')] class extends Component {
     <form wire:submit="resetPassword" class="space-y-6">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required
-                autofocus autocomplete="username" disabled />
+            <x-ui.input-label for="email" :value="__('Email')" />
+            <x-forms.text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email"
+                required autofocus autocomplete="username" disabled />
             <x-ui.input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <!-- Password -->
         <div>
-            <x-input-label for="password" :value="__('New Password')" />
-            <x-password-input wire:model="password" id="password" class="mt-1" name="password" required
+            <x-ui.input-label for="password" :value="__('New Password')" />
+            <x-forms.password-input wire:model="password" id="password" class="mt-1" name="password" required
                 autocomplete="new-password" placeholder="Enter new password" />
             <x-ui.input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <!-- Confirm Password -->
         <div>
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-            <x-password-input wire:model="password_confirmation" id="password_confirmation" class="mt-1"
+            <x-ui.input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-forms.password-input wire:model="password_confirmation" id="password_confirmation" class="mt-1"
                 name="password_confirmation" required autocomplete="new-password" placeholder="Confirm new password" />
             <x-ui.input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center justify-end mt-6">
-            <x-primary-button class="w-full sm:w-auto justify-center">
+            <x-ui.primary-button class="w-full sm:w-auto justify-center">
                 {{ __('Reset Password') }}
-            </x-primary-button>
+            </x-ui.primary-button>
         </div>
     </form>
 </div>

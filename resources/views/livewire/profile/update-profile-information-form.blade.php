@@ -96,16 +96,16 @@ new class extends Component {
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required
-                autofocus autocomplete="name" />
+            <x-ui.input-label for="name" :value="__('Name')" />
+            <x-forms.text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full"
+                required autofocus autocomplete="name" />
             <x-ui.input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full"
-                required autocomplete="username" />
+            <x-ui.input-label for="email" :value="__('Email')" />
+            <x-forms.text-input wire:model="email" id="email" name="email" type="email"
+                class="mt-1 block w-full" required autocomplete="username" />
             <x-ui.input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if (auth()->user() instanceof MustVerifyEmail && !auth()->user()->hasVerifiedEmail())
@@ -129,11 +129,11 @@ new class extends Component {
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-ui.primary-button>{{ __('Save') }}</x-ui.primary-button>
 
-            <x-action-message class="me-3" on="profile-updated">
+            <x-ui.action-message class="me-3" on="profile-updated">
                 {{ __('Saved.') }}
-            </x-action-message>
+            </x-ui.action-message>
         </div>
     </form>
 </section>

@@ -15,16 +15,14 @@
             </x-mary-card>
 
             <x-mary-card title="Office Setup">
-                <x-mary-select :options="['OSA','GSO','Student Orgs']" label="Default Office" class="mb-4" />
+                <x-mary-select :options="['OSA', 'GSO', 'Student Orgs']" label="Default Office" class="mb-4" />
                 <x-mary-toggle label="Enable cross-office approvals" />
             </x-mary-card>
 
             <x-mary-card title="Approval Workflows" class="lg:col-span-2">
-                <x-mary-timeline>
-                    <x-mary-timeline-item title="Student Org" subtitle="Submit Request" icon="o-paper-airplane" />
-                    <x-mary-timeline-item title="OSA" subtitle="Review" icon="o-eye" />
-                    <x-mary-timeline-item title="GSO" subtitle="Finalize" icon="o-check-badge" />
-                </x-mary-timeline>
+                <x-mary-timeline-item title="Student Org" subtitle="Submit Request" icon="o-paper-airplane" first />
+                <x-mary-timeline-item title="OSA" subtitle="Review" icon="o-eye" />
+                <x-mary-timeline-item title="GSO" subtitle="Finalize" icon="o-check-badge" last />
                 <x-mary-button icon="o-pencil-square" class="mt-4">Edit Workflow</x-mary-button>
             </x-mary-card>
         </div>

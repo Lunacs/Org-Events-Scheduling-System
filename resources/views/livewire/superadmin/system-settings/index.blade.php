@@ -65,11 +65,11 @@
                     <x-mary-card title="Approval Workflows" class="lg:col-span-2">
                         <div class="space-y-4">
                             <x-mary-timeline-item title="Student Organization" subtitle="Submit Event Request"
-                                icon="o-paper-airplane" />
+                                icon="o-paper-airplane" first />
                             <x-mary-timeline-item title="OSA Review" subtitle="Initial Review & Approval"
                                 icon="o-eye" />
                             <x-mary-timeline-item title="GSO Finalization" subtitle="Final Approval & Scheduling"
-                                icon="o-check-badge" />
+                                icon="o-check-badge" last />
 
                             <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div class="flex items-center">
