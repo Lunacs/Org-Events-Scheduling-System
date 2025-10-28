@@ -119,7 +119,7 @@
         <div class="p-6">
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-64">
-                    <x-mary-input wire:model.debounce.300ms="search" label="Search Requests"
+                    <x-mary-input wire:model.defer="search" wire:keydown.enter.prevent="applyFilters" label="Search Requests"
                                   placeholder="Search by event name, organization..." class="input-emerald">
                         <x-slot:prepend>
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,8 +140,8 @@
                                     option-value="id" option-label="name" class="select-emerald" />
                 </div>
 
-                <x-mary-button type="button" label="Bulk Approve ({{ count($selectedRequests) }})"
-                               icon="s-check" class="btn-emerald" disabled />
+                <x-mary-button type="button" label="Search" icon="o-magnifying-glass" class="btn-emerald"
+                               wire:click="applyFilters" />
             </div>
         </div>
     </div>
@@ -264,22 +264,22 @@
     @endphp
 
     <x-mary-modal wire:model="showConfirmationModal" title="Confirm {{ $modalActionLabel }}">
-            <p>Are you sure you want to {{ $modalActionVerb }} this request?</p>
+        <p class="mb-2 text-sm">Are you sure you want to {{ $modalActionVerb }} this request?</p>
 
        @if($requiredWord)
                 <div x-data="{ local: @entangle('confirmationInput'), action: @entangle('actionType'), required: null }"
                     x-init="required = action === 'approve' ? 'approve' : (action === 'reject' ? 'reject' : null); $watch('action', value => required = value === 'approve' ? 'approve' : (value === 'reject' ? 'reject' : null))"
-                    class="mt-4">
+                    class="mt-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type '{{ $requiredWord }}' to confirm</label>
                     <div class="mt-1 flex items-center space-x-2">
-                        <x-mary-input x-model="local" placeholder="{{ $requiredWord }}" class="flex-1" />
+                        <x-mary-input x-model="local" placeholder="{{ $requiredWord }}" class="flex-1 h-9" />
 
                         {{-- Live match indicator (client-side) --}}
-                        <div class="w-6 h-6 flex items-center justify-center">
-                            <svg x-show="local && local.trim().toLowerCase() === required" class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                            <svg x-show="local && local.trim().toLowerCase() === required" class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
-                            <svg x-show="!(local && local.trim().toLowerCase() === required)" class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg x-show="!(local && local.trim().toLowerCase() === required)" class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
                             </svg>
                         </div>

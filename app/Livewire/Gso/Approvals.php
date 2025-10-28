@@ -58,6 +58,34 @@ class Approvals extends Component
             ->get()
             ->map(fn(Office_Approval $approval) => $this->transformApproval($approval));
 
+        // If a search term is present, sort results by relevance: event name matches first,
+        // then organization name matches, then fallback to most recently updated.
+        if ($this->search !== '') {
+            $term = Str::lower(trim($this->search));
+
+            $approvals = $approvals->sort(function ($a, $b) use ($term) {
+                $aEvent = strtolower($a['event_name'] ?? '');
+                $bEvent = strtolower($b['event_name'] ?? '');
+                $aOrg = strtolower($a['organization'] ?? '');
+                $bOrg = strtolower($b['organization'] ?? '');
+
+                $score = function ($event, $org) use ($term) {
+                    if ($term !== '' && strpos($event, $term) !== false) return 1;
+                    if ($term !== '' && strpos($org, $term) !== false) return 2;
+                    return 3;
+                };
+
+                $sa = $score($aEvent, $aOrg);
+                $sb = $score($bEvent, $bOrg);
+
+                if ($sa !== $sb) {
+                    return $sa <=> $sb;
+                }
+
+                return ($b['updated_at_ts'] ?? 0) <=> ($a['updated_at_ts'] ?? 0);
+            })->values();
+        }
+
         return view('livewire.gso.approvals', [
             'approvals' => $approvals,
             'stats' => $stats,
@@ -174,6 +202,8 @@ class Approvals extends Component
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
             'remarks' => $approval->remarks ?? null,
             'participants' => $ticket?->total_participants,
+            // include timestamp for client-side sorting when searching
+            'updated_at_ts' => $approval->updated_at?->timestamp ?? 0,
         ];
     }
 
@@ -222,6 +252,19 @@ class Approvals extends Component
         // reset modal state and confirmation input
         $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
         $this->resetValidation();
+    }
+
+    /**
+     * Apply filters triggered by the UI 'Okay' button.
+     * Using wire:model.defer on the inputs ensures values are sent when this
+     * action is called.
+     */
+    public function applyFilters(): void
+    {
+        $this->search = trim((string) $this->search);
+        // clear any selected bulk requests when user runs a new search
+        $this->selectedRequests = [];
+        // Livewire will re-render the component after this action automatically
     }
 
     public function performAction()

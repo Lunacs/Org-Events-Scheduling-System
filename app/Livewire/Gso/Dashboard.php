@@ -36,7 +36,7 @@ class Dashboard extends Component
                 ->count(),
             'upcomingEvents' => Event_Schedule::query()
                 ->where('status', 'approved')
-                ->where('schedule_date', '>=', Carbon::now())
+                ->where('start_date', '>=', Carbon::now())
                 ->count(),
         ];
 

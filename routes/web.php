@@ -54,6 +54,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
+// Export route for GSO reports (signed URL used by Livewire to trigger browser download)
+Route::get('gso/reports/export', [\App\Http\Controllers\Gso\ReportsExportController::class, 'export'])
+    ->middleware(['auth', 'signed'])
+    ->name('gso.reports.export');
+
 // OSA routes
 Route::prefix('admin')
     ->middleware(['auth', 'verified', 'role:osa'])
