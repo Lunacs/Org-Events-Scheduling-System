@@ -46,13 +46,16 @@
                 {{-- MENU --}}
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
-                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="{{ route('gso.dashboard') }}" wire:navigate />
-                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days" link="{{ route('gso.ticket-review') }}"
+                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="{{ route('gso.dashboard') }}"
                         wire:navigate />
-                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="{{ route('gso.approvals') }}" wire:navigate />
-                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="{{ route('gso.calendar') }}" wire:navigate />
-                    <x-mary-menu-item title="Communication" icon="s-building-office" link="{{ route('gso.communication') }}"
+                    <x-mary-menu-item title="Ticket Review" icon="s-calendar-days"
+                        link="{{ route('gso.ticket-review') }}" wire:navigate />
+                    <x-mary-menu-item title="Approvals" icon="s-calendar" link="{{ route('gso.approvals') }}"
                         wire:navigate />
+                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="{{ route('gso.calendar') }}"
+                        wire:navigate />
+                    <x-mary-menu-item title="Communication" icon="s-building-office"
+                        link="{{ route('gso.communication') }}" wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate />
                 </x-mary-menu>
 

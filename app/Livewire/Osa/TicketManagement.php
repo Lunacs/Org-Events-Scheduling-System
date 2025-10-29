@@ -76,6 +76,15 @@ class TicketManagement extends Component
             'Ticket approved from ticket management.'
         ));
 
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'approved');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Approved',
+            'message' => "Your ticket {$ticket->ticket_number} has been approved!",
+            'type' => 'success',
+        ])->to($ticket->user);
+
         $this->dispatch('toast', [
             'type' => 'success',
             'title' => 'Success',
@@ -106,6 +115,15 @@ class TicketManagement extends Component
             'Ticket rejected from ticket management.'
         ));
 
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Rejected',
+            'message' => "Your ticket {$ticket->ticket_number} has been rejected.",
+            'type' => 'error',
+        ])->to($ticket->user);
+
         $this->dispatch('toast', [
             'type' => 'error',
             'title' => 'Rejected',
@@ -135,6 +153,15 @@ class TicketManagement extends Component
             'for_rescheduling',
             'Reschedule requested from ticket management.'
         ));
+
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'for_rescheduling');
+        $this->dispatch('notification-received', [
+            'title' => 'Reschedule Requested',
+            'message' => "Your ticket {$ticket->ticket_number} has been marked for rescheduling.",
+            'type' => 'info',
+        ])->to($ticket->user);
 
         $this->dispatch('toast', [
             'type' => 'info',

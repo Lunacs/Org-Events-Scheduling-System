@@ -118,10 +118,10 @@
                                     <div class="text-sm text-base-content/70">
                                         {{ Str::limit($event->ticket->description, 60) }}
                                     </div>
-                                    @if ($event->ticket->venue_requested || $event->eventSchedules->first()?->venue)
+                                    @if ($event->ticket->venue_requested || $event->eventSchedules?->first()?->venue)
                                         <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
                                             <x-mary-icon name="o-map-pin" class="w-3 h-3" />
-                                            {{ $event->ticket->venue_requested ?? $event->eventSchedules->first()->venue }}
+                                            {{ $event->ticket->venue_requested ?? $event->eventSchedules?->first()?->venue }}
                                         </div>
                                     @endif
                                 </div>
@@ -142,12 +142,12 @@
                                 </div>
                             </td>
                             <td>
-                                @if ($event->event_schedules->first())
+                                @if ($event->eventSchedules?->first())
                                     <div>
-                                        {{ \Carbon\Carbon::parse($event->event_schedules->first()->start_date)->format('M d, Y') }}
+                                        {{ \Carbon\Carbon::parse($event->eventSchedules->first()->start_date)->format('M d, Y') }}
                                     </div>
                                     <div class="text-sm text-base-content/70">
-                                        {{ $event->event_schedules->first()->start_time }}</div>
+                                        {{ $event->eventSchedules->first()->start_time }}</div>
                                 @else
                                     <span class="text-base-content/50">TBD</span>
                                 @endif
@@ -286,11 +286,11 @@
                 </div>
 
                 {{-- Schedule --}}
-                @if ($selectedEvent->event_schedules->count() > 0)
+                @if ($selectedEvent->eventSchedules?->count() > 0)
                     <div>
                         <h3 class="font-semibold mb-3">Event Schedule</h3>
                         <div class="space-y-2">
-                            @foreach ($selectedEvent->event_schedules as $schedule)
+                            @foreach ($selectedEvent->eventSchedules as $schedule)
                                 <div class="bg-base-200 rounded-lg p-3">
                                     <div class="flex items-center gap-2 text-sm">
                                         <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />

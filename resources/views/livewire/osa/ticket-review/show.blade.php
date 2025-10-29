@@ -636,23 +636,24 @@
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4">Comments</h2>
                 @if ($ticket->comments->count() > 0)
-                    <div class="mt-4 space-y-3">
+                    <div class="mt-4 space-y-4">
                         @foreach ($ticket->comments as $comment)
-                            <div class="p-3 bg-base-200 rounded-lg">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div class="flex items-center gap-2">
-                                        <p class="font-medium text-sm text-base-content">
-                                            {{ $comment->user->name }}
-                                        </p>
-                                        <x-mary-badge value="{{ $comment->user->role }}"
-                                            class="badge-primary text-xs" />
+                            <div class="chat chat-start">
+                                <div class="chat-image avatar">
+                                    <div class="w-10 rounded-full bg-base-300">
+                                        <img data-avatar="{{ $comment->user->avatar_url }}"
+                                            alt="{{ $comment->user->name }}" draggable="false"
+                                            class="rounded-full w-full h-full object-cover" />
                                     </div>
-
-                                    <p class="text-xs text-base-content/70">
-                                        {{ $comment->created_at->diffForHumans() }}
-                                    </p>
                                 </div>
-                                <p class="text-sm text-base-content/80">{{ $comment->content }}</p>
+                                <div class="chat-header">
+                                    {{ $comment->user->name }}
+                                    <x-mary-badge value="{{ $comment->user->role_display }}"
+                                        class="badge-primary text-xs ml-2" />
+                                    <time
+                                        class="text-xs opacity-50">{{ $comment->created_at->diffForHumans() }}</time>
+                                </div>
+                                <div class="chat-bubble">{{ $comment->content }}</div>
                             </div>
                         @endforeach
                     </div>

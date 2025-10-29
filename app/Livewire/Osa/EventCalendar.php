@@ -2,40 +2,68 @@
 
 namespace App\Livewire\Osa;
 
-use Livewire\Component;
+use App\Models\Event;
+use App\Models\Event_Schedule;
+use Carbon\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
-use App\Models\Event;
-use App\Models\Event_Schedule;
-use Carbon\Carbon;
+use Livewire\Component;
 use Mary\Traits\Toast;
 
 class EventCalendar extends Component
 {
     use Toast;
-    
+
     #[Title('Event Calendar - OSA Admin')]
     #[Layout('components.layouts.app')]
 
-    public $currentDate;
+    #[Url(except: 'dayGridMonth')]
     public $viewMode = 'dayGridMonth';
-    public $selectedEvent = null;
+
+    #[Url(as: 'date', except: '')]
+    public $dateParam = '';
+
+    public $currentDate;
+
+    // public $selectedEvent = null;
+
     public $showModal = false;
-    
+    public bool $filterDrawerOpen = false;
+
+    public ?Event $selectedEvent = null;
+
     #[Url(except: 'approved')]
     public $statusFilter = 'approved';
-    
+
     #[Url(except: '')]
     public $organizationFilter = '';
-    
+
     #[Url(except: '')]
     public $eventTypeFilter = '';
 
     public function mount()
     {
-        $this->currentDate = Carbon::now();
+        // Parse date parameter from URL, fallback to current date if empty or invalid
+        if ($this->dateParam) {
+            try {
+                $this->currentDate = Carbon::parse($this->dateParam);
+            } catch (\Exception $e) {
+                $this->currentDate = Carbon::now();
+            }
+        } else {
+            $this->currentDate = Carbon::now();
+        }
+    }
+
+    public function clearFilters()
+    {
+        $this->statusFilter = 'approved';
+        $this->organizationFilter = '';
+        $this->eventTypeFilter = '';
+        $this->filterDrawerOpen = false; // Close drawer when clearing filters
+        $this->dispatch('calendar-refetch');
     }
 
     public function previousPeriod()
@@ -55,33 +83,28 @@ class EventCalendar extends Component
 
     public function viewEvent($eventId)
     {
-        \Log::info('ViewEvent called with ID: ' . $eventId);
-        
         // Reset modal state first
         $this->showModal = false;
         $this->selectedEvent = null;
-        
+
         $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
                         'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name')
+                            ->with('studentOrganization:org_id,org_name'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
-                'eventType:event_type_id,type_name'
+                'eventType:event_type_id,type_name',
             ])
             ->find($eventId);
-            
-        \Log::info('Selected Event: ' . ($this->selectedEvent ? 'Found' : 'Not Found'));
-        
-        if (!$this->selectedEvent) {
-            \Log::error('Event not found with ID: ' . $eventId);
+
+        if (! $this->selectedEvent) {
             $this->dispatch('toast-error', message: 'Event not found');
+
             return;
         }
-        
-        \Log::info('Event found, opening modal...');
+
         $this->showModal = true;
     }
 
@@ -99,27 +122,77 @@ class EventCalendar extends Component
         $this->dispatch('calendar-change-view', view: $mode);
     }
 
-    public function clearFilters()
+    public function updateDateParam($date)
     {
-        $this->statusFilter = 'approved';
-        $this->organizationFilter = '';
-        $this->eventTypeFilter = '';
-        $this->dispatch('calendar-refetch');
+        try {
+            $parsedDate = Carbon::parse($date);
+            $this->dateParam = $parsedDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            $this->dateParam = Carbon::now()->format('Y-m-d');
+        }
     }
 
-    public function updatedStatusFilter()
+    // public function clearFilters()
+    // {
+    //     $this->statusFilter = 'approved';
+    //     $this->organizationFilter = '';
+    //     $this->eventTypeFilter = '';
+    //     $this->dispatch('calendar-refetch');
+
+    //     // Show toast notification for clearing filters
+    //     $this->success('All filters cleared: Showing all approved events', timeout: 5000);
+    // }
+
+    public function getUpdatedEvents()
     {
-        $this->dispatch('calendar-refetch');
+        return $this->eventsForCalendar;
     }
 
-    public function updatedOrganizationFilter()
+    public function updated($property)
     {
-        $this->dispatch('calendar-refetch');
+        // This method is called whenever any property is updated
+        if (in_array($property, ['statusFilter', 'organizationFilter', 'eventTypeFilter'])) {
+            $this->dispatch('calendar-refetch');
+
+            // Show toast notification for filter changes
+            $this->showFilterToast($property);
+        }
     }
 
-    public function updatedEventTypeFilter()
+    private function showFilterToast($property)
     {
-        $this->dispatch('calendar-refetch');
+        $message = '';
+
+        switch ($property) {
+            case 'statusFilter':
+                $statusName = $this->statusFilter === 'approved' ? 'Approved' : 'Rescheduled';
+                $message = "Filter applied: Showing {$statusName} events";
+                break;
+
+            case 'organizationFilter':
+                if ($this->organizationFilter) {
+                    $org = $this->organizations->firstWhere('org_id', $this->organizationFilter);
+                    $orgName = $org ? $org->org_name : 'Selected Organization';
+                    $message = "Filter applied: Showing events from {$orgName}";
+                } else {
+                    $message = 'Filter cleared: Showing events from all organizations';
+                }
+                break;
+
+            case 'eventTypeFilter':
+                if ($this->eventTypeFilter) {
+                    $eventType = $this->eventTypes->firstWhere('event_type_id', $this->eventTypeFilter);
+                    $typeName = $eventType ? $eventType->type_name : 'Selected Event Type';
+                    $message = "Filter applied: Showing {$typeName} events";
+                } else {
+                    $message = 'Filter cleared: Showing all event types';
+                }
+                break;
+        }
+
+        if ($message) {
+            $this->success($message, timeout: 5000);
+        }
     }
 
     #[Computed]
@@ -133,10 +206,10 @@ class EventCalendar extends Component
                         'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
                                 'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                                    ->with('studentOrganization:org_id,org_name')
+                                    ->with('studentOrganization:org_id,org_name'),
                             ]),
-                        'eventType:event_type_id,type_name'
-                    ])
+                        'eventType:event_type_id,type_name',
+                    ]),
             ])
             // Always show only approved event schedules
             ->where('status', 'approved')
@@ -154,7 +227,7 @@ class EventCalendar extends Component
             $endDate = $schedule->end_date ? $schedule->end_date->format('Y-m-d') : $startDate;
             $startTime = $schedule->start_time ?? '09:00';
             $endTime = $schedule->end_time ?? '17:00';
-            
+
             return [
                 'id' => $event->event_id,
                 'title' => $event->ticket->title,
@@ -170,7 +243,7 @@ class EventCalendar extends Component
                     'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
                     'description' => $event->ticket->description,
                     'ticketNumber' => $event->ticket->ticket_number,
-                ]
+                ],
             ];
         })->toArray();
     }
@@ -179,12 +252,27 @@ class EventCalendar extends Component
     {
         // Color coding based on organization or event type
         $colors = [
-            '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b',
-            '#ef4444', '#06b6d4', '#84cc16', '#f97316',
+            '#10b981',
+            '#3b82f6',
+            '#8b5cf6',
+            '#f59e0b',
+            '#ef4444',
+            '#06b6d4',
+            '#84cc16',
+            '#f97316',
         ];
-        
-        $orgId = $event->ticket->user->org_id ?? 0;
-        return $colors[$orgId % count($colors)];
+
+        // Use event type ID for consistent color assignment
+        $eventTypeId = $event->event__type_id ?? 0;
+
+        // Fallback to organization ID if no event type
+        if ($eventTypeId === 0) {
+            $orgId = $event->ticket->user->org_id ?? 0;
+
+            return $colors[$orgId % count($colors)];
+        }
+
+        return $colors[$eventTypeId % count($colors)];
     }
 
     public function render()
@@ -192,7 +280,7 @@ class EventCalendar extends Component
         return view('livewire.osa.event-calendar', [
             'events' => $this->eventsForCalendar,
             'organizations' => $this->organizations,
-            'eventTypes' => $this->eventTypes
+            'eventTypes' => $this->eventTypes,
         ]);
     }
 

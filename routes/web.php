@@ -1,5 +1,12 @@
 <?php
 
+use App\Livewire\Gso\Approvals as GsoApprovals;
+use App\Livewire\Gso\Calendar as GsoCalendar;
+use App\Livewire\Gso\Dashboard as GsoDashboard;
+use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\Reports as GsoReports;
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
+use App\Livewire\Osa\Archive;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
 use App\Livewire\Osa\Notifications as OsaNotifications;
@@ -8,12 +15,6 @@ use App\Livewire\Osa\Reports;
 use App\Livewire\Osa\TicketManagement;
 use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
 use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
-use App\Livewire\Gso\Approvals as GsoApprovals;
-use App\Livewire\Gso\Calendar as GsoCalendar;
-use App\Livewire\Gso\Dashboard as GsoDashboard;
-use App\Livewire\Gso\Details as GsoDetails;
-use App\Livewire\Gso\Reports as GsoReports;
-use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 use App\Livewire\StudentOrg\History;
@@ -66,6 +67,7 @@ Route::prefix('admin')
         Route::get('/notifications', OsaNotifications::class)->name('admin.notifications');
         //        Route::view('/student-organizations', 'osa.organizations')->name('admin.organizations');
         Route::get('/reports', Reports::class)->name('admin.reports');
+        Route::get('/archive', Archive::class)->name('admin.archive');
         Route::view('/accounts', 'osa.accounts')->name('admin.accounts');
         Route::get('/profile', OsaProfile::class)->name('admin.profile');
     });
@@ -110,4 +112,4 @@ Route::prefix('student-org')
         Route::get('/profile', \App\Livewire\StudentOrg\Profile::class)->name('student-org.profile');
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
