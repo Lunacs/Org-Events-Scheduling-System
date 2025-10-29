@@ -78,11 +78,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                             <x-mary-input label="Number of PLV Participants" type="number"
-                                wire:model.live="expectedPLVParticipants" placeholder="Number of attendees" required />
+                                wire:model.live="expectedPLVParticipants" placeholder="Number of attendees" />
 
                             <x-mary-input label="Number of non PLV Participants" type="number"
                                 wire:model.live="expectedNonPLVParticipants" placeholder="Number of attendees"
-                                required />
+                                 />
 
                             <x-mary-input label="Expected Participants" type="number"
                                 value="{{ $this->expectedParticipants }}" placeholder="Number of attendees" readonly />
@@ -155,7 +155,7 @@
                 <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                            wire:model="totalBudget" placeholder="0.00" prefix="₱" />
+                            wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
 
                         <x-mary-select label="Funding Source" wire:model="fundingSource" :options="$fundSources"
                             option-value="source_id" option-label="source_name"
@@ -242,7 +242,7 @@
                         wire:click="saveDraft" />
 
                     <div class="space-x-3">
-                        <x-mary-button label="Preview" icon="s-eye" class="btn-accent" />
+                        <x-mary-button label="Preview" icon="s-eye" class="btn-accent" wire:click="openPreviewModal" />
 
                         <x-mary-button label="Submit Ticket" icon="s-paper-airplane" class="btn-primary"
                             type="submit" />
@@ -252,4 +252,15 @@
             </x-mary-form>
         </div>
     </div>
+
+    <x-mary-modal
+        wire:model="showPreviewModal"
+        title="Ticket Preview"
+        class="backdrop-blur"
+        box-class="max-w-5xl max-h-[85vh] overflow-y-auto"
+        @close="$wire.closePreviewModal()">
+
+        <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+
+    </x-mary-modal>
 </div>

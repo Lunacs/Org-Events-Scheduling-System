@@ -48,7 +48,7 @@ class SubmitTicket extends Component
 
     #[Validate('required|integer|min:1')]
     public $expectedPLVParticipants = 0;
-    #[Validate('nullable|integer|min:1')]
+    #[Validate('nullable|integer|min:0')]
     public $expectedNonPLVParticipants = 0;
 
     #[Validate('required|string|max:255')]
@@ -122,6 +122,60 @@ class SubmitTicket extends Component
 
     #[Validate('nullable|array', 'attachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
     public $attachments = [];
+
+    public $showPreviewModal = false;
+
+    public function openPreviewModal()
+    {
+        $this->showPreviewModal = true;
+    }
+
+    public function closePreviewModal()
+    {
+        $this->showPreviewModal = false;
+    }
+
+    public function getPreviewTicketProperty()
+    {
+        $currentUser = auth()->user();
+        $currentUserinfo = $currentUser->studentOrganization;
+
+        // Create a temporary ticket object for preview
+        $ticket = new Ticket();
+        $ticket->user = $currentUser;
+        $ticket->title = $this->eventTitle;
+        $ticket->description = $this->eventDescription;
+        $ticket->plv_participants = $this->expectedPLVParticipants;
+        $ticket->external_participants = $this->expectedNonPLVParticipants;
+        $ticket->total_participants = $this->expectedParticipants;
+        $ticket->proponent_contact = $this->proponent_contact;
+        $ticket->adviser_contact = $this->adviser_contact;
+        $ticket->date_from = $this->eventStartDate;
+        $ticket->date_to = $this->eventEndDate;
+        $ticket->time_from = $this->eventStartTime;
+        $ticket->time_to = $this->eventEndTime;
+        $ticket->venue_requested = $this->preferredVenue;
+        $ticket->alternate_venue = $this->alternativeVenue;
+        $ticket->special_requirements = $this->specialRequirements;
+        $ticket->estimated_budget = $this->totalBudget;
+        $ticket->budget_breakdown = $this->budgetBreakdown;
+        $ticket->igp_requested = $this->igp_requested === 'true';
+        $ticket->igp_details = $this->igp_details;
+        $ticket->oc_accommodation = $this->oc_accommodation;
+        $ticket->oc_tsp = $this->oc_tsp;
+        $ticket->oc_driver_name = $this->oc_driver_name;
+        $ticket->oc_vehicle_type = $this->oc_vehicle_type;
+        $ticket->oc_vehicle_plate_number = $this->oc_vehicle_plate_number;
+        $ticket->oc_driver_contact_number = $this->oc_driver_contact_number;
+        $ticket->additional_notes = $this->additionalNotes;
+
+        // Load relationships
+        $ticket->setRelation('eventType', Event_Type::find($this->eventType));
+        $ticket->setRelation('fundSource', Fund_Sources::find($this->fundingSource));
+        $ticket->setRelation('attachments', collect([])); // Empty for preview
+
+        return $ticket;
+    }
 
     public function mount()
     {

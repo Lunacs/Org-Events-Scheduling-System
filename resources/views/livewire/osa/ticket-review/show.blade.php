@@ -1,29 +1,33 @@
 <div>
     {{-- Flash Messages --}}
     @if (session()->has('success'))
-        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-check-circle" class="w-5 h-5" />
+        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
+            <x-mary-icon name="o-check-circle" class="w-5 h-5"/>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-x-circle" class="w-5 h-5" />
+        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
+            <x-mary-icon name="o-x-circle" class="w-5 h-5"/>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if (session()->has('info'))
-        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
+            <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
             <span>{{ session('info') }}</span>
         </div>
     @endif
 
     @if (session()->has('warning'))
-        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5" />
+        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
+            <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5"/>
             <span>{{ session('warning') }}</span>
         </div>
     @endif
@@ -35,7 +39,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ route('osa.ticket-review.index') }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                            <x-mary-icon name="o-arrow-left" class="w-4 h-4"/>
                             Back to Tickets
                         </a>
                     </div>
@@ -57,7 +61,7 @@
                         ];
                     @endphp
                     <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                        class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}" />
+                                  class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}"/>
                 </div>
             </div>
         </div>
@@ -66,306 +70,7 @@
     {{-- Main Content --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Ticket Details --}}
-        <div class="lg:col-span-2 space-y-6">
-            {{-- Organization Information --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-building-office-2" class="w-5 h-5" />
-                    Organization Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Name</label>
-                        <p class="text-base-content font-medium">
-                            {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Course</label>
-                        <p class="text-base-content">
-                            {{ $ticket->user->studentOrganization->course->course_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Name of Proponent</label>
-                        <p class="text-base-content">{{ $ticket->user->name }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Proponent Position</label>
-                        <p class="text-base-content">{{ $ticket->user->position->position_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Contact Email</label>
-                        <p class="text-base-content">{{ $ticket->user->email }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Proponent Contact</label>
-                        <p class="text-base-content">{{ $ticket->proponent_contact ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Adviser</label>
-                        <p class="text-base-content">
-                            {{ $ticket->user->studentOrganization->adviser_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Adviser Contact</label>
-                        <p class="text-base-content">{{ $ticket->adviser_contact ?? 'N/A' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Event Details --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-calendar-days" class="w-5 h-5" />
-                    Event Details
-                </h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Title</label>
-                        <p class="text-base-content font-medium text-lg">{{ $ticket->title }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Type</label>
-                        <p class="text-base-content">{{ $ticket->eventType->type_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Description</label>
-                        <p class="text-base-content whitespace-pre-wrap">{{ $ticket->description }}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">PLV Participants</label>
-                            <p class="text-base-content font-semibold">{{ $ticket->plv_participants ?? 0 }}</p>
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">External Participants</label>
-                            <p class="text-base-content font-semibold">{{ $ticket->external_participants ?? 0 }}</p>
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">Total Expected Participants</label>
-                            <p class="text-primary font-semibold">
-                                {{ $ticket->total_participants ?? 0 }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Schedule & Venue --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-map-pin" class="w-5 h-5" />
-                    Schedule & Venue
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Start Date</label>
-                        <p class="text-base-content">
-                            {{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('F d, Y') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event End Date</label>
-                        <p class="text-base-content">
-                            {{ $ticket->date_to ? \Carbon\Carbon::parse($ticket->date_to)->format('F d, Y') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Start Time</label>
-                        <p class="text-base-content">
-                            {{ $ticket->time_from ? \Carbon\Carbon::parse($ticket->time_from)->format('g:i A') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event End Time</label>
-                        <p class="text-base-content">
-                            {{ $ticket->time_to ? \Carbon\Carbon::parse($ticket->time_to)->format('g:i A') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Preferred Venue</label>
-                        <p class="text-base-content">{{ $ticket->venue_requested ?? 'TBD' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Alternative Venue</label>
-                        <p class="text-base-content">{{ $ticket->alternate_venue ?? 'None' }}</p>
-                    </div>
-                </div>
-
-                @if ($ticket->special_requirements)
-                    <div class="mt-4">
-                        <label class="text-sm font-medium text-base-content/70">Special Requirements</label>
-                        <p class="text-base-content whitespace-pre-wrap bg-base-200 p-3 rounded">
-                            {{ $ticket->special_requirements }}</p>
-                    </div>
-                @endif
-
-                {{-- Off-Campus Activity Details --}}
-                @if ($ticket->oc_accommodation || $ticket->oc_tsp)
-                    <div class="mt-4 p-4 bg-warning/10 border-l-4 border-warning rounded">
-                        <h3 class="font-semibold text-base-content mb-3 flex items-center gap-2">
-                            <x-mary-icon name="o-map" class="w-4 h-4" />
-                            Off-Campus Activity Details
-                        </h3>
-
-                        @if ($ticket->oc_accommodation)
-                            <div class="mb-3">
-                                <label class="text-sm font-medium text-base-content/70">Accommodation
-                                    Provider</label>
-                                <p class="text-base-content">{{ $ticket->oc_accommodation }}</p>
-                            </div>
-                        @endif
-
-                        @if ($ticket->oc_tsp)
-                            <div class="mb-2">
-                                <label class="text-sm font-medium text-base-content/70">Transportation
-                                    Service
-                                    Provider</label>
-                                <p class="text-base-content">{{ ucfirst($ticket->oc_tsp) }}</p>
-                            </div>
-
-                            @if ($ticket->oc_tsp === 'outsourced')
-                                <div class="grid grid-cols-2 gap-3 mt-2">
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Driver
-                                            Name</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_driver_name ?? 'N/A' }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Contact
-                                            Number</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_driver_contact_number ?? 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Vehicle
-                                            Type</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_vehicle_type ?? 'N/A' }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Plate
-                                            Number</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_vehicle_plate_number ?? 'N/A' }}</p>
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-                    </div>
-                @endif
-            </div>
-
-            {{-- Budget Information --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-currency-dollar" class="w-5 h-5" />
-                    Budget Information
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Estimated Total
-                            Budget</label>
-                        <p class="text-base-content font-semibold text-lg">
-                            ₱{{ number_format($ticket->estimated_budget ?? 0, 2) }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Funding Source</label>
-                        <p class="text-base-content">{{ $ticket->fundSource->source_name ?? 'N/A' }}</p>
-                    </div>
-                </div>
-
-                @if ($ticket->budget_breakdown)
-                    <div class="mt-4">
-                        <label class="text-sm font-medium text-base-content/70">Budget Breakdown</label>
-                        <p class="text-base-content whitespace-pre-wrap bg-base-200 p-3 rounded">
-                            {{ $ticket->budget_breakdown }}</p>
-                    </div>
-                @endif
-
-                {{-- IGP Request --}}
-                <div class="mt-4">
-                    <label class="text-sm font-medium text-base-content/70">IGP Request</label>
-                    <p class="text-base-content">
-                        @if ($ticket->igp_requested)
-                            <x-mary-badge value="Requested" class="badge-success" />
-                            @if ($ticket->igp_details)
-                                <span
-                                    class="block mt-2 bg-base-200 p-3 rounded whitespace-pre-wrap">{{ $ticket->igp_details }}</span>
-                            @endif
-                        @else
-                            <x-mary-badge value="Not Requested" class="badge-neutral" />
-                        @endif
-                    </p>
-                </div>
-            </div>
-
-            {{-- Additional Information --}}
-            @if ($ticket->additional_notes)
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                        <x-mary-icon name="o-document-text" class="w-5 h-5" />
-                        Additional Information
-                    </h2>
-                    <p class="text-base-content whitespace-pre-wrap bg-base-200 p-4 rounded">
-                        {{ $ticket->additional_notes }}</p>
-                </div>
-            @endif
-
-            {{-- Attachments --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-paper-clip" class="w-5 h-5" />
-                    Attachments
-                </h2>
-                @if ($ticket->attachments->count() > 0)
-                    <div class="space-y-3">
-                        @foreach ($ticket->attachments as $attachment)
-                            <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <x-mary-icon name="o-document" class="w-5 h-5 text-primary" />
-                                    <div>
-                                        <p class="font-medium text-base-content">
-                                            {{ $attachment->file_name }}</p>
-                                        <p class="text-sm text-base-content/70">
-                                            {{ $attachment->file_type ?? 'Unknown type' }}</p>
-                                    </div>
-                                </div>
-                                <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
-                                    class="btn btn-primary btn-sm">
-                                    <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
-                                    Download
-                                </a>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-8">
-                        <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
-                        <p class="text-base-content/70">No attachments uploaded</p>
-                    </div>
-                @endif
-            </div>
-        </div>
+        <x-tickets.ticket-preview :ticket="$ticket"/>
 
         {{-- Sidebar --}}
         <div class="space-y-6">
@@ -404,7 +109,7 @@
             @if ($ticket->events->isNotEmpty())
                 <div class="bg-base-100 rounded-box shadow-lg p-6">
                     <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                        <x-mary-icon name="o-check-badge" class="w-5 h-5 text-success" />
+                        <x-mary-icon name="o-check-badge" class="w-5 h-5 text-success"/>
                         Event Created
                     </h2>
                     @php
@@ -414,7 +119,7 @@
                     @if ($schedule)
                         <div class="space-y-3">
                             <div class="alert alert-success">
-                                <x-mary-icon name="o-calendar-days" class="w-5 h-5" />
+                                <x-mary-icon name="o-calendar-days" class="w-5 h-5"/>
                                 <div class="flex-1">
                                     <p class="font-medium">Event is scheduled!</p>
                                     <p class="text-sm mt-1">{{ $schedule->start_date->format('F d, Y') }}
@@ -436,7 +141,7 @@
                             <div>
                                 <label class="text-sm font-medium text-base-content/70">Status</label>
                                 <x-mary-badge value="{{ ucfirst($schedule->status) }}"
-                                    class="{{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}" />
+                                              class="{{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}"/>
                             </div>
                         </div>
                     @else
@@ -448,7 +153,7 @@
             {{-- Approval History --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-clock" class="w-5 h-5" />
+                    <x-mary-icon name="o-clock" class="w-5 h-5"/>
                     Approval History
                 </h2>
 
@@ -521,7 +226,7 @@
                                             </div>
                                             <x-mary-badge
                                                 value="{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}"
-                                                class="{{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }} badge-sm" />
+                                                class="{{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }} badge-sm"/>
                                         </div>
 
                                         @if ($approval['remarks'])
@@ -543,7 +248,7 @@
                     </div>
                 @else
                     <div class="text-center py-8">
-                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
+                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3"/>
                         <p class="text-base-content/70">No approval actions yet</p>
                         <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting review</p>
                     </div>
@@ -563,7 +268,7 @@
                     @if ($gsoApproval)
                         <div
                             class="alert mb-4 {{ $gsoApproval->decision === 'approved' ? 'alert-success' : 'alert-error' }}">
-                            <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                            <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
                             <div>
                                 <p class="font-semibold">GSO has {{ $gsoApproval->decision }} this request
                                 </p>
@@ -574,47 +279,47 @@
 
                     <div class="space-y-3">
                         <button class="btn btn-success w-full text-base-200 flex justify-between"
-                            wire:click="openFinalApprovalModal">
+                                wire:click="openFinalApprovalModal">
                             Final Approval
-                            <x-mary-icon name="o-check-circle" class="w-4 h-4" />
+                            <x-mary-icon name="o-check-circle" class="w-4 h-4"/>
                         </button>
 
                         <button class="btn btn-error w-full text-base-200 flex justify-between"
-                            wire:click="openFinalRejectionModal">
+                                wire:click="openFinalRejectionModal">
                             Final Rejection
-                            <x-mary-icon name="o-x-circle" class="w-4 h-4" />
+                            <x-mary-icon name="o-x-circle" class="w-4 h-4"/>
                         </button>
                     </div>
                 @elseif (in_array($ticket->status, ['received', 'amended']))
                     {{-- Initial Review Actions --}}
                     <div class="space-y-3">
                         <button class="btn btn-success w-full text-base-200 flex justify-between"
-                            wire:click="openApprovalModal">
+                                wire:click="openApprovalModal">
                             Approve Ticket
-                            <x-mary-icon name="o-check-circle" class="w-4 h-4" />
+                            <x-mary-icon name="o-check-circle" class="w-4 h-4"/>
                         </button>
 
                         <button class="btn btn-warning w-full text-base-200 flex justify-between"
-                            wire:click="openRevisionModal">
+                                wire:click="openRevisionModal">
                             Request Revision
-                            <x-mary-icon name="o-arrow-path" class="w-4 h-4" />
+                            <x-mary-icon name="o-arrow-path" class="w-4 h-4"/>
                         </button>
 
                         <button class="btn btn-info w-full text-base-200 flex justify-between"
-                            wire:click="openForwardModal">
+                                wire:click="openForwardModal">
                             Forward to GSO
-                            <x-mary-icon name="o-arrow-right" class="w-4 h-4" />
+                            <x-mary-icon name="o-arrow-right" class="w-4 h-4"/>
                         </button>
 
                         <button class="btn btn-error w-full text-base-200 flex justify-between"
-                            wire:click="openRejectionModal">
+                                wire:click="openRejectionModal">
                             Reject Ticket
-                            <x-mary-icon name="o-x-circle" class="w-4 h-4" />
+                            <x-mary-icon name="o-x-circle" class="w-4 h-4"/>
                         </button>
                     </div>
                 @else
                     <div class="alert alert-info">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
                         <span>
                             @if ($ticket->status === 'approved')
                                 This ticket has been <u>approved</u>.
@@ -645,7 +350,7 @@
                                             {{ $comment->user->name }}
                                         </p>
                                         <x-mary-badge value="{{ $comment->user->role }}"
-                                            class="badge-primary text-xs" />
+                                                      class="badge-primary text-xs"/>
                                     </div>
 
                                     <p class="text-xs text-base-content/70">
@@ -658,9 +363,10 @@
                     </div>
                 @endif
                 <div class="space-y-3 mt-4">
-                    <textarea wire:model="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."></textarea>
+                    <textarea wire:model="comment" class="textarea textarea-bordered w-full h-4"
+                              placeholder="Add a comment..."></textarea>
                     <button class="btn btn-primary w-full" wire:click="addComment">
-                        <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4" />
+                        <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4"/>
                         Add Comment
                     </button>
                 </div>
@@ -672,7 +378,7 @@
     <x-mary-modal wire:model="showApprovalModal" title="Confirm Ticket Approval" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-success">
-                <x-mary-icon name="o-check-circle" class="w-6 h-6" />
+                <x-mary-icon name="o-check-circle" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">You are about to approve this ticket</h3>
                     <p class="text-sm">This action will create an event and schedule it on the calendar.
@@ -681,17 +387,17 @@
             </div>
 
             <x-mary-textarea wire:model="approvalRemarks" label="Approval Remarks"
-                placeholder="Enter your remarks for approving this ticket..." rows="4"
-                hint="Provide a brief explanation for this approval" />
+                             placeholder="Enter your remarks for approving this ticket..." rows="4"
+                             hint="Provide a brief explanation for this approval"/>
             @error('approvalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeApprovalModal" />
+            <x-mary-button label="Cancel" wire:click="closeApprovalModal"/>
             <x-mary-button label="Confirm Approval" class="btn-success" wire:click="approveTicket"
-                spinner="approveTicket" />
+                           spinner="approveTicket"/>
         </x-slot:actions>
     </x-mary-modal>
 
@@ -699,7 +405,7 @@
     <x-mary-modal wire:model="showRejectionModal" title="Confirm Ticket Rejection" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-error">
-                <x-mary-icon name="o-x-circle" class="w-6 h-6" />
+                <x-mary-icon name="o-x-circle" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">You are about to reject this ticket</h3>
                     <p class="text-sm">This action cannot be undone. No event will be created.</p>
@@ -707,17 +413,17 @@
             </div>
 
             <x-mary-textarea wire:model="rejectionRemarks" label="Rejection Remarks"
-                placeholder="Explain the reason for rejecting this ticket..." rows="4"
-                hint="Provide detailed explanation for the rejection (minimum 10 characters)" />
+                             placeholder="Explain the reason for rejecting this ticket..." rows="4"
+                             hint="Provide detailed explanation for the rejection (minimum 10 characters)"/>
             @error('rejectionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeRejectionModal" />
+            <x-mary-button label="Cancel" wire:click="closeRejectionModal"/>
             <x-mary-button label="Confirm Rejection" class="btn-error" wire:click="rejectTicket"
-                spinner="rejectTicket" />
+                           spinner="rejectTicket"/>
         </x-slot:actions>
     </x-mary-modal>
 
@@ -725,7 +431,7 @@
     <x-mary-modal wire:model="showRevisionModal" title="Request Ticket Revision" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-warning">
-                <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
+                <x-mary-icon name="o-arrow-path" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">Request changes to this ticket</h3>
                     <p class="text-sm">The student organization will need to revise and resubmit.</p>
@@ -733,17 +439,17 @@
             </div>
 
             <x-mary-textarea wire:model="revisionRemarks" label="Revision Instructions"
-                placeholder="Clearly explain what needs to be changed or added..." rows="5"
-                hint="Be specific about what needs to be revised (minimum 10 characters)" />
+                             placeholder="Clearly explain what needs to be changed or added..." rows="5"
+                             hint="Be specific about what needs to be revised (minimum 10 characters)"/>
             @error('revisionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeRevisionModal" />
+            <x-mary-button label="Cancel" wire:click="closeRevisionModal"/>
             <x-mary-button label="Request Revision" class="btn-warning" wire:click="requestRevision"
-                spinner="requestRevision" />
+                           spinner="requestRevision"/>
         </x-slot:actions>
     </x-mary-modal>
 
@@ -751,7 +457,7 @@
     <x-mary-modal wire:model="showForwardModal" title="Forward to GSO" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-info">
-                <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
+                <x-mary-icon name="o-arrow-right" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">Forward this ticket to GSO</h3>
                     <p class="text-sm">GSO will review and provide their decision. You'll make the final
@@ -760,17 +466,17 @@
             </div>
 
             <x-mary-textarea wire:model="forwardRemarks" label="Forwarding Remarks"
-                placeholder="Enter remarks for GSO..." rows="4"
-                hint="Explain why this needs GSO review or what specific approval is needed" />
+                             placeholder="Enter remarks for GSO..." rows="4"
+                             hint="Explain why this needs GSO review or what specific approval is needed"/>
             @error('forwardRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeForwardModal" />
+            <x-mary-button label="Cancel" wire:click="closeForwardModal"/>
             <x-mary-button label="Forward to GSO" class="btn-info" wire:click="forwardToGso"
-                spinner="forwardToGso" />
+                           spinner="forwardToGso"/>
         </x-slot:actions>
     </x-mary-modal>
 
@@ -778,7 +484,7 @@
     <x-mary-modal wire:model="showFinalApprovalModal" title="Final Approval" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-success">
-                <x-mary-icon name="o-check-badge" class="w-6 h-6" />
+                <x-mary-icon name="o-check-badge" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">Final approval after GSO review</h3>
                     <p class="text-sm">This will create the event and schedule it on the calendar.</p>
@@ -786,17 +492,17 @@
             </div>
 
             <x-mary-textarea wire:model="finalApprovalRemarks" label="Final Approval Remarks"
-                placeholder="Enter your final approval remarks..." rows="4"
-                hint="Document your final decision after considering GSO's input" />
+                             placeholder="Enter your final approval remarks..." rows="4"
+                             hint="Document your final decision after considering GSO's input"/>
             @error('finalApprovalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeFinalApprovalModal" />
+            <x-mary-button label="Cancel" wire:click="closeFinalApprovalModal"/>
             <x-mary-button label="Confirm Final Approval" class="btn-success" wire:click="finalApproval"
-                spinner="finalApproval" />
+                           spinner="finalApproval"/>
         </x-slot:actions>
     </x-mary-modal>
 
@@ -804,7 +510,7 @@
     <x-mary-modal wire:model="showFinalRejectionModal" title="Final Rejection" class="backdrop-blur">
         <div class="space-y-4">
             <div class="alert alert-error">
-                <x-mary-icon name="o-x-circle" class="w-6 h-6" />
+                <x-mary-icon name="o-x-circle" class="w-6 h-6"/>
                 <div>
                     <h3 class="font-bold">Final rejection after GSO review</h3>
                     <p class="text-sm">This action cannot be undone. No event will be created.</p>
@@ -812,17 +518,17 @@
             </div>
 
             <x-mary-textarea wire:model="finalRejectionRemarks" label="Final Rejection Remarks"
-                placeholder="Explain the reason for final rejection..." rows="4"
-                hint="Provide detailed explanation considering GSO's input (minimum 10 characters)" />
+                             placeholder="Explain the reason for final rejection..." rows="4"
+                             hint="Provide detailed explanation considering GSO's input (minimum 10 characters)"/>
             @error('finalRejectionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+            <span class="text-error text-sm">{{ $message }}</span>
             @enderror
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeFinalRejectionModal" />
+            <x-mary-button label="Cancel" wire:click="closeFinalRejectionModal"/>
             <x-mary-button label="Confirm Final Rejection" class="btn-error" wire:click="finalRejection"
-                spinner="finalRejection" />
+                           spinner="finalRejection"/>
         </x-slot:actions>
     </x-mary-modal>
 
