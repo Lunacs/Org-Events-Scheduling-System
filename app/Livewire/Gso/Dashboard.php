@@ -36,7 +36,7 @@ class Dashboard extends Component
                 ->count(),
             'upcomingEvents' => Event_Schedule::query()
                 ->where('status', 'approved')
-                ->where('schedule_date', '>=', Carbon::now())
+                ->where('start_date', '>=', Carbon::now())
                 ->count(),
         ];
 
@@ -80,7 +80,7 @@ class Dashboard extends Component
     {
         $ticket = $approval->ticket;
 
-        $rawDate = $ticket?->getAttribute('date-from');
+    $rawDate = $ticket?->getAttribute('date_from');
         $eventDate = $this->parseDate($rawDate);
 
         if (! $eventDate && $ticket?->created_at) {
@@ -88,6 +88,8 @@ class Dashboard extends Component
                 ? $ticket->created_at
                 : $this->parseDate((string) $ticket->created_at);
         }
+
+        $priorityKey = $this->determinePriorityKey($eventDate);
 
         return [
             'approval_id' => $approval->id,
@@ -99,7 +101,9 @@ class Dashboard extends Component
                 ?? 'N/A',
             'request_type' => trim((string) ($ticket?->eventType?->type_name ?? 'N/A')),
             'event_date' => $eventDate?->translatedFormat('M d, Y') ?? 'N/A',
-            'priority' => $this->resolvePriority($ticket?->total_participants),
+            'priority' => $this->resolvePriority($eventDate),
+            'priority_key' => $priorityKey,
+            'days_until_event' => $this->daysUntil($eventDate),
         ];
     }
 
@@ -116,16 +120,40 @@ class Dashboard extends Component
         }
     }
 
-    protected function resolvePriority(?int $totalParticipants): string
+    protected function resolvePriority(?Carbon $eventDate): string
     {
-        if ($totalParticipants === null) {
-            return 'Low';
-        }
-
-        return match (true) {
-            $totalParticipants >= 200 => 'High',
-            $totalParticipants >= 100 => 'Medium',
+        return match ($this->determinePriorityKey($eventDate)) {
+            'high' => 'High',
+            'medium' => 'Medium',
             default => 'Low',
         };
+    }
+
+    protected function determinePriorityKey(?Carbon $eventDate): string
+    {
+        $daysUntil = $this->daysUntil($eventDate);
+
+        if ($daysUntil === null) {
+            return 'low';
+        }
+
+        if ($daysUntil <= 3) {
+            return 'high';
+        }
+
+        if ($daysUntil <= 7) {
+            return 'medium';
+        }
+
+        return 'low';
+    }
+
+    protected function daysUntil(?Carbon $eventDate): ?int
+    {
+        if (! $eventDate) {
+            return null;
+        }
+
+        return Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
     }
 }

@@ -43,9 +43,9 @@ class Calendar extends Component
             return null;
         }
 
-        $eventDate = $this->parseDate($ticket->getAttribute('date-from'));
-        $timeFrom = $this->parseTime($ticket->getAttribute('time-from'));
-        $timeTo = $this->parseTime($ticket->getAttribute('time-to'));
+        $eventDate = $this->parseDate($ticket->getAttribute('date_from'));
+        $timeFrom = $this->parseTime($ticket->getAttribute('time_from'));
+        $timeTo = $this->parseTime($ticket->getAttribute('time_to'));
 
         $requirements = collect(preg_split('/[\,\n]+/', (string) ($ticket->special_requirements ?? '')))
             ->map(fn(string $item) => trim($item))
@@ -61,6 +61,10 @@ class Calendar extends Component
                 ?? 'N/A',
             'date' => $eventDate?->format('Y-m-d') ?? optional($ticket->created_at)->format('Y-m-d') ?? Carbon::today()->format('Y-m-d'),
             'time' => $this->formatTimeRange($timeFrom, $timeTo),
+            'start_time' => $timeFrom?->format('H:i'),
+            'end_time' => $timeTo?->format('H:i'),
+            'start_minutes' => $this->timeToMinutes($timeFrom),
+            'end_minutes' => $this->timeToMinutes($timeTo),
             'venue' => $ticket->venue_requested ?? 'TBD',
             'status' => 'approved',
             'attendees' => $ticket->total_participants ? (string) $ticket->total_participants : '0',
@@ -113,5 +117,10 @@ class Calendar extends Component
         $time = $from ?? $to;
 
         return $time?->format('H:i') ?? '—';
+    }
+
+    protected function timeToMinutes(?Carbon $time): ?int
+    {
+        return $time ? ($time->hour * 60 + $time->minute) : null;
     }
 }

@@ -98,8 +98,9 @@ class Details extends Component
     protected function buildOverview(): array
     {
         $status = $this->normalizeStatus($this->ticket->status);
-        $priorityLabel = $this->resolvePriority($this->ticket->total_participants);
-        $priorityKey = Str::of($priorityLabel)->lower()->toString();
+    $eventDate = $this->parseDate($this->ticketAttribute('date_from'));
+        $priorityKey = $this->determinePriorityKey($eventDate);
+        $priorityLabel = $this->resolvePriorityLabel($priorityKey);
 
         return [
             'ticket_number' => $this->ticket->ticket_number ?? 'N/A',
@@ -139,10 +140,10 @@ class Details extends Component
      */
     protected function buildEventDetails(array $requirements): array
     {
-        $dateFrom = $this->ticketAttribute('date-from');
-        $dateTo = $this->ticketAttribute('date-to');
-        $timeFrom = $this->ticketAttribute('time-from');
-        $timeTo = $this->ticketAttribute('time-to');
+    $dateFrom = $this->ticketAttribute('date_from');
+    $dateTo = $this->ticketAttribute('date_to');
+    $timeFrom = $this->ticketAttribute('time_from');
+    $timeTo = $this->ticketAttribute('time_to');
 
         return [
             'title' => $this->ticket->title ?? '—',
@@ -208,7 +209,7 @@ class Details extends Component
                             'id' => $schedule->schedule_id,
                             'event_label' => $label,
                             'event_notes' => $event->notes ?? null,
-                            'datetime' => $schedule->schedule_date?->format('M d, Y g:i A') ?? '—',
+                            'datetime' => $schedule->start_date?->format('M d, Y g:i A') ?? '—',
                             'venue' => $schedule->schedule_venue ?? '—',
                             'status' => $status,
                             'status_label' => $this->resolveStatusLabel($status),
@@ -317,15 +318,30 @@ class Details extends Component
         };
     }
 
-    protected function resolvePriority(?int $totalParticipants): string
+    protected function determinePriorityKey(?Carbon $eventDate): string
     {
-        if ($totalParticipants === null) {
-            return 'Low';
+        if (! $eventDate) {
+            return 'low';
         }
 
-        return match (true) {
-            $totalParticipants >= 200 => 'High',
-            $totalParticipants >= 100 => 'Medium',
+        $daysUntil = Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+
+        if ($daysUntil <= 3) {
+            return 'high';
+        }
+
+        if ($daysUntil <= 7) {
+            return 'medium';
+        }
+
+        return 'low';
+    }
+
+    protected function resolvePriorityLabel(string $priorityKey): string
+    {
+        return match ($priorityKey) {
+            'high' => 'High',
+            'medium' => 'Medium',
             default => 'Low',
         };
     }

@@ -1,3 +1,66 @@
+@php
+    use Carbon\Carbon;
+
+    $requestTypeStyles = [
+        'venue booking' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        'equipment' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        'logistics' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    ];
+
+    $sampleApprovals = collect([
+        [
+            'ticket_id' => 'TKT-001',
+            'event_title' => 'Leadership Summit 2024',
+            'organization' => 'Student Council',
+            'request_type' => 'Venue Booking',
+            'event_date' => '2024-11-15',
+        ],
+        [
+            'ticket_id' => 'TKT-002',
+            'event_title' => 'Science Fair',
+            'organization' => 'Science Club',
+            'request_type' => 'Equipment',
+            'event_date' => '2024-11-20',
+        ],
+        [
+            'ticket_id' => 'TKT-003',
+            'event_title' => 'Cultural Night',
+            'organization' => 'Cultural Society',
+            'request_type' => 'Logistics',
+            'event_date' => '2024-12-01',
+        ],
+    ])->map(function (array $item) use ($requestTypeStyles) {
+        $eventDate = Carbon::parse($item['event_date']);
+        $daysUntil = Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+        $priorityKey = $daysUntil <= 3 ? 'high' : ($daysUntil <= 7 ? 'medium' : 'low');
+
+        $priorityBadgeClass = match ($priorityKey) {
+            'high' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            'medium' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            default => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        };
+
+        $requestBadgeClass = $requestTypeStyles[strtolower($item['request_type'])] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+
+        return array_merge($item, [
+            'event_date_display' => $eventDate->format('M d, Y'),
+            'priority_key' => $priorityKey,
+            'priority_label' => ucfirst($priorityKey),
+            'priority_badge_class' => $priorityBadgeClass,
+            'request_badge_class' => $requestBadgeClass,
+            'days_until_event' => $daysUntil,
+            'review_url' => route('gso.ticket-review'),
+        ]);
+    });
+
+    $stats = [
+        'pending' => $sampleApprovals->count(),
+        'approved_today' => 3,
+        'rejected_today' => 1,
+        'upcoming_events' => $sampleApprovals->where('days_until_event', '>=', 0)->count(),
+    ];
+@endphp
+
 <x-layouts.gso-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -21,7 +84,7 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Approvals</p>
-                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">8</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['pending']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -39,7 +102,7 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved Today</p>
-                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">3</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['approved_today']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -57,7 +120,7 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rejected Today</p>
-                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">1</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['rejected_today']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -76,7 +139,7 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Upcoming Events</p>
-                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">12</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['upcoming_events']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -122,99 +185,43 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                <tr>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        TKT-001</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Leadership Summit 2024</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Student Council</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                            Venue Booking
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">Nov
-                                        15, 2024</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                            High
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Approve</button>
-                                        <button
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-3">Reject</button>
-                                        <a href="{{ route('gso.ticket-review') }}"
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Review</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        TKT-002</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Science Fair</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Science Club</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                            Equipment
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">Nov
-                                        20, 2024</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                            Medium
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Approve</button>
-                                        <button
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-3">Reject</button>
-                                        <a href="{{ route('gso.ticket-review') }}"
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Review</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        TKT-003</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Cultural Night</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Cultural Society</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                            Logistics
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        Dec 1, 2024</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                                            Low
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Approve</button>
-                                        <button
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-3">Reject</button>
-                                        <a href="{{ route('gso.ticket-review') }}"
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Review</a>
-                                    </td>
-                                </tr>
+                                @foreach ($sampleApprovals as $approval)
+                                    <tr>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $approval['ticket_id'] }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            {{ $approval['event_title'] }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            {{ $approval['organization'] }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $approval['request_badge_class'] }}">
+                                                {{ $approval['request_type'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                            {{ $approval['event_date_display'] }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $approval['priority_badge_class'] }}">
+                                                {{ $approval['priority_label'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                                class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3">Approve</button>
+                                            <button
+                                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-3">Reject</button>
+                                            <a href="{{ $approval['review_url'] }}"
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">Review</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -228,7 +235,7 @@
 
                     <div class="space-y-4">
                         <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0">
+                            <div class="shrink-0">
                                 <div
                                     class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                                     <svg class="w-4 h-4 text-green-600 dark:text-green-300" fill="none"
@@ -247,7 +254,7 @@
                         </div>
 
                         <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0">
+                            <div class="shrink-0">
                                 <div
                                     class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
                                     <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none"
@@ -266,7 +273,7 @@
                         </div>
 
                         <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0">
+                            <div class="shrink-0">
                                 <div
                                     class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                                     <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none"

@@ -198,7 +198,9 @@
                                     <td x-text="record.eventName"></td>
                                     <td x-text="record.organization"></td>
                                     <td>
-                                        <div class="badge badge-outline" x-text="record.requestType"></div>
+                                        <span
+                                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-[12rem] text-left text-sm font-medium shadow-sm ' + getRequestTypeClass(record.requestType)"
+                                            x-text="record.requestType || 'N/A'"></span>
                                     </td>
                                     <td>
                                         <div class="badge" :class="getDecisionClass(record.decision)"
@@ -292,6 +294,26 @@
 
             breakdown: [],
 
+            requestTypeClassDefaults: {
+                'venue booking': 'badge-primary text-primary-content',
+                'venue': 'badge-primary text-primary-content',
+                'equipment': 'badge-info text-info-content',
+                'logistics': 'badge-secondary text-secondary-content',
+                'catering': 'badge-accent text-accent-content'
+            },
+            requestTypeClassPalette: [
+                'badge-success text-success-content',
+                'badge-warning text-warning-content',
+                'badge-error text-error-content',
+                'badge-neutral text-neutral-content',
+                'badge-info text-info-content',
+                'badge-secondary text-secondary-content',
+                'badge-accent text-accent-content',
+                'badge-primary text-primary-content'
+            ],
+            requestTypeClassMap: {},
+            requestTypePaletteIndex: 0,
+
             records: (gsoReportSeed.records ?? []).map(record => ({
                 ...record,
                 decidedAt: record.decided_at ? new Date(record.decided_at) : null,
@@ -332,6 +354,7 @@
             },
 
             init() {
+                this.bootstrapRequestTypeClasses();
                 this.applyFilters();
             },
 
@@ -523,6 +546,41 @@
                     'Pending': 'badge-warning'
                 };
                 return classes[decision] || 'badge-ghost';
+            },
+
+            bootstrapRequestTypeClasses() {
+                this.requestTypeClassMap = { ...this.requestTypeClassDefaults };
+                this.requestTypePaletteIndex = 0;
+
+                const uniqueTypes = Array.from(new Set(
+                    this.records
+                        .map(record => (record.requestType || '').toString().trim().toLowerCase())
+                        .filter(Boolean)
+                ));
+
+                uniqueTypes.forEach(typeKey => {
+                    if (!this.requestTypeClassMap[typeKey]) {
+                        const paletteClass = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                        this.requestTypeClassMap[typeKey] = paletteClass;
+                        this.requestTypePaletteIndex += 1;
+                    }
+                });
+            },
+
+            getRequestTypeClass(type) {
+                if (!type) {
+                    return 'badge-ghost text-base-content';
+                }
+
+                const key = type.toString().trim().toLowerCase();
+
+                if (!this.requestTypeClassMap[key]) {
+                    const paletteClass = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                    this.requestTypeClassMap[key] = paletteClass;
+                    this.requestTypePaletteIndex += 1;
+                }
+
+                return this.requestTypeClassMap[key];
             }
         }
     }

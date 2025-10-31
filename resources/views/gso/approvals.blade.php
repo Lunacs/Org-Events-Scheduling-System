@@ -3,62 +3,60 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Approvals Management') }}
         </h2>
-    </x-slot>
-
-    <div class="py-12" x-data="approvalsManager()">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="stats shadow bg-emerald-50 dark:bg-emerald-900/20">
-                    <div class="stat">
-                        <div class="stat-figure text-emerald-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="stat-title text-emerald-700 dark:text-emerald-300">Pending Review</div>
-                        <div class="stat-value text-emerald-600" x-text="pendingCount"></div>
-                        <div class="stat-desc text-emerald-600">Awaiting your approval</div>
-                    </div>
-                </div>
-
-                <div class="stats shadow bg-blue-50 dark:bg-blue-900/20">
-                    <div class="stat">
-                        <div class="stat-figure text-blue-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="stat-title text-blue-700 dark:text-blue-300">Today's Approvals</div>
-                        <div class="stat-value text-blue-600" x-text="todayApproved"></div>
-                        <div class="stat-desc text-blue-600">Approved today</div>
-                    </div>
-                </div>
-
-                <div class="stats shadow bg-orange-50 dark:bg-orange-900/20">
-                    <div class="stat">
-                        <div class="stat-figure text-orange-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
+                allRequests: [{
+                        id: 'REQ-001',
+                        event_name: 'Leadership Summit 2024',
+                        organization: 'Student Council',
+                        event_date: '2024-11-15',
+                        request_type: 'Venue Booking',
+                        status: 'pending',
+                        description: 'Annual leadership summit requiring main auditorium with full AV setup.',
+                        requirements: ['Audio System', 'Projector', 'Seating for 200', 'Stage Lighting'],
+                        submitted_date: 'Oct 1, 2024',
+                        due_date: 'Oct 15, 2024'
+                    },
+                    {
+                        id: 'REQ-002',
+                        event_name: 'Science Fair',
+                        organization: 'Science Club',
+                        event_date: '2024-11-20',
+                        request_type: 'Equipment',
+                        status: 'pending',
+                        description: 'Equipment needed for student science project presentations.',
+                        requirements: ['Display Tables', 'Power Extensions', 'Internet Access'],
+                        submitted_date: 'Sep 28, 2024',
+                        due_date: 'Oct 20, 2024'
+                    },
+                    {
+                        id: 'REQ-003',
+                        event_name: 'Cultural Night',
+                        organization: 'Cultural Society',
+                        event_date: '2024-12-01',
+                        request_type: 'Logistics',
+                        status: 'approved',
+                        description: 'Support for multicultural celebration event.',
+                        requirements: ['Security', 'Cleanup Crew', 'Parking Management'],
+                        submitted_date: 'Sep 25, 2024',
+                        due_date: 'Oct 25, 2024'
+                    }
+                ],
+                filteredRequests: [],
                         <div class="stat-title text-orange-700 dark:text-orange-300">Urgent</div>
                         <div class="stat-value text-orange-600" x-text="urgentCount"></div>
-                        <div class="stat-desc text-orange-600">High priority items</div>
+                        filteredRequests: [],
+                        priority_label: '',
                     </div>
                 </div>
             </div>
 
             <!-- Filter and Search -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6">
+                            return this.allRequests.filter(r => r.priority === 'high' && r.status === 'pending').length;
                     <div class="flex flex-wrap gap-4 items-end">
                         <div class="flex-1 min-w-64">
                             <x-mary-input label="Search Requests" placeholder="Search by event name, organization..."
-                                x-model="searchTerm" @input.debounce.300ms="filterRequests()" class="input-emerald">
+                            this.allRequests = this.allRequests.map(request => this.prepareRequest(request));
+                            this.filteredRequests = this.allRequests;
                                 <x-slot:prepend>
                                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -136,7 +134,7 @@
                                                 <div class="badge" :class="getStatusClass(request.status)"
                                                     x-text="request.status"></div>
                                                 <div class="badge" :class="getPriorityClass(request.priority)"
-                                                    x-text="request.priority + ' priority'"></div>
+                                                    x-text="request.priority_label"></div>
                                             </div>
 
                                             <div
@@ -147,7 +145,7 @@
                                                 </div>
                                                 <div>
                                                     <strong>Event Date:</strong> <span
-                                                        x-text="request.event_date"></span>
+                                                        x-text="request.event_date_display"></span>
                                                 </div>
                                                 <div>
                                                     <strong>Requested:</strong> <span
@@ -259,7 +257,7 @@
                     x-transition:leave.duration.0ms x-transition:leave.scale.origin.bottom>
                     <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10"
+                            <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10"
                                 :class="actionType === 'approve' ? 'bg-green-100' : 'bg-red-100'">
                                 <template x-if="actionType === 'approve'">
                                     <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor"
@@ -375,6 +373,7 @@
                 },
 
                 init() {
+                    this.allRequests = this.allRequests.map(request => this.prepareRequest(request));
                     this.filteredRequests = this.allRequests;
                 },
 
@@ -478,6 +477,82 @@
                         'low': 'badge-success'
                     };
                     return classes[priority] || 'badge-ghost';
+                },
+
+                prepareRequest(request) {
+                    const eventDate = this.parseEventDate(request.event_date);
+                    const daysUntil = this.daysUntil(eventDate);
+                    const priorityKey = this.determinePriorityKey(daysUntil);
+
+                    return {
+                        ...request,
+                        event_date_display: this.formatEventDate(eventDate),
+                        priority: priorityKey,
+                        priority_label: this.resolvePriorityLabel(priorityKey),
+                        days_until_event: daysUntil,
+                    };
+                },
+
+                parseEventDate(value) {
+                    if (!value) {
+                        return null;
+                    }
+
+                    const parsed = new Date(value);
+                    return Number.isNaN(parsed.getTime()) ? null : parsed;
+                },
+
+                formatEventDate(eventDate) {
+                    if (!eventDate) {
+                        return 'TBD';
+                    }
+
+                    return eventDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: '2-digit',
+                        year: 'numeric'
+                    });
+                },
+
+                daysUntil(eventDate) {
+                    if (!eventDate) {
+                        return null;
+                    }
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const event = new Date(eventDate);
+                    event.setHours(0, 0, 0, 0);
+
+                    const diffMs = event.getTime() - today.getTime();
+                    return Math.round(diffMs / 86400000);
+                },
+
+                determinePriorityKey(daysUntil) {
+                    if (daysUntil === null || Number.isNaN(daysUntil)) {
+                        return 'low';
+                    }
+
+                    if (daysUntil <= 3) {
+                        return 'high';
+                    }
+
+                    if (daysUntil <= 7) {
+                        return 'medium';
+                    }
+
+                    return 'low';
+                },
+
+                resolvePriorityLabel(priorityKey) {
+                    const labels = {
+                        'high': 'High Priority',
+                        'medium': 'Medium Priority',
+                        'low': 'Low Priority'
+                    };
+
+                    return labels[priorityKey] || 'Low Priority';
                 }
             }
         }

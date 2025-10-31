@@ -32,26 +32,33 @@ class Approvals extends Component
 
         $pendingQuery = (clone $baseQuery)->where('decision', 'pending');
 
+        $pendingApprovalsForStats = (clone $pendingQuery)->get();
+
         $stats = [
-            'pending' => (clone $pendingQuery)->count(),
+            'pending' => $pendingApprovalsForStats->count(),
             'todayApproved' => (clone $baseQuery)
                 ->where('decision', 'approved')
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
-            'urgent' => (clone $pendingQuery)
-                ->whereHas('ticket', fn(Builder $query) => $query->where('total_participants', '>=', 200))
+            'urgent' => $pendingApprovalsForStats
+                ->filter(fn(Office_Approval $approval) => $this->determinePriorityKey($this->extractEventDate($approval)) === 'high')
                 ->count(),
         ];
 
         $decision = $this->normalizeStatusFilter($this->statusFilter);
 
-        $approvals = (clone $baseQuery)
+        $approvalsCollection = (clone $baseQuery)
             ->where('decision', $decision)
             ->when($this->search !== '', fn(Builder $query) => $this->applySearchFilter($query, $this->search))
-            ->when($this->priorityFilter !== 'all', fn(Builder $query) => $this->applyPriorityFilter($query, $this->priorityFilter))
             ->orderByDesc('updated_at')
             ->get()
             ->map(fn(Office_Approval $approval) => $this->transformApproval($approval));
+
+        if ($this->priorityFilter !== 'all') {
+            $approvalsCollection = $approvalsCollection->filter(fn(array $approval) => ($approval['priority'] ?? 'low') === $this->priorityFilter);
+        }
+
+        $approvals = $approvalsCollection->values();
 
         return view('livewire.gso.approvals', [
             'approvals' => $approvals,
@@ -104,33 +111,12 @@ class Approvals extends Component
         });
     }
 
-    protected function applyPriorityFilter(Builder $query, string $priority): void
-    {
-        $query->whereHas('ticket', function (Builder $ticketQuery) use ($priority) {
-            if ($priority === 'high') {
-                $ticketQuery->where('total_participants', '>=', 200);
-
-                return;
-            }
-
-            if ($priority === 'medium') {
-                $ticketQuery->whereBetween('total_participants', [100, 199]);
-
-                return;
-            }
-
-            if ($priority === 'low') {
-                $ticketQuery->where('total_participants', '<', 100);
-            }
-        });
-    }
-
     protected function transformApproval(Office_Approval $approval): array
     {
         $ticket = $approval->ticket;
 
-        $eventDate = $this->parseDate($ticket?->getAttribute('date-from'));
-        $dueDate = $this->parseDate($ticket?->getAttribute('date-to'));
+    $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
+    $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
 
         $requirements = collect(preg_split('/[\,\n]+/', (string) ($ticket?->special_requirements ?? '')))
             ->map(fn(string $item) => trim($item))
@@ -138,7 +124,7 @@ class Approvals extends Component
             ->values()
             ->all();
 
-        $priority = $this->resolvePriority($ticket?->total_participants);
+        $priority = $this->resolvePriority($eventDate);
 
         $statusDefinitions = $this->statusDefinitions();
         $status = $approval->decision ?? 'pending';
@@ -156,6 +142,7 @@ class Approvals extends Component
             'event_date' => $eventDate?->format('M d, Y') ?? 'N/A',
             'priority' => $priority['key'],
             'priority_label' => $priority['label'],
+            'priority_days_until' => $priority['days_until'],
             'status' => $status,
             'status_label' => $statusLabel,
             'description' => $ticket?->description ?? 'No description provided.',
@@ -180,20 +167,59 @@ class Approvals extends Component
         }
     }
 
-    protected function resolvePriority(?int $totalParticipants): array
+    protected function resolvePriority(?Carbon $eventDate): array
     {
-        if ($totalParticipants === null) {
-            return ['key' => 'low', 'label' => 'Low Priority'];
+        $priorityKey = $this->determinePriorityKey($eventDate);
+
+        $labels = [
+            'high' => 'High Priority',
+            'medium' => 'Medium Priority',
+            'low' => 'Low Priority',
+        ];
+
+        return [
+            'key' => $priorityKey,
+            'label' => $labels[$priorityKey] ?? 'Low Priority',
+            'days_until' => $this->daysUntilEvent($eventDate),
+        ];
+    }
+
+    protected function determinePriorityKey(?Carbon $eventDate): string
+    {
+        $daysUntil = $this->daysUntilEvent($eventDate);
+
+        if ($daysUntil === null) {
+            return 'low';
         }
 
-        if ($totalParticipants >= 200) {
-            return ['key' => 'high', 'label' => 'High Priority'];
+        if ($daysUntil <= 3) {
+            return 'high';
         }
 
-        if ($totalParticipants >= 100) {
-            return ['key' => 'medium', 'label' => 'Medium Priority'];
+        if ($daysUntil <= 7) {
+            return 'medium';
         }
 
-        return ['key' => 'low', 'label' => 'Low Priority'];
+        return 'low';
+    }
+
+    protected function daysUntilEvent(?Carbon $eventDate): ?int
+    {
+        if (! $eventDate) {
+            return null;
+        }
+
+        return Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+    }
+
+    protected function extractEventDate(Office_Approval $approval): ?Carbon
+    {
+        $ticket = $approval->ticket;
+
+        if (! $ticket) {
+            return null;
+        }
+
+    return $this->parseDate($ticket->getAttribute('date_from'));
     }
 }

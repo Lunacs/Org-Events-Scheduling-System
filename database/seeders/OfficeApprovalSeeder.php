@@ -54,6 +54,45 @@ class OfficeApprovalSeeder extends Seeder
             }
         }
 
+        // Guarantee pending approvals that exercise all proximity-based priority states
+        $priorityRemarks = [
+            'Annual Tech Summit 2024' => 'Event date is within two days – prioritize coordination.',
+            'Cultural Festival Celebration' => 'Upcoming within the week – monitor preparations.',
+            'Sports Week Competition' => 'Scheduled later this month – track requirements.',
+        ];
+
+        $indexedOffices = $offices->values();
+        $officeCount = max(1, $indexedOffices->count());
+        $defaultUserId = $gsoUsers->first()->user_id ?? null;
+        $index = 0;
+
+        foreach ($priorityRemarks as $title => $remark) {
+            $ticket = $approvedTickets->firstWhere('title', $title);
+
+            if (! $ticket) {
+                continue;
+            }
+
+            $office = $indexedOffices->get($index % $officeCount);
+            $index++;
+
+            if (! $office) {
+                continue;
+            }
+
+            \App\Models\Office_Approval::updateOrCreate(
+                [
+                    'ticket_id' => $ticket->ticket_id,
+                    'office_id' => $office->office_id,
+                    'decision' => 'pending',
+                ],
+                [
+                    'user_id' => $defaultUserId,
+                    'remarks' => $remark,
+                ]
+            );
+        }
+
         $this->command->info('Created office approvals for approved tickets');
     }
 }
