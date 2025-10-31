@@ -135,8 +135,8 @@ class Reports extends Component
 
     protected function computeStats(Collection $approvals): array
     {
-    $approved = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'approved') === 0)->count();
-    $rejected = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'rejected') === 0)->count();
+        $approved = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'approved') === 0)->count();
+        $rejected = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'rejected') === 0)->count();
         $total = max($approved + $rejected, 1);
 
         $avgResponse = $approvals
