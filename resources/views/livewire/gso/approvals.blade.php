@@ -174,11 +174,7 @@
                         $priorityLabel = $approval['priority_label'] ?? ucfirst($priorityKey);
                         $statusKey = $approval['status'] ?? 'pending';
                         $statusLabel = $approval['status_label'] ?? ucfirst($statusKey);
-                        $cardTone = [
-                            'high' => 'border-red-200 bg-red-50 dark:bg-red-900/10',
-                            'medium' => 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10',
-                            'low' => 'border-gray-200 bg-white dark:bg-gray-800',
-                        ][$priorityKey] ?? 'border-gray-200 bg-white dark:bg-gray-800';
+                        $cardTone = 'border-gray-200 bg-white dark:bg-gray-800';
                     @endphp
                     <div class="border rounded-lg p-4 hover:shadow-md transition-shadow {{ $cardTone }}"
                         wire:key="approval-{{ $approval['id'] ?? uniqid() }}">
@@ -232,25 +228,49 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-col space-y-2 ml-4">
-                                <div class="flex space-x-2">
-                                    <x-mary-button type="button" label="Approve" icon="s-check"
-                                        class="btn-sm btn-success" />
-                                    <x-mary-button type="button" label="Reject" icon="s-x-mark"
-                                        class="btn-sm btn-error" />
-                                </div>
-
-                                @if ($approval['ticket_id'])
-                                    <x-mary-button label="Details" icon="s-eye"
-                                        class="btn-sm btn-outline btn-emerald" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id']]) }}"
-                                        wire:navigate />
+                            <div class="flex flex-col space-y-2 ml-4 md:self-center md:items-center w-full sm:w-56">
+                                @if ($statusKey === 'pending')
+                                    <div class="flex flex-col gap-2 w-full">
+                                        <div class="flex gap-2">
+                                            <x-mary-button type="button" label="Approve" icon="s-check"
+                                                class="btn-sm btn-success flex-1" />
+                                            <x-mary-button type="button" label="Reject" icon="s-x-mark"
+                                                class="btn-sm btn-error flex-1" />
+                                        </div>
+                                        @if ($approval['ticket_id'])
+                                            <x-mary-button label="Details" icon="s-eye"
+                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id']]) }}"
+                                                wire:navigate />
+                                        @else
+                                            <x-mary-button label="Details" icon="s-eye"
+                                                class="btn-sm btn-outline w-full"
+                                                disabled />
+                                        @endif
+                                    </div>
                                 @else
-                                    <x-mary-button label="Details" icon="s-eye" class="btn-sm btn-outline"
-                                        disabled />
+                                    @php
+                                        $statusBadgeText = match ($statusKey) {
+                                            'approved' => $statusLabel . ' ✓',
+                                            'rejected' => $statusLabel . ' ✗',
+                                            default => $statusLabel,
+                                        };
+                                    @endphp
+                                    <div class="flex flex-col gap-2 w-full">
+                                        <div class="flex">
+                                            <x-mary-badge :value="$statusBadgeText"
+                                                class="badge {{ $statusBadges[$statusKey] ?? 'badge-ghost' }} flex-1 justify-center" />
+                                        </div>
+                                        @if ($approval['ticket_id'])
+                                            <x-mary-button label="Details" icon="s-eye"
+                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id']]) }}"
+                                                wire:navigate />
+                                        @else
+                                            <x-mary-button label="Details" icon="s-eye"
+                                                class="btn-sm btn-outline w-full"
+                                                disabled />
+                                        @endif
+                                    </div>
                                 @endif
-
-                                <x-mary-button type="button" label="More Info" icon="s-question-mark-circle"
-                                    class="btn-sm btn-warning" />
                             </div>
                         </div>
                     </div>
