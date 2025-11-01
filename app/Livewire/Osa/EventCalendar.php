@@ -15,7 +15,7 @@ use Mary\Traits\Toast;
 class EventCalendar extends Component
 {
     use Toast;
-    
+
     #[Title('Event Calendar - OSA Admin')]
     #[Layout('components.layouts.app')]
 
@@ -23,13 +23,13 @@ class EventCalendar extends Component
     public $viewMode = 'dayGridMonth';
     public $selectedEvent = null;
     public $showModal = false;
-    
+
     #[Url(except: 'approved')]
     public $statusFilter = 'approved';
-    
+
     #[Url(except: '')]
     public $organizationFilter = '';
-    
+
     #[Url(except: '')]
     public $eventTypeFilter = '';
 
@@ -56,11 +56,11 @@ class EventCalendar extends Component
     public function viewEvent($eventId)
     {
         \Log::info('ViewEvent called with ID: ' . $eventId);
-        
+
         // Reset modal state first
         $this->showModal = false;
         $this->selectedEvent = null;
-        
+
         $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
@@ -72,15 +72,15 @@ class EventCalendar extends Component
                 'eventType:event_type_id,type_name'
             ])
             ->find($eventId);
-            
+
         \Log::info('Selected Event: ' . ($this->selectedEvent ? 'Found' : 'Not Found'));
-        
+
         if (!$this->selectedEvent) {
             \Log::error('Event not found with ID: ' . $eventId);
             $this->dispatch('toast-error', message: 'Event not found');
             return;
         }
-        
+
         \Log::info('Event found, opening modal...');
         $this->showModal = true;
     }
@@ -104,22 +104,22 @@ class EventCalendar extends Component
         $this->statusFilter = 'approved';
         $this->organizationFilter = '';
         $this->eventTypeFilter = '';
-        $this->dispatch('calendar-refetch');
+        $this->dispatch('osa-calendar-updated');
     }
 
     public function updatedStatusFilter()
     {
-        $this->dispatch('calendar-refetch');
+        $this->dispatch('osa-calendar-updated');
     }
 
     public function updatedOrganizationFilter()
     {
-        $this->dispatch('calendar-refetch');
+        $this->dispatch('osa-calendar-updated');
     }
 
     public function updatedEventTypeFilter()
     {
-        $this->dispatch('calendar-refetch');
+        $this->dispatch('osa-calendar-updated');
     }
 
     #[Computed]
@@ -154,7 +154,7 @@ class EventCalendar extends Component
             $endDate = $schedule->end_date ? $schedule->end_date->format('Y-m-d') : $startDate;
             $startTime = $schedule->start_time ?? '09:00';
             $endTime = $schedule->end_time ?? '17:00';
-            
+
             return [
                 'id' => $event->event_id,
                 'title' => $event->ticket->title,
@@ -182,7 +182,7 @@ class EventCalendar extends Component
             '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b',
             '#ef4444', '#06b6d4', '#84cc16', '#f97316',
         ];
-        
+
         $orgId = $event->ticket->user->org_id ?? 0;
         return $colors[$orgId % count($colors)];
     }

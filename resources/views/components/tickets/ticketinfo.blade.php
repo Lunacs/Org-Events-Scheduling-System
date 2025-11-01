@@ -1,6 +1,6 @@
 @props(['tickets'])
 
-{{-- Ticket Item 1 --}}
+{{-- Ticket Item --}}
 <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
     <div class="flex items-start justify-between">
         <div class="flex-1">
