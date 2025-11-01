@@ -154,4 +154,25 @@
             </div>
         @endif
     </x-mary-modal>
+
+    <x-mary-drawer
+        wire:model="showEditDrawer"
+        title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
+        subtitle="Revise your event request"
+        separator
+        with-close-button
+        close-on-escape
+        right
+        class="w-11/12 lg:w-2/3"
+        @close="$wire.closeEditDrawer()"
+    >
+        @if($this->selectedTicket)
+            @livewire('student-org.edit-ticket', key('edit-ticket-' . $this->selectedTicket->ticket_id))
+        @else
+            <div class="text-center py-8">
+                <x-mary-loading class="loading-lg"/>
+            </div>
+        @endif
+    </x-mary-drawer>
+
 </div>

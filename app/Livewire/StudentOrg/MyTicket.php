@@ -15,12 +15,12 @@ class MyTicket extends Component
 
     #[Title('My Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
-
     public $search = '';
     public $statusFilter = '';
     public $dateFilter = '';
     public $showDetailsModal = false;
     public $showCommentsModal = false;
+    public $showEditDrawer = false;
     public $selectedTicketId;
     public $comment = '';
 
@@ -47,6 +47,22 @@ class MyTicket extends Component
     public function closeCommentsModal()
     {
         $this->showCommentsModal = false;
+        $this->selectedTicketId = null;
+    }
+
+    #[On('open-ticket-edit')]
+    public function openEditDrawer($ticketId = null)
+    {
+        $this->selectedTicketId = $ticketId;
+        $this->showEditDrawer = true;
+
+        // Dispatch event to edit form component to load ticket data
+        $this->dispatch('load-ticket-for-edit', ticketId: $ticketId);
+    }
+
+    public function closeEditDrawer()
+    {
+        $this->showEditDrawer = false;
         $this->selectedTicketId = null;
     }
 
@@ -112,14 +128,14 @@ class MyTicket extends Component
     {
         $allTickets = auth()->user()->tickets()->with('eventType')->get();
         $ticketsQuery = auth()->user()->tickets()->with('eventType')
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')
                         ->orWhere('ticket_number', 'like', '%' . $this->search . '%')
                         ->orWhere('description', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->statusFilter, function($query) {
+            ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
             })
             ->orderBy('created_at', 'desc');
