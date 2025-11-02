@@ -56,14 +56,14 @@
                     {{-- Ticket Item 1 --}}
                     @foreach($tickets as $ticket)
                         <x-tickets.ticketinfo :tickets="$ticket"/>
-
                     @endforeach
                 </div>
 
                 {{-- Pagination --}}
                 <div class="mt-6 flex justify-between items-center">
                     <div class="text-sm text-gray-600">
-                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }} of {{ $tickets->total() }} tickets
+                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }}
+                        of {{ $tickets->total() }} tickets
                     </div>
 
                     <div class="flex space-x-2">
@@ -71,35 +71,109 @@
                             icon="s-chevron-left"
                             class="btn-sm btn-ghost"
                             wire:click="previousPage"
-                            :disabled="!$tickets->previousPageUrl()" />
+                            :disabled="!$tickets->previousPageUrl()"/>
 
                         @foreach($tickets->getUrlRange(1, $tickets->lastPage()) as $page => $url)
                             <x-mary-button
                                 :label="$page"
                                 class="btn-sm {{ $page == $tickets->currentPage() ? 'btn-primary' : 'btn-ghost' }}"
-                                wire:click="gotoPage({{ $page }})" />
+                                wire:click="gotoPage({{ $page }})"/>
                         @endforeach
 
                         <x-mary-button
                             icon="s-chevron-right"
                             class="btn-sm btn-ghost"
                             wire:click="nextPage"
-                            :disabled="!$tickets->nextPageUrl()" />
+                            :disabled="!$tickets->nextPageUrl()"/>
                     </div>
                 </div>
             </x-mary-card>
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text" color="text-primary"/>
+                <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text"
+                             color="text-primary"/>
 
-                <x-mary-stat title="Under Review" value="{{ $allTickets->whereNotIn('status', ['approved', 'rejected', 'needs_revision', 'for_rescheduling'])->count() }}" icon="s-clock" color="text-warning"/>
+                <x-mary-stat title="Under Review"
+                             value="{{ $allTickets->whereNotIn('status', ['approved', 'rejected', 'needs_revision', 'for_rescheduling'])->count() }}"
+                             icon="s-clock" color="text-warning"/>
 
-                <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}" icon="s-check-circle" color="text-success"/>
+                <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}"
+                             icon="s-check-circle" color="text-success"/>
 
-                <x-mary-stat title="Need Action" value="{{ $allTickets->whereIn('status', ['needs_revision', 'for_rescheduling'])->count() }}" icon="s-exclamation-triangle" color="text-error"/>
+                <x-mary-stat title="Need Action"
+                             value="{{ $allTickets->whereIn('status', ['needs_revision', 'for_rescheduling'])->count() }}"
+                             icon="s-exclamation-triangle" color="text-error"/>
             </div>
         </div>
     </div>
+
+    <x-mary-modal
+        wire:model="showDetailsModal"
+        title="Ticket Details"
+        class="backdrop-blur"
+        box-class="max-w-5xl max-h-[85vh] overflow-y-auto"
+        @close="$wire.closeDetailsModal()">
+
+        @if($this->selectedTicket)
+            <x-tickets.ticket-preview :ticket="$this->selectedTicket"/>
+        @else
+            <div class="text-center py-8">
+                <x-mary-loading class="loading-lg"/>
+            </div>
+        @endif
+    </x-mary-modal>
+
+    <x-mary-modal
+        wire:model="showCommentsModal"
+        title="Ticket Comments"
+        class="backdrop-blur"
+        box-class="max-w-5xl max-h-[85vh] overflow-y-auto"
+        @close="$wire.closeCommentsModal()">
+
+        @if($this->selectedTicket)
+            @if(in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'rejected']))
+                <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket"/>
+            @endif
+            @if($this->selectedTicketComments)
+                @foreach($this->selectedTicketComments as $comment)
+                    <x-comment-boxes.normal-comment :comment="$comment"/>
+                @endforeach
+            @endif
+            <div class="space-y-3 mt-6">
+                    <textarea wire:model="comment" class="textarea textarea-bordered w-full h-4"
+                              placeholder="Add a comment..."></textarea>
+                <button class="btn btn-primary w-full" wire:click="addComment">
+                    <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4"/>
+                    Add Comment
+                </button>
+            </div>
+        @else
+            <div class="text-center py-8">
+                <x-mary-loading class="loading-lg"/>
+            </div>
+        @endif
+    </x-mary-modal>
+
+    <x-mary-drawer
+        wire:model="showEditDrawer"
+        title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
+        subtitle="Revise your event request"
+        separator
+        with-close-button
+        close-on-escape
+        right
+        class="w-11/12 lg:w-2/3"
+        @close="$wire.closeEditDrawer()"
+    >
+        @if($showEditDrawer && $selectedTicketId)
+            @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
+        @else
+            <div class="text-center py-8">
+                <x-mary-loading class="loading-lg"/>
+            </div>
+        @endif
+    </x-mary-drawer>
+
 
 </div>

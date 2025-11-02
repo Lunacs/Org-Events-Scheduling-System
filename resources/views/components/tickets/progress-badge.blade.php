@@ -10,4 +10,6 @@
     <x-mary-badge value="Requires Revision" class="badge-warning"/>
 @elseif(strtolower($status) == 'for_rescheduling')
     <x-mary-badge value="Needs Rescheduling" class="badge-warning"/>
+@elseif(strtolower($status) == 'rejected')
+    <x-mary-badge value="Rejected" class="badge-error"/>
 @endif

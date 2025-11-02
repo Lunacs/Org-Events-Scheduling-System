@@ -41,215 +41,27 @@
                 </div>
             </x-mary-card>
 
-            {{-- Calendar Navigation and Filters --}}
-            <x-mary-card>
-                <div class="flex flex-wrap gap-4 items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <x-mary-button icon="s-chevron-left" class="btn-ghost btn-sm" wire:click="previousMonth" />
-                        <h3 class="text-xl font-semibold min-w-48 text-center">October 2025</h3>
-                        <x-mary-button icon="s-chevron-right" class="btn-ghost btn-sm" wire:click="nextMonth" />
+            <x-calendar.full-calendar
+                :events="$events"
+                :view-mode="$viewMode"
+                on-event-click="viewEvent"
+                calendar-id="student-calendar"
+                update-event="student-calendar-updated"
+                :show-filters="true"
+                wire:key="student-calendar-{{ $eventTypeFilter }}-{{ $venueFilter }}">
+
+                <x-slot:filterSlot>
+                    <div class="flex flex-wrap gap-2">
+                        <x-mary-select wire:model.live="eventTypeFilter" placeholder="Event Type" :options="$eventTypes"
+                                       option-value="event_type_id" option-label="type_name" class="select-sm min-w-[150px]" />
+
+                        <x-mary-select wire:model.live="venueFilter" placeholder="Venue" :options="$venues"
+                                       option-value="id" option-label="name" class="select-sm min-w-[150px]" />
+
+                        <x-mary-button wire:click="resetFilters" class="btn-ghost btn-sm" icon="o-x-mark" tooltip="Clear Filters" />
                     </div>
-
-                    <div class="flex flex-wrap gap-3">
-                        <x-mary-select label="Event Type" wire:model.live="eventTypeFilter" :options="[
-                            ['id' => '', 'name' => 'All Types'],
-                            ['id' => 'academic', 'name' => 'Academic'],
-                            ['id' => 'cultural', 'name' => 'Cultural'],
-                            ['id' => 'sports', 'name' => 'Sports'],
-                            ['id' => 'meeting', 'name' => 'Meeting'],
-                            ['id' => 'workshop', 'name' => 'Workshop'],
-                        ]"
-                            class="w-40" />
-
-                        <x-mary-select label="Venue" wire:model.live="venueFilter" :options="[
-                            ['id' => '', 'name' => 'All Venues'],
-                            ['id' => 'auditorium', 'name' => 'University Auditorium'],
-                            ['id' => 'student_center', 'name' => 'Student Center'],
-                            ['id' => 'gymnasium', 'name' => 'Gymnasium'],
-                            ['id' => 'library', 'name' => 'Library Hall'],
-                        ]" class="w-40" />
-
-                        <x-mary-button icon="s-arrow-path" class="btn-ghost btn-sm" wire:click="resetFilters"
-                            tooltip="Reset Filters" />
-                    </div>
-                </div>
-            </x-mary-card>
-
-            {{-- Calendar Grid --}}
-            <x-mary-card>
-                <div class="calendar-container">
-                    {{-- Calendar Header Days --}}
-                    <div class="grid grid-cols-7 gap-px bg-gray-200 rounded-t-lg overflow-hidden">
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Sunday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Monday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Tuesday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Wednesday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Thursday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Friday</div>
-                        <div class="bg-gray-100 p-3 text-center font-semibold text-sm">Saturday</div>
-                    </div>
-
-                    {{-- Calendar Body --}}
-                    <div class="grid grid-cols-7 gap-px bg-gray-200 rounded-b-lg overflow-hidden">
-                        {{-- Week 1 --}}
-                        <div class="bg-white p-2 h-32 text-gray-400">
-                            <div class="text-sm">29</div>
-                        </div>
-                        <div class="bg-white p-2 h-32 text-gray-400">
-                            <div class="text-sm">30</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">1</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-blue-100 text-blue-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-blue-200"
-                                    onclick="showEventDetails('evt-001')">
-                                    Fundraising Concert
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">2</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">3</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">4</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">5</div>
-                        </div>
-
-                        {{-- Week 2 --}}
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">6</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">7</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">8</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-green-100 text-green-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-green-200"
-                                    onclick="showEventDetails('evt-002')">
-                                    Sports Festival
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">9</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">10</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">11</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">12</div>
-                        </div>
-
-                        {{-- Week 3 --}}
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">13</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">14</div>
-                        </div>
-                        <div class="bg-white p-2 h-32 border-2 border-primary border-dashed">
-                            <div class="text-sm font-medium">15</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-primary-100 text-primary-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-primary-200 border border-primary-300"
-                                    onclick="showEventDetails('evt-003')">
-                                    Your Org Meeting
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">16</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">17</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">18</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">19</div>
-                        </div>
-
-                        {{-- Week 4 --}}
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">20</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-purple-100 text-purple-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-purple-200"
-                                    onclick="showEventDetails('evt-004')">
-                                    Workshop Series
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">21</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-purple-100 text-purple-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-purple-200"
-                                    onclick="showEventDetails('evt-004')">
-                                    Workshop Day 2
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">22</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-purple-100 text-purple-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-purple-200"
-                                    onclick="showEventDetails('evt-004')">
-                                    Workshop Day 3
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">23</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">24</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">25</div>
-                            <div class="mt-1 space-y-1">
-                                <div class="bg-yellow-100 text-yellow-800 text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:bg-yellow-200"
-                                    onclick="showEventDetails('evt-005')">
-                                    Cultural Night
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">26</div>
-                        </div>
-
-                        {{-- Week 5 --}}
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">27</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">28</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">29</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">30</div>
-                        </div>
-                        <div class="bg-white p-2 h-32">
-                            <div class="text-sm font-medium">31</div>
-                        </div>
-                        <div class="bg-white p-2 h-32 text-gray-400">
-                            <div class="text-sm">1</div>
-                        </div>
-                        <div class="bg-white p-2 h-32 text-gray-400">
-                            <div class="text-sm">2</div>
-                        </div>
-                    </div>
-                </div>
-            </x-mary-card>
+                </x-slot:filterSlot>
+            </x-calendar.full-calendar>
 
             {{-- Legend --}}
             <x-mary-card title="Legend" subtitle="Event categories and colors">
@@ -400,14 +212,144 @@
                     </div>
                 </div>
             </x-mary-card>
+
+            {{-- Upcoming Events List --}}
+            {{-- <x-mary-card title="Upcoming Events This Month" subtitle="Detailed list of scheduled events">
+                <div class="space-y-4">
+                    @forelse($upcomingEvents as $schedule)
+                        @php
+                            $event = $schedule->event;
+                            $eventColor = $this->getEventColor($event);
+                            $isMyOrg = auth()->user()->org_id === $event->ticket->user->org_id;
+                        @endphp
+                        <div class="flex items-start space-x-4 p-4 rounded-lg border-l-4 {{ $isMyOrg ? 'bg-primary-50 border-primary-400 border-dashed' : 'bg-base-200 border-base-300' }}">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: {{ $eventColor }}20;">
+                                    <x-mary-icon name="s-calendar" class="w-6 h-6" style="color: {{ $eventColor }};" />
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between">
+                                    <h4 class="font-semibold">{{ $event->ticket->title }}</h4>
+                                    @if($isMyOrg)
+                                        <x-mary-badge value="Your Org" class="badge-primary badge-sm" />
+                                    @endif
+                                </div>
+                                <p class="text-sm text-base-content/70 mt-1">
+                                    {{ $event->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                                </p>
+                                <div class="flex items-center space-x-4 mt-2 text-sm text-base-content/60">
+                        <span class="flex items-center space-x-1">
+                            <x-mary-icon name="s-calendar" class="w-4 h-4" />
+                            <span>{{ $schedule->start_date->format('M d, Y') }} • {{ $schedule->start_time }} - {{ $schedule->end_time }}</span>
+                        </span>
+                                    <span class="flex items-center space-x-1">
+                            <x-mary-icon name="s-map-pin" class="w-4 h-4" />
+                            <span>{{ $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD' }}</span>
+                        </span>
+                                </div>
+                                <x-mary-badge value="{{ $event->eventType?->type_name ?? 'N/A' }}" class="badge-info badge-sm mt-2" />
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-8 text-base-content/50">
+                            <x-mary-icon name="o-calendar-days" class="w-12 h-12 mx-auto mb-2" />
+                            <p>No upcoming events scheduled</p>
+                        </div>
+                    @endforelse
+                </div>
+            </x-mary-card> --}}
+
         </div>
     </div>
+    {{-- Event Details Modal --}}
+    <x-mary-modal wire:model="showModal" title="Event Details" class="modal-lg">
+        @if ($selectedEvent && $selectedEvent->ticket)
+            <div class="space-y-6">
+                {{-- Event Header --}}
+                <div class="border-b border-base-300 pb-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold">{{ $selectedEvent->ticket->title }}</h2>
+                            <p class="text-base-content/70">
+                                {{ $selectedEvent->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                            </p>
+                        </div>
+                        @php
+                            $badgeClass = match ($selectedEvent->ticket->status) {
+                                'approved' => 'badge-success',
+                                'rescheduled' => 'badge-warning',
+                                default => 'badge-primary',
+                            };
+                        @endphp
+                        <x-mary-badge value="{{ str_replace('_', ' ', ucwords($selectedEvent->ticket->status, '_')) }}"
+                                      class="{{ $badgeClass }}" />
+                    </div>
+                </div>
 
-    <script>
-        function showEventDetails(eventId) {
-            // This would typically open a modal or show event details
-            console.log('Show event details for:', eventId);
-            // You can implement a modal or redirect to event details page
-        }
-    </script>
+                {{-- Event Information --}}
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold mb-3">Event Details</h3>
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="font-medium text-base-content/70">Ticket #:</span>
+                                <span>{{ $selectedEvent->ticket->ticket_number }}</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-base-content/70">Type:</span>
+                                <span>{{ $selectedEvent->eventType?->type_name ?? 'N/A' }}</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-base-content/70">Venue:</span>
+                                <span>{{ $selectedEvent->ticket->venue_requested ?? 'TBD' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold mb-3">Schedule</h3>
+                        <div class="space-y-2">
+                            @foreach ($selectedEvent->eventSchedules as $schedule)
+                                <div class="bg-base-200 rounded-lg p-3">
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
+                                        <span>{{ \Carbon\Carbon::parse($schedule->start_date)->format('M d, Y') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm mt-1">
+                                        <x-mary-icon name="o-clock" class="w-4 h-4 text-primary" />
+                                        <span>{{ $schedule->start_time }} - {{ $schedule->end_time }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Description --}}
+                @if ($selectedEvent->ticket->description)
+                    <div>
+                        <h3 class="font-semibold mb-3">Description</h3>
+                        <p class="text-sm text-base-content/80">{{ $selectedEvent->ticket->description }}</p>
+                    </div>
+                @endif
+            </div>
+        @else
+            <div class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <div class="loading loading-spinner loading-lg text-primary mb-4"></div>
+                    <p class="text-base-content/70">Loading event details...</p>
+                    @if ($selectedEvent)
+                        <p class="text-xs text-base-content/50 mt-2">Debug: Event loaded but ticket missing</p>
+                    @else
+                        <p class="text-xs text-base-content/50 mt-2">Debug: No event selected</p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        <x-slot:actions>
+            <x-mary-button wire:click="closeModal" class="btn-ghost">Close</x-mary-button>
+        </x-slot:actions>
+    </x-mary-modal>
 </div>

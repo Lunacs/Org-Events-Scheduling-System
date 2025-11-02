@@ -194,6 +194,17 @@ class UserSeeder extends Seeder
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
         ]);
 
+        User::create([
+            'name' => 'Miss Lanoira',
+            'email' => 'plvlanoira07@gmail.com',
+            'email_verified_at' => null,
+            'password' => Hash::make('LanoiraCutie'),
+            'role_id' => User::ROLE_OSA,
+            'org_id' => null,
+            'office_id' => null,
+            'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
+        ]);
+
         // Create office staff users if offices exist
         $offices = Office::limit(2)->get();
         foreach ($offices as $office) {

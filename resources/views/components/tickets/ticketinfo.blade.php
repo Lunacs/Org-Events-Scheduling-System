@@ -1,6 +1,6 @@
 @props(['tickets'])
 
-{{-- Ticket Item 1 --}}
+{{-- Ticket Item --}}
 <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
     <div class="flex items-start justify-between">
         <div class="flex-1">
@@ -31,11 +31,13 @@
             <x-tickets.progress-section :status="$tickets->status"/>
         </div>
 
-        <x-tickets.ticket-actions :status="$tickets->status"/>
+        <x-tickets.ticket-actions :status="$tickets->status" :ticket="$tickets"/>
     </div>
 
-    {{-- Latest Comment/Remark --}}
-    <x-tickets.latest-remark :status="$tickets->status"/>
+    <div class="mt-4 pt-4 border-t border-gray-100">
+        {{-- Latest Comment/Remark --}}
+        <x-tickets.latest-remark :status="$tickets->status" :ticket="$tickets"/>
+    </div>
 
     <div class="mt-3 text-sm text-gray-500">
         Submitted on {{ \Carbon\Carbon::parse($tickets->created_at)->format('F j, Y') }} • Last
