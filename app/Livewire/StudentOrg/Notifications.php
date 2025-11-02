@@ -37,14 +37,16 @@ class Notifications extends Component
         $query = $user->notifications()->latest();
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('data', 'like', '%' . $this->search . '%');
-            });
-        }
+            if ($this->search) {
+                $query->where(function($q) {
+                    $q->where('data->title', 'like', '%' . $this->search . '%')
+                      ->orWhere('data->message', 'like', '%' . $this->search . '%');
+                });
+            }
 
-        if ($this->typeFilter) {
-            $query->where('data', 'like', '%"type":"' . $this->typeFilter . '"%');
-        }
+            if ($this->typeFilter) {
+                $query->where('data->type', $this->typeFilter);
+            }
 
         if ($this->statusFilter === 'unread') {
             $query->whereNull('read_at');
