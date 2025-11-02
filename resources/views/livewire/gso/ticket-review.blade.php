@@ -175,7 +175,7 @@
 
                     @scope('cell_actions', $row)
                         <x-mary-button label="View" icon="s-eye" class="btn-outline btn-emerald btn-sm"
-                            link="{{ route('gso.ticket-details', ['ticket' => $row['ticket_id']]) }}" wire:navigate />
+                            link="{{ route('gso.ticket-details', ['ticket' => $row['ticket_id'], 'office' => $row['office_id'] ?? null]) }}" wire:navigate />
                     @endscope
                 </x-mary-table>
             @else
