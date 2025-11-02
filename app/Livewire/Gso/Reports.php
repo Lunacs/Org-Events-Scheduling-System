@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Reports extends Component
 {
+    use ResolvesOfficeContext;
     #[Title('GSO Reports & Analytics')]
     #[Layout('components.layouts.gso-layout')]
     public array $reportSeed = [];
@@ -61,7 +63,7 @@ class Reports extends Component
 
     protected function buildReportSeed(): array
     {
-        $officeId = Auth::user()?->office_id;
+        $officeId = $this->resolveOfficeId(Auth::user());
 
         $approvals = $this->approvalsQuery($officeId)->get();
 
@@ -71,7 +73,7 @@ class Reports extends Component
         ];
     }
 
-    protected function approvalsQuery(?int $officeId): Builder
+    protected function approvalsQuery(int $officeId): Builder
     {
         return Office_Approval::query()
             ->with([
@@ -79,10 +81,10 @@ class Reports extends Component
                 'ticket.user.studentOrganization',
             ])
             ->whereIn('decision', ['approved', 'Approved', 'rejected', 'Rejected'])
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
     }
 
-    protected function filteredApprovals(?int $officeId, string $timePeriod, ?string $start, ?string $end, ?string $search): Collection
+    protected function filteredApprovals(int $officeId, string $timePeriod, ?string $start, ?string $end, ?string $search): Collection
     {
         $query = $this->approvalsQuery($officeId);
 
@@ -110,19 +112,22 @@ class Reports extends Component
 
     protected function formatRecords(Collection $approvals): array
     {
-        return $approvals->map(function (Office_Approval $approval) {
+        $resolvedOfficeId = $this->resolveOfficeId(Auth::user());
+
+        return $approvals->map(function (Office_Approval $approval) use ($resolvedOfficeId) {
             $ticket = $approval->ticket;
             $decidedAt = $approval->updated_at ?? $approval->created_at ?? Carbon::now();
             $submittedAt = $approval->created_at ?? $decidedAt;
 
             $responseHours = $submittedAt->diffInMinutes($decidedAt) / 60;
+            $officeId = (int) ($approval->office_id ?? $resolvedOfficeId);
 
             return [
                 'id' => $approval->id,
                 'decided_at' => $decidedAt->toIso8601String(),
                 'date' => $decidedAt->format('Y-m-d'),
                 'ticketId' => $ticket?->ticket_number ?? 'N/A',
-                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', $ticket) : null,
+                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', ['ticket' => $ticket, 'office' => $officeId]) : null,
                 'eventName' => $ticket?->title ?? 'N/A',
                 'organization' => $ticket?->user?->studentOrganization?->org_name
                     ?? $ticket?->user?->name

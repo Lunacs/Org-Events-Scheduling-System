@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Gso\ReportsExportController;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
 use App\Livewire\Osa\Notifications as OsaNotifications;
@@ -93,6 +94,9 @@ Route::prefix('gso')
         Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');
         Route::get('/reports', GsoReports::class)->name('gso.reports');
+        Route::get('/reports/export', [ReportsExportController::class, 'export'])
+            ->name('gso.reports.export')
+            ->middleware('signed');
         Route::get('/profile', \App\Livewire\Gso\Profile::class)->name('gso.profile');
     });
 

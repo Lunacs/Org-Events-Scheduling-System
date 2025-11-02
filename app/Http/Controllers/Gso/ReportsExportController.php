@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportsExportController extends Controller
 {
+    use ResolvesOfficeContext;
+
     public function export(Request $request)
     {
         $format = $request->query('format', 'pdf');
@@ -21,13 +24,13 @@ class ReportsExportController extends Controller
         $end = $request->query('end');
         $search = $request->query('search');
 
-        $officeId = Auth::user()?->office_id;
+        $officeId = $this->resolveOfficeId(Auth::user());
 
         // Build the approvals query similar to the Livewire component
         $query = Office_Approval::query()
             ->with(['ticket.eventType', 'ticket.user.studentOrganization'])
             ->whereIn('decision', ['approved', 'Approved', 'rejected', 'Rejected'])
-            ->when($officeId, fn($q) => $q->where('office_id', $officeId));
+            ->where('office_id', $officeId);
 
         // Apply range
         [$rangeStart, $rangeEnd] = $this->resolveRange($timePeriod, $start, $end);
@@ -55,7 +58,7 @@ class ReportsExportController extends Controller
             return $this->emptyExport($format);
         }
 
-        $records = $this->formatRecords($approvals);
+    $records = $this->formatRecords($approvals, $officeId);
         $stats = $this->computeStats($approvals);
         $breakdown = $this->computeBreakdown($approvals);
 
@@ -70,21 +73,22 @@ class ReportsExportController extends Controller
         abort(400, 'Unsupported export format.');
     }
 
-    protected function formatRecords($approvals): array
+    protected function formatRecords($approvals, int $fallbackOfficeId): array
     {
-        return $approvals->map(function (Office_Approval $approval) {
+        return $approvals->map(function (Office_Approval $approval) use ($fallbackOfficeId) {
             $ticket = $approval->ticket;
             $decidedAt = $approval->updated_at ?? $approval->created_at ?? Carbon::now();
             $submittedAt = $approval->created_at ?? $decidedAt;
 
             $responseHours = $submittedAt->diffInMinutes($decidedAt) / 60;
+            $officeId = (int) ($approval->office_id ?? $fallbackOfficeId);
 
             return [
                 'id' => $approval->id,
                 'decided_at' => $decidedAt->toIso8601String(),
                 'date' => $decidedAt->format('Y-m-d'),
                 'ticketId' => $ticket?->ticket_number ?? 'N/A',
-                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', $ticket) : null,
+                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', ['ticket' => $ticket, 'office' => $officeId]) : null,
                 'eventName' => $ticket?->title ?? 'N/A',
                 'organization' => $ticket?->user?->studentOrganization?->org_name
                     ?? $ticket?->user?->name
