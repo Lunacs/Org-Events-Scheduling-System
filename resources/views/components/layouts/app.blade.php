@@ -24,6 +24,11 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        [x-cloak] {
+            display: none !important
+        }
+    </style>
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
@@ -54,7 +59,7 @@
                         wire:navigate />
                     <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
-                    <x-mary-menu-item title="Archive Access" icon="s-archive-box" link="/admin/archive" wire:navigate />
+                    <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate />
                 </x-mary-menu>
             </x-slot:sidebar>
             <x-slot:footer>

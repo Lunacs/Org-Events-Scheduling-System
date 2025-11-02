@@ -1,4 +1,4 @@
-{{-- <div>
+<div>
     <div class="p-6">
         <!-- Header -->
         @persist('dashboard-header')
@@ -231,9 +231,9 @@
             </div>
         @endpersist
     </div>
-</div> --}}
+</div>
 
-<div>
+{{-- <div>
     <div class="p-6 space-y-6">
         <!-- Enhanced Header with Breadcrumb and Actions -->
         @persist('dashboard-header')
@@ -661,4 +661,4 @@
             </x-mary-card>
         @endpersist
     </div>
-</div>
+</div> --}}

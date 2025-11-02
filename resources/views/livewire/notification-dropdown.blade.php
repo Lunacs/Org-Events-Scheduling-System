@@ -4,14 +4,7 @@
 
 <div>
     <!-- Notifications Dropdown -->
-    <div class="dropdown dropdown-end" x-data="{
-        open: false,
-        refreshOnOpen() {
-            if (this.open) {
-                $wire.loadNotifications();
-            }
-        }
-    }" x-on:click="open = !open; refreshOnOpen()">
+    <div class="dropdown dropdown-end" x-data="{ open: false }" x-on:click="open = !open">
         <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle relative tooltip tooltip-bottom"
             data-tip="Notifications">
             <x-heroicon-s-bell class="h-5 w-5" />
@@ -19,7 +12,7 @@
                 <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
             @endif
         </div>
-        <ul tabindex="0"
+        <ul tabindex="0" wire:poll.visible.30s="loadNotifications"
             class="dropdown-content z-1 menu p-0 shadow-lg bg-base-100 rounded-box w-80 border border-base-300 mt-2 max-h-[400px] overflow-y-auto">
             {{-- Notifications Header --}}
             <li class="px-4 py-3 bg-base-200 rounded-t-box sticky top-0 z-10 pointer-events-none">

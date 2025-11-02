@@ -104,8 +104,9 @@ class Ticket extends Model
      */
     public function latestOsaApproval()
     {
+        // Use the correct primary key for OSA_Approval to determine the latest record
         return $this->hasOne(OSA_Approval::class, 'ticket_id')
-                    ->latestOfMany();
+                    ->latestOfMany('osa_approval_id');
     }
 
     /**

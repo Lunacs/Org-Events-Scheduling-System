@@ -1,29 +1,43 @@
-<div>
+<div x-data="{
+    showApproval: false,
+    showRejection: false,
+    showRevision: false,
+    showForward: false,
+    showFinalApproval: false,
+    showFinalRejection: false,
+    approvalRemarks: '',
+    rejectionRemarks: '',
+    revisionRemarks: '',
+    forwardRemarks: '',
+    finalApprovalRemarks: '',
+    finalRejectionRemarks: ''
+}" x-on:ticket-approved.window="showApproval = false; approvalRemarks = ''"
+    x-on:ticket-forwarded.window="showForward = false; forwardRemarks = ''"
+    x-on:ticket-revision-requested.window="showRevision = false; revisionRemarks = ''"
+    x-on:ticket-rejected.window="showRejection = false; rejectionRemarks = ''"
+    x-on:ticket-final-approved.window="showFinalApproval = false; finalApprovalRemarks = ''"
+    x-on:ticket-final-rejected.window="showFinalRejection = false; finalRejectionRemarks = ''" x-cloak>
     {{-- Flash Messages --}}
     @if (session()->has('success'))
         <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-check-circle" class="w-5 h-5" />
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if (session()->has('error'))
         <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-x-circle" class="w-5 h-5" />
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if (session()->has('info'))
         <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-information-circle" class="w-5 h-5" />
             <span>{{ session('info') }}</span>
         </div>
     @endif
 
     @if (session()->has('warning'))
         <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5" />
             <span>{{ session('warning') }}</span>
         </div>
     @endif
@@ -35,7 +49,6 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ route('osa.ticket-review.index') }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                             Back to Tickets
                         </a>
                     </div>
@@ -56,8 +69,8 @@
                             'rejected' => 'badge-error',
                         ];
                     @endphp
-                    <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                        class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}" />
+                    <span
+                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
                 </div>
             </div>
         </div>
@@ -69,10 +82,7 @@
         <div class="lg:col-span-2 space-y-6">
             {{-- Organization Information --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-building-office-2" class="w-5 h-5" />
-                    Organization Information
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Organization Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Organization Name</label>
@@ -121,10 +131,7 @@
 
             {{-- Event Details --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-calendar-days" class="w-5 h-5" />
-                    Event Details
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Event Details</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Event Title</label>
@@ -163,10 +170,7 @@
 
             {{-- Schedule & Venue --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-map-pin" class="w-5 h-5" />
-                    Schedule & Venue
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Schedule & Venue</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Event Start Date</label>
@@ -218,10 +222,7 @@
                 {{-- Off-Campus Activity Details --}}
                 @if ($ticket->oc_accommodation || $ticket->oc_tsp)
                     <div class="mt-4 p-4 bg-warning/10 border-l-4 border-warning rounded">
-                        <h3 class="font-semibold text-base-content mb-3 flex items-center gap-2">
-                            <x-mary-icon name="o-map" class="w-4 h-4" />
-                            Off-Campus Activity Details
-                        </h3>
+                        <h3 class="font-semibold text-base-content mb-3">Off-Campus Activity Details</h3>
 
                         @if ($ticket->oc_accommodation)
                             <div class="mb-3">
@@ -276,10 +277,7 @@
 
             {{-- Budget Information --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-currency-dollar" class="w-5 h-5" />
-                    Budget Information
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Budget Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Estimated Total
@@ -307,13 +305,13 @@
                     <label class="text-sm font-medium text-base-content/70">IGP Request</label>
                     <p class="text-base-content">
                         @if ($ticket->igp_requested)
-                            <x-mary-badge value="Requested" class="badge-success" />
+                            <span class="badge badge-success">Requested</span>
                             @if ($ticket->igp_details)
                                 <span
                                     class="block mt-2 bg-base-200 p-3 rounded whitespace-pre-wrap">{{ $ticket->igp_details }}</span>
                             @endif
                         @else
-                            <x-mary-badge value="Not Requested" class="badge-neutral" />
+                            <span class="badge badge-neutral">Not Requested</span>
                         @endif
                     </p>
                 </div>
@@ -322,10 +320,7 @@
             {{-- Additional Information --}}
             @if ($ticket->additional_notes)
                 <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                        <x-mary-icon name="o-document-text" class="w-5 h-5" />
-                        Additional Information
-                    </h2>
+                    <h2 class="text-xl font-bold text-base-content mb-4">Additional Information</h2>
                     <p class="text-base-content whitespace-pre-wrap bg-base-200 p-4 rounded">
                         {{ $ticket->additional_notes }}</p>
                 </div>
@@ -333,16 +328,12 @@
 
             {{-- Attachments --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-paper-clip" class="w-5 h-5" />
-                    Attachments
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Attachments</h2>
                 @if ($ticket->attachments->count() > 0)
                     <div class="space-y-3">
                         @foreach ($ticket->attachments as $attachment)
                             <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                                 <div class="flex items-center gap-3">
-                                    <x-mary-icon name="o-document" class="w-5 h-5 text-primary" />
                                     <div>
                                         <p class="font-medium text-base-content">
                                             {{ $attachment->file_name }}</p>
@@ -352,7 +343,6 @@
                                 </div>
                                 <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
                                     class="btn btn-primary btn-sm">
-                                    <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
                                     Download
                                 </a>
                             </div>
@@ -390,12 +380,14 @@
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Submitted</label>
-                        <p class="text-base-content">{{ $ticket->created_at->format('F d, Y g:i A') }}</p>
+                        <p class="text-base-content">
+                            {{ $ticket->created_at ? $ticket->created_at->format('F d, Y g:i A') : 'TBD' }}</p>
                     </div>
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Last Updated</label>
-                        <p class="text-base-content">{{ $ticket->updated_at->format('F d, Y g:i A') }}</p>
+                        <p class="text-base-content">
+                            {{ $ticket->updated_at ? $ticket->updated_at->format('F d, Y g:i A') : 'TBD' }}</p>
                     </div>
                 </div>
             </div>
@@ -403,10 +395,7 @@
             {{-- Event Status --}}
             @if ($ticket->events->isNotEmpty())
                 <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                        <x-mary-icon name="o-check-badge" class="w-5 h-5 text-success" />
-                        Event Created
-                    </h2>
+                    <h2 class="text-xl font-bold text-base-content mb-4">Event Created</h2>
                     @php
                         $event = $ticket->events->first();
                         $schedule = $event->eventSchedules->first();
@@ -414,10 +403,10 @@
                     @if ($schedule)
                         <div class="space-y-3">
                             <div class="alert alert-success">
-                                <x-mary-icon name="o-calendar-days" class="w-5 h-5" />
                                 <div class="flex-1">
                                     <p class="font-medium">Event is scheduled!</p>
-                                    <p class="text-sm mt-1">{{ $schedule->start_date->format('F d, Y') }}
+                                    <p class="text-sm mt-1">
+                                        {{ $schedule->start_date ? $schedule->start_date->format('F d, Y') : 'TBD' }}
                                     </p>
                                 </div>
                             </div>
@@ -435,8 +424,8 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-base-content/70">Status</label>
-                                <x-mary-badge value="{{ ucfirst($schedule->status) }}"
-                                    class="{{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}" />
+                                <span
+                                    class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}">{{ ucfirst($schedule->status) }}</span>
                             </div>
                         </div>
                     @else
@@ -447,10 +436,7 @@
 
             {{-- Approval History --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-                    <x-mary-icon name="o-clock" class="w-5 h-5" />
-                    Approval History
-                </h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Approval History</h2>
 
                 @php
                     // Combine all approvals into one collection with timestamps
@@ -519,9 +505,8 @@
                                                     {{ $approval['user']->name ?? 'System' }}
                                                 </p>
                                             </div>
-                                            <x-mary-badge
-                                                value="{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}"
-                                                class="{{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }} badge-sm" />
+                                            <span
+                                                class="badge badge-sm {{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }}">{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}</span>
                                         </div>
 
                                         @if ($approval['remarks'])
@@ -543,7 +528,6 @@
                     </div>
                 @else
                     <div class="text-center py-8">
-                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
                         <p class="text-base-content/70">No approval actions yet</p>
                         <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting review</p>
                     </div>
@@ -563,7 +547,6 @@
                     @if ($gsoApproval)
                         <div
                             class="alert mb-4 {{ $gsoApproval->decision === 'approved' ? 'alert-success' : 'alert-error' }}">
-                            <x-mary-icon name="o-information-circle" class="w-5 h-5" />
                             <div>
                                 <p class="font-semibold">GSO has {{ $gsoApproval->decision }} this request
                                 </p>
@@ -574,42 +557,36 @@
 
                     <div class="space-y-3">
                         <button class="btn btn-success w-full text-base-200 flex justify-between"
-                            wire:click="openFinalApprovalModal">
+                            @click="showFinalApproval = true">
                             Final Approval
-                            <x-mary-icon name="o-check-circle" class="w-4 h-4" />
                         </button>
 
                         <button class="btn btn-error w-full text-base-200 flex justify-between"
-                            wire:click="openFinalRejectionModal">
+                            @click="showFinalRejection = true">
                             Final Rejection
-                            <x-mary-icon name="o-x-circle" class="w-4 h-4" />
                         </button>
                     </div>
                 @elseif (in_array($ticket->status, ['received', 'amended']))
                     {{-- Initial Review Actions --}}
                     <div class="space-y-3">
                         <button class="btn btn-success w-full text-base-200 flex justify-between"
-                            wire:click="openApprovalModal">
+                            @click="showApproval = true">
                             Approve Ticket
-                            <x-mary-icon name="o-check-circle" class="w-4 h-4" />
                         </button>
 
                         <button class="btn btn-warning w-full text-base-200 flex justify-between"
-                            wire:click="openRevisionModal">
+                            @click="showRevision = true">
                             Request Revision
-                            <x-mary-icon name="o-arrow-path" class="w-4 h-4" />
                         </button>
 
                         <button class="btn btn-info w-full text-base-200 flex justify-between"
-                            wire:click="openForwardModal">
+                            @click="showForward = true">
                             Forward to GSO
-                            <x-mary-icon name="o-arrow-right" class="w-4 h-4" />
                         </button>
 
                         <button class="btn btn-error w-full text-base-200 flex justify-between"
-                            wire:click="openRejectionModal">
+                            @click="showRejection = true">
                             Reject Ticket
-                            <x-mary-icon name="o-x-circle" class="w-4 h-4" />
                         </button>
                     </div>
                 @else
@@ -661,7 +638,6 @@
                 <div class="space-y-3 mt-4">
                     <textarea wire:model="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."></textarea>
                     <button class="btn btn-primary w-full" wire:click="addComment">
-                        <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4" />
                         Add Comment
                     </button>
                 </div>
@@ -669,201 +645,243 @@
         </div>
     </div>
 
-    {{-- Approval Modal --}}
-    <x-mary-modal wire:model="showApprovalModal" title="Confirm Ticket Approval" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-success">
-                <x-mary-icon name="o-check-circle" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">You are about to approve this ticket</h3>
-                    <p class="text-sm">This action will create an event and schedule it on the calendar.
-                    </p>
+    {{-- Approval Modal (Alpine) --}}
+    <div x-show="showApproval" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showApproval=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Confirm Ticket Approval</h3>
+            <div class="space-y-4">
+                <div class="alert alert-success">
+                    <x-mary-icon name="o-check-circle" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">You are about to approve this ticket</h3>
+                        <p class="text-sm">This action will create an event and schedule it on the calendar.</p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Approval Remarks</label>
+                <textarea x-model="approvalRemarks" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter your remarks for approving this ticket..."></textarea>
+                <p class="text-xs text-base-content/60">Provide a brief explanation for this approval</p>
+                @error('approvalRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="approvalRemarks" label="Approval Remarks"
-                placeholder="Enter your remarks for approving this ticket..." rows="4"
-                hint="Provide a brief explanation for this approval" />
-            @error('approvalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showApproval=false">Cancel</button>
+                <button class="btn btn-success" wire:loading :disabled="approvalRemarks.trim().length < 3"
+                    @click="$wire.set('approvalRemarks', approvalRemarks); $wire.approveTicket();">
+                    Confirm Approval
+                </button>
+            </div>
         </div>
+    </div>
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeApprovalModal" />
-            <x-mary-button label="Confirm Approval" class="btn-success" wire:click="approveTicket"
-                spinner="approveTicket" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Rejection Modal --}}
-    <x-mary-modal wire:model="showRejectionModal" title="Confirm Ticket Rejection" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-error">
-                <x-mary-icon name="o-x-circle" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">You are about to reject this ticket</h3>
-                    <p class="text-sm">This action cannot be undone. No event will be created.</p>
+    {{-- Rejection Modal (Alpine) --}}
+    <div x-show="showRejection" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showRejection=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Confirm Ticket Rejection</h3>
+            <div class="space-y-4">
+                <div class="alert alert-error">
+                    <x-mary-icon name="o-x-circle" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">You are about to reject this ticket</h3>
+                        <p class="text-sm">This action cannot be undone. No event will be created.</p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Rejection Remarks</label>
+                <textarea x-model="rejectionRemarks" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Explain the reason for rejecting this ticket..."></textarea>
+                <p class="text-xs text-base-content/60">Provide detailed explanation for the rejection (minimum 10
+                    characters)</p>
+                @error('rejectionRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="rejectionRemarks" label="Rejection Remarks"
-                placeholder="Explain the reason for rejecting this ticket..." rows="4"
-                hint="Provide detailed explanation for the rejection (minimum 10 characters)" />
-            @error('rejectionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showRejection=false">Cancel</button>
+                <button class="btn btn-error" wire:loading :disabled="rejectionRemarks.trim().length < 10"
+                    @click="$wire.set('rejectionRemarks', rejectionRemarks); $wire.rejectTicket();">
+                    Confirm Rejection
+                </button>
+            </div>
         </div>
+    </div>
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeRejectionModal" />
-            <x-mary-button label="Confirm Rejection" class="btn-error" wire:click="rejectTicket"
-                spinner="rejectTicket" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Revision Request Modal --}}
-    <x-mary-modal wire:model="showRevisionModal" title="Request Ticket Revision" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-warning">
-                <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">Request changes to this ticket</h3>
-                    <p class="text-sm">The student organization will need to revise and resubmit.</p>
+    {{-- Revision Request Modal (Alpine) --}}
+    <div x-show="showRevision" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showRevision=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Request Ticket Revision</h3>
+            <div class="space-y-4">
+                <div class="alert alert-warning">
+                    <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">Request changes to this ticket</h3>
+                        <p class="text-sm">The student organization will need to revise and resubmit.</p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Revision Instructions</label>
+                <textarea x-model="revisionRemarks" class="textarea textarea-bordered w-full" rows="5"
+                    placeholder="Clearly explain what needs to be changed or added..."></textarea>
+                <p class="text-xs text-base-content/60">Be specific about what needs to be revised (minimum 10
+                    characters)</p>
+                @error('revisionRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="revisionRemarks" label="Revision Instructions"
-                placeholder="Clearly explain what needs to be changed or added..." rows="5"
-                hint="Be specific about what needs to be revised (minimum 10 characters)" />
-            @error('revisionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showRevision=false">Cancel</button>
+                <button class="btn btn-warning" wire:loading :disabled="revisionRemarks.trim().length < 10"
+                    @click="$wire.set('revisionRemarks', revisionRemarks); $wire.requestRevision();">
+                    Request Revision
+                </button>
+            </div>
         </div>
+    </div>
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeRevisionModal" />
-            <x-mary-button label="Request Revision" class="btn-warning" wire:click="requestRevision"
-                spinner="requestRevision" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Forward to GSO Modal --}}
-    <x-mary-modal wire:model="showForwardModal" title="Forward to GSO" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-info">
-                <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">Forward this ticket to GSO</h3>
-                    <p class="text-sm">GSO will review and provide their decision. You'll make the final
-                        approval.</p>
+    {{-- Forward to GSO Modal (Alpine) --}}
+    <div x-show="showForward" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showForward=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Forward to GSO</h3>
+            <div class="space-y-4">
+                <div class="alert alert-info">
+                    <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">Forward this ticket to GSO</h3>
+                        <p class="text-sm">GSO will review and provide their decision. You'll make the final approval.
+                        </p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Forwarding Remarks</label>
+                <textarea x-model="forwardRemarks" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter remarks for GSO..."></textarea>
+                <p class="text-xs text-base-content/60">Explain why this needs GSO review or what specific approval is
+                    needed</p>
+                @error('forwardRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="forwardRemarks" label="Forwarding Remarks"
-                placeholder="Enter remarks for GSO..." rows="4"
-                hint="Explain why this needs GSO review or what specific approval is needed" />
-            @error('forwardRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showForward=false">Cancel</button>
+                <button class="btn btn-info" wire:loading :disabled="forwardRemarks.trim().length < 3"
+                    @click="$wire.set('forwardRemarks', forwardRemarks); $wire.forwardToGso();">
+                    Forward to GSO
+                </button>
+            </div>
         </div>
+    </div>
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeForwardModal" />
-            <x-mary-button label="Forward to GSO" class="btn-info" wire:click="forwardToGso"
-                spinner="forwardToGso" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Final Approval Modal --}}
-    <x-mary-modal wire:model="showFinalApprovalModal" title="Final Approval" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-success">
-                <x-mary-icon name="o-check-badge" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">Final approval after GSO review</h3>
-                    <p class="text-sm">This will create the event and schedule it on the calendar.</p>
+    {{-- Final Approval Modal (Alpine) --}}
+    <div x-show="showFinalApproval" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showFinalApproval=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Final Approval</h3>
+            <div class="space-y-4">
+                <div class="alert alert-success">
+                    <x-mary-icon name="o-check-badge" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">Final approval after GSO review</h3>
+                        <p class="text-sm">This will create the event and schedule it on the calendar.</p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Final Approval Remarks</label>
+                <textarea x-model="finalApprovalRemarks" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter your final approval remarks..."></textarea>
+                <p class="text-xs text-base-content/60">Document your final decision after considering GSO's input</p>
+                @error('finalApprovalRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="finalApprovalRemarks" label="Final Approval Remarks"
-                placeholder="Enter your final approval remarks..." rows="4"
-                hint="Document your final decision after considering GSO's input" />
-            @error('finalApprovalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showFinalApproval=false">Cancel</button>
+                <button class="btn btn-success" wire:loading :disabled="finalApprovalRemarks.trim().length < 3"
+                    @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks); $wire.finalApproval();">
+                    Confirm Final Approval
+                </button>
+            </div>
         </div>
+    </div>
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeFinalApprovalModal" />
-            <x-mary-button label="Confirm Final Approval" class="btn-success" wire:click="finalApproval"
-                spinner="finalApproval" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Final Rejection Modal --}}
-    <x-mary-modal wire:model="showFinalRejectionModal" title="Final Rejection" class="backdrop-blur">
-        <div class="space-y-4">
-            <div class="alert alert-error">
-                <x-mary-icon name="o-x-circle" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">Final rejection after GSO review</h3>
-                    <p class="text-sm">This action cannot be undone. No event will be created.</p>
+    {{-- Final Rejection Modal (Alpine) --}}
+    <div x-show="showFinalRejection" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showFinalRejection=false"></div>
+        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+            <h3 class="text-lg font-bold mb-4">Final Rejection</h3>
+            <div class="space-y-4">
+                <div class="alert alert-error">
+                    <x-mary-icon name="o-x-circle" class="w-6 h-6" />
+                    <div>
+                        <h3 class="font-bold">Final rejection after GSO review</h3>
+                        <p class="text-sm">This action cannot be undone. No event will be created.</p>
+                    </div>
                 </div>
+                <label class="text-sm font-medium">Final Rejection Remarks</label>
+                <textarea x-model="finalRejectionRemarks" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Explain the reason for final rejection..."></textarea>
+                <p class="text-xs text-base-content/60">Provide detailed explanation considering GSO's input (minimum
+                    10 characters)</p>
+                @error('finalRejectionRemarks')
+                    <span class="text-error text-sm">{{ $message }}</span>
+                @enderror
             </div>
-
-            <x-mary-textarea wire:model="finalRejectionRemarks" label="Final Rejection Remarks"
-                placeholder="Explain the reason for final rejection..." rows="4"
-                hint="Provide detailed explanation considering GSO's input (minimum 10 characters)" />
-            @error('finalRejectionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
-            @enderror
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn" @click="showFinalRejection=false">Cancel</button>
+                <button class="btn btn-error" wire:loading :disabled="finalRejectionRemarks.trim().length < 10"
+                    @click="$wire.set('finalRejectionRemarks', finalRejectionRemarks); $wire.finalRejection();">
+                    Confirm Final Rejection
+                </button>
+            </div>
         </div>
-
-        <x-slot:actions>
-            <x-mary-button label="Cancel" wire:click="closeFinalRejectionModal" />
-            <x-mary-button label="Confirm Final Rejection" class="btn-error" wire:click="finalRejection"
-                spinner="finalRejection" />
-        </x-slot:actions>
-    </x-mary-modal>
+    </div>
 
     {{-- Add JavaScript for handling Livewire events --}}
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('ticket-approved', () => {
-                // Optional: Add any client-side actions when ticket is approved
-                console.log('Ticket approved successfully');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-approved'));
             });
 
             Livewire.on('ticket-forwarded', () => {
-                // Optional: Add any client-side actions when ticket is forwarded
-                console.log('Ticket forwarded to GSO');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-forwarded'));
             });
 
             Livewire.on('ticket-revision-requested', () => {
-                // Optional: Add any client-side actions when revision is requested
-                console.log('Ticket revision requested');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-revision-requested'));
             });
 
             Livewire.on('ticket-rejected', () => {
-                // Optional: Add any client-side actions when ticket is rejected
-                console.log('Ticket rejected');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-rejected'));
             });
 
             Livewire.on('ticket-final-approved', () => {
-                // Optional: Add any client-side actions for final approval
-                console.log('Ticket final approval completed');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-final-approved'));
             });
 
             Livewire.on('ticket-final-rejected', () => {
-                // Optional: Add any client-side actions for final rejection
-                console.log('Ticket final rejection completed');
+                // Dispatch Alpine event to close modal
+                window.dispatchEvent(new CustomEvent('ticket-final-rejected'));
             });
 
             Livewire.on('comment-added', () => {
-                // Optional: Add any client-side actions when comment is added
-                console.log('Comment added successfully');
+                // Re-initialize avatars when a new comment is added
+                if (window.AvatarHelper && typeof window.AvatarHelper.initAvatars === 'function') {
+                    setTimeout(() => window.AvatarHelper.initAvatars(), 100);
+                }
             });
+        });
+
+        // Also listen for Livewire updates to reinitialize avatars
+        document.addEventListener('livewire:updated', () => {
+            if (window.AvatarHelper && typeof window.AvatarHelper.initAvatars === 'function') {
+                window.AvatarHelper.initAvatars();
+            }
         });
     </script>
 </div>

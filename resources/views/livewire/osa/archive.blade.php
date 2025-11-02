@@ -1,4 +1,4 @@
-<div>
+<div x-data="{ isOpen: false, currentId: @entangle('selectedEventId'), cached: {} }">
     {{-- Header --}}
     <div class="mb-8">
         <div class="bg-base-100 rounded-box shadow-lg p-6">
@@ -8,7 +8,7 @@
                     <p class="text-base-content/70 mt-1">View past events and historical decisions</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <x-mary-badge value="{{ $archivedEvents->total() }} Archived Events" class="badge-neutral" />
+                    <span class="badge badge-neutral">{{ $archivedEvents->total() }} Archived Events</span>
                 </div>
             </div>
         </div>
@@ -17,26 +17,33 @@
     {{-- Filters --}}
     <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search events..."
-                icon="o-magnifying-glass" clearable />
+            <input wire:model.defer="search" type="text" placeholder="Search events..."
+                class="input input-bordered w-full" />
 
-            <x-mary-select wire:model.live="statusFilter" placeholder="Status" :options="[
-                ['id' => '', 'name' => 'All Statuses'],
-                ['id' => 'approved', 'name' => 'Approved'],
-                ['id' => 'rejected', 'name' => 'Rejected'],
-                ['id' => 'completed', 'name' => 'Completed'],
-            ]" option-value="id"
-                option-label="name" />
+            <select wire:model.defer="statusFilter" class="select select-bordered w-full">
+                <option value="">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="completed">Completed</option>
+            </select>
 
-            <x-mary-select wire:model.live="organizationFilter" placeholder="Organization" :options="App\Models\Student_Organization::select('org_id', 'org_name')->get()"
-                option-value="org_id" option-label="org_name" />
+            <select wire:model.defer="organizationFilter" class="select select-bordered w-full">
+                <option value="">Organization</option>
+                @foreach (App\Models\Student_Organization::select('org_id', 'org_name')->get() as $org)
+                    <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
+                @endforeach
+            </select>
 
-            <x-mary-select wire:model.live="yearFilter" placeholder="Year" :options="$availableYears->map(fn($year) => ['id' => $year, 'name' => $year])" option-value="id"
-                option-label="name" />
+            <select wire:model.defer="yearFilter" class="select select-bordered w-full">
+                <option value="">Year</option>
+                @foreach ($availableYears as $year)
+                    <option value="{{ $year }}">{{ $year }}</option>
+                @endforeach
+            </select>
 
-            <x-mary-button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark">
-                Clear Filters
-            </x-mary-button>
+            <button wire:click="applyFilters" type="button" class="btn btn-primary">Apply</button>
+
+            <button wire:click="clearFilters" type="button" class="btn btn-ghost">Clear Filters</button>
         </div>
     </div>
 
@@ -44,9 +51,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-base-100 rounded-box shadow-lg p-4">
             <div class="flex items-center gap-3">
-                <div class="bg-success/10 p-2 rounded-full">
-                    <x-mary-icon name="o-check-circle" class="w-5 h-5 text-success" />
-                </div>
+                <div class="bg-success/10 p-2 rounded-full"></div>
                 <div>
                     <div class="text-lg font-bold">{{ $archivedEvents->where('ticket.status', 'approved')->count() }}
                     </div>
@@ -57,9 +62,7 @@
 
         <div class="bg-base-100 rounded-box shadow-lg p-4">
             <div class="flex items-center gap-3">
-                <div class="bg-error/10 p-2 rounded-full">
-                    <x-mary-icon name="o-x-circle" class="w-5 h-5 text-error" />
-                </div>
+                <div class="bg-error/10 p-2 rounded-full"></div>
                 <div>
                     <div class="text-lg font-bold">{{ $archivedEvents->where('ticket.status', 'rejected')->count() }}
                     </div>
@@ -70,9 +73,7 @@
 
         <div class="bg-base-100 rounded-box shadow-lg p-4">
             <div class="flex items-center gap-3">
-                <div class="bg-primary/10 p-2 rounded-full">
-                    <x-mary-icon name="o-calendar-days" class="w-5 h-5 text-primary" />
-                </div>
+                <div class="bg-primary/10 p-2 rounded-full"></div>
                 <div>
                     <div class="text-lg font-bold">{{ $archivedEvents->where('ticket.status', 'completed')->count() }}
                     </div>
@@ -83,9 +84,7 @@
 
         <div class="bg-base-100 rounded-box shadow-lg p-4">
             <div class="flex items-center gap-3">
-                <div class="bg-info/10 p-2 rounded-full">
-                    <x-mary-icon name="o-building-office" class="w-5 h-5 text-info" />
-                </div>
+                <div class="bg-info/10 p-2 rounded-full"></div>
                 <div>
                     <div class="text-lg font-bold">
                         {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}</div>
@@ -120,7 +119,6 @@
                                     </div>
                                     @if ($event->ticket->venue_requested || $event->eventSchedules?->first()?->venue)
                                         <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
-                                            <x-mary-icon name="o-map-pin" class="w-3 h-3" />
                                             {{ $event->ticket->venue_requested ?? $event->eventSchedules?->first()?->venue }}
                                         </div>
                                     @endif
@@ -160,8 +158,8 @@
                                         'completed' => 'badge-primary',
                                     ];
                                 @endphp
-                                <x-mary-badge value="{{ ucfirst($event->ticket->status) }}"
-                                    class="{{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }}" />
+                                <span
+                                    class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }}">{{ ucfirst($event->ticket->status) }}</span>
                             </td>
                             <td>
                                 <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>
@@ -170,11 +168,12 @@
                             </td>
                             <td>
                                 <div class="flex gap-1">
-                                    <x-mary-button wire:click="viewArchivedEvent({{ $event->event_id }})"
-                                        icon="o-eye" class="btn-sm btn-ghost" tooltip="View Details" />
-                                    @if ($event->ticket->attachments->count() > 0)
-                                        <x-mary-button icon="o-paper-clip" class="btn-sm btn-ghost"
-                                            tooltip="{{ $event->ticket->attachments->count() }} attachments" />
+                                    <button
+                                        @click="isOpen = true; if (!cached[{{ $event->event_id }}]) { $wire.viewArchivedEvent({{ $event->event_id }}); } else { currentId = {{ $event->event_id }} }"
+                                        type="button" class="btn btn-sm btn-ghost" title="View Details">View</button>
+                                    @if ($event->ticket_attachments_count > 0)
+                                        <span class="badge badge-ghost">{{ $event->ticket_attachments_count }}
+                                            attachments</span>
                                     @endif
                                 </div>
                             </td>
@@ -183,7 +182,6 @@
                         <tr>
                             <td colspan="6" class="text-center py-8">
                                 <div class="flex flex-col items-center gap-2">
-                                    <x-mary-icon name="o-archive-box" class="w-12 h-12 text-base-content/30" />
                                     <span class="text-base-content/70">No archived events found</span>
                                     <span class="text-sm text-base-content/50">Try adjusting your filters</span>
                                 </div>
@@ -202,148 +200,37 @@
         @endif
     </div>
 
-    {{-- Event Details Modal --}}
-    <x-mary-modal wire:model="showModal" title="Archived Event Details" class="modal-lg">
-        @if ($selectedEvent)
-            <div class="space-y-6">
-                {{-- Event Header --}}
-                <div class="border-b border-base-300 pb-4">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h2 class="text-xl font-bold">{{ $selectedEvent->ticket->title }}</h2>
-                            <p class="text-base-content/70">
-                                {{ $selectedEvent->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
-                            </p>
-                        </div>
-                        @php
-                            $statusClasses = [
-                                'approved' => 'badge-success',
-                                'rejected' => 'badge-error',
-                                'completed' => 'badge-primary',
-                            ];
-                        @endphp
-                        <x-mary-badge value="{{ ucfirst($selectedEvent->ticket->status) }}"
-                            class="{{ $statusClasses[$selectedEvent->ticket->status] ?? 'badge-neutral' }}" />
-                    </div>
-                </div>
-
-                {{-- Event Information --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {{-- Event Details Modal (DaisyUI via Alpine.js for show/hide) --}}
+    <div x-cloak x-show="isOpen" x-transition.opacity x-transition.duration.200ms class="modal"
+        :class="{ 'modal-open': isOpen }">
+        <div class="modal-box max-w-4xl">
+            <h3 class="font-bold text-lg">Archived Event Details</h3>
+            <div class="py-4"
+                x-effect="if (currentId && !cached[currentId]) { $nextTick(() => { const el = $refs.details; if (el) { const html = el.innerHTML.trim(); if (html && !html.includes('animate-pulse')) { cached[currentId] = html; } } }); }">
+                <template x-if="currentId && cached[currentId]">
+                    <div x-html="cached[currentId]"></div>
+                </template>
+                <template x-if="!currentId || !cached[currentId]">
                     <div>
-                        <h3 class="font-semibold mb-3">Event Details</h3>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="font-medium text-base-content/70">Event Type:</span>
-                                <span>{{ $selectedEvent->eventType?->type_name ?? 'N/A' }}</span>
+                        @if ($selectedEventId)
+                            <div x-ref="details">
+                                <livewire:osa.archived-event-details :event-id="$selectedEventId"
+                                    wire:key="archived-event-{{ $selectedEventId }}" />
                             </div>
-                            <div>
-                                <span class="font-medium text-base-content/70">Expected Attendees:</span>
-                                <span>{{ $selectedEvent->ticket->total_participants ?? 'N/A' }}</span>
+                        @else
+                            <div class="space-y-3">
+                                <div class="h-6 bg-base-200 rounded animate-pulse"></div>
+                                <div class="h-4 bg-base-200 rounded animate-pulse"></div>
+                                <div class="h-4 bg-base-200 rounded animate-pulse w-3/4"></div>
                             </div>
-                            <div>
-                                <span class="font-medium text-base-content/70">Venue:</span>
-                                <span>{{ $selectedEvent->ticket->venue_requested ?? ($selectedEvent->eventSchedules->first()?->venue ?? 'N/A') }}</span>
-                            </div>
-                            <div>
-                                <span class="font-medium text-base-content/70">Submitted:</span>
-                                <span>{{ $selectedEvent->ticket->created_at->format('M d, Y h:i A') }}</span>
-                            </div>
-                        </div>
+                        @endif
                     </div>
-
-                    <div>
-                        <h3 class="font-semibold mb-3">Decision History</h3>
-                        <div class="space-y-3">
-                            @if ($selectedEvent->ticket->osaApproval)
-                                <div class="bg-base-200 rounded-lg p-3">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <x-mary-icon name="o-user-circle" class="w-4 h-4 text-primary" />
-                                        <span class="font-medium">OSA Decision</span>
-                                    </div>
-                                    <div class="text-sm space-y-1">
-                                        <div>
-                                            <span class="font-medium">Status:</span>
-                                            <x-mary-badge
-                                                value="{{ ucfirst($selectedEvent->ticket->osaApproval->status) }}"
-                                                class="{{ $selectedEvent->ticket->osaApproval->status === 'approved' ? 'badge-success' : 'badge-error' }} badge-sm" />
-                                        </div>
-                                        <div>
-                                            <span class="font-medium">Date:</span>
-                                            {{ $selectedEvent->ticket->osaApproval->approved_at?->format('M d, Y h:i A') }}
-                                        </div>
-                                        @if ($selectedEvent->ticket->osaApproval->comments)
-                                            <div>
-                                                <span class="font-medium">Comments:</span>
-                                                <p class="mt-1 text-base-content/80">
-                                                    {{ $selectedEvent->ticket->osaApproval->comments }}</p>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Schedule --}}
-                @if ($selectedEvent->eventSchedules?->count() > 0)
-                    <div>
-                        <h3 class="font-semibold mb-3">Event Schedule</h3>
-                        <div class="space-y-2">
-                            @foreach ($selectedEvent->eventSchedules as $schedule)
-                                <div class="bg-base-200 rounded-lg p-3">
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-primary" />
-                                        <span>{{ \Carbon\Carbon::parse($schedule->start_date)->format('M d, Y') }}</span>
-                                        <x-mary-icon name="o-clock" class="w-4 h-4 text-primary ml-4" />
-                                        <span>{{ $schedule->start_time }} - {{ $schedule->end_time }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Description --}}
-                @if ($selectedEvent->ticket->description)
-                    <div>
-                        <h3 class="font-semibold mb-3">Description</h3>
-                        <p class="text-sm text-base-content/80 bg-base-200 rounded-lg p-4">
-                            {{ $selectedEvent->ticket->description }}</p>
-                    </div>
-                @endif
-
-                {{-- Attachments --}}
-                @if ($selectedEvent->ticket->attachments->count() > 0)
-                    <div>
-                        <h3 class="font-semibold mb-3">Attachments
-                            ({{ $selectedEvent->ticket->attachments->count() }})</h3>
-                        <div class="space-y-2">
-                            @foreach ($selectedEvent->ticket->attachments as $attachment)
-                                <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <x-mary-icon name="o-document" class="w-5 h-5 text-primary" />
-                                        <div>
-                                            <p class="font-medium">{{ $attachment->original_name }}</p>
-                                            <p class="text-sm text-base-content/70">{{ $attachment->file_size }} •
-                                                {{ $attachment->file_type }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <x-mary-button class="btn-sm btn-ghost" icon="o-eye" tooltip="Preview" />
-                                        <x-mary-button class="btn-sm btn-ghost" icon="o-arrow-down-tray"
-                                            tooltip="Download" />
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+                </template>
             </div>
-        @endif
-
-        <x-slot:actions>
-            <x-mary-button wire:click="closeModal" class="btn-ghost">Close</x-mary-button>
-        </x-slot:actions>
-    </x-mary-modal>
+            <div class="modal-action">
+                <button class="btn btn-ghost" @click="isOpen = false; $wire.closeModal()">Close</button>
+            </div>
+        </div>
+        <div class="modal-backdrop" @click="isOpen = false; $wire.closeModal()"></div>
+    </div>
 </div>

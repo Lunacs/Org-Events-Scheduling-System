@@ -51,23 +51,18 @@ class AvatarSelector extends Component
         }
     }
 
-    public function selectAvatar($style, $seed)
-    {
-        $this->selectedStyle = $style;
-        $this->selectedSeed = $seed;
-
-        // Dispatch event to trigger avatar reinitialization
-        $this->dispatch('avatar-selected');
-    }
-
-    public function saveAvatar()
+    public function saveAvatar($style, $seed)
     {
         $user = Auth::user();
 
         $user->update([
-            'avatar_style' => $this->selectedStyle,
-            'avatar_seed' => $this->selectedSeed,
+            'avatar_style' => $style,
+            'avatar_seed' => $seed,
         ]);
+
+        // Update local state to reflect saved values
+        $this->selectedStyle = $style;
+        $this->selectedSeed = $seed;
 
         $this->success('Avatar updated successfully!', position: 'toast-top');
 

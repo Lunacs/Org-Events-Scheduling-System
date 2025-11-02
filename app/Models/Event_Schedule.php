@@ -48,6 +48,8 @@ class Event_Schedule extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'start_time' => 'string',
+        'end_time' => 'string',
     ];
 
     /**

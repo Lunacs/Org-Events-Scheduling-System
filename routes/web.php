@@ -112,4 +112,4 @@ Route::prefix('student-org')
         Route::get('/profile', \App\Livewire\StudentOrg\Profile::class)->name('student-org.profile');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
