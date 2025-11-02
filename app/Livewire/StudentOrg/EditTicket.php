@@ -76,8 +76,17 @@ class EditTicket extends Component
         'eventStartTime' => 'required',
         'eventEndTime' => 'required',
         'preferredVenue' => 'required|string',
+        'alternativeVenue' => 'nullable|string|max:255',
         'totalBudget' => 'required|numeric|min:0',
         'fundingSource' => 'required|exists:fund__sources,source_id',
+        'additionalNotes' => 'nullable|string|max:2000',
+        'is_oc' => 'boolean',
+        'oc_accommodation' => 'nullable|string|max:2000',
+        'oc_tsp' => 'nullable|string|in:in-house,outsourced',
+        'oc_driver_name' => 'nullable|string|max:255',
+        'oc_vehicle_type' => 'nullable|string|max:255',
+        'oc_vehicle_plate_number' => 'nullable|string|max:255',
+        'oc_driver_contact_number' => 'nullable|string|max:255',
         'newAttachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
     ];
 
