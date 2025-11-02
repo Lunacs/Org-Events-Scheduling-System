@@ -107,13 +107,18 @@ class MyTicket extends Component
             return;
         }
 
+        $ticket = auth()->user()->tickets()->find($this->selectedTicketId);
+        if (!$ticket) {
+            session()->flash('warning', 'You do not have access to that ticket.');
+            return;
+        }
+
         if (empty(trim($this->comment))) {
             session()->flash('warning', 'Please enter a comment.');
             return;
         }
 
-        TicketComment::create([
-            'ticket_id' => $this->selectedTicketId,
+        $ticket->comments()->create([
             'user_id' => auth()->id(),
             'content' => $this->comment,
         ]);

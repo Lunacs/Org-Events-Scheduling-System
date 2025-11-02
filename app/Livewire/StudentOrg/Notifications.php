@@ -38,18 +38,21 @@ class Notifications extends Component
 
         if ($this->search) {
             $query->where(function($q) {
-                $q->where('data', 'like', '%' . $this->search . '%');
+                $q->where('data->title', 'like', '%' . $this->search . '%')
+                  ->orWhere('data->message', 'like', '%' . $this->search . '%');
             });
         }
 
         if ($this->typeFilter) {
-            $query->where('data', 'like', '%"type":"' . $this->typeFilter . '"%');
+            $query->where('data->type', $this->typeFilter);
         }
 
         if ($this->statusFilter === 'unread') {
             $query->whereNull('read_at');
         } elseif ($this->statusFilter === 'read') {
             $query->whereNotNull('read_at');
+        } elseif ($this->statusFilter === 'archived') {
+            $query->where('data->archived', true);
         }
 
         $this->notifications = $query->get();
