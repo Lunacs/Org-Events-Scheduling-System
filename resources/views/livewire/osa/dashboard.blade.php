@@ -63,7 +63,8 @@
             <x-mary-card title="Pending Approvals" subtitle="Requests requiring your attention"
                 class="col-span-1 lg:col-span-2 shadow-md">
                 <x-slot:menu>
-                    <x-mary-button icon="o-eye" link="/admin/tickets" class="btn-sm btn-ghost" label="View All" />
+                    <x-mary-button icon="o-eye" link="/admin/tickets" class="btn-sm btn-ghost" label="View All"
+                        wire:navigate />
                 </x-slot:menu>
 
                 @if (count($this->pendingApprovals) > 0)
@@ -88,7 +89,7 @@
                                 <x-slot:actions>
                                     <x-mary-button icon="o-eye"
                                         link="/admin/ticket-review?ticket={{ $approval['id'] }}"
-                                        class="btn-sm btn-primary" />
+                                        class="btn-sm btn-primary" wire:navigate />
                                 </x-slot:actions>
                             </x-mary-list-item>
                         @endforeach
@@ -105,7 +106,7 @@
             <!-- Upcoming Events -->
             <x-mary-card title="Upcoming Events" subtitle="Approved & scheduled" shadow class="shadow-md">
                 <x-slot:menu>
-                    <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" />
+                    <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" wire:navigate />
                 </x-slot:menu>
 
                 @if (count($this->upcomingEvents) > 0)
@@ -171,7 +172,7 @@
 
                 <div class="mt-4 text-center">
                     <x-mary-button label="View All Tickets" link="/admin/tickets" class="btn-primary"
-                        icon-right="o-arrow-right" />
+                        icon-right="o-arrow-right" wire:navigate />
                 </div>
             @else
                 <div class="text-center py-12">
@@ -189,7 +190,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <x-mary-card
                         class="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-primary duration-200"
-                        link="/admin/tickets" title="Click to manage event requests and review submitted tickets">
+                        link="/admin/tickets" title="Click to manage event requests and review submitted tickets"
+                        wire:navigate>
                         <div class="text-center py-4">
                             <x-mary-icon name="o-ticket" class="w-12 h-12 mx-auto mb-3 text-primary" />
                             <h3 class="font-semibold">Review Tickets</h3>
@@ -210,7 +212,7 @@
 
                     <x-mary-card
                         class="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-accent duration-200"
-                        link="/admin/calendar" title="View and manage scheduled events on the calendar">
+                        link="/admin/calendar" title="View and manage scheduled events on the calendar" wire:navigate>
                         <div class="text-center py-4">
                             <x-mary-icon name="o-calendar-days" class="w-12 h-12 mx-auto mb-3 text-accent" />
                             <h3 class="font-semibold">Event Calendar</h3>
@@ -220,7 +222,7 @@
 
                     <x-mary-card
                         class="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-info duration-200"
-                        link="/admin/reports" title="Generate and view reports for events and requests">
+                        link="/admin/reports" title="Generate and view reports for events and requests" wire:navigate>
                         <div class="text-center py-4">
                             <x-mary-icon name="o-document-chart-bar" class="w-12 h-12 mx-auto mb-3 text-info" />
                             <h3 class="font-semibold">Reports</h3>
@@ -296,7 +298,7 @@
                 @if ($this->stats['pending'] > 0)
                     <div class="mt-3 pt-3 border-t">
                         <x-mary-button label="Review Now" icon-right="o-arrow-right"
-                            class="btn-warning btn-sm btn-block" link="/admin/tickets?status=pending" />
+                            class="btn-warning btn-sm btn-block" link="/admin/tickets?status=pending" wire:navigate />
                     </div>
                 @endif
             </x-mary-card>
@@ -431,7 +433,7 @@
                                 <a role="tab" class="tab">Urgent</a>
                             </div>
                             <x-mary-button icon="o-arrow-right" link="/admin/tickets" class="btn-sm btn-ghost"
-                                label="View All" />
+                                label="View All" wire:navigate />
                         </div>
                     </x-slot:menu>
 
@@ -520,7 +522,7 @@
             <div class="col-span-1">
                 <x-mary-card class="shadow-md sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
                     <x-slot:menu>
-                        <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" />
+                        <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" wire:navigate />
                     </x-slot:menu>
 
                     @if (count($this->upcomingEvents) > 0)
@@ -558,7 +560,7 @@
 
                         <div class="mt-4 pt-4 border-t">
                             <x-mary-button label="View Full Calendar" icon-right="o-arrow-right"
-                                class="btn-sm btn-block btn-outline" link="/admin/calendar" />
+                                class="btn-sm btn-block btn-outline" link="/admin/calendar" wire:navigate />
                         </div>
                     @else
                         <div class="text-center py-12">
@@ -602,7 +604,7 @@
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- Review Tickets -->
-                    <a href="/admin/tickets"
+                    <a href="/admin/tickets" wire:navigate
                         class="group p-6 bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
@@ -618,7 +620,7 @@
                     </a>
 
                     <!-- Approvals -->
-                    <a href="/admin/approvals"
+                    <a href="/admin/approvals" wire:navigate
                         class="group p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/20 rounded-xl border-2 border-transparent hover:border-secondary transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
@@ -632,7 +634,7 @@
                     </a>
 
                     <!-- Calendar -->
-                    <a href="/admin/calendar"
+                    <a href="/admin/calendar" wire:navigate
                         class="group p-6 bg-gradient-to-br from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/20 rounded-xl border-2 border-transparent hover:border-accent transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
@@ -645,7 +647,7 @@
                     </a>
 
                     <!-- Reports -->
-                    <a href="/admin/reports"
+                    <a href="/admin/reports" wire:navigate
                         class="group p-6 bg-gradient-to-br from-info/5 to-info/10 hover:from-info/10 hover:to-info/20 rounded-xl border-2 border-transparent hover:border-info transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
