@@ -226,7 +226,7 @@
                                         </div>
                                         @if ($approval['ticket_id'])
                                             <x-mary-button label="Details" icon="s-eye"
-                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id']]) }}"
+                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id'], 'office' => $approval['office_id'] ?? null]) }}"
                                                 wire:navigate />
                                         @else
                                             <x-mary-button label="Details" icon="s-eye"
@@ -249,7 +249,7 @@
                                         </div>
                                         @if ($approval['ticket_id'])
                                             <x-mary-button label="Details" icon="s-eye"
-                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id']]) }}"
+                                                class="btn-sm btn-outline btn-emerald w-full" link="{{ route('gso.ticket-details', ['ticket' => $approval['ticket_id'], 'office' => $approval['office_id'] ?? null]) }}"
                                                 wire:navigate />
                                         @else
                                             <x-mary-button label="Details" icon="s-eye"

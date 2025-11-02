@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
+use App\Models\Office_Approval;
 use App\Models\Ticket;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -12,11 +15,19 @@ use Livewire\Component;
 
 class Details extends Component
 {
+    use ResolvesOfficeContext;
+
     #[Title('Ticket Details - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public Ticket $ticket;
 
     public ?int $ticketId = null;
+    public ?int $officeId = null;
+
+    /**
+     * The office approval record matched to the active office context.
+     */
+    protected ?Office_Approval $officeApproval = null;
 
     /**
      * View model segments consumed by the Blade template.
@@ -35,6 +46,7 @@ class Details extends Component
 
     public function mount(Ticket $ticket = null, ?int $ticketId = null): void
     {
+        $this->officeId = $this->resolveActiveOfficeId();
         $resolved = $this->resolveTicket($ticket, $ticketId);
 
         $this->hydrateFromTicket($resolved);
@@ -80,6 +92,7 @@ class Details extends Component
     {
         $this->ticket = $ticket;
         $this->ticketId = $ticket->getAttribute('ticket_id');
+        $this->officeApproval = $this->resolveOfficeApproval($ticket);
 
         $this->requirements = $this->buildRequirements();
         $this->overview = $this->buildOverview();
@@ -97,8 +110,9 @@ class Details extends Component
      */
     protected function buildOverview(): array
     {
-        $status = $this->normalizeStatus($this->ticket->status);
-    $eventDate = $this->parseDate($this->ticketAttribute('date_from'));
+        $statusSource = $this->officeApproval?->decision ?? $this->ticket->status;
+        $status = $this->normalizeStatus($statusSource);
+        $eventDate = $this->parseDate($this->ticketAttribute('date_from'));
         $priorityKey = $this->determinePriorityKey($eventDate);
         $priorityLabel = $this->resolvePriorityLabel($priorityKey);
 
@@ -107,6 +121,7 @@ class Details extends Component
             'status' => $status,
             'status_label' => $this->resolveStatusLabel($status),
             'status_badge' => $this->resolveStatusBadge($status),
+            'status_detail' => $this->officeApproval?->remarks,
             'priority_label' => $priorityLabel,
             'priority_badge' => $this->resolvePriorityBadge($priorityKey),
             'event_type' => $this->ticket->eventType?->type_name ?? '—',
@@ -140,10 +155,10 @@ class Details extends Component
      */
     protected function buildEventDetails(array $requirements): array
     {
-    $dateFrom = $this->ticketAttribute('date_from');
-    $dateTo = $this->ticketAttribute('date_to');
-    $timeFrom = $this->ticketAttribute('time_from');
-    $timeTo = $this->ticketAttribute('time_to');
+        $dateFrom = $this->ticketAttribute('date_from');
+        $dateTo = $this->ticketAttribute('date_to');
+        $timeFrom = $this->ticketAttribute('time_from');
+        $timeTo = $this->ticketAttribute('time_to');
 
         return [
             'title' => $this->ticket->title ?? '—',
@@ -272,7 +287,10 @@ class Details extends Component
      */
     protected function buildOfficeApprovals(): array
     {
+        $officeId = $this->officeId ?? $this->resolveOfficeId(Auth::user());
+
         return $this->ticket->officeApprovals
+            ->when($officeId, fn($collection) => $collection->where('office_id', $officeId))
             ->sortByDesc('updated_at')
             ->map(function ($approval) {
                 $decision = $this->normalizeStatus($approval->decision ?? 'pending');
@@ -467,5 +485,30 @@ class Details extends Component
         } catch (\Throwable) {
             return asset($path);
         }
+    }
+
+    protected function resolveActiveOfficeId(): int
+    {
+        $routeOffice = request()->query('office');
+
+        if (is_numeric($routeOffice)) {
+            $candidate = (int) $routeOffice;
+
+            if ($candidate > 0) {
+                return $candidate;
+            }
+        }
+
+        return $this->resolveOfficeId(Auth::user());
+    }
+
+    protected function resolveOfficeApproval(Ticket $ticket): ?Office_Approval
+    {
+        if ($this->officeId === null) {
+            return null;
+        }
+
+        return $ticket->officeApprovals
+            ->firstWhere('office_id', $this->officeId);
     }
 }

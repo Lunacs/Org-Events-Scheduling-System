@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Event_Schedule;
 use App\Models\Office_Approval;
 use App\Models\Transaction_Logs;
@@ -13,16 +14,17 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
+    use ResolvesOfficeContext;
     #[Title('Dashboard - GSO')]
     #[Layout('components.layouts.gso-layout')]
 
     public function render()
     {
         $user = Auth::user();
-        $officeId = $user?->office_id;
+        $officeId = $this->resolveOfficeId($user);
 
         $baseApprovalQuery = Office_Approval::query()
-            ->when($officeId, fn($query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
 
         $stats = [
             'pending' => (clone $baseApprovalQuery)->where('decision', 'pending')->count(),
@@ -54,7 +56,7 @@ class Dashboard extends Component
 
         $recentActivities = Transaction_Logs::query()
             ->with('user')
-            ->when($officeId, fn($query) => $query->whereHas('user', fn($userQuery) => $userQuery->where('office_id', $officeId)))
+            ->whereHas('user', fn($userQuery) => $userQuery->where('office_id', $officeId))
             ->latest('created_at')
             ->limit(5)
             ->get()

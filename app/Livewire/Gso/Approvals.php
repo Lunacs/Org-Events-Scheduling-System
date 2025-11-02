@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,7 @@ use Livewire\Component;
 
 class Approvals extends Component
 {
+    use ResolvesOfficeContext;
     #[Title('Approvals Management - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public string $search = '';
@@ -34,8 +36,8 @@ class Approvals extends Component
 
     public function render()
     {
-        $user = Auth::user();
-        $officeId = $user?->office_id;
+    $user = Auth::user();
+    $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
@@ -56,8 +58,13 @@ class Approvals extends Component
 
         $decision = $this->normalizeStatusFilter($this->statusFilter);
 
-        $approvalsCollection = (clone $baseQuery)
-            ->where('decision', $decision)
+        $approvalsQuery = clone $baseQuery;
+
+        if ($decision !== 'all') {
+            $approvalsQuery->where('decision', $decision);
+        }
+
+        $approvalsCollection = $approvalsQuery
             ->when($this->search !== '', fn(Builder $query) => $this->applySearchFilter($query, $this->search))
             ->orderByDesc('updated_at')
             ->get()
@@ -108,14 +115,14 @@ class Approvals extends Component
         ]);
     }
 
-    protected function baseQuery(?int $officeId): Builder
+    protected function baseQuery(int $officeId): Builder
     {
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
     }
 
     protected function normalizeStatusFilter(string $status): string
@@ -186,6 +193,7 @@ class Approvals extends Component
             'priority_days_until' => $priority['days_until'],
             'status' => $status,
             'status_label' => $statusLabel,
+            'office_id' => $approval->office_id ?? $this->resolveOfficeId(Auth::user()),
             'description' => $ticket?->description ?? 'No description provided.',
             'requirements' => $requirements,
             'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',

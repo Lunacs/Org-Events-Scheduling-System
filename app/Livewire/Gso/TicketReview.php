@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class TicketReview extends Component
 {
+    use ResolvesOfficeContext;
+
     #[Title('Ticket Review - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public string $filterType = '';
@@ -25,8 +28,8 @@ class TicketReview extends Component
 
     public function render()
     {
-        $user = Auth::user();
-        $officeId = $user?->office_id;
+    $user = Auth::user();
+    $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
@@ -64,17 +67,17 @@ class TicketReview extends Component
         ]);
     }
 
-    protected function baseQuery(?int $officeId): Builder
+    protected function baseQuery(int $officeId): Builder
     {
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
     }
 
-    protected function filteredQuery(?int $officeId): Builder
+    protected function filteredQuery(int $officeId): Builder
     {
         return $this->baseQuery($officeId)
             ->when($this->filterStatus !== '', fn(Builder $query) => $this->applyStatusFilter($query, $this->filterStatus))
@@ -129,6 +132,7 @@ class TicketReview extends Component
             'priority_days_until' => $priority['days_until'],
             'status' => $statusKey,
             'status_label' => $statusLabel,
+            'office_id' => $approval->office_id ?? $this->resolveOfficeId(Auth::user()),
             'attendees' => $ticket?->total_participants,
             'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
