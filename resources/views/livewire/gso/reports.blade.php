@@ -108,8 +108,20 @@
             <!-- Chart Section -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4" x-text="chartTitle">
-                    </h3>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="chartTitle">
+                        </h3>
+                        <x-mary-select :options="[
+                                ['id' => 'request_types', 'name' => 'Request Type Distribution'],
+                                ['id' => 'approvals', 'name' => 'Approval Trends']
+                            ]"
+                            option-value="id"
+                            option-label="name"
+                            x-model="selectedChart"
+                            @change="refreshChart({ forceReinit: true })"
+                            class="select-emerald w-full sm:w-60 text-center"
+                            input-class="text-center" />
+                    </div>
 
                     <div
                         class="relative h-64 bg-linear-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
@@ -285,6 +297,7 @@
     function gsoReports() {
         return {
             selectedReport: 'approvals',
+            selectedChart: 'request_types',
             timePeriod: 'this_month',
             customDateRange: {
                 start: '',
@@ -357,11 +370,9 @@
             get chartTitle() {
                 const titles = {
                     'approvals': 'Approval Trends',
-                    'performance': 'Performance Metrics',
-                    'workload': 'Workload Distribution',
-                    'trends': 'Request Trends'
+                    'request_types': 'Request Type Distribution'
                 };
-                return titles[this.selectedReport] || 'Report Chart';
+                return titles[this.selectedChart] || 'Report Chart';
             },
 
             get tableTitle() {
@@ -375,21 +386,45 @@
             },
 
             get statusDataset() {
-                return [
-                    this.statusSummary.approved,
-                    this.statusSummary.rejected
-                ];
+                if (this.selectedChart === 'approvals') {
+                    return [
+                        Number(this.statusSummary.approved || 0),
+                        Number(this.statusSummary.rejected || 0)
+                    ];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => Number(item.count) || 0);
+                }
+
+                return [];
             },
 
             get statusLabels() {
-                return ['Approved', 'Rejected'];
+                if (this.selectedChart === 'approvals') {
+                    return ['Approved', 'Rejected'];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => item.type || 'Unspecified');
+                }
+
+                return [];
             },
 
             get statusColors() {
-                return [
-                    this.chartColors.approved,
-                    this.chartColors.rejected
-                ];
+                if (this.selectedChart === 'approvals') {
+                    return [
+                        this.chartColors.approved,
+                        this.chartColors.rejected
+                    ];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => item.color || '#10b981');
+                }
+
+                return [];
             },
 
             get hasStatusData() {
@@ -468,13 +503,12 @@
                     approved,
                     rejected
                 };
-
-                this.refreshChart();
             },
 
             updateBreakdown(dataset) {
                 if (!dataset.length) {
                     this.breakdown = [];
+                    this.refreshChart();
                     return;
                 }
 
@@ -499,6 +533,8 @@
                         color,
                     };
                 });
+
+                this.refreshChart();
             },
 
             resolveRange(period) {
