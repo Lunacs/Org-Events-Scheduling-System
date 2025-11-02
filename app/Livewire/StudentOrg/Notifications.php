@@ -52,6 +52,12 @@ class Notifications extends Component
             $query->whereNull('read_at');
         } elseif ($this->statusFilter === 'read') {
             $query->whereNotNull('read_at');
+        } elseif ($this->statusFilter === 'archived') {
+            // Define how archived notifications are identified
+            // Option 1: Use a dedicated column
+            $query->where('archived', true);
+            // Option 2: Use JSON data field
+            // $query->where('data->archived', true);
         }
 
         $this->notifications = $query->get();
