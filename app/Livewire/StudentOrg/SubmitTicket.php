@@ -137,8 +137,8 @@ class SubmitTicket extends Component
         return [
             'eventStartDate' => 'required|date|after_or_equal:today',
             'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-            'eventStartTime' => 'required|date_format:H:i',
-            'eventEndTime' => 'required|date_format:H:i|after:eventStartTime',
+            'eventStartTime' => 'required|date_format:H:i|after_or_equal:08:00',
+            'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
         ];
     }
 

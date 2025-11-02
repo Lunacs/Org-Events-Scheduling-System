@@ -166,13 +166,14 @@
         class="w-11/12 lg:w-2/3"
         @close="$wire.closeEditDrawer()"
     >
-        @if($this->selectedTicket)
-            @livewire('student-org.edit-ticket', key('edit-ticket-' . $this->selectedTicket->ticket_id))
+        @if($showEditDrawer && $selectedTicketId)
+            @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
         @else
             <div class="text-center py-8">
                 <x-mary-loading class="loading-lg"/>
             </div>
         @endif
     </x-mary-drawer>
+
 
 </div>

@@ -12,28 +12,28 @@
             <div>
                 <label class="text-sm font-medium text-base-content/70">Organization Name</label>
                 <p class="text-base-content font-medium">
-                    {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</p>
+                    {{ $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}</p>
             </div>
 
             <div>
                 <label class="text-sm font-medium text-base-content/70">Organization Course</label>
                 <p class="text-base-content">
-                    {{ $ticket->user->studentOrganization->course->course_name ?? 'N/A' }}</p>
+                    {{ $ticket->user?->studentOrganization?->course?->course_name ?? 'N/A' }}</p>
             </div>
 
             <div>
                 <label class="text-sm font-medium text-base-content/70">Name of Proponent</label>
-                <p class="text-base-content">{{ $ticket->user->name }}</p>
+                <p class="text-base-content">{{ $ticket->user?->name }}</p>
             </div>
 
             <div>
                 <label class="text-sm font-medium text-base-content/70">Proponent Position</label>
-                <p class="text-base-content">{{ $ticket->user->position->position_name ?? 'N/A' }}</p>
+                <p class="text-base-content">{{ $ticket->user?->position?->position_name ?? 'N/A' }}</p>
             </div>
 
             <div>
                 <label class="text-sm font-medium text-base-content/70">Contact Email</label>
-                <p class="text-base-content">{{ $ticket->user->email }}</p>
+                <p class="text-base-content">{{ $ticket->user?->email }}</p>
             </div>
 
             <div>
@@ -44,7 +44,7 @@
             <div>
                 <label class="text-sm font-medium text-base-content/70">Organization Adviser</label>
                 <p class="text-base-content">
-                    {{ $ticket->user->studentOrganization->adviser_name ?? 'N/A' }}</p>
+                    {{ $ticket->user?->studentOrganization?->adviser_name ?? 'N/A' }}</p>
             </div>
 
             <div>

@@ -3,6 +3,8 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Attachment;
+use App\Models\User;
+use App\Notifications\TicketSubmittedNotification;
 use Exception;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -25,7 +27,74 @@ class EditTicket extends Component
     // All your existing properties from SubmitTicket
     public $organizationName = '';
     public $adviser = '';
-    // ... (copy all properties from SubmitTicket.php)
+    public $contactEmail = '';
+    public $proponentName = '';
+    public $organizationCourse = '';
+    public $proponentPosition = '';
+    public $proponent_contact = '';
+    public $adviser_contact = '';
+    public $eventTitle = '';
+    public $eventDescription = '';
+    public $eventType = '';
+    public $expectedPLVParticipants = 0;
+    public $expectedNonPLVParticipants = 0;
+    public $eventStartDate = '';
+    public $eventEndDate = '';
+    public $eventStartTime = '';
+    public $eventEndTime = '';
+    public $preferredVenue = '';
+    public $alternativeVenue = '';
+    public $specialRequirements = '';
+    public $totalBudget = 0.0;
+    public $budgetBreakdown = '';
+    public $fundingSource = '';
+    public $igp_requested = 'false';
+    public $igp_details = '';
+    public $is_oc = false;
+    public $oc_accommodation = false;
+    public $oc_tsp = '';
+    public $oc_driver_name = '';
+    public $oc_vehicle_type = '';
+    public $oc_vehicle_plate_number = '';
+    public $oc_driver_contact_number = '';
+    public $additionalNotes = '';
+    public $attachments = [];
+    public $newAttachments = [];
+
+    protected $rules = [
+        'eventTitle' => 'required|string|max:255',
+        'eventDescription' => 'required|string',
+        'proponent_contact' => 'required|string',
+        'adviser_contact' => 'required|string',
+        'expectedPLVParticipants' => 'required|integer|min:0',
+        'expectedNonPLVParticipants' => 'required|integer|min:0',
+        'eventType' => 'required|exists:event__types,event_type_id',
+        'eventStartDate' => 'required|date',
+        'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
+        'eventStartTime' => 'required',
+        'eventEndTime' => 'required',
+        'preferredVenue' => 'required|string',
+        'totalBudget' => 'required|numeric|min:0',
+        'fundingSource' => 'required|exists:fund__sources,source_id',
+        'newAttachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+    ];
+
+    public function mount($ticketId = null)
+    {
+        if ($ticketId) {
+            $this->loadTicket($ticketId);
+        }
+    }
+
+    public function getRequiredDocuments()
+    {
+        return config("event_requirements.documents.{$this->eventType}", ['Pick an event type to see needed attachments.']);
+    }
+
+    public function getExpectedParticipantsProperty()
+    {
+        return (int) $this->expectedPLVParticipants + (int) $this->expectedNonPLVParticipants;
+    }
 
     #[On('load-ticket-for-edit')]
     public function loadTicket($ticketId)
@@ -73,7 +142,7 @@ class EditTicket extends Component
         $this->fundingSource = $this->ticket->fund_source_id;
         $this->igp_requested = $this->ticket->igp_requested ? 'true' : 'false';
         $this->igp_details = $this->ticket->igp_details;
-        $this->is_oc = (bool)$this->ticket->oc_accommodation;
+        $this->is_oc = (bool)$this->ticket->is_oc;
         $this->oc_accommodation = $this->ticket->oc_accommodation;
         $this->oc_tsp = $this->ticket->oc_tsp;
         $this->oc_driver_name = $this->ticket->oc_driver_name;
@@ -100,7 +169,7 @@ class EditTicket extends Component
         if ($this->isNeedsRevision) {
             return !in_array($field, [
                 'organizationName', 'organizationCourse', 'proponentName',
-                'contactEmail', 'proponentPosition', 'adviser'
+                'contactEmail', 'proponentPosition', 'adviser', 'proponent_contact', 'adviser_contact'
             ]);
         }
 
@@ -149,6 +218,26 @@ class EditTicket extends Component
         return $previewTicket;
     }
 
+    public function removeAttachment($index)
+    {
+        // Remove from attachments array
+        unset($this->attachments[$index]);
+        $this->attachments = array_values($this->attachments); // Re-index array
+    }
+
+    public function removeNewAttachment($index)
+    {
+        unset($this->newAttachments[$index]);
+        $this->newAttachments = array_values($this->newAttachments);
+    }
+
+    public function updatedNewAttachments()
+    {
+        $this->validate([
+            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx'
+        ]);
+    }
+
     public function updateTicket()
     {
         $this->validate();
@@ -182,8 +271,11 @@ class EditTicket extends Component
                 'oc_vehicle_plate_number' => $this->oc_vehicle_plate_number,
                 'oc_driver_contact_number' => $this->oc_driver_contact_number,
                 'additional_notes' => $this->additionalNotes,
-                'status' => 'received', // Reset to received after revision
+                'status' => 'amended',
             ]);
+
+            // Refresh the model instance after update
+            $this->ticket->refresh();
 
             // Handle new attachments if any
             if ($this->newAttachments) {
@@ -204,6 +296,12 @@ class EditTicket extends Component
                 }
             }
 
+            // Notify OSA admins - now using the refreshed model
+            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            foreach ($osaUsers as $osaUser) {
+                $osaUser->notify(new TicketSubmittedNotification($this->ticket));
+            }
+
             $this->toast(
                 type: 'success',
                 title: 'Ticket Updated!',
@@ -211,11 +309,8 @@ class EditTicket extends Component
                 position: 'toast-top toast-end',
                 timeout: 3000
             );
-
-            $this->dispatch('ticket-updated');
-            $this->dispatch('close-edit-drawer');
-
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             $this->toast(
                 type: 'error',
                 title: 'Update Failed',
