@@ -3,6 +3,7 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\TicketComment;
+use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
@@ -22,6 +23,8 @@ class MyTicket extends Component
     public $showCommentsModal = false;
     public $showEditDrawer = false;
     public $selectedTicketId;
+
+    #[Rule('string|max:1000')]
     public $comment = '';
 
     #[On('open-ticket-details')]

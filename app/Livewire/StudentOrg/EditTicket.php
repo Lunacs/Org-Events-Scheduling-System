@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
@@ -60,6 +61,7 @@ class EditTicket extends Component
     public $additionalNotes = '';
     public $attachments = [];
     public $newAttachments = [];
+    public $removedAttachmentIds = [];
 
     protected $rules = [
         'eventTitle' => 'required|string|max:255',
@@ -93,7 +95,7 @@ class EditTicket extends Component
 
     public function getExpectedParticipantsProperty()
     {
-        return (int) $this->expectedPLVParticipants + (int) $this->expectedNonPLVParticipants;
+        return (int)$this->expectedPLVParticipants + (int)$this->expectedNonPLVParticipants;
     }
 
     #[On('load-ticket-for-edit')]
@@ -211,6 +213,13 @@ class EditTicket extends Component
         $previewTicket->igp_requested = $this->igp_requested === 'true';
         $previewTicket->igp_details = $this->igp_details;
         $previewTicket->additional_notes = $this->additionalNotes;
+        $previewTicket->is_oc = $this->is_oc;
+        $previewTicket->oc_accommodation = $this->oc_accommodation;
+        $previewTicket->oc_tsp = $this->oc_tsp;
+        $previewTicket->oc_driver_name = $this->oc_driver_name;
+        $previewTicket->oc_vehicle_type = $this->oc_vehicle_type;
+        $previewTicket->oc_vehicle_plate_number = $this->oc_vehicle_plate_number;
+        $previewTicket->oc_driver_contact_number = $this->oc_driver_contact_number;
 
         $previewTicket->setRelation('eventType', Event_Type::find($this->eventType));
         $previewTicket->setRelation('fundSource', Fund_Sources::find($this->fundingSource));
@@ -220,6 +229,11 @@ class EditTicket extends Component
 
     public function removeAttachment($index)
     {
+        // Track the attachment ID for deletion
+        if (isset($this->attachments[$index]['attachment_id'])) {
+            $this->removedAttachmentIds[] = $this->attachments[$index]['attachment_id'];
+        }
+
         // Remove from attachments array
         unset($this->attachments[$index]);
         $this->attachments = array_values($this->attachments); // Re-index array
@@ -243,6 +257,22 @@ class EditTicket extends Component
         $this->validate();
 
         try {
+            // Delete removed attachments
+            if (!empty($this->removedAttachmentIds)) {
+                foreach ($this->removedAttachmentIds as $attachmentId) {
+                    $attachment = Attachment::find($attachmentId);
+                    if ($attachment && $attachment->ticket_id === $this->ticket->ticket_id) {
+                        // Delete file from storage
+                        if (Storage::exists($attachment->file_path)) {
+                            Storage::delete($attachment->file_path);
+                        }
+                        // Delete database record
+                        $attachment->delete();
+                    }
+                }
+                $this->removedAttachmentIds = [];
+            }
+
             $this->ticket->update([
                 'title' => $this->eventTitle,
                 'description' => $this->eventDescription,
@@ -309,8 +339,7 @@ class EditTicket extends Component
                 position: 'toast-top toast-end',
                 timeout: 3000
             );
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $this->toast(
                 type: 'error',
                 title: 'Update Failed',

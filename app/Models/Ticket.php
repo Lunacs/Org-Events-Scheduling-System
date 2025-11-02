@@ -53,6 +53,7 @@ class Ticket extends Model
         'additional_notes',
         'fund_source_id',
         'status',
+        'content',
     ];
 
     /**
