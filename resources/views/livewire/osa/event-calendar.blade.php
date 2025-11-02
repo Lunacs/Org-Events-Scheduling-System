@@ -13,15 +13,10 @@
             </div>
         </div>
     </div>
-
+    {{-- niga --}}
     {{-- Calendar Component --}}
-    <x-calendar.full-calendar
-        :events="$events"
-        :view-mode="$viewMode"
-        on-event-click="viewEvent"
-        calendar-id="osa-calendar"
-        update-event="osa-calendar-updated"
-        :show-filters="true"
+    <x-calendar.full-calendar :events="$events" :view-mode="$viewMode" on-event-click="viewEvent" calendar-id="osa-calendar"
+        update-event="osa-calendar-updated" :show-filters="true"
         wire:key="osa-calendar-{{ $statusFilter }}-{{ $organizationFilter }}-{{ $eventTypeFilter }}">
 
         <x-slot:filterSlot>
@@ -29,15 +24,18 @@
                 <x-mary-select wire:model.live="statusFilter" placeholder="Status" :options="[
                     ['id' => 'approved', 'name' => 'Approved'],
                     ['id' => 'rescheduled', 'name' => 'Rescheduled'],
-                ]" option-value="id" option-label="name" class="select-sm min-w-[140px]" />
+                ]" option-value="id"
+                    option-label="name" class="select-sm min-w-[140px]" />
 
                 <x-mary-select wire:model.live="organizationFilter" placeholder="Organization" :options="$organizations"
-                               option-value="org_id" option-label="org_name" class="select-sm text-xs min-w-[200px] max-w-[300px]" />
+                    option-value="org_id" option-label="org_name"
+                    class="select-sm text-xs min-w-[200px] max-w-[300px]" />
 
                 <x-mary-select wire:model.live="eventTypeFilter" placeholder="Event Type" :options="$eventTypes"
-                               option-value="event_type_id" option-label="type_name" class="select-sm min-w-[150px]" />
+                    option-value="event_type_id" option-label="type_name" class="select-sm min-w-[150px]" />
 
-                <x-mary-button wire:click="clearFilters" class="btn-ghost btn-sm" icon="o-x-mark" tooltip="Clear Filters" />
+                <x-mary-button wire:click="clearFilters" class="btn-ghost btn-sm" icon="o-x-mark"
+                    tooltip="Clear Filters" />
             </div>
         </x-slot:filterSlot>
     </x-calendar.full-calendar>
