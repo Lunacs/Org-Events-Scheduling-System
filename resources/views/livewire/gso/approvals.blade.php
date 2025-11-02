@@ -36,56 +36,47 @@
     ];
 
     $requestTypeBadgePalette = [
-        'badge-success',
-        'badge-warning',
-        'badge-error',
-        'badge-neutral',
-        'badge-info',
-        'badge-secondary',
-        'badge-accent',
-        'badge-primary',
+        'badge-success', 'badge-warning', 'badge-error', 'badge-neutral',
+        'badge-info', 'badge-secondary', 'badge-accent', 'badge-primary',
     ];
 
-    $approvalCollection = collect($approvals)
-        ->map(fn ($approval) => is_array($approval) ? $approval : (array) $approval);
+    $approvalCollection = collect($approvals)->map(fn($a) => is_array($a) ? $a : (array) $a);
 
     $requestTypeBadgeMap = $requestTypeBadgeDefaults;
     $paletteIndex = 0;
 
     foreach ($approvalCollection->pluck('request_type')->filter()->unique()->values() as $typeLabel) {
         $lookupKey = \Illuminate\Support\Str::of($typeLabel)->lower()->toString();
-
-        if (! array_key_exists($lookupKey, $requestTypeBadgeMap)) {
+        if (!array_key_exists($lookupKey, $requestTypeBadgeMap)) {
             $requestTypeBadgeMap[$lookupKey] = $requestTypeBadgePalette[$paletteIndex % count($requestTypeBadgePalette)];
             $paletteIndex++;
         }
     }
 
-    $approvals = $approvalCollection
-        ->map(function ($approval) use ($requestTypeBadgeMap, $defaultRequestTypeBadge) {
-            $typeKey = \Illuminate\Support\Str::of($approval['request_type'] ?? '')->lower()->toString();
-            $approval['request_type_badge_class'] = $requestTypeBadgeMap[$typeKey] ?? $defaultRequestTypeBadge;
-
-            return $approval;
-        })
-        ->values()
-        ->all();
+    $approvals = $approvalCollection->map(function($approval) use ($requestTypeBadgeMap, $defaultRequestTypeBadge) {
+        $typeKey = \Illuminate\Support\Str::of($approval['request_type'] ?? '')->lower()->toString();
+        $approval['request_type_badge_class'] = $requestTypeBadgeMap[$typeKey] ?? $defaultRequestTypeBadge;
+        return $approval;
+    })->values()->all();
 @endphp
 
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-6 sm:py-12 space-y-6">
+
+    <!-- Page Header -->
     <div class="mb-6">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Approvals Management') }}
         </h2>
     </div>
 
+    <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="stats shadow bg-emerald-50 dark:bg-emerald-900/20">
             <div class="stat">
                 <div class="stat-figure text-emerald-500">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div class="stat-title text-emerald-700 dark:text-emerald-300">Pending Review</div>
@@ -99,7 +90,7 @@
                 <div class="stat-figure text-blue-500">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div class="stat-title text-blue-700 dark:text-blue-300">Today's Approvals</div>
@@ -113,7 +104,7 @@
                 <div class="stat-figure text-orange-500">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div class="stat-title text-orange-700 dark:text-orange-300">Urgent</div>
@@ -123,17 +114,17 @@
         </div>
     </div>
 
+    <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
         <div class="p-6">
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-64">
-                    <x-mary-input wire:model.debounce.300ms="search" label="Search Requests"
-                        placeholder="Search by event name, organization..." class="input-emerald">
+                    <x-mary-input wire:model.defer="search" wire:keydown.enter.prevent="applyFilters" label="Search Requests"
+                                  placeholder="Search by event name, organization..." class="input-emerald">
                         <x-slot:prepend>
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </x-slot:prepend>
                     </x-mary-input>
@@ -141,20 +132,21 @@
 
                 <div>
                     <x-mary-select wire:model.live="statusFilter" label="Status Filter" :options="$statusOptions"
-                        option-value="id" option-label="name" class="select-emerald" />
+                                    option-value="id" option-label="name" class="select-emerald" />
                 </div>
 
                 <div>
                     <x-mary-select wire:model.live="priorityFilter" label="Priority Filter" :options="$priorityOptions"
-                        option-value="id" option-label="name" class="select-emerald" />
+                                    option-value="id" option-label="name" class="select-emerald" />
                 </div>
 
-                <x-mary-button type="button" label="Bulk Approve ({{ count($selectedRequests) }})"
-                    icon="s-check" class="btn-emerald" disabled />
+                <x-mary-button type="button" label="Search" icon="o-magnifying-glass" class="btn-emerald"
+                               wire:click="applyFilters" />
             </div>
         </div>
     </div>
 
+    <!-- Approval Requests -->
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
@@ -179,6 +171,8 @@
                     <div class="rounded-lg p-4 hover:shadow-md transition-shadow {{ $cardTone }}"
                         wire:key="approval-{{ $approval['id'] ?? uniqid() }}">
                         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+
+                            <!-- Approval Info -->
                             <div class="flex items-start space-x-4 flex-1">
                                 <input type="checkbox" class="checkbox checkbox-emerald mt-1" disabled>
 
@@ -188,24 +182,17 @@
                                             {{ $approval['event_name'] }}
                                         </h4>
                                         <x-mary-badge :value="$statusLabel"
-                                            class="badge {{ $statusBadges[$statusKey] ?? 'badge-ghost' }}" />
+                                                      class="badge {{ $statusBadges[$statusKey] ?? 'badge-ghost' }}" />
                                         <x-mary-badge :value="\Illuminate\Support\Str::lower($priorityLabel)"
-                                            class="badge {{ $priorityBadges[$priorityKey] ?? 'badge-ghost' }}" />
+                                                      class="badge {{ $priorityBadges[$priorityKey] ?? 'badge-ghost' }}" />
                                         <x-mary-badge :value="$approval['request_type'] ?? 'N/A'"
-                                            class="badge {{ $approval['request_type_badge_class'] ?? $defaultRequestTypeBadge }}" />
+                                                      class="badge {{ $approval['request_type_badge_class'] ?? $defaultRequestTypeBadge }}" />
                                     </div>
 
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                        <div>
-                                            <strong>Organization:</strong> {{ $approval['organization'] }}
-                                        </div>
-                                        <div>
-                                            <strong>Event Date:</strong> {{ $approval['event_date'] }}
-                                        </div>
-                                        <div>
-                                            <strong>Requested:</strong> {{ $approval['request_type'] }}
-                                        </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                        <div><strong>Organization:</strong> {{ $approval['organization'] }}</div>
+                                        <div><strong>Event Date:</strong> {{ $approval['event_date'] }}</div>
+                                        <div><strong>Requested:</strong> {{ $approval['request_type'] }}</div>
                                     </div>
 
                                     <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
@@ -216,14 +203,12 @@
                                         @forelse ($approval['requirements'] as $requirement)
                                             <x-mary-badge :value="$requirement" class="badge badge-outline badge-sm" />
                                         @empty
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">No special
-                                                requirements provided.</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">No special requirements provided.</span>
                                         @endforelse
                                     </div>
 
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        Submitted: {{ $approval['submitted_date'] }} |
-                                        Due: {{ $approval['due_date'] }}
+                                        Submitted: {{ $approval['submitted_date'] }} | Due: {{ $approval['due_date'] }}
                                     </div>
                                 </div>
                             </div>
@@ -233,9 +218,11 @@
                                     <div class="flex flex-col gap-2 w-full">
                                         <div class="flex gap-2">
                                             <x-mary-button type="button" label="Approve" icon="s-check"
-                                                class="btn-sm btn-success flex-1" />
+                                                class="btn-sm btn-success flex-1"
+                                                wire:click="confirmAction({{ $approval['id'] }}, 'approve')" />
                                             <x-mary-button type="button" label="Reject" icon="s-x-mark"
-                                                class="btn-sm btn-error flex-1" />
+                                                class="btn-sm btn-error flex-1"
+                                                wire:click="confirmAction({{ $approval['id'] }}, 'reject')" />
                                         </div>
                                         @if ($approval['ticket_id'])
                                             <x-mary-button label="Details" icon="s-eye"
@@ -272,6 +259,7 @@
                                     </div>
                                 @endif
                             </div>
+
                         </div>
                     </div>
                 @empty
@@ -287,4 +275,55 @@
             </div>
         </div>
     </div>
+
+        <!-- Modal Confirmation -->
+    @php
+        $modalActionLabel = $actionType === 'approve' ? 'Approve' : ($actionType === 'reject' ? 'Reject' : ucfirst($actionType));
+        $modalActionVerb = $actionType === 'approve' ? 'approve' : ($actionType === 'reject' ? 'reject' : $actionType);
+        $modalColor = $actionType === 'approve' ? 'success' : ($actionType === 'reject' ? 'danger' : 'secondary');
+        $requiredWord = $actionType === 'approve' ? 'approve' : ($actionType === 'reject' ? 'reject' : null);
+    @endphp
+
+    <x-mary-modal wire:model="showConfirmationModal" title="Confirm {{ $modalActionLabel }}">
+        <p class="mb-2 text-sm">Are you sure you want to {{ $modalActionVerb }} this request?</p>
+
+       @if($requiredWord)
+                <div x-data="{ local: @entangle('confirmationInput'), action: @entangle('actionType'), required: null }"
+                    x-init="required = action === 'approve' ? 'approve' : (action === 'reject' ? 'reject' : null); $watch('action', value => required = value === 'approve' ? 'approve' : (value === 'reject' ? 'reject' : null))"
+                    class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type '{{ $requiredWord }}' to confirm</label>
+                    <div class="mt-1 flex items-center space-x-2">
+                        <x-mary-input x-model="local" placeholder="{{ $requiredWord }}" class="flex-1 h-9" />
+
+                        {{-- Live match indicator (client-side) --}}
+                        <div class="w-5 h-5 flex items-center justify-center">
+                            <svg x-show="local && local.trim().toLowerCase() === required" class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <svg x-show="!(local && local.trim().toLowerCase() === required)" class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+                            </svg>
+                        </div>
+                    </div>
+
+                    @error('confirmationInput')
+                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+        @endif
+
+        <x-slot:actions>
+            <x-mary-button wire:click="cancelConfirmation" color="secondary">
+                Cancel
+            </x-mary-button>
+
+                <x-mary-button wire:click="performAction"
+                               wire:loading.attr="disabled"
+                               wire:target="performAction"
+                               color="{{ $modalColor }}"
+                               x-bind:disabled="required ? !(local && local.trim().toLowerCase() === required) : false">
+                    Yes, {{ $modalActionLabel }}
+                </x-mary-button>
+        </x-slot:actions>
+    </x-mary-modal>
 </div>

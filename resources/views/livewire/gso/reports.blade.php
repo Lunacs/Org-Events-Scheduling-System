@@ -435,6 +435,7 @@
                 this.bootstrapRequestTypeClasses();
                 this.applyFilters();
                 this.handleThemeChange();
+                this.initDownloadListener();
             },
 
             generateReport() {
@@ -624,6 +625,20 @@
                     this.customDateRange.end || null,
                     this.searchTerm || null
                 );
+            },
+            // Listen for the signed-download URL from the Livewire component and navigate
+            // the browser there to trigger a native file download.
+            initDownloadListener() {
+                window.addEventListener('gso:export-download', (ev) => {
+                    try {
+                        const url = ev?.detail?.url;
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    } catch (err) {
+                        // ignore failures silently
+                    }
+                });
             },
 
             refreshChart(options = {}) {
@@ -875,7 +890,6 @@
 
                 return this.requestTypeClassMap[key];
             },
-
             getDecisionClass(decision) {
                 const classes = {
                     'Approved': 'badge-success',

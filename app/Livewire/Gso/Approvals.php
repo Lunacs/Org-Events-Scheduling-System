@@ -23,6 +23,15 @@ class Approvals extends Component
 
     public array $selectedRequests = [];
 
+    public bool $showConfirmationModal = false;
+    public ?int $selectedApprovalId = null;
+    public string $actionType = '';
+    public string $confirmationInput = '';
+
+    protected $listeners = [
+        'refreshApprovals' => '$refresh',
+    ];
+
     public function render()
     {
         $user = Auth::user();
@@ -55,10 +64,42 @@ class Approvals extends Component
             ->map(fn(Office_Approval $approval) => $this->transformApproval($approval));
 
         if ($this->priorityFilter !== 'all') {
-            $approvalsCollection = $approvalsCollection->filter(fn(array $approval) => ($approval['priority'] ?? 'low') === $this->priorityFilter);
+            $approvalsCollection = $approvalsCollection->filter(
+                fn(array $approval) => ($approval['priority'] ?? 'low') === $this->priorityFilter
+            );
         }
 
         $approvals = $approvalsCollection->values();
+
+        if ($this->search !== '') {
+            $term = Str::lower(trim($this->search));
+
+            $approvals = $approvals->sort(function ($a, $b) use ($term) {
+                $aEvent = strtolower($a['event_name'] ?? '');
+                $bEvent = strtolower($b['event_name'] ?? '');
+                $aOrg = strtolower($a['organization'] ?? '');
+                $bOrg = strtolower($b['organization'] ?? '');
+
+                $score = function ($event, $org) use ($term) {
+                    if ($term !== '' && strpos($event, $term) !== false) {
+                        return 1;
+                    }
+                    if ($term !== '' && strpos($org, $term) !== false) {
+                        return 2;
+                    }
+                    return 3;
+                };
+
+                $sa = $score($aEvent, $aOrg);
+                $sb = $score($bEvent, $bOrg);
+
+                if ($sa !== $sb) {
+                    return $sa <=> $sb;
+                }
+
+                return ($b['updated_at_ts'] ?? 0) <=> ($a['updated_at_ts'] ?? 0);
+            })->values();
+        }
 
         return view('livewire.gso.approvals', [
             'approvals' => $approvals,
@@ -115,8 +156,8 @@ class Approvals extends Component
     {
         $ticket = $approval->ticket;
 
-    $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
-    $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
+        $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
+        $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
 
         $requirements = collect(preg_split('/[\,\n]+/', (string) ($ticket?->special_requirements ?? '')))
             ->map(fn(string $item) => trim($item))
@@ -151,6 +192,7 @@ class Approvals extends Component
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
             'remarks' => $approval->remarks ?? null,
             'participants' => $ticket?->total_participants,
+            'updated_at_ts' => $approval->updated_at?->timestamp ?? 0,
         ];
     }
 
@@ -220,6 +262,67 @@ class Approvals extends Component
             return null;
         }
 
-    return $this->parseDate($ticket->getAttribute('date_from'));
+        return $this->parseDate($ticket->getAttribute('date_from'));
+    }
+
+    public function confirmAction(int $approvalId, string $action)
+    {
+        $this->resetValidation();
+        $this->confirmationInput = '';
+        $this->selectedApprovalId = $approvalId;
+        $this->actionType = $action;
+        $this->showConfirmationModal = true;
+    }
+
+    public function cancelConfirmation()
+    {
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->resetValidation();
+    }
+
+    public function applyFilters(): void
+    {
+        $this->search = trim((string) $this->search);
+        $this->selectedRequests = [];
+    }
+
+    public function performAction()
+    {
+        if (! $this->selectedApprovalId) {
+            return;
+        }
+
+        $approval = Office_Approval::find($this->selectedApprovalId);
+        if (! $approval) {
+            return;
+        }
+
+        $requiredWord = null;
+        if ($this->actionType === 'approve') {
+            $requiredWord = 'approve';
+        } elseif ($this->actionType === 'reject') {
+            $requiredWord = 'reject';
+        }
+
+        if ($requiredWord) {
+            if (strtolower(trim($this->confirmationInput)) !== $requiredWord) {
+                $this->addError('confirmationInput', 'Type "' . $requiredWord . '" to proceed.');
+                return;
+            }
+        }
+
+        $decision = $this->actionType === 'approve'
+            ? 'approved'
+            : ($this->actionType === 'reject' ? 'rejected' : $this->actionType);
+
+        $approval->decision = $decision;
+        $approval->updated_at = now();
+        $approval->save();
+
+        $this->dispatch('refreshApprovals');
+
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->resetValidation();
+        session()->flash('message', 'Request ' . $decision . ' successfully.');
     }
 }
