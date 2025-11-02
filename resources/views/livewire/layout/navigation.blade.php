@@ -101,7 +101,7 @@ new class extends Component {
                         {{-- User Info Header --}}
                         @if ($user)
                             <li
-                                class="menu-title px-4 py-3 bg-base-200 rounded-t-box -mx-2 -mt-2 mb-2 focus:bg-base-200">
+                                class="menu-title px-4 py-3 bg-base-200 rounded-t-box -mx-2 -mt-2 mb-2 focus:bg-base-200 pointer-events-none">
                                 <div class="flex items-center gap-3">
                                     <div wire:key="dropdown-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
                                         <x-ui.avatar :user="$user" size="lg" />

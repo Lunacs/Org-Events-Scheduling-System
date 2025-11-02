@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\Event;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -33,7 +34,9 @@ class Archive extends Component
     #[Url(except: '')]
     public $eventTypeFilter = '';
 
-    public $selectedEvent = null;
+    public $selectedEvent = null; // deprecated; kept for BC, not used now
+
+    public ?int $selectedEventId = null;
 
     public $showModal = false;
 
@@ -44,17 +47,8 @@ class Archive extends Component
 
     public function viewArchivedEvent($eventId)
     {
-        $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
-            ->with([
-                'ticket:ticket_id,ticket_number,title,description,status,user_id,venue_requested,total_participants,created_at' => fn ($q) => $q->with([
-                    'user:user_id,org_id' => fn ($q) => $q->with('studentOrganization:org_id,org_name'),
-                    'osaApprovals:osa_approval_id,ticket_id,status,comments,approved_at',
-                    'attachments:attachment_id,ticket_id,file_path,file_name',
-                ]),
-                'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
-                'eventType:event_type_id,type_name',
-            ])
-            ->find($eventId);
+        // Open modal immediately; child component will fetch details
+        $this->selectedEventId = (int) $eventId;
         $this->showModal = true;
     }
 
@@ -62,6 +56,7 @@ class Archive extends Component
     {
         $this->showModal = false;
         $this->selectedEvent = null;
+        $this->selectedEventId = null;
     }
 
     public function updatingSearch()
@@ -94,6 +89,12 @@ class Archive extends Component
         $this->resetPage();
     }
 
+    public function applyFilters()
+    {
+        // Explicitly re-query with current deferred filter values
+        $this->resetPage();
+    }
+
     public function render()
     {
         $archivedEvents = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
@@ -102,11 +103,12 @@ class Archive extends Component
                     ->with([
                         'user' => fn ($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name'),
-                        'attachments:attachment_id,ticket_id',
-                    ]),
+                    ])
+                    ->withCount('attachments'),
                 'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                 'eventType:event_type_id,type_name',
             ])
+            // Count attachments via the nested ticket relation
             ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
             ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
             ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
@@ -125,9 +127,11 @@ class Archive extends Component
     #[Computed]
     public function availableYears()
     {
-        return Event::selectRaw('YEAR(created_at) as year')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        return Cache::remember('osa_archive_available_years', 600, function () {
+            return Event::selectRaw('YEAR(created_at) as year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year');
+        });
     }
 }

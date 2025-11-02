@@ -8,7 +8,7 @@
                     <p class="text-base-content/70 mt-1">Review event proposals and final approvals</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <x-mary-badge value="{{ $tickets->total() }} Tickets" class="badge-primary" />
+                    <span class="badge badge-primary">{{ $tickets->total() }} Tickets</span>
                 </div>
             </div>
         </div>
@@ -17,27 +17,27 @@
     {{-- Filters --}}
     <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
-                icon="o-magnifying-glass" clearable />
+            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search tickets..."
+                class="input input-bordered w-full" />
 
-            <x-mary-select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
-                ['id' => 'received', 'name' => 'Received'],
-                ['id' => 'gso_review', 'name' => 'GSO Review'],
-                ['id' => 'pending_osa_approval', 'name' => 'Pending Final Approval'],
-                ['id' => 'for_rescheduling', 'name' => 'For Rescheduling'],
-                ['id' => 'rescheduled', 'name' => 'Rescheduled'],
-                ['id' => 'needs_revision', 'name' => 'Needs Revision'],
-                ['id' => 'amended', 'name' => 'Amended'],
-                ['id' => 'approved', 'name' => 'Approved'],
-                ['id' => 'rejected', 'name' => 'Rejected'],
-            ]"
-                option-value="id" option-label="name" />
+            <select wire:model.live="statusFilter" class="select select-bordered w-full">
+                <option value="">Filter by Status</option>
+                <option value="received">Received</option>
+                <option value="gso_review">GSO Review</option>
+                <option value="pending_osa_approval">Pending Final Approval</option>
+                <option value="for_rescheduling">For Rescheduling</option>
+                <option value="rescheduled">Rescheduled</option>
+                <option value="needs_revision">Needs Revision</option>
+                <option value="amended">Amended</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
 
             <div class="flex gap-2">
-                <x-mary-button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark" tooltip="Clear Filters">
+                <button wire:click="clearFilters" type="button" class="btn btn-ghost" title="Clear Filters">
                     <span wire:loading.remove wire:target="clearFilters">Clear</span>
                     <span wire:loading wire:target="clearFilters">Clearing...</span>
-                </x-mary-button>
+                </button>
             </div>
         </div>
     </div>
@@ -69,8 +69,9 @@
                                 'rejected' => 'badge-error',
                             ];
                         @endphp
-                        <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                            class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} badge-sm" />
+                        <span class="badge badge-sm {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}">
+                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                        </span>
                     </div>
 
                     {{-- Description --}}
@@ -82,23 +83,19 @@
                         @if ($ticket->events->isNotEmpty() && $ticket->events->first()->eventSchedules->isNotEmpty())
                             {{-- Show approved event schedule --}}
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-success" />
                                 <span
                                     class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->start_date?->format('M d, Y') ?? 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-success" />
                                 <span
                                     class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</span>
                             </div>
                         @else
                             {{-- Show requested dates --}}
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-calendar-days" class="w-4 h-4 text-base-content/70" />
                                 <span>{{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y') : 'TBD' }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-sm">
-                                <x-mary-icon name="o-map-pin" class="w-4 h-4 text-base-content/70" />
                                 <span>{{ $ticket->venue_requested ?? 'TBD' }}</span>
                             </div>
                         @endif
@@ -111,7 +108,6 @@
                     <div class="space-y-4">
                         {{-- Attachments Info --}}
                         <div class="flex items-center gap-2">
-                            <x-mary-icon name="o-paper-clip" class="w-4 h-4 text-secondary" />
                             <span class="text-sm text-base-content/70">
                                 {{ $ticket->attachments->count() }} attachment(s)
                             </span>
@@ -120,8 +116,7 @@
                         {{-- Actions --}}
                         <div class="flex gap-2">
                             <a href="{{ route('osa.ticket-review.show', $ticket->ticket_number) }}"
-                                class="btn btn-primary btn-sm flex-1" wire:navigate>
-                                <x-mary-icon name="o-eye" class="w-4 h-4" />
+                                class="btn btn-primary btn-sm flex-1" wire:navigate title="Review">
                                 Review
                             </a>
                         </div>
@@ -139,7 +134,6 @@
         @empty
             <div class="col-span-full text-center py-12">
                 <div class="flex flex-col items-center gap-4">
-                    <x-mary-icon name="o-document-text" class="w-16 h-16 text-base-content/30" />
                     <div>
                         <h3 class="text-lg font-semibold text-base-content/70">No tickets found</h3>
                         <p class="text-sm text-base-content/50">Try adjusting your filters</p>

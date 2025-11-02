@@ -1,28 +1,6 @@
 <div>
     <x-mary-toast />
 
-    <style>
-        [data-tip] {
-            position: relative;
-        }
-
-        [data-tip]:hover::after {
-            content: attr(data-tip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 0.5rem;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            z-index: 1000;
-            margin-bottom: 0.25rem;
-        }
-    </style>
-
     {{-- Header --}}
     @persist('ticket-management-header')
         <div class="mb-8">
@@ -90,8 +68,9 @@
                 </thead>
                 <tbody>
                     @forelse($tickets as $ticket)
-                        <tr class="hover:cursor-pointer hover:border-l-2 hover:border-l-primary"
+                        <tr class="hover:cursor-pointer hover:bg-base-200 transition-colors duration-200"
                             wire:key="ticket-{{ $ticket->ticket_id }}"
+                            title="Ticket: {{ $ticket->title }} | Organization: {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }} | Status: {{ ucfirst(str_replace('_', ' ', $ticket->status)) }} | Click to view details"
                             onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
                             <td>
                                 <span class="font-mono text-sm">#{{ $ticket->ticket_number }}</span>
@@ -120,7 +99,7 @@
                                 @php
                                     $statusClasses = [
                                         'received' => 'badge-info',
-                                        'gso_review' => 'badge-secondary',
+                                        'gso_review' => 'badge-info',
                                         'for_rescheduling' => 'badge-warning',
                                         'rescheduled' => 'badge-success',
                                         'needs_revision' => 'badge-warning',
@@ -130,7 +109,7 @@
                                     ];
                                 @endphp
                                 <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}" />
+                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} flex-wrap text-center h-auto leading-tight px-3 py-1" />
                             </td>
                             <td>
                                 <div>{{ $ticket->created_at?->format('M d, Y') ?? 'N/A' }}</div>
@@ -141,20 +120,20 @@
                             <td onclick="event.stopPropagation()">
                                 <div class="flex gap-1 justify-center">
                                     <button wire:click="approveTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-success btn-circle" data-tip="Approve"
+                                        class="btn btn-sm btn-success btn-circle tooltip tooltip-top" data-tip="Approve"
                                         onclick="event.stopPropagation()">
                                         <x-mary-icon name="o-check" class="w-4 h-4" />
                                     </button>
 
                                     <button wire:click="rejectTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-error btn-circle" data-tip="Reject"
+                                        class="btn btn-sm btn-error btn-circle tooltip tooltip-top" data-tip="Reject"
                                         onclick="event.stopPropagation()">
                                         <x-mary-icon name="o-x-mark" class="w-4 h-4" />
                                     </button>
 
                                     <button wire:click="rescheduleTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-warning btn-circle" data-tip="Reschedule"
-                                        onclick="event.stopPropagation()">
+                                        class="btn btn-sm btn-warning btn-circle tooltip tooltip-top"
+                                        data-tip="Reschedule" onclick="event.stopPropagation()">
                                         <x-mary-icon name="o-calendar" class="w-4 h-4" />
                                     </button>
                                 </div>

@@ -45,8 +45,7 @@ class Reports extends Component
             'exportFormat' => 'required|in:pdf,excel,csv',
         ]);
 
-        // Logic to generate and download report
-        session()->flash('message', 'Report generated successfully!');
+        return $this->export();
     }
 
     public function clearFilters()
@@ -131,5 +130,105 @@ class Reports extends Component
             default:
                 return collect();
         }
+    }
+
+    protected function export()
+    {
+        $data = $this->reportData;
+
+        // Excel fallback to CSV to avoid extra package dependency
+        if ($this->exportFormat === 'excel') {
+            $this->exportFormat = 'csv';
+        }
+
+        if ($this->exportFormat === 'csv') {
+            return $this->exportCsv($data);
+        }
+
+        if ($this->exportFormat === 'pdf') {
+            return $this->exportPdf($data);
+        }
+
+        abort(400, 'Unsupported export format.');
+    }
+
+    protected function exportCsv($data)
+    {
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.csv';
+
+        return response()->streamDownload(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+
+            // Header
+            fputcsv($handle, ['OSA Reports']);
+            fputcsv($handle, ['Report Type', ucfirst(str_replace('_', ' ', $this->reportType))]);
+            fputcsv($handle, ['Date Range', $this->dateFrom, $this->dateTo]);
+            if ($this->organizationFilter) {
+                fputcsv($handle, ['Organization Filter', (string) $this->organizationFilter]);
+            }
+            fputcsv($handle, []);
+
+            switch ($this->reportType) {
+                case 'approved_events':
+                case 'rejected_events':
+                    fputcsv($handle, ['Ticket #', 'Title', 'Organization', 'Event Type', 'Status', 'Created At', 'Updated At']);
+                    foreach ($data as $ticket) {
+                        fputcsv($handle, [
+                            $ticket->ticket_number,
+                            $ticket->title,
+                            optional($ticket->user->studentOrganization)->org_name ?? 'N/A',
+                            optional($ticket->eventType)->type_name ?? 'N/A',
+                            $ticket->status,
+                            optional($ticket->created_at)?->format('Y-m-d H:i'),
+                            optional($ticket->updated_at)?->format('Y-m-d H:i'),
+                        ]);
+                    }
+                    break;
+
+                case 'org_participation':
+                    fputcsv($handle, ['Organization', 'Tickets Count']);
+                    foreach ($data as $org) {
+                        fputcsv($handle, [
+                            $org->org_name,
+                            $org->tickets_count,
+                        ]);
+                    }
+                    break;
+
+                case 'monthly_summary':
+                    fputcsv($handle, ['Metric', 'Value']);
+                    fputcsv($handle, ['Total Tickets', $data['total_tickets']]);
+                    fputcsv($handle, ['Approved', $data['approved_tickets']]);
+                    fputcsv($handle, ['Rejected', $data['rejected_tickets']]);
+                    fputcsv($handle, ['Pending', $data['pending_tickets']]);
+                    break;
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    protected function exportPdf($data)
+    {
+        if (! class_exists('Barryvdh\\DomPDF\\Facade\\Pdf')) {
+            throw new \RuntimeException('PDF export requires the barryvdh/laravel-dompdf package.');
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.osa.summary-pdf', [
+            'reportType' => $this->reportType,
+            'data' => $data,
+            'dateFrom' => $this->dateFrom,
+            'dateTo' => $this->dateTo,
+            'organizationFilter' => $this->organizationFilter,
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.pdf';
+
+        return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

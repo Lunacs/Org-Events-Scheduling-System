@@ -2,23 +2,29 @@
 
 namespace App\Livewire\Osa;
 
-use Livewire\Component;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 class Notifications extends Component
 {
     #[Title('Notifications - OSA Admin')]
     #[Layout('components.layouts.app')]
-
     public $search = '';
+
     public $typeFilter = '';
+
     public $statusFilter = '';
+
     public $notifications = [];
+
     public $unreadCount = 0;
+
     public $totalCount = 0;
+
     public $todayCount = 0;
+
     public $weekCount = 0;
 
     public function mount()
@@ -29,24 +35,35 @@ class Notifications extends Component
     public function loadNotifications()
     {
         $user = auth()->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return;
         }
 
         // Build query
         $query = $user->notifications()->latest();
 
-        // Apply search filter
+        // Apply search filter - search in JSON data fields
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('data', 'like', '%' . $this->search . '%');
+            $searchTerm = $this->search;
+            $query->where(function ($q) use ($searchTerm) {
+                // Search in title, message, ticket_number from JSON data
+                $q->whereRaw('JSON_EXTRACT(data, "$.title") LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('JSON_EXTRACT(data, "$.message") LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('JSON_EXTRACT(data, "$.ticket_number") LIKE ?', ["%{$searchTerm}%"]);
             });
         }
 
-        // Apply type filter
+        // Apply type filter - search in JSON type field
+        // Notification types are like 'ticket_status_approved', 'ticket_status_rejected', etc.
         if ($this->typeFilter) {
-            $query->where('data', 'like', '%"type":"' . $this->typeFilter . '"%');
+            if ($this->typeFilter === 'ticket_status') {
+                // Filter for all ticket status notifications
+                $query->whereRaw('JSON_EXTRACT(data, "$.type") LIKE ?', ['ticket_status_%']);
+            } else {
+                // Exact match for other types
+                $query->whereRaw('JSON_EXTRACT(data, "$.type") = ?', [$this->typeFilter]);
+            }
         }
 
         // Apply status filter
@@ -55,6 +72,8 @@ class Notifications extends Component
         } elseif ($this->statusFilter === 'read') {
             $query->whereNotNull('read_at');
         }
+        // Note: Archived filter removed as Laravel notifications table doesn't have archived status
+        // If archived functionality is needed, consider adding a deleted_at column or a separate field
 
         // Get notifications
         $this->notifications = $query->get();
@@ -62,12 +81,12 @@ class Notifications extends Component
         // Get counts
         $this->unreadCount = $user->unreadNotifications()->count();
         $this->totalCount = $user->notifications()->count();
-        
+
         // Count today's notifications
         $this->todayCount = $user->notifications()
             ->whereDate('created_at', today())
             ->count();
-        
+
         // Count this week's notifications
         $this->weekCount = $user->notifications()
             ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
@@ -78,7 +97,7 @@ class Notifications extends Component
     {
         $user = auth()->user();
         $notification = $user->notifications()->find($notificationId);
-        
+
         if ($notification) {
             $notification->markAsRead();
             $this->loadNotifications();
@@ -138,4 +157,3 @@ class Notifications extends Component
         return view('livewire.osa.notifications');
     }
 }
-

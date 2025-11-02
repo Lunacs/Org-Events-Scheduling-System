@@ -2,9 +2,9 @@
     use Illuminate\Support\Carbon;
 @endphp
 
-<div wire:poll.5s="loadNotifications">
+<div>
     <!-- Notifications Dropdown -->
-    <div class="dropdown dropdown-end">
+    <div class="dropdown dropdown-end" x-data="{ open: false }" x-on:click="open = !open">
         <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle relative tooltip tooltip-bottom"
             data-tip="Notifications">
             <x-heroicon-s-bell class="h-5 w-5" />
@@ -12,18 +12,23 @@
                 <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
             @endif
         </div>
-        <ul tabindex="0"
-            class="dropdown-content z-1 menu p-2 shadow-lg bg-base-100 rounded-box w-80 border border-base-300 mt-2 max-h-[400px] overflow-y-auto">
+        <ul tabindex="0" wire:poll.visible.30s="loadNotifications"
+            class="dropdown-content z-1 menu p-0 shadow-lg bg-base-100 rounded-box w-80 border border-base-300 mt-2 max-h-[400px] overflow-y-auto">
             {{-- Notifications Header --}}
-            <li class="menu-title px-4 py-3 bg-base-200 rounded-t-box -mx-2 -mt-2 mb-2 sticky top-0 z-10">
+            <li class="px-4 py-3 bg-base-200 rounded-t-box sticky top-0 z-10 pointer-events-none">
                 <div class="flex items-center justify-between">
                     <h4 class="font-bold text-base text-base-content">Notifications</h4>
-                    @if ($unreadCount > 0)
-                        <span class="badge badge-error badge-sm">{{ $unreadCount }}</span>
-                    @endif
+                    <div class="flex items-center gap-2">
+                        @if ($unreadCount > 0)
+                            <span class="badge badge-error badge-sm">{{ $unreadCount }}</span>
+                        @endif
+                        <button wire:click="loadNotifications" class="btn btn-xs btn-ghost" title="Refresh">
+                            <x-heroicon-s-arrow-path class="h-3 w-3" />
+                        </button>
+                    </div>
                 </div>
                 @if ($unreadCount > 0)
-                    <button wire:click="markAllAsRead" class="btn btn-xs btn-ghost mt-2">
+                    <button wire:click="markAllAsRead" class="btn btn-xs btn-ghost mt-2 pointer-events-auto">
                         Mark all as read
                     </button>
                 @endif

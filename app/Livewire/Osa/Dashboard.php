@@ -19,14 +19,14 @@ class Dashboard extends Component
     #[Layout('components.layouts.app')]
 
     // Cache duration in minutes
-    protected $cacheDuration = 5;
+    protected $cacheDuration = 10;
 
     public function render()
     {
         return view('livewire.osa.dashboard');
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 600)]
     public function stats(): array
     {
         return Cache::remember('osa_dashboard_stats', $this->cacheDuration, function () {
@@ -45,7 +45,7 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 600)]
     public function recentTickets(): array
     {
         return Cache::remember('osa_dashboard_recent_tickets', $this->cacheDuration, function () {
@@ -73,7 +73,7 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 600)]
     public function pendingApprovals(): array
     {
         return Cache::remember('osa_dashboard_pending_approvals', $this->cacheDuration, function () {
@@ -99,7 +99,7 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 600)]
     public function upcomingEvents(): array
     {
         return Cache::remember('osa_dashboard_upcoming_events', $this->cacheDuration, function () {

@@ -30,7 +30,7 @@
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="superadmin-drawer" collapsible
+            <x-slot:sidebar drawer="main-drawer"
                 class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl lg:pl-10">
 
                 {{-- BRAND --}}
