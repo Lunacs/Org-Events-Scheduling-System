@@ -141,7 +141,12 @@ class MyTicket extends Component
                 });
             })
             ->when($this->statusFilter, function ($query) {
-                $query->where('status', $this->statusFilter);
+                if ($this->statusFilter === 'under_review') {
+                    // Show tickets with received, amended, or rescheduled status
+                    $query->whereIn('status', ['received', 'amended', 'rescheduled']);
+                } else {
+                    $query->where('status', $this->statusFilter);
+                }
             })
             ->orderBy('created_at', 'desc');
 
@@ -150,4 +155,5 @@ class MyTicket extends Component
             'tickets' => $ticketsQuery->paginate(10),
         ]);
     }
+
 }

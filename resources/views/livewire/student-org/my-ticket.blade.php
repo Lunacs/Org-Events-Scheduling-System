@@ -28,9 +28,7 @@
                     <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
                         ['id' => 'draft', 'name' => 'Draft'],
-                        ['id' => 'received', 'name' => 'Under Review'],
-                        ['id' => 'pending_osa', 'name' => 'Pending OSA Approval'],
-                        ['id' => 'pending_gso', 'name' => 'Pending GSO Approval'],
+                        ['id' => 'under_review', 'name' => 'Under Review'],
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'rejected', 'name' => 'Rejected'],
                         ['id' => 'needs_revision', 'name' => 'Requires Revision'],

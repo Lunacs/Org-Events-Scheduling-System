@@ -97,41 +97,43 @@
                     </x-mary-card>
 
                     {{-- New Schedule Details --}}
-                    <x-mary-card title="New Schedule Details" subtitle="Provide your preferred new schedule">
-                        <div class="space-y-4">
-                            @if ($changeDate)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-mary-datetime label="New Start Date & Time" wire:model="newStartDateTime"
-                                                     required/>
+                    @if($changeDate || $changeTime || $changeVenue)
+                        <x-mary-card title="New Schedule Details" subtitle="Provide your preferred new schedule">
+                            <div class="space-y-4">
+                                @if ($changeDate)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <x-mary-datetime label="New Start Date" wire:model.live="newStartDate"
+                                                         required/>
 
-                                    <x-mary-datetime label="New End Date & Time" wire:model="newEndDateTime" required/>
-                                </div>
-                            @endif
+                                        <x-mary-datetime label="New End Date" wire:model.live="newEndDate" required/>
+                                    </div>
+                                @endif
 
-                            @if ($changeTime && !$changeDate)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-mary-input label="New Start Time" type="time" wire:model="newStartTime"
-                                                  required/>
+                                @if ($changeTime)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <x-mary-input label="New Start Time" type="time" wire:model.live="newStartTime"
+                                                      required/>
 
-                                    <x-mary-input label="New End Time" type="time" wire:model="newEndTime"
-                                                  required/>
-                                </div>
-                            @endif
+                                        <x-mary-input label="New End Time" type="time" wire:model.live="newEndTime"
+                                                      required/>
+                                    </div>
+                                @endif
 
-                            @if ($changeVenue)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-mary-input label="New Preferred Venue" wire:model="newVenue"
-                                                  placeholder="e.g., University Auditorium" required/>
+                                @if ($changeVenue)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <x-mary-input label="New Preferred Venue" wire:model.live="newVenue"
+                                                      placeholder="e.g., University Auditorium" required/>
 
-                                    <x-mary-input label="Alternative Venue" wire:model="alternativeVenue"
-                                                  placeholder="Backup venue option"/>
-                                </div>
-                            @endif
-                        </div>
-                    </x-mary-card>
+                                        <x-mary-input label="Alternative Venue" wire:model.live="alternativeVenue"
+                                                      placeholder="Backup venue option"/>
+                                    </div>
+                                @endif
+                            </div>
+                        </x-mary-card>
+                    @endif
 
                     {{-- Reason for Reschedule --}}
-                    <x-mary-card title="Reason for Reschedule" subtitle="Please provide a detailed explanation">
+                    {{--<x-mary-card title="Reason for Reschedule" subtitle="Please provide a detailed explanation">
                         <div class="space-y-4">
                             <x-mary-select label="Primary Reason" wire:model="rescheduleReason" :options="[
                                 ['id' => 'venue_conflict', 'name' => 'Venue Conflict/Unavailability'],
@@ -155,7 +157,7 @@
                                              placeholder="Describe how this reschedule might affect participants, logistics, or other stakeholders."
                                              rows="3"/>
                         </div>
-                    </x-mary-card>
+                    </x-mary-card>  --}}
 
                     {{-- Supporting Documents --}}
                     <x-mary-card title="Supporting Documents"
@@ -177,49 +179,26 @@
                                 </div>
                             </div>
 
-                            <x-mary-file wire:model="supportingDocuments" multiple
-                                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                         hint="Upload supporting documents (PDF, DOC, JPG, PNG). Max 5MB per file."/>
-                        </div>
-                    </x-mary-card>
+                            <x-mary-file
+                                wire:model="supportingDocuments"
+                                multiple
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
+                                hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file."/>
 
-                    {{-- Contact Information --}}
-                    <x-mary-card title="Contact Information" subtitle="How can we reach you regarding this request?">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input label="Primary Contact Person" wire:model="contactPerson"
-                                          placeholder="Name of person to contact" required/>
-
-                            <x-mary-input label="Contact Email" type="email" wire:model="contactEmail"
-                                          placeholder="email@example.com" required/>
-
-                            <x-mary-input label="Contact Phone" wire:model="contactPhone" placeholder="09XX XXX XXXX"
-                                          required/>
-
-                            <x-mary-select label="Preferred Contact Method" wire:model="preferredContact"
-                                           :options="[
-                                    ['id' => 'email', 'name' => 'Email'],
-                                    ['id' => 'phone', 'name' => 'Phone'],
-                                    ['id' => 'both', 'name' => 'Both Email and Phone'],
-                                ]" required/>
-                        </div>
-                    </x-mary-card>
-
-                    {{-- Urgency Level --}}
-                    <x-mary-card title="Urgency Level" subtitle="How urgent is this reschedule request?">
-                        <div class="space-y-4">
-                            <x-mary-radio label="Normal - Standard processing time (5-7 business days)"
-                                          wire:model="urgencyLevel" value="normal"/>
-
-                            <x-mary-radio label="Urgent - Expedited processing needed (2-3 business days)"
-                                          wire:model="urgencyLevel" value="urgent"/>
-
-                            <x-mary-radio label="Emergency - Immediate attention required (within 24 hours)"
-                                          wire:model="urgencyLevel" value="emergency"/>
-
-                            @if ($urgencyLevel === 'urgent' || $urgencyLevel === 'emergency')
-                                <x-mary-textarea label="Justification for Urgency" wire:model="urgencyJustification"
-                                                 placeholder="Please explain why this request requires urgent or emergency processing."
-                                                 rows="3" required/>
+                            @if($supportingDocuments)
+                                <div class="mt-4 space-y-2">
+                                    <p class="text-sm font-medium">Attached Files:</p>
+                                    @foreach($supportingDocuments as $index => $file)
+                                        <div class="flex items-center justify-between bg-base-200 p-2 rounded">
+                                            <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
+                                            <x-mary-button
+                                                icon="o-x-mark"
+                                                wire:click="removeAttachment({{ $index }})"
+                                                class="btn-ghost btn-sm"
+                                                spinner/>
+                                        </div>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                     </x-mary-card>
@@ -246,21 +225,22 @@
 
                     {{-- Form Actions --}}
                     <div class="flex justify-between items-center pt-6">
-                        <x-mary-button label="Save as Draft" icon="s-document" class="btn-secondary"
-                                       wire:click="saveDraft"/>
+                        {{--                        <x-mary-button label="Save as Draft" icon="s-document" class="btn-secondary"--}}
+                        {{--                                       wire:click="saveDraft"/>--}}
 
-                        <div class="space-x-3">
-                            <x-mary-button label="Preview Request" icon="s-eye" class="btn-accent"/>
 
-                            <x-mary-button label="Submit Reschedule Request" icon="s-paper-airplane"
-                                           class="btn-primary" type="submit"/>
-                        </div>
+                        <x-mary-button label="Preview Request" icon="s-eye" class="btn-accent"
+                                       wire:click="openPreviewModal"/>
+
+                        <x-mary-button label="Submit Reschedule Request" icon="s-paper-airplane"
+                                       class="btn-primary" type="submit"/>
+
                     </div>
                 </x-mary-form>
             @endif
 
             {{-- Recent Reschedule Requests --}}
-            <x-mary-card title="Recent Reschedule Requests" subtitle="Your previous reschedule request history">
+            {{-- <x-mary-card title="Recent Reschedule Requests" subtitle="Your previous reschedule request history">
                 <div class="space-y-4">
                     <div class="flex items-start space-x-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
                         <div class="flex-shrink-0">
@@ -304,7 +284,24 @@
                 <div class="mt-4 text-center">
                     <x-mary-button label="View All Reschedule History" icon="s-clock" class="btn-sm btn-ghost"/>
                 </div>
-            </x-mary-card>
+            </x-mary-card> --}}
         </div>
     </div>
+
+    <x-mary-modal
+        wire:model="showPreviewModal"
+        title="Ticket Preview"
+        class="backdrop-blur"
+        box-class="max-w-5xl max-h-[85vh] overflow-y-auto"
+        @close="$wire.closePreviewModal()">
+
+        @if($this->previewTicket)
+            <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+        @else
+            <div class="text-center py-8">
+                <x-mary-icon name="o-exclamation-circle" class="w-12 h-12 text-warning mx-auto mb-3"/>
+                <p class="text-base-content/70">No ticket selected for preview</p>
+            </div>
+        @endif
+    </x-mary-modal>
 </div>

@@ -102,39 +102,49 @@
             <x-mary-card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
                 <x-slot:menu>
                     <x-mary-button label="View All" link="/student-org/notifications" icon="s-bell"
-                        class="btn-sm btn-ghost" wire:navigate />
+                                   class="btn-sm btn-ghost" wire:navigate />
                 </x-slot:menu>
 
                 <div class="space-y-3">
-                    <div class="flex items-start space-x-3 p-3 bg-success/10 rounded-lg border-l-4 border-success">
-                        <x-mary-icon name="s-check-circle" class="w-5 h-5 text-success mt-0.5" />
-                        <div>
-                            <p class="font-medium">Event Approved: Fundraising Event</p>
-                            <p class="text-sm text-gray-600">Your event request has been approved by OSA. You can now
-                                proceed with preparations.</p>
-                            <p class="text-xs text-gray-500 mt-1">2 hours ago</p>
-                        </div>
-                    </div>
+                    @forelse($recentNotifications as $notification)
+                        @php
+                            $data = $notification->data;
+                            $createdAt = \Illuminate\Support\Carbon::parse($notification->created_at);
+                            $timeAgo = $createdAt->diffForHumans();
 
-                    <div class="flex items-start space-x-3 p-3 bg-warning/10 rounded-lg border-l-4 border-warning">
-                        <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
-                        <div>
-                            <p class="font-medium">Additional Requirements Needed</p>
-                            <p class="text-sm text-gray-600">Your Workshop Series request needs additional
-                                documentation. Please check your tickets.</p>
-                            <p class="text-xs text-gray-500 mt-1">1 day ago</p>
-                        </div>
-                    </div>
+                            $colorMap = [
+                                'primary' => 'primary',
+                                'success' => 'success',
+                                'error' => 'error',
+                                'warning' => 'warning',
+                                'info' => 'info',
+                                'secondary' => 'secondary',
+                            ];
+                            $color = $colorMap[$data['color'] ?? 'info'] ?? 'info';
 
-                    <div class="flex items-start space-x-3 p-3 bg-info/10 rounded-lg border-l-4 border-info">
-                        <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
-                        <div>
-                            <p class="font-medium">Reminder: Event Guidelines</p>
-                            <p class="text-sm text-gray-600">Please review the updated event guidelines before your
-                                next submission.</p>
-                            <p class="text-xs text-gray-500 mt-1">3 days ago</p>
+                            $iconMap = [
+                                'success' => 's-check-circle',
+                                'warning' => 's-exclamation-triangle',
+                                'error' => 's-x-circle',
+                                'info' => 's-information-circle',
+                            ];
+                            $icon = $iconMap[$color] ?? 's-bell';
+                        @endphp
+
+                        <div class="flex items-start space-x-3 p-3 bg-{{ $color }}/10 rounded-lg border-l-4 border-{{ $color }}">
+                            <x-mary-icon :name="$icon" class="w-5 h-5 text-{{ $color }} mt-0.5" />
+                            <div class="flex-1">
+                                <p class="font-medium">{{ $data['title'] ?? 'Notification' }}</p>
+                                <p class="text-sm text-gray-600">{{ $data['message'] ?? 'No message' }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ $timeAgo }}</p>
+                            </div>
                         </div>
-                    </div>
+                    @empty
+                        <div class="text-center py-8">
+                            <x-mary-icon name="s-bell-slash" class="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <p class="text-gray-500 text-sm">No recent notifications</p>
+                        </div>
+                    @endforelse
                 </div>
             </x-mary-card>
         </div>
