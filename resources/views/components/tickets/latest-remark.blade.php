@@ -39,7 +39,13 @@
             <x-mary-icon name="s-exclamation-triangle"
                          class="w-5 h-5 text-orange-500 mt-0.5"/>
             <div class="flex-1">
-                <p class="text-sm font-medium text-orange-700">Revision Required</p>
+                <p class="text-sm font-medium text-orange-700">
+                    @if(strtolower($status) == 'for_rescheduling')
+                        Needs Rescheduling
+                    @else
+                        Revision Required
+                    @endif
+                </p>
                 @if($ticket->latestOsaApproval?->remarks)
                     <p class="text-sm text-orange-600 mt-1">{{ $ticket->latestOsaApproval->remarks }}</p>
                 @else
@@ -49,8 +55,14 @@
                         maximum capacity per session.</p>
                 @endif
                 <p class="text-xs text-orange-500 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
-                <x-mary-button label="Submit Revision" icon="s-arrow-up"
-                               class="btn-sm btn-primary mt-2"/>
+                @if(strtolower($status) == 'for_rescheduling')
+                    <x-mary-button label="Reschedule Event" icon="s-arrow-up"
+                                   class="btn-sm btn-primary mt-2" link="reschedule" wire:navigate/>
+                @else
+                    <x-mary-button label="Submit Revision" icon="s-arrow-up"
+                                   class="btn-sm btn-primary mt-2" @click="$dispatch('open-ticket-edit', { ticketId: {{ $ticket->ticket_id }} })" tooltip="Revise Event"/>
+                @endif
+
             </div>
         </div>
     </div>

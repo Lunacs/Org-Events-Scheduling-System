@@ -15,12 +15,20 @@ class Dashboard extends Component
         $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc');
         $upcomingEvents = auth()->user()->tickets()
             ->where('status', 'approved')
-            ->whereBetween('date_to', [now(), now()->addDays(30)])
+            ->whereBetween('date_from', [now(), now()->addDays(30)])
             ->orderBy('date_from', 'asc')
             ->get();
+
+        // Get recent unread notifications (last 3)
+        $recentNotifications = auth()->user()->unreadNotifications()
+            ->take(3)
+            ->get();
+
         return view('livewire.student-org.dashboard', [
             'tickets' => $tickets->get(),
             'upcomingEvents' => $upcomingEvents,
+            'recentNotifications' => $recentNotifications,
         ]);
     }
+
 }

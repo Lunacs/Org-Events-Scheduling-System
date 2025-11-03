@@ -99,7 +99,8 @@
 
                         <x-mary-datetime label="Event End Date" wire:model.live="eventEndDate" required/>
 
-                        <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time" required/>
+                        <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
+                                         required/>
 
                         <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time" required/>
 
@@ -150,8 +151,6 @@
                             </div>
                         @endif
                     @endif
-
-
                 </x-mary-card>
 
                 {{-- Budget Information --}}
@@ -310,17 +309,13 @@
 
                 {{-- Form Actions --}}
                 <div class="flex justify-between items-center pt-6">
-                    <x-mary-button label="Save as Draft" icon="s-document" class="btn-secondary"
-                                   wire:click="saveDraft"/>
+                    <x-mary-button label="Preview" icon="s-eye" class="btn-accent" wire:click="openPreviewModal"/>
 
-                    <div class="space-x-3">
-                        <x-mary-button label="Preview" icon="s-eye" class="btn-accent" wire:click="openPreviewModal"/>
+                    <x-mary-button label="Submit Ticket" icon="s-paper-airplane" class="btn-primary"
+                                   type="submit"/>
 
-                        <x-mary-button label="Submit Ticket" icon="s-paper-airplane" class="btn-primary"
-                                       type="submit"/>
-                        <x-mary-toast/>
-                    </div>
                 </div>
+                <x-mary-toast/>
             </x-mary-form>
         </div>
     </div>
