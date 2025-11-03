@@ -105,6 +105,14 @@ class Show extends Component
             'remarks' => $this->approvalRemarks,
         ]);
 
+        // Create a copy back to OSA approvals with pending status for tracking
+        OSA_Approval::create([
+            'ticket_id' => $this->ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'pending',
+            'remarks' => 'Ticket approved - pending post-approval review',
+        ]);
+
         // Create Event record
         $event = Event::create([
             'ticket_id' => $this->ticket->ticket_id,
@@ -328,6 +336,14 @@ class Show extends Component
             'user_id' => auth()->id(),
             'decision' => 'approved',
             'remarks' => $this->finalApprovalRemarks,
+        ]);
+
+        // Create a copy back to OSA approvals with pending status for tracking
+        OSA_Approval::create([
+            'ticket_id' => $this->ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'pending',
+            'remarks' => 'Ticket approved after GSO review - pending post-approval review',
         ]);
 
         // Notify ticket owner about status change

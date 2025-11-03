@@ -30,6 +30,9 @@ class Approvals extends Component
     public string $actionType = '';
     public string $confirmationInput = '';
 
+    public bool $showBulkApprovalModal = false;
+    public string $bulkConfirmationInput = '';
+
     protected $listeners = [
         'refreshApprovals' => '$refresh',
     ];
@@ -288,10 +291,73 @@ class Approvals extends Component
         $this->resetValidation();
     }
 
-    public function applyFilters(): void
+    public function updatingSearch()
     {
-        $this->search = trim((string) $this->search);
         $this->selectedRequests = [];
+    }
+
+    public function updatingPriorityFilter()
+    {
+        $this->selectedRequests = [];
+    }
+
+    public function bulkApprove()
+    {
+        if (empty($this->selectedRequests)) {
+            return;
+        }
+
+        $this->bulkConfirmationInput = '';
+        $this->showBulkApprovalModal = true;
+    }
+
+    public function cancelBulkApproval()
+    {
+        $this->showBulkApprovalModal = false;
+        $this->bulkConfirmationInput = '';
+        $this->resetValidation();
+    }
+
+    public function performBulkApproval()
+    {
+        // Validate confirmation input
+        if (strtolower(trim($this->bulkConfirmationInput)) !== 'approve') {
+            $this->addError('bulkConfirmationInput', 'Type "approve" to proceed.');
+            return;
+        }
+
+        $approvedCount = 0;
+        $gsoUser = \Illuminate\Support\Facades\Auth::user();
+
+        foreach ($this->selectedRequests as $approvalId) {
+            $approval = Office_Approval::find($approvalId);
+            
+            if ($approval && $approval->decision === 'pending') {
+                $approval->decision = 'approved';
+                $approval->user_id = $gsoUser->user_id;
+                $approval->updated_at = now();
+                $approval->save();
+
+                // Create a copy back to OSA approvals with pending status
+                \App\Models\OSA_Approval::create([
+                    'ticket_id' => $approval->ticket_id,
+                    'user_id' => $gsoUser->user_id,
+                    'decision' => 'pending',
+                    'remarks' => 'Ticket approved by GSO - awaiting final OSA review',
+                ]);
+
+                $approvedCount++;
+            }
+        }
+
+        $this->selectedRequests = [];
+        $this->showBulkApprovalModal = false;
+        $this->bulkConfirmationInput = '';
+        $this->resetValidation();
+        
+        $this->dispatch('refreshApprovals');
+        
+        session()->flash('message', "{$approvedCount} request(s) approved successfully.");
     }
 
     public function performAction()
@@ -326,6 +392,16 @@ class Approvals extends Component
         $approval->decision = $decision;
         $approval->updated_at = now();
         $approval->save();
+
+        // If approved, create a copy back to OSA approvals with pending status
+        if ($decision === 'approved') {
+            \App\Models\OSA_Approval::create([
+                'ticket_id' => $approval->ticket_id,
+                'user_id' => auth()->id(),
+                'decision' => 'pending',
+                'remarks' => 'Ticket approved by GSO - awaiting final OSA review',
+            ]);
+        }
 
         $this->dispatch('refreshApprovals');
 
