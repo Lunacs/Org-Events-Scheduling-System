@@ -29,7 +29,7 @@
 
             <select wire:model.defer="organizationFilter" class="select select-bordered w-full">
                 <option value="">Organization</option>
-                @foreach (App\Models\Student_Organization::select('org_id', 'org_name')->get() as $org)
+                @foreach ($organizations as $org)
                     <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
                 @endforeach
             </select>
@@ -159,7 +159,7 @@
                                     ];
                                 @endphp
                                 <span
-                                    class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }}">{{ ucfirst($event->ticket->status) }}</span>
+                                    class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
                             </td>
                             <td>
                                 <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>

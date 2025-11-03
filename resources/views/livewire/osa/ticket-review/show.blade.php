@@ -49,7 +49,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ route('osa.ticket-review.index') }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4"/>
+                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                             Back to Tickets
                         </a>
                     </div>
@@ -71,7 +71,7 @@
                         ];
                     @endphp
                     <span
-                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
+                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
                 </div>
             </div>
         </div>
@@ -306,7 +306,7 @@
                     <label class="text-sm font-medium text-base-content/70">IGP Request</label>
                     <p class="text-base-content">
                         @if ($ticket->igp_requested)
-                            <span class="badge badge-success">Requested</span>
+                            <span class="badge badge-success text-white">Requested</span>
                             @if ($ticket->igp_details)
                                 <span
                                     class="block mt-2 bg-base-200 p-3 rounded whitespace-pre-wrap">{{ $ticket->igp_details }}</span>
@@ -336,16 +336,19 @@
                             <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                                 <div class="flex items-center gap-3">
                                     <div>
-                                        <p class="font-medium text-base-content">
-                                            {{ $attachment->file_name }}</p>
+                                        <button type="button" class="link link-neutral font-medium"
+                                            wire:click="previewAttachment({{ $attachment->attachment_id }})">
+                                            {{ $attachment->file_name }}
+                                        </button>
                                         <p class="text-sm text-base-content/70">
-                                            {{ $attachment->file_type ?? 'Unknown type' }}</p>
+                                            {{ $attachment->file_type ? strtoupper($attachment->file_type) : (strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) ?: 'FILE') }}
+                                        </p>
                                     </div>
                                 </div>
-                                <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
-                                    class="btn btn-primary btn-sm">
+                                <button type="button" class="btn btn-primary btn-sm"
+                                    wire:click="downloadAttachment({{ $attachment->attachment_id }})">
                                     Download
-                                </a>
+                                </button>
                             </div>
                         @endforeach
                     </div>
@@ -426,7 +429,7 @@
                             <div>
                                 <label class="text-sm font-medium text-base-content/70">Status</label>
                                 <span
-                                    class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}">{{ ucfirst($schedule->status) }}</span>
+                                    class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }} text-white">{{ ucfirst($schedule->status) }}</span>
                             </div>
                         </div>
                     @else
@@ -507,7 +510,7 @@
                                                 </p>
                                             </div>
                                             <span
-                                                class="badge badge-sm {{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }}">{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}</span>
+                                                class="badge badge-sm {{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}</span>
                                         </div>
 
                                         @if ($approval['remarks'])
@@ -592,7 +595,7 @@
                     </div>
                 @else
                     <div class="alert alert-info">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5" />
                         <span>
                             @if ($ticket->status === 'approved')
                                 This ticket has been <u>approved</u>.
@@ -611,12 +614,16 @@
             </div>
 
             {{-- Comments --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <div class="bg-base-100 rounded-box shadow-lg p-6" x-data="{ isSubmitting: false }" x-init="$nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })"
+                @comment-added.window="
+                    isSubmitting = false;
+                    $nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })
+                ">
                 <h2 class="text-xl font-bold text-base-content mb-4">Comments</h2>
                 @if ($ticket->comments->count() > 0)
-                    <div class="mt-4 space-y-4">
+                    <div class="mt-4 space-y-4" wire:key="comments-list">
                         @foreach ($ticket->comments as $comment)
-                            <div class="chat chat-start">
+                            <div class="chat chat-start" wire:key="comment-{{ $comment->id }}">
                                 <div class="chat-image avatar">
                                     <div class="w-10 rounded-full bg-base-300">
                                         <img data-avatar="{{ $comment->user->avatar_url }}"
@@ -637,10 +644,12 @@
                     </div>
                 @endif
                 <div class="space-y-3 mt-4">
-                    <textarea wire:model="comment" class="textarea textarea-bordered w-full h-4"
-                              placeholder="Add a comment..."></textarea>
-                    <button class="btn btn-primary w-full" wire:click="addComment">
-                        Add Comment
+                    <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
+                        x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
+                    <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
+                        :disabled="isSubmitting" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="addComment">Add Comment</span>
+                        <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
                     </button>
                 </div>
             </div>
@@ -669,11 +678,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showApproval=false">Cancel</button>
-                <button class="btn btn-success" wire:loading :disabled="approvalRemarks.trim().length < 3"
-                    @click="$wire.set('approvalRemarks', approvalRemarks); $wire.approveTicket();">
-                    Confirm Approval
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showApproval=false" />
+                <x-mary-button label="Confirm Approval" class="btn-success" wire:click="approveTicket"
+                    spinner="approveTicket" x-bind:disabled="approvalRemarks.trim().length < 3"
+                    @click="$wire.set('approvalRemarks', approvalRemarks)" />
             </div>
         </div>
     </div>
@@ -701,11 +709,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showRejection=false">Cancel</button>
-                <button class="btn btn-error" wire:loading :disabled="rejectionRemarks.trim().length < 10"
-                    @click="$wire.set('rejectionRemarks', rejectionRemarks); $wire.rejectTicket();">
-                    Confirm Rejection
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showRejection=false" />
+                <x-mary-button label="Confirm Rejection" class="btn-error" wire:click="rejectTicket"
+                    spinner="rejectTicket" x-bind:disabled="rejectionRemarks.trim().length < 10"
+                    @click="$wire.set('rejectionRemarks', rejectionRemarks)" />
             </div>
         </div>
     </div>
@@ -733,11 +740,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showRevision=false">Cancel</button>
-                <button class="btn btn-warning" wire:loading :disabled="revisionRemarks.trim().length < 10"
-                    @click="$wire.set('revisionRemarks', revisionRemarks); $wire.requestRevision();">
-                    Request Revision
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showRevision=false" />
+                <x-mary-button label="Request Revision" class="btn-warning" wire:click="requestRevision"
+                    spinner="requestRevision" x-bind:disabled="revisionRemarks.trim().length < 10"
+                    @click="$wire.set('revisionRemarks', revisionRemarks)" />
             </div>
         </div>
     </div>
@@ -766,11 +772,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showForward=false">Cancel</button>
-                <button class="btn btn-info" wire:loading :disabled="forwardRemarks.trim().length < 3"
-                    @click="$wire.set('forwardRemarks', forwardRemarks); $wire.forwardToGso();">
-                    Forward to GSO
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showForward=false" />
+                <x-mary-button label="Forward to GSO" class="btn-info" wire:click="forwardToGso"
+                    spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
+                    @click="$wire.set('forwardRemarks', forwardRemarks)" />
             </div>
         </div>
     </div>
@@ -797,11 +802,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showFinalApproval=false">Cancel</button>
-                <button class="btn btn-success" wire:loading :disabled="finalApprovalRemarks.trim().length < 3"
-                    @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks); $wire.finalApproval();">
-                    Confirm Final Approval
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false" />
+                <x-mary-button label="Confirm Final Approval" class="btn-success" wire:click="finalApproval"
+                    spinner="finalApproval" x-bind:disabled="finalApprovalRemarks.trim().length < 3"
+                    @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />
             </div>
         </div>
     </div>
@@ -829,11 +833,10 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn" @click="showFinalRejection=false">Cancel</button>
-                <button class="btn btn-error" wire:loading :disabled="finalRejectionRemarks.trim().length < 10"
-                    @click="$wire.set('finalRejectionRemarks', finalRejectionRemarks); $wire.finalRejection();">
-                    Confirm Final Rejection
-                </button>
+                <x-mary-button label="Cancel" class="btn" @click="showFinalRejection=false" />
+                <x-mary-button label="Confirm Final Rejection" class="btn-error" wire:click="finalRejection"
+                    spinner="finalRejection" x-bind:disabled="finalRejectionRemarks.trim().length < 10"
+                    @click="$wire.set('finalRejectionRemarks', finalRejectionRemarks)" />
             </div>
         </div>
     </div>
@@ -872,18 +875,30 @@
             });
 
             Livewire.on('comment-added', () => {
-                // Re-initialize avatars when a new comment is added
-                if (window.AvatarHelper && typeof window.AvatarHelper.initAvatars === 'function') {
-                    setTimeout(() => window.AvatarHelper.initAvatars(), 100);
+                // Dispatch Alpine event for client-side avatar initialization
+                window.dispatchEvent(new CustomEvent('comment-added'));
+            });
+
+            Livewire.on('open-attachment-preview', ({
+                url
+            }) => {
+                if (url) {
+                    window.open(url, '_blank');
                 }
             });
-        });
 
-        // Also listen for Livewire updates to reinitialize avatars
-        document.addEventListener('livewire:updated', () => {
-            if (window.AvatarHelper && typeof window.AvatarHelper.initAvatars === 'function') {
-                window.AvatarHelper.initAvatars();
-            }
+            // Re-initialize avatars when returning from a new tab or refocusing
+            window.addEventListener('pageshow', () => {
+                if (window.AvatarHelper) window.AvatarHelper.initAvatars(true);
+            });
+            window.addEventListener('focus', () => {
+                if (window.AvatarHelper) window.AvatarHelper.initAvatars(false);
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && window.AvatarHelper) {
+                    window.AvatarHelper.initAvatars(false);
+                }
+            });
         });
     </script>
 </div>

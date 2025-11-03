@@ -2,17 +2,26 @@
 
 namespace App\Livewire\Osa\TicketReview;
 
+use App\Models\Event;
+use App\Models\Event_Schedule;
 use App\Models\Office_Approval;
 use App\Models\OSA_Approval;
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\User;
+use App\Notifications\TicketCommentNotification;
+use App\Notifications\TicketForwardedToGsoNotification;
 use App\Notifications\TicketStatusUpdatedNotification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 class Show extends Component
 {
+    use Toast;
+
     #[Title('Ticket Review - OSA Admin')]
     #[Layout('components.layouts.app')]
     public Ticket $ticket;
@@ -34,7 +43,12 @@ class Show extends Component
 
     public function mount($ticketNumber)
     {
-        $this->ticket = Ticket::with([
+        // Optimize: Select only needed columns from tickets table
+        $this->ticket = Ticket::select([
+            'ticket_id', 'ticket_number', 'title', 'description', 'status', 'date_from', 'date_to',
+            'time_from', 'time_to', 'venue_requested', 'participants_count', 'expected_participants',
+            'additional_notes', 'user_id', 'event_type_id', 'fund_source_id', 'created_at', 'updated_at'
+        ])->with([
             'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
             'user.role:role_id,role_name',
             'user.studentOrganization:org_id,org_name,org_code',
@@ -42,7 +56,7 @@ class Show extends Component
             'user.position:position_id,position_name',
             'events:event_id,ticket_id,event__type_id,notes',
             'events.eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue,status',
-            'attachments:attachment_id,ticket_id,file_path,file_name',
+            'attachments:attachment_id,ticket_id,file_path,file_name,file_type',
             'eventType:event_type_id,type_name',
             'fundSource:source_id,source_name',
             'comments:id,ticket_id,user_id,content,created_at',
@@ -92,14 +106,14 @@ class Show extends Component
         ]);
 
         // Create Event record
-        $event = \App\Models\Event::create([
+        $event = Event::create([
             'ticket_id' => $this->ticket->ticket_id,
             'event__type_id' => $this->ticket->event_type_id,
             'notes' => 'Event created from approved ticket',
         ]);
 
         // Create Event Schedule record
-        \App\Models\Event_Schedule::create([
+        Event_Schedule::create([
             'event_id' => $event->event_id,
             'start_date' => $this->ticket->date_from,
             'end_date' => $this->ticket->date_to,
@@ -124,7 +138,7 @@ class Show extends Component
             'type' => 'success',
         ]);
 
-        session()->flash('success', 'Ticket has been approved and event has been created successfully.');
+        $this->success('Ticket has been approved and event has been created successfully.');
         $this->dispatch('ticket-approved');
     }
 
@@ -167,7 +181,17 @@ class Show extends Component
             'remarks' => $this->forwardRemarks,
         ]);
 
-        // Client-side modal closing handled via Alpine.js
+        // Notify all GSO users in the GSO office about the forwarded ticket
+        $gsoUsers = User::where('role_id', User::ROLE_GSO)
+            ->where('office_id', 1)
+            ->get();
+
+        foreach ($gsoUsers as $gsoUser) {
+            $gsoUser->notify(new TicketForwardedToGsoNotification(
+                $this->ticket,
+                $this->forwardRemarks
+            ));
+        }
 
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
@@ -181,11 +205,9 @@ class Show extends Component
             'type' => 'info',
         ]);
 
-        session()->flash('success', 'Ticket has been forwarded to GSO for approval.');
+        $this->success('Ticket has been forwarded to GSO for approval.');
         $this->dispatch('ticket-forwarded');
     }
-
-    // Open/close revision modal removed; handled by Alpine.js
 
     public function requestRevision()
     {
@@ -217,8 +239,6 @@ class Show extends Component
             'remarks' => $this->revisionRemarks,
         ]);
 
-        // Client-side modal closing handled via Alpine.js
-
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
@@ -231,11 +251,9 @@ class Show extends Component
             'type' => 'warning',
         ]);
 
-        session()->flash('info', 'Ticket has been sent back for revision.');
+        $this->warning('Ticket has been sent back for revision.');
         $this->dispatch('ticket-revision-requested');
     }
-
-    // Open/close rejection modal removed; handled by Alpine.js
 
     public function rejectTicket()
     {
@@ -267,8 +285,6 @@ class Show extends Component
             $this->rejectionRemarks
         ));
 
-        // Client-side modal closing handled via Alpine.js
-
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
@@ -281,11 +297,9 @@ class Show extends Component
             'type' => 'error',
         ]);
 
-        session()->flash('error', 'Ticket has been rejected.');
+        $this->error('Ticket has been rejected.');
         $this->dispatch('ticket-rejected');
     }
-
-    // Open/close final approval modal removed; handled by Alpine.js
 
     public function finalApproval()
     {
@@ -321,14 +335,14 @@ class Show extends Component
         ));
 
         // Create Event record
-        $event = \App\Models\Event::create([
+        $event = Event::create([
             'ticket_id' => $this->ticket->ticket_id,
             'event__type_id' => $this->ticket->event_type_id,
             'notes' => 'Event created from approved ticket after GSO review',
         ]);
 
         // Create Event Schedule record
-        \App\Models\Event_Schedule::create([
+        Event_Schedule::create([
             'event_id' => $event->event_id,
             'start_date' => $this->ticket->date_from,
             'end_date' => $this->ticket->date_to,
@@ -338,8 +352,6 @@ class Show extends Component
             'status' => 'approved',
             'remarks' => 'Schedule created from approved ticket after GSO review',
         ]);
-
-        // Client-side modal closing handled via Alpine.js
 
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
@@ -353,11 +365,9 @@ class Show extends Component
             'type' => 'success',
         ]);
 
-        session()->flash('success', 'Ticket has been approved and event has been created successfully.');
+        $this->success('Ticket has been approved and event has been created successfully.');
         $this->dispatch('ticket-final-approved');
     }
-
-    // Open/close final rejection modal removed; handled by Alpine.js
 
     public function finalRejection()
     {
@@ -405,42 +415,149 @@ class Show extends Component
             'type' => 'error',
         ]);
 
-        session()->flash('error', 'Ticket has been rejected after GSO review.');
+        $this->error('Ticket has been rejected after GSO review.');
         $this->dispatch('ticket-final-rejected');
     }
 
     public function addComment()
     {
         if (empty(trim($this->comment))) {
-            session()->flash('warning', 'Please enter a comment.');
+            $this->warning('Please enter a comment.');
 
             return;
         }
 
-        TicketComment::create([
+        // Create comment
+        $newComment = TicketComment::create([
             'ticket_id' => $this->ticket->ticket_id,
             'user_id' => auth()->id(),
             'content' => $this->comment,
         ]);
 
+        // Clear the input
         $this->comment = '';
-        // Load comments with user avatar data for proper rendering
+
+        // Reload only the comments relationship with minimal data
         $this->ticket->load([
             'comments:id,ticket_id,user_id,content,created_at',
             'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
             'comments.user.role:role_id,role_name',
         ]);
 
-        // Dispatch events for instant notifications
-        $this->dispatch('refresh-notifications');
-        $this->dispatch('notification-received', [
-            'title' => 'New Comment Added',
-            'message' => "A new comment has been added to ticket {$this->ticket->ticket_number}.",
-            'type' => 'info',
-        ]);
+        // Notify relevant parties (server-side concern)
+        $this->notifyCommentAdded($newComment);
 
-        session()->flash('success', 'Your comment has been added successfully.');
+        // Simple success message (no heavy notifications)
+        $this->success('Comment added successfully.');
+
+        // Dispatch event for avatar initialization (client-side UI)
         $this->dispatch('comment-added');
+    }
+
+    /**
+     * Notify relevant users when a comment is added
+     * OSA comment → Notify ticket owner (Student Org)
+     * Student Org comment → Notify OSA
+     * If ticket forwarded to GSO → Also notify GSO
+     */
+    private function notifyCommentAdded(TicketComment $comment)
+    {
+        $commenter = auth()->user();
+        $ticketOwner = $this->ticket->user;
+
+        // Don't notify the person who made the comment
+        $usersToNotify = collect();
+
+        // Always notify the ticket owner if they didn't make the comment
+        if ($ticketOwner->user_id !== $commenter->user_id) {
+            $usersToNotify->push($ticketOwner);
+        }
+
+        // If commenter is Student Org, notify OSA users
+        if ($commenter->isStudentOrg()) {
+            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            $usersToNotify = $usersToNotify->merge($osaUsers);
+        }
+
+        // If ticket is in GSO review status, notify GSO users (but only if they didn't comment)
+        // if (in_array($this->ticket->status, ['gso_review', 'pending_osa_approval'])) {
+        //     $gsoUsers = User::where('role_id', User::ROLE_GSO)
+        //         ->where('user_id', '!=', $commenter->user_id)
+        //         ->get();
+        //     $usersToNotify = $usersToNotify->merge($gsoUsers);
+        // }
+
+        // Send DB + broadcast immediately; queue mail separately to avoid UI delay
+        $usersToNotify->unique('user_id')->each(function ($user) use ($comment, $commenter) {
+            // immediate
+            $user->notifyNow(new TicketCommentNotification($this->ticket, $comment, $commenter, ['database', 'broadcast']));
+
+            // queued mail only
+            $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
+        });
+
+        // Dispatch real-time notification event
+        if ($usersToNotify->isNotEmpty()) {
+            $this->dispatch('refresh-notifications');
+        }
+    }
+
+    /**
+     * Generate a temporary URL and open in a new tab for preview.
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, false);
+
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Generate a temporary URL that forces download and redirect to it.
+     */
+    public function downloadAttachment(int $attachmentId)
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return null;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
+
+        return redirect()->away($url);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem. Falls back to public URL if unsupported.
+     */
+    private function makeTemporaryUrl(string $path, string $filename, bool $forceDownload = false): string
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+
+        try {
+            if (method_exists($disk, 'temporaryUrl')) {
+                $options = [
+                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline').'; filename="'.addslashes($filename).'"',
+                ];
+
+                return $disk->temporaryUrl($path, now()->addMinutes(5), $options);
+            }
+        } catch (\Throwable $e) {
+            // Fallback below if temporary URLs are unavailable for the disk
+        }
+
+        return Storage::url($path);
     }
 
     public function render()

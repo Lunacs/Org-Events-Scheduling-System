@@ -38,7 +38,7 @@
             ]"
                 option-value="id" option-label="name" />
 
-            <x-mary-select wire:model.live="organizationFilter" placeholder="Filter by Organization" :options="App\Models\Student_Organization::select('org_id', 'org_name')->get()"
+            <x-mary-select wire:model.live="organizationFilter" placeholder="Filter by Organization" :options="$organizations"
                 option-value="org_id" option-label="org_name" />
 
             <div class="flex gap-2">
@@ -63,7 +63,6 @@
                         <th>Organization</th>
                         <th>Status</th>
                         <th>Date Submitted</th>
-                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,7 +108,7 @@
                                     ];
                                 @endphp
                                 <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} flex-wrap text-center h-auto leading-tight px-3 py-1" />
+                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-md w-[10rem] justify-center truncate" />
                             </td>
                             <td>
                                 <div>{{ $ticket->created_at?->format('M d, Y') ?? 'N/A' }}</div>
@@ -117,31 +116,10 @@
                                     {{ $ticket->created_at?->format('h:i A') ?? '' }}
                                 </div>
                             </td>
-                            <td onclick="event.stopPropagation()">
-                                <div class="flex gap-1 justify-center">
-                                    <button wire:click="approveTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-success btn-circle tooltip tooltip-top" data-tip="Approve"
-                                        onclick="event.stopPropagation()">
-                                        <x-mary-icon name="o-check" class="w-4 h-4" />
-                                    </button>
-
-                                    <button wire:click="rejectTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-error btn-circle tooltip tooltip-top" data-tip="Reject"
-                                        onclick="event.stopPropagation()">
-                                        <x-mary-icon name="o-x-mark" class="w-4 h-4" />
-                                    </button>
-
-                                    <button wire:click="rescheduleTicket({{ $ticket->ticket_id }})"
-                                        class="btn btn-sm btn-warning btn-circle tooltip tooltip-top"
-                                        data-tip="Reschedule" onclick="event.stopPropagation()">
-                                        <x-mary-icon name="o-calendar" class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-8">
+                            <td colspan="5" class="text-center py-8">
                                 <div class="flex flex-col items-center gap-2">
                                     <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
                                     <span class="text-base-content/70">No tickets found</span>

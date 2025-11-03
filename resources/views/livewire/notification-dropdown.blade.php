@@ -13,16 +13,17 @@
             @endif
         </div>
         <ul tabindex="0" wire:poll.visible.30s="loadNotifications"
-            class="dropdown-content z-1 menu p-0 shadow-lg bg-base-100 rounded-box w-80 border border-base-300 mt-2 max-h-[400px] overflow-y-auto">
+            class="dropdown-content z-1 menu p-0 shadow-lg bg-base-100 rounded-box w-80 border border-base-300 mt-2 max-h-[500px] flex flex-col">
             {{-- Notifications Header --}}
-            <li class="px-4 py-3 bg-base-200 rounded-t-box sticky top-0 z-10 pointer-events-none">
-                <div class="flex items-center justify-between">
+            <li class="px-4 py-3 bg-base-200 rounded-t-box sticky top-0 z-10 shrink-0 pointer-events-none">
+                <div class="flex items-center justify-between pointer-events-none">
                     <h4 class="font-bold text-base text-base-content">Notifications</h4>
                     <div class="flex items-center gap-2">
                         @if ($unreadCount > 0)
                             <span class="badge badge-error badge-sm">{{ $unreadCount }}</span>
                         @endif
-                        <button wire:click="loadNotifications" class="btn btn-xs btn-ghost" title="Refresh">
+                        <button wire:click="loadNotifications" class="btn btn-xs btn-ghost cursor-pointer"
+                            title="Refresh">
                             <x-heroicon-s-arrow-path class="h-3 w-3" />
                         </button>
                     </div>
@@ -34,47 +35,49 @@
                 @endif
             </li>
 
-            {{-- Notification Items --}}
-            @forelse($notifications as $notification)
-                @php
-                    $data = $notification->data;
-                    $isUnread = is_null($notification->read_at);
-                    $createdAt = Carbon::parse($notification->created_at);
-                    $timeAgo = $createdAt->diffForHumans();
-                @endphp
+            {{-- Scrollable Notification Items Container --}}
+            <div class="flex-1 overflow-y-auto min-h-0">
+                @forelse($notifications as $notification)
+                    @php
+                        $data = $notification->data;
+                        $isUnread = is_null($notification->read_at);
+                        $createdAt = Carbon::parse($notification->created_at);
+                        $timeAgo = $createdAt->diffForHumans();
+                    @endphp
 
-                <li>
-                    <div wire:click="markAsRead('{{ $notification->id }}')"
-                        class="py-3 px-4 hover:bg-base-200 transition-colors cursor-pointer {{ !$isUnread ? 'opacity-75' : '' }}">
-                        <div class="flex items-start gap-3 w-full">
-                            <div
-                                class="w-2 h-2 {{ $isUnread ? 'bg-' . ($data['color'] ?? 'primary') : 'bg-base-300' }} rounded-full mt-2 shrink-0">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-base-content">{{ $data['title'] ?? 'Notification' }}
-                                </p>
-                                <p class="text-xs text-base-content/60 mt-1">{{ $data['message'] ?? 'No message' }}</p>
-                                <p class="text-xs text-base-content/40 mt-1">{{ $timeAgo }}</p>
+                    <li>
+                        <div wire:click="markAsRead('{{ $notification->id }}')"
+                            class="py-3 px-4 hover:bg-base-200 transition-colors cursor-pointer {{ !$isUnread ? 'opacity-75' : '' }}">
+                            <div class="flex items-start gap-3 w-full">
+                                <div
+                                    class="w-2 h-2 {{ $isUnread ? 'bg-' . ($data['color'] ?? 'primary') : 'bg-base-300' }} rounded-full mt-2 shrink-0">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-base-content">
+                                        {{ $data['title'] ?? 'Notification' }}
+                                    </p>
+                                    <p class="text-xs text-base-content/60 mt-1">{{ $data['message'] ?? 'No message' }}
+                                    </p>
+                                    <p class="text-xs text-base-content/40 mt-1">{{ $timeAgo }}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </li>
+                    </li>
 
-                @if (!$loop->last)
-                    <div class="divider my-0"></div>
-                @endif
-            @empty
-                <li class="px-4 py-8 text-center">
-                    <p class="text-sm text-base-content/60">No notifications</p>
-                </li>
-            @endforelse
+                    @if (!$loop->last)
+                        <div class="divider my-0"></div>
+                    @endif
+                @empty
+                    <li class="px-4 py-8 text-center">
+                        <p class="text-sm text-base-content/60">No notifications</p>
+                    </li>
+                @endforelse
+            </div>
 
-            <div class="divider my-0"></div>
-
-            {{-- View All Link --}}
-            <li>
+            {{-- View All Link - Fixed at Bottom --}}
+            <li class="sticky bottom-0 bg-base-100 rounded-b-box shrink-0 border-t border-base-300">
                 <a href="{{ route('admin.notifications') }}" wire:navigate
-                    class="py-3 px-4 text-center text-primary hover:bg-base-200 transition-colors font-medium">
+                    class="py-3 px-4 text-center text-primary hover:bg-base-200 transition-colors font-medium block">
                     View All Notifications
                 </a>
             </li>

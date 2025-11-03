@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\OSA_Approval;
 use App\Models\Ticket;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -170,11 +171,18 @@ class TicketManagement extends Component
         ]);
     }
 
-    public function render()
+    #[Computed]
+    public function tickets()
     {
-        $tickets = Ticket::select([
-            'ticket_id', 'ticket_number', 'title', 'description', 'status',
-            'created_at', 'user_id', 'event_type_id',
+        return Ticket::select([
+            'ticket_id',
+            'ticket_number',
+            'title',
+            'description',
+            'status',
+            'created_at',
+            'user_id',
+            'event_type_id',
         ])
             ->with([
                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])
@@ -188,8 +196,24 @@ class TicketManagement extends Component
             }))
             ->when($this->dateFilter, fn ($query) => $query->whereDate('created_at', $this->dateFilter))
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->paginate(10); // Increased from 5 to 10 for better UX
+    }
 
-        return view('livewire.osa.ticket-management', compact('tickets'));
+    public function render()
+    {
+        return view('livewire.osa.ticket-management', [
+            'tickets' => $this->tickets,
+            'organizations' => $this->organizations,
+        ]);
+    }
+
+    #[Computed(persist: true, seconds: 3600)]
+    public function organizations()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('osa_organizations_list', 3600, function () {
+            return \App\Models\Student_Organization::select(['org_id', 'org_name'])
+                ->orderBy('org_name')
+                ->get();
+        });
     }
 }

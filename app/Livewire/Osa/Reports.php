@@ -5,6 +5,7 @@ namespace App\Livewire\Osa;
 use App\Models\Student_Organization;
 use App\Models\Ticket;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -71,7 +72,7 @@ class Reports extends Component
             ->get();
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 300)]
     public function reportData()
     {
         if (empty($this->dateFrom) || empty($this->dateTo)) {
@@ -81,55 +82,63 @@ class Reports extends Component
         $dateFrom = Carbon::parse($this->dateFrom);
         $dateTo = Carbon::parse($this->dateTo)->endOfDay();
 
-        switch ($this->reportType) {
-            case 'approved_events':
-                return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                    ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
-                        'events:event_id,ticket_id',
-                        'eventType:event_type_id,type_name',
-                    ])
-                    ->where('status', 'approved')
-                    ->whereBetween('created_at', [$dateFrom, $dateTo])
-                    ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+        $cacheKey = "osa_report_{$this->reportType}_{$this->dateFrom}_{$this->dateTo}_{$this->organizationFilter}";
 
-            case 'rejected_events':
-                return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                    ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
-                        'events:event_id,ticket_id',
-                        'eventType:event_type_id,type_name',
-                    ])
-                    ->where('status', 'rejected')
-                    ->whereBetween('created_at', [$dateFrom, $dateTo])
-                    ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+        return Cache::remember($cacheKey, 600, function () use ($dateFrom, $dateTo) {
+            switch ($this->reportType) {
+                case 'approved_events':
+                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        ->with([
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name'),
+                            'events:event_id,ticket_id',
+                            'eventType:event_type_id,type_name',
+                        ])
+                        ->where('status', 'approved')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo])
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->orderBy('created_at', 'desc')
+                        ->limit(1000) // Add limit for performance
+                        ->get();
 
-            case 'org_participation':
-                return Student_Organization::select(['org_id', 'org_name', 'org_code'])
-                    ->withCount([
-                        'tickets' => fn ($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
-                    ])
-                    ->when($this->organizationFilter, fn ($query) => $query->where('org_id', $this->organizationFilter))
-                    ->orderBy('tickets_count', 'desc')
-                    ->get();
+                case 'rejected_events':
+                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        ->with([
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name'),
+                            'events:event_id,ticket_id',
+                            'eventType:event_type_id,type_name',
+                        ])
+                        ->where('status', 'rejected')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo])
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->orderBy('created_at', 'desc')
+                        ->limit(1000) // Add limit for performance
+                        ->get();
 
-            case 'monthly_summary':
-                return [
-                    'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'rejected_tickets' => Ticket::where('status', 'rejected')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                ];
+                case 'org_participation':
+                    return Student_Organization::select(['org_id', 'org_name', 'org_code'])
+                        ->withCount([
+                            'tickets' => fn($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
+                        ])
+                        ->when($this->organizationFilter, fn($query) => $query->where('org_id', $this->organizationFilter))
+                        ->orderBy('tickets_count', 'desc')
+                        ->limit(100) // Add limit for performance
+                        ->get();
 
-            default:
-                return collect();
-        }
+                case 'monthly_summary':
+                    // Use more efficient counting
+                    return [
+                        'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'rejected_tickets' => Ticket::where('status', 'rejected')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                    ];
+
+                default:
+                    return collect();
+            }
+        });
     }
 
     protected function export()
@@ -154,7 +163,7 @@ class Reports extends Component
 
     protected function exportCsv($data)
     {
-        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.csv';
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');
@@ -225,9 +234,9 @@ class Reports extends Component
             'generatedAt' => now(),
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.pdf';
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
+        return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
             'Content-Type' => 'application/pdf',
         ]);
     }

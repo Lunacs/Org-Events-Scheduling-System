@@ -169,7 +169,7 @@
                                     <td>{{ $ticket->events->first()?->created_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
-                                        <x-mary-badge value="Approved" class="badge-success" />
+                                        <x-mary-badge value="Approved" class="badge-success text-white" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -202,7 +202,7 @@
                                     <td>{{ $ticket->created_at->format('M d, Y') }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
-                                        <x-mary-badge value="Rejected" class="badge-error" />
+                                        <x-mary-badge value="Rejected" class="badge-error text-white" />
                                     </td>
                                 </tr>
                             @endforeach

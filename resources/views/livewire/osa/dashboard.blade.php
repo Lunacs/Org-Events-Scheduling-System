@@ -166,7 +166,7 @@
                             'Rejected' => 'badge-error',
                             'Forwarded' => 'badge-info',
                             default => 'badge-ghost',
-                        }" />
+                        } . ' text-white'" />
                     @endscope
                 </x-mary-table>
 

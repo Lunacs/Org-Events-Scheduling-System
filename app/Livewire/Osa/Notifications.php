@@ -29,10 +29,47 @@ class Notifications extends Component
 
     public function mount()
     {
-        $this->loadNotifications();
+        // Load counts first (lightweight)
+        $this->loadCounts();
+        // Load only recent notifications (limit to 20 for faster initial load)
+        $this->loadNotifications(true);
     }
 
-    public function loadNotifications()
+    public function loadCounts()
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return;
+        }
+
+        // Optimize: Load all counts in a single query with aggregations
+        $counts = \Illuminate\Support\Facades\Cache::remember(
+            "osa_notifications_counts_{$user->user_id}",
+            60, // 1 minute cache
+            function () use ($user) {
+                $today = today();
+                $weekStart = now()->startOfWeek();
+                $weekEnd = now()->endOfWeek();
+
+                $allNotifications = $user->notifications();
+                
+                return [
+                    'unread' => (clone $allNotifications)->whereNull('read_at')->count(),
+                    'total' => $allNotifications->count(),
+                    'today' => (clone $allNotifications)->whereDate('created_at', $today)->count(),
+                    'week' => (clone $allNotifications)->whereBetween('created_at', [$weekStart, $weekEnd])->count(),
+                ];
+            }
+        );
+
+        $this->unreadCount = $counts['unread'] ?? 0;
+        $this->totalCount = $counts['total'] ?? 0;
+        $this->todayCount = $counts['today'] ?? 0;
+        $this->weekCount = $counts['week'] ?? 0;
+    }
+
+    public function loadNotifications($limitOnly = false)
     {
         $user = auth()->user();
 
@@ -72,25 +109,19 @@ class Notifications extends Component
         } elseif ($this->statusFilter === 'read') {
             $query->whereNotNull('read_at');
         }
-        // Note: Archived filter removed as Laravel notifications table doesn't have archived status
-        // If archived functionality is needed, consider adding a deleted_at column or a separate field
+
+        // Limit results for faster initial load
+        if ($limitOnly) {
+            $query->limit(20);
+        }
 
         // Get notifications
         $this->notifications = $query->get();
-
-        // Get counts
-        $this->unreadCount = $user->unreadNotifications()->count();
-        $this->totalCount = $user->notifications()->count();
-
-        // Count today's notifications
-        $this->todayCount = $user->notifications()
-            ->whereDate('created_at', today())
-            ->count();
-
-        // Count this week's notifications
-        $this->weekCount = $user->notifications()
-            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->count();
+        
+        // Reload counts if filters changed (but not on initial mount)
+        if (!$limitOnly) {
+            $this->loadCounts();
+        }
     }
 
     public function markAsRead($notificationId)
@@ -100,6 +131,8 @@ class Notifications extends Component
 
         if ($notification) {
             $notification->markAsRead();
+            // Clear cache to refresh counts
+            \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
             $this->loadNotifications();
         }
     }
@@ -108,6 +141,8 @@ class Notifications extends Component
     {
         $user = auth()->user();
         $user->unreadNotifications->markAsRead();
+        // Clear cache to refresh counts
+        \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
         $this->loadNotifications();
         session()->flash('success', 'All notifications marked as read.');
     }
@@ -128,17 +163,17 @@ class Notifications extends Component
 
     public function updatedSearch()
     {
-        $this->loadNotifications();
+        $this->loadNotifications(false); // Load all when filtering
     }
 
     public function updatedTypeFilter()
     {
-        $this->loadNotifications();
+        $this->loadNotifications(false); // Load all when filtering
     }
 
     public function updatedStatusFilter()
     {
-        $this->loadNotifications();
+        $this->loadNotifications(false); // Load all when filtering
     }
 
     public function loadMore()

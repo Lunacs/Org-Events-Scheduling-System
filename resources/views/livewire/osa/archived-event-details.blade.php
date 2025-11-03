@@ -23,7 +23,7 @@
                         ];
                     @endphp
                     <span
-                        class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }}">{{ ucfirst($event->ticket->status) }}</span>
+                        class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
                 </div>
             </div>
 
@@ -71,7 +71,8 @@
                                                     'revision_requested' => 'badge-warning',
                                                 ][$decision] ?? 'badge-neutral';
                                         @endphp
-                                        <span class="badge badge-sm {{ $dClass }}">{{ ucfirst($decision) }}</span>
+                                        <span
+                                            class="badge badge-sm {{ $dClass }} text-white">{{ ucfirst($decision) }}</span>
                                     </div>
                                     <div>
                                         <span class="font-medium">Date:</span>

@@ -95,32 +95,36 @@ class Archive extends Component
         $this->resetPage();
     }
 
-    public function render()
+    #[Computed(persist: true, seconds: 300)]
+    public function archivedEvents()
     {
-        $archivedEvents = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
+        return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
             ->with([
-                'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
                     ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
+                        'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
+                            ->with('studentOrganization:org_id,org_name')
                     ])
                     ->withCount('attachments'),
                 'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                 'eventType:event_type_id,type_name',
             ])
-            // Count attachments via the nested ticket relation
-            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
-            ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
-            ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
-            ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->yearFilter, fn ($query) => $query->whereYear('created_at', $this->yearFilter))
-            ->when($this->eventTypeFilter, fn ($query) => $query->where('event__type_id', $this->eventTypeFilter))
+            ->whereHas('ticket', fn($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
+            ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
+            ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
+            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(12); // Reduced from 15 to 12
+    }
 
+    public function render()
+    {
         return view('livewire.osa.archive', [
-            'archivedEvents' => $archivedEvents,
+            'archivedEvents' => $this->archivedEvents,
             'availableYears' => $this->availableYears,
+            'organizations' => $this->organizations,
         ]);
     }
 
@@ -132,6 +136,16 @@ class Archive extends Component
                 ->distinct()
                 ->orderBy('year', 'desc')
                 ->pluck('year');
+        });
+    }
+
+    #[Computed(persist: true, seconds: 3600)]
+    public function organizations()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('osa_organizations_list', 3600, function () {
+            return \App\Models\Student_Organization::select(['org_id', 'org_name'])
+                ->orderBy('org_name')
+                ->get();
         });
     }
 }

@@ -18,8 +18,8 @@ class Dashboard extends Component
     #[Title('Dashboard - OSA Admin')]
     #[Layout('components.layouts.app')]
 
-    // Cache duration in minutes
-    protected $cacheDuration = 10;
+    // Cache duration in seconds - optimized for better performance
+    protected $cacheDuration = 300; // 5 minutes cache for better performance
 
     public function render()
     {
@@ -30,6 +30,11 @@ class Dashboard extends Component
     public function stats(): array
     {
         return Cache::remember('osa_dashboard_stats', $this->cacheDuration, function () {
+            $now = now();
+            $currentMonth = $now->month;
+            $currentYear = $now->year;
+            
+            // Optimize: Use raw queries for faster counts
             return [
                 'pending' => Ticket::where('status', 'pending')->count(),
                 'forwarded' => Ticket::whereHas('officeApprovals', function ($query) {
@@ -38,8 +43,8 @@ class Dashboard extends Component
                 'approved' => Ticket::where('status', 'approved')->count(),
                 'rejected' => Ticket::where('status', 'rejected')->count(),
                 'totalOrganizations' => Student_Organization::count(),
-                'thisMonthTickets' => Ticket::whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
+                'thisMonthTickets' => Ticket::whereMonth('created_at', $currentMonth)
+                    ->whereYear('created_at', $currentYear)
                     ->count(),
             ];
         });

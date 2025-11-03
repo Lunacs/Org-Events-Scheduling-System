@@ -3,12 +3,14 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\TicketComment;
-use Livewire\Attributes\Rule;
-use Livewire\Component;
-use Livewire\Attributes\Title;
+use App\Models\User;
+use App\Notifications\TicketCommentNotification;
 use Livewire\Attributes\Layout;
-use Livewire\WithPagination;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Rule;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class MyTicket extends Component
 {
@@ -17,11 +19,17 @@ class MyTicket extends Component
     #[Title('My Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
     public $search = '';
+
     public $statusFilter = '';
+
     public $dateFilter = '';
+
     public $showDetailsModal = false;
+
     public $showCommentsModal = false;
+
     public $showEditDrawer = false;
+
     public $selectedTicketId;
 
     #[Rule('string|max:1000')]
@@ -78,8 +86,9 @@ class MyTicket extends Component
 
     public function getSelectedTicketProperty()
     {
-        if (!$this->selectedTicketId) {
+        if (! $this->selectedTicketId) {
             \Log::info('No ticket ID set');
+
             return null;
         }
 
@@ -90,8 +99,9 @@ class MyTicket extends Component
 
     public function getSelectedTicketCommentsProperty()
     {
-        if (!$this->selectedTicketId) {
+        if (! $this->selectedTicketId) {
             \Log::info('No ticket ID set for comments');
+
             return null;
         }
 
@@ -107,26 +117,70 @@ class MyTicket extends Component
     {
         $this->validate(['comment' => 'required|string|max:1000']);
 
-        if (!$this->selectedTicketId) {
+        if (! $this->selectedTicketId) {
             session()->flash('warning', 'No ticket selected.');
+
             return;
         }
 
         $ticket = auth()->user()->tickets()->find($this->selectedTicketId);
-        if (!$ticket) {
+        if (! $ticket) {
             session()->flash('warning', 'You do not have access to that ticket.');
+
             return;
         }
 
-        $ticket->comments()->create([
+        // Create comment
+        $newComment = $ticket->comments()->create([
             'user_id' => auth()->id(),
             'content' => $this->comment,
         ]);
 
+        $newComment->load('user:user_id,name,role_id,avatar_style,avatar_seed', 'user.role:role_id,role_name');
+
+        // Clear input
         $this->comment = '';
 
-        session()->flash('success', 'Your comment has been added successfully.');
+        // Notify relevant parties
+        $this->notifyCommentAdded($ticket, $newComment);
+
+        session()->flash('success', 'Comment added successfully.');
         $this->dispatch('comment-added');
+    }
+
+    /**
+     * Notify relevant users when student org adds a comment
+     * Student Org comment → Notify OSA (always)
+     * If ticket in GSO review → Also notify GSO
+     */
+    private function notifyCommentAdded($ticket, TicketComment $comment)
+    {
+        $commenter = auth()->user();
+        $usersToNotify = collect();
+
+        // Always notify OSA users when student org comments
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+        $usersToNotify = $usersToNotify->merge($osaUsers);
+
+        // If ticket is in GSO review, also notify GSO users
+        if (in_array($ticket->status, ['gso_review', 'pending_osa_approval'])) {
+            $gsoUsers = User::where('role_id', User::ROLE_GSO)->get();
+            $usersToNotify = $usersToNotify->merge($gsoUsers);
+        }
+
+        // Send DB + broadcast immediately; queue mail separately to avoid UI delay
+        $usersToNotify->unique('user_id')->each(function ($user) use ($ticket, $comment, $commenter) {
+            // immediate
+            $user->notifyNow(new TicketCommentNotification($ticket, $comment, $commenter, ['database', 'broadcast']));
+
+            // queued mail only
+            $user->notify(new TicketCommentNotification($ticket, $comment, $commenter, ['mail']));
+        });
+
+        // Dispatch real-time notification event
+        if ($usersToNotify->isNotEmpty()) {
+            $this->dispatch('refresh-notifications');
+        }
     }
 
     public function render()
@@ -135,9 +189,9 @@ class MyTicket extends Component
         $ticketsQuery = auth()->user()->tickets()->with('eventType')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
-                        ->orWhere('ticket_number', 'like', '%' . $this->search . '%')
-                        ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $q->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('ticket_number', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->statusFilter, function ($query) {

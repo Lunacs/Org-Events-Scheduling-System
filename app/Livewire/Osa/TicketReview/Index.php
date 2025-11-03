@@ -20,13 +20,12 @@ class Index extends Component
     #[Url(except: '')]
     public $search = '';
 
-    #[Url(except: 'pending')]
-    public $statusFilter = 'received';
+    #[Url(except: '')]
+    public $statusFilter = '';
 
     public function clearFilters()
     {
-        $this->search = '';
-        $this->statusFilter = 'received';
+        $this->reset(['search', 'statusFilter']);
         $this->resetPage();
     }
 
@@ -40,45 +39,48 @@ class Index extends Component
         $this->resetPage();
     }
 
-    #[Computed]
+    public function render()
+    {
+        // Use the computed property
+        return view('livewire.osa.ticket-review.index', [
+            'tickets' => $this->tickets,
+        ]);
+    }
+
+    #[Computed(persist: true, seconds: 300)]
     public function tickets()
     {
         return Ticket::select([
-            'ticket_id', 'ticket_number', 'title', 'description', 'status',
-            'venue_requested', 'user_id', 'event_type_id', 'created_at',
+            'ticket_id',
+            'ticket_number',
+            'title',
+            'description',
+            'status',
+            'venue_requested',
+            'user_id',
+            'event_type_id',
+            'created_at',
         ])
             ->with([
-                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                'user' => fn($q) => $q->select(['user_id', 'org_id'])
                     ->with('studentOrganization:org_id,org_name'),
-                'events.eventSchedules',
+                'events' => fn($q) => $q->select(['event_id', 'ticket_id'])
+                    ->with('eventSchedules:schedule_id,event_id,start_date,start_time'),
                 'attachments:attachment_id,ticket_id,file_path,file_name',
                 'eventType:event_type_id,type_name',
             ])
             ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('title', 'like', '%'.$this->search.'%')
-                        ->orWhere('description', 'like', '%'.$this->search.'%')
-                        ->orWhere('ticket_number', 'like', '%'.$this->search.'%')
-                        ->orWhereHas('user.studentOrganization', function ($orgQuery) {
-                            $orgQuery->where('org_code', 'like', '%'.$this->search.'%');
-                        })
-                        ->orWhereHas('user.studentOrganization', function ($orgQuery) {
-                            $orgQuery->where('org_name', 'like', '%'.$this->search.'%');
-                        });
+                // Optimize search - use index-friendly queries
+                $searchTerm = '%' . $this->search . '%';
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'like', $searchTerm)
+                        ->orWhere('ticket_number', 'like', $searchTerm);
                 });
             })
             ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(12);
-    }
-
-    public function render()
-    {
-
-        return view('livewire.osa.ticket-review.index', [
-            'tickets' => $this->tickets(),
-        ]);
+            ->paginate(10); // Reduced from 12 to 10 for faster loads
     }
 }

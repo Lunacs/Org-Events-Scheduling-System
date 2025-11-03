@@ -207,7 +207,18 @@ textarea:focus-visible {
 .alert-error * {
     color: white !important;
 }
+/* Hide number input arrows */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
 /* FullCalendar Custom Styles - Matching DaisyUI Emerald Theme */
 .fc {
     /* Base colors matching DaisyUI */
