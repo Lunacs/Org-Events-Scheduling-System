@@ -69,6 +69,14 @@ class TicketManagement extends Component
             'remarks' => 'Ticket approved from ticket management.',
         ]);
 
+        // Create a copy back to OSA approvals with pending status for tracking
+        OSA_Approval::create([
+            'ticket_id' => $ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'pending',
+            'remarks' => 'Ticket approved - pending post-approval review',
+        ]);
+
         // Notify ticket owner about status change
         $ticket->user->notify(new \App\Notifications\TicketStatusUpdatedNotification(
             $ticket,

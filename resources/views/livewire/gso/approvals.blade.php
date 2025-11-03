@@ -62,6 +62,18 @@
 
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-6 sm:py-12 space-y-6">
 
+    <!-- Success Message -->
+    @if (session('message'))
+        <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-emerald-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+            </div>
+        </div>
+    @endif
+
     <!-- Page Header -->
     <div class="mb-6">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -118,21 +130,22 @@
     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
         <div class="p-6">
             <div class="flex flex-wrap gap-4 items-end">
-                <div class="flex-1 min-w-64">
-                    <x-mary-input wire:model.defer="search" wire:keydown.enter.prevent="applyFilters" label="Search Requests"
-                                  placeholder="Search by event name, organization..." class="input-emerald">
+                <div class="flex-1 min-w-96">
+                    <x-mary-input 
+                        wire:model.live.debounce.300ms="search" 
+                        label="Search Requests"
+                        placeholder="Search by event name, organization, ticket number..." 
+                        class="input-emerald"
+                    >
                         <x-slot:prepend>
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                            <div class="flex items-center justify-center h-full px-3">
+                                <svg class="w-7 h-7 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
                         </x-slot:prepend>
                     </x-mary-input>
-                </div>
-
-                <div>
-                    <x-mary-select wire:model.live="statusFilter" label="Status Filter" :options="$statusOptions"
-                                    option-value="id" option-label="name" class="select-emerald" />
                 </div>
 
                 <div>
@@ -140,8 +153,14 @@
                                     option-value="id" option-label="name" class="select-emerald" />
                 </div>
 
-                <x-mary-button type="button" label="Search" icon="o-magnifying-glass" class="btn-emerald"
-                               wire:click="applyFilters" />
+                <x-mary-button 
+                    type="button" 
+                    label="Bulk Approve" 
+                    icon="o-check-circle" 
+                    class="btn-success"
+                    wire:click="bulkApprove"
+                    :disabled="empty($selectedRequests)"
+                    x-bind:class="{ 'opacity-50 cursor-not-allowed': @js(empty($selectedRequests)) }" />
             </div>
         </div>
     </div>
@@ -152,10 +171,67 @@
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Approval Requests</h3>
                 <div class="flex items-center space-x-4">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="checkbox checkbox-emerald" disabled>
-                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Select All</span>
-                    </label>
+                    @php
+                        $pendingApprovals = collect($approvals)->filter(fn($a) => ($a['status'] ?? '') === 'pending');
+                        $allPendingIds = $pendingApprovals->pluck('id')->all();
+                        $hasPending = !empty($allPendingIds);
+                    @endphp
+                    @if($hasPending)
+                        <label class="flex items-center cursor-pointer" 
+                               x-data="{ 
+                                   selectedIds: @entangle('selectedRequests').live,
+                                   allPendingIds: @js($allPendingIds),
+                                   get isAllChecked() {
+                                       return Array.isArray(this.selectedIds) && 
+                                              this.selectedIds.length === this.allPendingIds.length && 
+                                              this.allPendingIds.length > 0;
+                                   }
+                               }">
+                            <div class="relative inline-flex items-center justify-center">
+                                <input 
+                                    type="checkbox" 
+                                    class="checkbox checkbox-emerald"
+                                    x-bind:checked="isAllChecked"
+                                    x-on:change="
+                                        if ($event.target.checked) {
+                                            $wire.set('selectedRequests', @js($allPendingIds));
+                                        } else {
+                                            $wire.set('selectedRequests', []);
+                                        }
+                                    "
+                                >
+                                <!-- White checkmark overlay when all selected -->
+                                <div 
+                                    x-show="isAllChecked"
+                                    x-transition.opacity.duration.200ms
+                                    class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                >
+                                    <svg 
+                                        class="w-3.5 h-3.5 text-white"
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                        stroke-width="4"
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                Select All Pending ({{ count($allPendingIds) }})
+                            </span>
+                        </label>
+                        @if(count($selectedRequests) > 0)
+                            <span class="text-sm font-medium text-emerald-600">
+                                {{ count($selectedRequests) }} selected
+                            </span>
+                        @endif
+                    @else
+                        <label class="flex items-center opacity-50">
+                            <input type="checkbox" class="checkbox checkbox-emerald" disabled>
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Select All</span>
+                        </label>
+                    @endif
                 </div>
             </div>
 
@@ -174,7 +250,16 @@
 
                             <!-- Approval Info -->
                             <div class="flex items-start space-x-4 flex-1">
-                                <input type="checkbox" class="checkbox checkbox-emerald mt-1" disabled>
+                                @if($statusKey === 'pending')
+                                    <input 
+                                        type="checkbox" 
+                                        class="checkbox checkbox-emerald mt-1" 
+                                        wire:model.live="selectedRequests"
+                                        value="{{ $approval['id'] }}"
+                                    >
+                                @else
+                                    <input type="checkbox" class="checkbox checkbox-emerald mt-1 opacity-30" disabled>
+                                @endif
 
                                 <div class="flex-1">
                                     <div class="flex flex-wrap items-center space-x-3 mb-2">
@@ -324,6 +409,50 @@
                                x-bind:disabled="required ? !(local && local.trim().toLowerCase() === required) : false">
                     Yes, {{ $modalActionLabel }}
                 </x-mary-button>
+        </x-slot:actions>
+    </x-mary-modal>
+
+    <!-- Bulk Approval Modal -->
+    <x-mary-modal wire:model="showBulkApprovalModal" title="Confirm Bulk Approval">
+        <p class="mb-2 text-sm">
+            You are about to approve <strong class="text-emerald-600">{{ count($selectedRequests) }} request(s)</strong>. 
+            This action will approve all selected requests at once.
+        </p>
+
+        <div x-data="{ local: @entangle('bulkConfirmationInput') }" class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type 'approve' to confirm</label>
+            <div class="mt-1 flex items-center space-x-2">
+                <x-mary-input x-model="local" placeholder="approve" class="flex-1 h-9" />
+
+                {{-- Live match indicator (client-side) --}}
+                <div class="w-5 h-5 flex items-center justify-center">
+                    <svg x-show="local && local.trim().toLowerCase() === 'approve'" class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <svg x-show="!(local && local.trim().toLowerCase() === 'approve')" class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+                    </svg>
+                </div>
+            </div>
+
+            @error('bulkConfirmationInput')
+                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <x-slot:actions>
+            <x-mary-button wire:click="cancelBulkApproval" color="secondary">
+                Cancel
+            </x-mary-button>
+
+            <x-mary-button 
+                wire:click="performBulkApproval"
+                wire:loading.attr="disabled"
+                wire:target="performBulkApproval"
+                color="success"
+                x-bind:disabled="!(local && local.trim().toLowerCase() === 'approve')">
+                Yes, Approve All
+            </x-mary-button>
         </x-slot:actions>
     </x-mary-modal>
 </div>
