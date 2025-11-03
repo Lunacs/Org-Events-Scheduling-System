@@ -21,6 +21,8 @@
                 ['label' => 'Proponent', 'value' => $organization['proponent'] ?? '—'],
                 ['label' => 'Position', 'value' => $organization['position'] ?? '—'],
                 ['label' => 'Contact Email', 'value' => $organization['email'] ?? '—', 'span' => 2],
+                ['label' => 'Proponent Contact', 'value' => $organization['proponent_contact'] ?? '—'],
+                ['label' => 'Adviser Contact', 'value' => $organization['adviser_contact'] ?? '—'],
             ];
 
             $eventInfoItems = [
@@ -28,6 +30,7 @@
                 ['label' => 'Event Type', 'value' => $eventDetails['event_type'] ?? '—'],
                 ['label' => 'Date Range', 'value' => $eventDetails['date_range'] ?? '—'],
                 ['label' => 'Time Range', 'value' => $eventDetails['time_range'] ?? '—'],
+                ['label' => 'Off-Campus Activity', 'value' => $eventDetails['off_campus_label'] ?? 'No'],
                 ['label' => 'Primary Venue', 'value' => $eventDetails['venue_requested'] ?? '—'],
                 ['label' => 'Alternative Venue', 'value' => $eventDetails['alternate_venue'] ?? '—'],
                 ['label' => 'Sponsoring Body', 'value' => $eventDetails['sponsoring_body'] ?? '—', 'span' => 2],
@@ -52,6 +55,27 @@
                     'wrapper' => 'bg-emerald-100 dark:bg-emerald-900/40',
                     'valueClass' => 'text-emerald-800 dark:text-emerald-200',
                 ],
+            ];
+
+            $fundingItems = [
+                ['label' => 'Funding Source', 'value' => $financial['fund_source'] ?? '—'],
+                ['label' => 'Estimated Budget', 'value' => $financial['estimated_budget'] ?? '—'],
+                ['label' => 'IGP Request', 'value' => $igp['request_label'] ?? 'Not Requested'],
+            ];
+
+            $hasBudgetBreakdown = $financial['has_breakdown'] ?? false;
+            $budgetBreakdown = $financial['budget_breakdown'] ?? null;
+            $igpDetails = $igp['details'] ?? null;
+            $igpHasDetails = $igp['has_details'] ?? false;
+
+            $showOffCampusCard = $offCampus['has_details'] ?? false;
+            $offCampusItems = [
+                ['label' => 'Accommodation Provider', 'value' => $offCampus['accommodation'] ?? '—'],
+                ['label' => 'Transport Service Provider', 'value' => $offCampus['transport_provider_label'] ?? '—'],
+                ['label' => 'Driver Name', 'value' => $offCampus['driver_name'] ?? '—'],
+                ['label' => 'Driver Contact', 'value' => $offCampus['driver_contact'] ?? '—'],
+                ['label' => 'Vehicle Type', 'value' => $offCampus['vehicle_type'] ?? '—'],
+                ['label' => 'Vehicle Plate Number', 'value' => $offCampus['vehicle_plate'] ?? '—'],
             ];
 
             $scheduleHeaders = [
@@ -133,6 +157,15 @@
                     </p>
                 </div>
 
+                @if (!empty($eventDetails['organizer_notes']))
+                    <div class="space-y-2">
+                        <p class="text-sm text-base-content/60">Organizer Notes</p>
+                        <p class="text-base text-base-content/80 leading-relaxed whitespace-pre-line">
+                            {{ $eventDetails['organizer_notes'] }}
+                        </p>
+                    </div>
+                @endif
+
                 @if (!empty($eventDetails['notes']))
                     <div class="space-y-2">
                         <p class="text-sm text-base-content/60">Additional Notes</p>
@@ -145,6 +178,48 @@
                 @endif
             </div>
         </x-mary-card>
+
+        <x-mary-card title="Budget & Funding" subtitle="Financial plan and income generation">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                @foreach ($fundingItems as $item)
+                    <div class="space-y-1">
+                        <p class="text-sm text-base-content/60">{{ $item['label'] }}</p>
+                        <p class="text-base font-semibold text-base-content">{{ $item['value'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+
+            @if ($hasBudgetBreakdown)
+                <div class="space-y-2 mt-6">
+                    <p class="text-sm text-base-content/60">Budget Breakdown</p>
+                    <p class="text-base text-base-content/80 whitespace-pre-line">{{ $budgetBreakdown }}</p>
+                </div>
+            @endif
+
+            <div class="space-y-2 mt-6">
+                <p class="text-sm text-base-content/60">IGP Details</p>
+                @if ($igpHasDetails)
+                    <p class="text-base text-base-content/80 whitespace-pre-line">{{ $igpDetails }}</p>
+                @else
+                    <span class="text-sm text-base-content/50">
+                        {{ ($igp['requested'] ?? false) ? 'No details provided.' : 'No IGP requested for this event.' }}
+                    </span>
+                @endif
+            </div>
+        </x-mary-card>
+
+        @if ($showOffCampusCard)
+            <x-mary-card title="Off-Campus Logistics" subtitle="Transportation and accommodation details">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    @foreach ($offCampusItems as $item)
+                        <div class="space-y-1">
+                            <p class="text-sm text-base-content/60">{{ $item['label'] }}</p>
+                            <p class="text-base font-semibold text-base-content">{{ $item['value'] ?? '—' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </x-mary-card>
+        @endif
 
         <x-mary-card title="Participants & Requirements" subtitle="Headcount and logistical needs">
             <div class="space-y-6 text-sm">
@@ -277,16 +352,127 @@
             </div>
         </x-mary-card>
 
-        <x-mary-card title="Actions" subtitle="Decide on this ticket once you've reviewed all sections">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <p class="text-sm text-base-content/60">
-                    These actions are read-only placeholders. Accept or reject functionality will be added later.
-                </p>
-                <div class="flex flex-wrap gap-3">
-                    <x-mary-button label="Reject" icon="s-x-mark" class="btn-error btn-outline" />
-                    <x-mary-button label="Accept" icon="s-check" class="btn-success" />
+        @php
+            $status = $overview['status'] ?? 'pending';
+            $showActions = !in_array($status, ['approved', 'rejected'], true);
+            $actionTargetId = $actionApprovalId ?? null;
+            $actionsEnabled = $showActions && $actionTargetId !== null;
+        @endphp
+
+        @if ($actionsEnabled)
+            <x-mary-card title="Actions" subtitle="Decide on this ticket once you've reviewed all sections">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <p class="text-sm text-base-content/60">
+                        Confirm your decision for this office review below. Once approved or rejected, the ticket status will update automatically.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <x-mary-button label="Reject" icon="s-x-mark" class="btn-error btn-outline"
+                            wire:click="openActionModal('reject')" />
+                        <x-mary-button label="Accept" icon="s-check" class="btn-success"
+                            wire:click="openActionModal('approve')" />
+                    </div>
                 </div>
-            </div>
-        </x-mary-card>
+            </x-mary-card>
+        @endif
+
+        @php
+            $currentActionType = $this->actionType ?? null;
+            $modalRequiredWord = match ($currentActionType) {
+                'approve' => 'approve',
+                'reject' => 'reject',
+                default => null,
+            };
+            $modalActionLabel = $currentActionType ? ucfirst($currentActionType) : 'Action';
+        @endphp
+
+    <x-mary-modal wire:model="showActionModal" title="Confirm {{ $modalActionLabel }}">
+        <div x-data="{
+                confirmationInput: @entangle('confirmationInput').live,
+                currentAction: @entangle('actionType').live,
+                requiredWord() {
+                    if (this.currentAction === 'approve') {
+                        return 'approve';
+                    }
+
+                    if (this.currentAction === 'reject') {
+                        return 'reject';
+                    }
+
+                    return null;
+                },
+                matchesRequired() {
+                    const required = this.requiredWord();
+
+                    if (! required) {
+                        return true;
+                    }
+
+                    if (! this.confirmationInput) {
+                        return false;
+                    }
+
+                    return this.confirmationInput.trim().toLowerCase() === required;
+                },
+                confirmButtonClasses() {
+                    if (! this.matchesRequired()) {
+                        return 'btn-neutral btn-disabled opacity-60 cursor-not-allowed';
+                    }
+
+                    if (this.currentAction === 'approve') {
+                        return 'btn-success';
+                    }
+
+                    if (this.currentAction === 'reject') {
+                        return 'btn-error';
+                    }
+
+                    return 'btn-secondary';
+                }
+            }">
+            <p class="mb-2 text-sm text-base-content/80">
+                Are you sure you want to {{ strtolower($modalActionLabel) }} this ticket for your office?
+            </p>
+
+            @if ($modalRequiredWord)
+                <div class="mt-2 space-y-2">
+                    <label class="block text-sm font-medium text-base-content/80">Type '{{ $modalRequiredWord }}' to confirm</label>
+                    <div class="flex items-center gap-2 w-full">
+                        <div class="flex-1">
+                            <x-mary-input x-model="confirmationInput" placeholder="{{ $modalRequiredWord }}" class="w-full h-10" />
+                        </div>
+                        <div class="w-5 h-5 flex items-center justify-center">
+                            <svg x-cloak x-show="requiredWord() && matchesRequired()" class="w-4 h-4 text-emerald-500"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <svg x-cloak x-show="requiredWord() && !matchesRequired()" class="w-4 h-4 text-base-content/30"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+                            </svg>
+                        </div>
+                    </div>
+                    @error('confirmationInput')
+                        <p class="text-sm text-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+
+            <x-slot:actions>
+                <x-mary-button color="secondary" wire:click="cancelActionModal">
+                    Cancel
+                </x-mary-button>
+
+                <button type="button"
+                    class="btn"
+                    x-bind:class="confirmButtonClasses()"
+                    x-bind:disabled="!matchesRequired()"
+                    wire:click="performAction"
+                    wire:loading.attr="disabled"
+                    wire:target="performAction">
+                    Yes, {{ $modalActionLabel }}
+                </button>
+            </x-slot:actions>
+        </div>
+    </x-mary-modal>
     </div>
 </div>
