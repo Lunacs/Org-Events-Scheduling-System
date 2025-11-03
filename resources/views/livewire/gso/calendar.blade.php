@@ -151,12 +151,13 @@
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-8 gap-px min-w-full">
+                        <div class="grid grid-cols-8 min-w-full border border-gray-200 dark:border-gray-600">
                             <div
-                                class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                                Time</div>
-                            <template x-for="day in weekDays" :key="day.date">
-                                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center">
+                                class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300 border-r border-gray-200 dark:border-gray-700">
+                                Time
+                            </div>
+                            <template x-for="day in weekDays" :key="`week-header-${day.date}`">
+                                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center border-l border-gray-200 dark:border-gray-700">
                                     <div class="text-sm font-medium text-emerald-700 dark:text-emerald-300"
                                         x-text="day.dayName"></div>
                                     <div class="text-xs text-emerald-600 dark:text-emerald-400" x-text="day.date">
@@ -165,21 +166,37 @@
                             </template>
                         </div>
 
-                        <template x-for="hour in timeSlots" :key="hour">
-                            <div class="grid grid-cols-8 gap-px border-b border-gray-200 dark:border-gray-600">
-                                <div class="bg-gray-50 dark:bg-gray-700 p-2 text-xs text-gray-600 dark:text-gray-400 text-center"
-                                    x-text="hour"></div>
-                                <template x-for="day in weekDays" :key="day.date + hour">
-                                    <div class="bg-white dark:bg-gray-800 min-h-12 p-1">
-                                        <template x-for="event in getEventsForDayHour(day.date, hour)" :key="event.id">
-                                            <div class="text-xs p-1 rounded mb-1 cursor-pointer"
-                                                :class="getEventClass(event)" @click="viewEventDetails(event)"
-                                                x-text="event.title"></div>
+                        <div class="grid grid-cols-8 min-w-full border border-t-0 border-gray-200 dark:border-gray-600 relative">
+                            <div class="relative bg-white dark:bg-gray-800 pt-6">
+                                <div class="grid" :style="weekGridTemplateStyle()">
+                                    <template x-for="hour in timeSlots" :key="`time-label-${hour}`">
+                                        <div class="border-b border-gray-200 dark:border-gray-700 flex items-start justify-center text-xs text-gray-600 dark:text-gray-400 pt-2">
+                                            <span x-text="hour"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <template x-for="day in weekDays" :key="`week-column-${day.date}`">
+                                <div class="relative border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden pt-6">
+                                    <div class="grid h-full" :style="weekGridTemplateStyle()">
+                                        <template x-for="hour in timeSlots" :key="`gridline-${day.date}-${hour}`">
+                                            <div class="border-b border-gray-200 dark:border-gray-700"></div>
                                         </template>
                                     </div>
-                                </template>
-                            </div>
-                        </template>
+
+                                    <template x-for="layout in getWeekDayLayouts(day.date)" :key="layout.key">
+                                        <div class="absolute rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer px-2 py-1 text-xs text-white"
+                                            :class="layout.event.colorClass"
+                                            :style="layout.style"
+                                            @click="viewEventDetails(layout.event)">
+                                            <div class="font-semibold whitespace-normal wrap-break-word" x-text="layout.event.title"></div>
+                                            <div class="text-[10px] opacity-90" x-text="layout.event.time"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
@@ -348,9 +365,36 @@
                 '18:00', '19:00', '20:00', '21:00'
             ],
 
-            events: gsoCalendarEvents,
+            eventPalette: [
+                'bg-emerald-500',
+                'bg-blue-500',
+                'bg-sky-500',
+                'bg-amber-500',
+                'bg-rose-500',
+                'bg-lime-500',
+                'bg-indigo-500',
+                'bg-cyan-500'
+            ],
+
+            events: [],
+            timelineStartMinutes: 0,
+            timelineEndMinutes: 0,
+            timelineDurationMinutes: 0,
+            weekMinEventHeightPercent: 4,
+            weekColumnGapPercent: 1,
 
             init() {
+                this.events = gsoCalendarEvents.map((event, index) => this.enhanceEvent(event, index));
+                this.timelineStartMinutes = this.parseTimeToMinutes(this.timeSlots[0]) ?? (7 * 60);
+                const lastSlotMinutes = this.parseTimeToMinutes(this.timeSlots[this.timeSlots.length - 1]) ?? (21 * 60);
+                this.timelineEndMinutes = lastSlotMinutes + 60;
+
+                if (this.timelineEndMinutes <= this.timelineStartMinutes) {
+                    this.timelineEndMinutes = this.timelineStartMinutes + (12 * 60);
+                }
+
+                this.timelineDurationMinutes = Math.max(this.timelineEndMinutes - this.timelineStartMinutes, 60);
+
                 const today = new Date();
                 this.currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 this.computeCalendar();
@@ -451,28 +495,28 @@
             },
 
             goPrevious() {
-                const newDate = new Date(this.currentDate);
+                const baseDate = new Date(this.currentDate);
 
                 if (this.viewMode === 'week') {
-                    newDate.setDate(newDate.getDate() - 7);
+                    baseDate.setDate(baseDate.getDate() - 7);
+                    this.currentDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
                 } else {
-                    newDate.setMonth(newDate.getMonth() - 1);
+                    this.currentDate = new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1);
                 }
 
-                this.currentDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
                 this.computeCalendar();
             },
 
             goNext() {
-                const newDate = new Date(this.currentDate);
+                const baseDate = new Date(this.currentDate);
 
                 if (this.viewMode === 'week') {
-                    newDate.setDate(newDate.getDate() + 7);
+                    baseDate.setDate(baseDate.getDate() + 7);
+                    this.currentDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
                 } else {
-                    newDate.setMonth(newDate.getMonth() + 1);
+                    this.currentDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
                 }
 
-                this.currentDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
                 this.computeCalendar();
             },
 
@@ -486,10 +530,118 @@
                 return this.filteredEvents.filter(event => event.date === date);
             },
 
-            getEventsForDayHour(date, hour) {
-                return this.getEventsForDay(date).filter(event => {
-                    // Simple time matching - in real app, you'd parse time ranges
-                    return event.time.includes(hour);
+            weekGridTemplateStyle() {
+                return `grid-template-rows: repeat(${this.timeSlots.length}, minmax(3.5rem, 1fr));`;
+            },
+
+            getWeekDayLayouts(date) {
+                const timelineStart = this.timelineStartMinutes;
+                const timelineEnd = this.timelineEndMinutes;
+                const totalMinutes = this.timelineDurationMinutes || 1;
+                const gapPercent = this.weekColumnGapPercent ?? 1;
+                const minHeightPercent = this.weekMinEventHeightPercent ?? 2;
+
+                const events = this.getEventsForDay(date)
+                    .map((event, index) => {
+                        let start = event.startMinutes ?? timelineStart;
+                        let end = event.endMinutes ?? (event.startMinutes ?? (timelineStart + 60));
+
+                        if (end <= start) {
+                            end = start + 60;
+                        }
+
+                        start = Math.max(start, timelineStart);
+                        end = Math.min(Math.max(end, start + 15), timelineEnd);
+
+                        return {
+                            event,
+                            start,
+                            end,
+                            key: `${event.id ?? event.title ?? 'event'}-${index}`
+                        };
+                    })
+                    .filter(entry => entry.end > entry.start);
+
+                if (! events.length) {
+                    return [];
+                }
+
+                const sorted = [...events].sort((a, b) => {
+                    if (a.start !== b.start) {
+                        return a.start - b.start;
+                    }
+
+                    return a.end - b.end;
+                });
+
+                const clusterMaxColumns = {};
+                const active = [];
+                let clusterSequence = 0;
+
+                sorted.forEach(entry => {
+                    for (let i = active.length - 1; i >= 0; i--) {
+                        if (active[i].end <= entry.start) {
+                            active.splice(i, 1);
+                        }
+                    }
+
+                    let clusterId;
+                    if (active.length) {
+                        clusterId = active[0].clusterId;
+                    } else {
+                        clusterId = `cluster-${date}-${clusterSequence++}`;
+                    }
+
+                    const usedColumns = active.map(item => item.column);
+                    let column = 0;
+                    while (usedColumns.includes(column)) {
+                        column++;
+                    }
+
+                    entry.clusterId = clusterId;
+                    entry.column = column;
+
+                    active.push(entry);
+
+                    const currentMax = clusterMaxColumns[clusterId] ?? 0;
+                    clusterMaxColumns[clusterId] = Math.max(currentMax, column + 1);
+                });
+
+                return events.map(entry => {
+                    const clusterColumns = clusterMaxColumns[entry.clusterId] ?? 1;
+                    const widthPercent = 100 / clusterColumns;
+                    const leftPercent = widthPercent * entry.column;
+                    let topPercent = ((entry.start - timelineStart) / totalMinutes) * 100;
+                    let heightPercent = ((entry.end - entry.start) / totalMinutes) * 100;
+
+                    heightPercent = Math.max(heightPercent, minHeightPercent);
+
+                    topPercent = Math.max(0, Math.min(topPercent, 100));
+                    if (topPercent + heightPercent > 100) {
+                        heightPercent = Math.max(minHeightPercent, 100 - topPercent);
+                    }
+
+                    let adjustedWidth = Math.max(widthPercent - gapPercent, widthPercent * 0.6);
+                    let adjustedLeft = leftPercent + (gapPercent / 2);
+
+                    adjustedLeft = Math.max(0, Math.min(adjustedLeft, 100));
+                    if (adjustedLeft + adjustedWidth > 100) {
+                        adjustedWidth = Math.max(0, 100 - adjustedLeft);
+                    }
+
+                    const formatPercent = value => Number(value.toFixed(4));
+
+                    topPercent = formatPercent(topPercent);
+                    heightPercent = formatPercent(heightPercent);
+                    adjustedLeft = formatPercent(adjustedLeft);
+                    adjustedWidth = formatPercent(adjustedWidth);
+
+                    const style = `top:${topPercent}%;height:${heightPercent}%;left:${adjustedLeft}%;width:${adjustedWidth}%;z-index:${10 + entry.column};`;
+
+                    return {
+                        ...entry,
+                        style
+                    };
                 });
             },
 
@@ -523,20 +675,94 @@
             },
 
             getEventClass(event) {
-                const baseClass = 'text-white text-xs p-1 rounded truncate';
-                if (event.office_involved) {
-                    return `${baseClass} bg-purple-500`;
-                }
-                return `${baseClass} ${this.getEventColorClass(event)}`;
+                const baseClass = 'text-white text-xs p-1 rounded truncate cursor-pointer';
+                const colorClass = event.colorClass || 'bg-emerald-500';
+                const emphasis = event.office_involved ? ' ring-2 ring-offset-1 ring-purple-200' : '';
+                return `${baseClass} ${colorClass}${emphasis}`;
             },
 
             getEventColorClass(event) {
-                const colors = {
-                    'approved': 'bg-emerald-500',
-                    'pending': 'bg-yellow-500',
-                    'rejected': 'bg-red-500'
+                return event.colorClass || 'bg-emerald-500';
+            },
+
+            parseTimeToMinutes(value) {
+                if (typeof value === 'number') {
+                    return value;
+                }
+
+                if (! value || value === '—') {
+                    return null;
+                }
+
+                const parts = String(value).split(':');
+                if (parts.length < 2) {
+                    return null;
+                }
+
+                const hours = Number(parts[0]);
+                const minutes = Number(parts[1]);
+
+                if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+                    return null;
+                }
+
+                return hours * 60 + minutes;
+            },
+
+            enhanceEvent(event, index) {
+                let startMinutes = typeof event.start_minutes === 'number'
+                    ? event.start_minutes
+                    : this.parseTimeToMinutes(event.start_time);
+
+                let endMinutes = typeof event.end_minutes === 'number'
+                    ? event.end_minutes
+                    : this.parseTimeToMinutes(event.end_time);
+
+                if (startMinutes !== null && endMinutes !== null && endMinutes < startMinutes) {
+                    endMinutes = startMinutes + 60;
+                }
+
+                if (startMinutes === null && endMinutes !== null) {
+                    startMinutes = endMinutes - 60;
+                }
+
+                if (startMinutes !== null && endMinutes === null) {
+                    endMinutes = startMinutes + 60;
+                }
+
+                if (startMinutes === null && endMinutes === null) {
+                    startMinutes = 7 * 60;
+                    endMinutes = 8 * 60;
+                }
+
+                return {
+                    ...event,
+                    startMinutes,
+                    endMinutes,
+                    colorClass: this.getPaletteColor(event, index)
                 };
-                return colors[event.status] || 'bg-gray-500';
+            },
+
+            getPaletteColor(event, index) {
+                const palette = this.eventPalette;
+                if (! palette.length) {
+                    return 'bg-emerald-500';
+                }
+
+                const key = event.id ?? `${event.title ?? ''}-${index}`;
+                const hash = this.hashString(String(key));
+
+                return palette[Math.abs(hash) % palette.length];
+            },
+
+            hashString(value) {
+                let hash = 0;
+                for (let i = 0; i < value.length; i++) {
+                    hash = ((hash << 5) - hash) + value.charCodeAt(i);
+                    hash |= 0;
+                }
+
+                return hash;
             },
 
             getStatusClass(status) {

@@ -1,11 +1,6 @@
 <?php
 
-use App\Livewire\Gso\Approvals as GsoApprovals;
-use App\Livewire\Gso\Calendar as GsoCalendar;
-use App\Livewire\Gso\Dashboard as GsoDashboard;
-use App\Livewire\Gso\Details as GsoDetails;
-use App\Livewire\Gso\Reports as GsoReports;
-use App\Livewire\Gso\TicketReview as GsoTicketReview;
+use App\Http\Controllers\Gso\ReportsExportController;
 use App\Livewire\Osa\Archive;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
@@ -15,6 +10,12 @@ use App\Livewire\Osa\Reports;
 use App\Livewire\Osa\TicketManagement;
 use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
 use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
+use App\Livewire\Gso\Approvals as GsoApprovals;
+use App\Livewire\Gso\Calendar as GsoCalendar;
+use App\Livewire\Gso\Dashboard as GsoDashboard;
+use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\Reports as GsoReports;
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 use App\Livewire\StudentOrg\History;
@@ -95,6 +96,9 @@ Route::prefix('gso')
         Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');
         Route::get('/reports', GsoReports::class)->name('gso.reports');
+        Route::get('/reports/export', [ReportsExportController::class, 'export'])
+            ->name('gso.reports.export')
+            ->middleware('signed');
         Route::get('/profile', \App\Livewire\Gso\Profile::class)->name('gso.profile');
     });
 

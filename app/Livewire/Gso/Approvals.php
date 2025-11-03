@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,7 @@ use Livewire\Component;
 
 class Approvals extends Component
 {
+    use ResolvesOfficeContext;
     #[Title('Approvals Management - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public string $search = '';
@@ -23,35 +25,88 @@ class Approvals extends Component
 
     public array $selectedRequests = [];
 
+    public bool $showConfirmationModal = false;
+    public ?int $selectedApprovalId = null;
+    public string $actionType = '';
+    public string $confirmationInput = '';
+
+    protected $listeners = [
+        'refreshApprovals' => '$refresh',
+    ];
+
     public function render()
     {
-        $user = Auth::user();
-        $officeId = $user?->office_id;
+    $user = Auth::user();
+    $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
         $pendingQuery = (clone $baseQuery)->where('decision', 'pending');
 
+        $pendingApprovalsForStats = (clone $pendingQuery)->get();
+
         $stats = [
-            'pending' => (clone $pendingQuery)->count(),
+            'pending' => $pendingApprovalsForStats->count(),
             'todayApproved' => (clone $baseQuery)
                 ->where('decision', 'approved')
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
-            'urgent' => (clone $pendingQuery)
-                ->whereHas('ticket', fn(Builder $query) => $query->where('total_participants', '>=', 200))
+            'urgent' => $pendingApprovalsForStats
+                ->filter(fn(Office_Approval $approval) => $this->determinePriorityKey($this->extractEventDate($approval)) === 'high')
                 ->count(),
         ];
 
         $decision = $this->normalizeStatusFilter($this->statusFilter);
 
-        $approvals = (clone $baseQuery)
-            ->where('decision', $decision)
+        $approvalsQuery = clone $baseQuery;
+
+        if ($decision !== 'all') {
+            $approvalsQuery->where('decision', $decision);
+        }
+
+        $approvalsCollection = $approvalsQuery
             ->when($this->search !== '', fn(Builder $query) => $this->applySearchFilter($query, $this->search))
-            ->when($this->priorityFilter !== 'all', fn(Builder $query) => $this->applyPriorityFilter($query, $this->priorityFilter))
             ->orderByDesc('updated_at')
             ->get()
             ->map(fn(Office_Approval $approval) => $this->transformApproval($approval));
+
+        if ($this->priorityFilter !== 'all') {
+            $approvalsCollection = $approvalsCollection->filter(
+                fn(array $approval) => ($approval['priority'] ?? 'low') === $this->priorityFilter
+            );
+        }
+
+        $approvals = $approvalsCollection->values();
+
+        if ($this->search !== '') {
+            $term = Str::lower(trim($this->search));
+
+            $approvals = $approvals->sort(function ($a, $b) use ($term) {
+                $aEvent = strtolower($a['event_name'] ?? '');
+                $bEvent = strtolower($b['event_name'] ?? '');
+                $aOrg = strtolower($a['organization'] ?? '');
+                $bOrg = strtolower($b['organization'] ?? '');
+
+                $score = function ($event, $org) use ($term) {
+                    if ($term !== '' && strpos($event, $term) !== false) {
+                        return 1;
+                    }
+                    if ($term !== '' && strpos($org, $term) !== false) {
+                        return 2;
+                    }
+                    return 3;
+                };
+
+                $sa = $score($aEvent, $aOrg);
+                $sb = $score($bEvent, $bOrg);
+
+                if ($sa !== $sb) {
+                    return $sa <=> $sb;
+                }
+
+                return ($b['updated_at_ts'] ?? 0) <=> ($a['updated_at_ts'] ?? 0);
+            })->values();
+        }
 
         return view('livewire.gso.approvals', [
             'approvals' => $approvals,
@@ -60,14 +115,14 @@ class Approvals extends Component
         ]);
     }
 
-    protected function baseQuery(?int $officeId): Builder
+    protected function baseQuery(int $officeId): Builder
     {
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
     }
 
     protected function normalizeStatusFilter(string $status): string
@@ -104,33 +159,12 @@ class Approvals extends Component
         });
     }
 
-    protected function applyPriorityFilter(Builder $query, string $priority): void
-    {
-        $query->whereHas('ticket', function (Builder $ticketQuery) use ($priority) {
-            if ($priority === 'high') {
-                $ticketQuery->where('total_participants', '>=', 200);
-
-                return;
-            }
-
-            if ($priority === 'medium') {
-                $ticketQuery->whereBetween('total_participants', [100, 199]);
-
-                return;
-            }
-
-            if ($priority === 'low') {
-                $ticketQuery->where('total_participants', '<', 100);
-            }
-        });
-    }
-
     protected function transformApproval(Office_Approval $approval): array
     {
         $ticket = $approval->ticket;
 
-        $eventDate = $this->parseDate($ticket?->getAttribute('date-from'));
-        $dueDate = $this->parseDate($ticket?->getAttribute('date-to'));
+        $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
+        $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
 
         $requirements = collect(preg_split('/[\,\n]+/', (string) ($ticket?->special_requirements ?? '')))
             ->map(fn(string $item) => trim($item))
@@ -138,7 +172,7 @@ class Approvals extends Component
             ->values()
             ->all();
 
-        $priority = $this->resolvePriority($ticket?->total_participants);
+        $priority = $this->resolvePriority($eventDate);
 
         $statusDefinitions = $this->statusDefinitions();
         $status = $approval->decision ?? 'pending';
@@ -156,14 +190,17 @@ class Approvals extends Component
             'event_date' => $eventDate?->format('M d, Y') ?? 'N/A',
             'priority' => $priority['key'],
             'priority_label' => $priority['label'],
+            'priority_days_until' => $priority['days_until'],
             'status' => $status,
             'status_label' => $statusLabel,
+            'office_id' => $approval->office_id ?? $this->resolveOfficeId(Auth::user()),
             'description' => $ticket?->description ?? 'No description provided.',
             'requirements' => $requirements,
             'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
             'remarks' => $approval->remarks ?? null,
             'participants' => $ticket?->total_participants,
+            'updated_at_ts' => $approval->updated_at?->timestamp ?? 0,
         ];
     }
 
@@ -180,20 +217,120 @@ class Approvals extends Component
         }
     }
 
-    protected function resolvePriority(?int $totalParticipants): array
+    protected function resolvePriority(?Carbon $eventDate): array
     {
-        if ($totalParticipants === null) {
-            return ['key' => 'low', 'label' => 'Low Priority'];
+        $priorityKey = $this->determinePriorityKey($eventDate);
+
+        $labels = [
+            'high' => 'High Priority',
+            'medium' => 'Medium Priority',
+            'low' => 'Low Priority',
+        ];
+
+        return [
+            'key' => $priorityKey,
+            'label' => $labels[$priorityKey] ?? 'Low Priority',
+            'days_until' => $this->daysUntilEvent($eventDate),
+        ];
+    }
+
+    protected function determinePriorityKey(?Carbon $eventDate): string
+    {
+        $daysUntil = $this->daysUntilEvent($eventDate);
+
+        if ($daysUntil === null) {
+            return 'low';
         }
 
-        if ($totalParticipants >= 200) {
-            return ['key' => 'high', 'label' => 'High Priority'];
+        if ($daysUntil <= 3) {
+            return 'high';
         }
 
-        if ($totalParticipants >= 100) {
-            return ['key' => 'medium', 'label' => 'Medium Priority'];
+        if ($daysUntil <= 7) {
+            return 'medium';
         }
 
-        return ['key' => 'low', 'label' => 'Low Priority'];
+        return 'low';
+    }
+
+    protected function daysUntilEvent(?Carbon $eventDate): ?int
+    {
+        if (! $eventDate) {
+            return null;
+        }
+
+        return Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+    }
+
+    protected function extractEventDate(Office_Approval $approval): ?Carbon
+    {
+        $ticket = $approval->ticket;
+
+        if (! $ticket) {
+            return null;
+        }
+
+        return $this->parseDate($ticket->getAttribute('date_from'));
+    }
+
+    public function confirmAction(int $approvalId, string $action)
+    {
+        $this->resetValidation();
+        $this->confirmationInput = '';
+        $this->selectedApprovalId = $approvalId;
+        $this->actionType = $action;
+        $this->showConfirmationModal = true;
+    }
+
+    public function cancelConfirmation()
+    {
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->resetValidation();
+    }
+
+    public function applyFilters(): void
+    {
+        $this->search = trim((string) $this->search);
+        $this->selectedRequests = [];
+    }
+
+    public function performAction()
+    {
+        if (! $this->selectedApprovalId) {
+            return;
+        }
+
+        $approval = Office_Approval::find($this->selectedApprovalId);
+        if (! $approval) {
+            return;
+        }
+
+        $requiredWord = null;
+        if ($this->actionType === 'approve') {
+            $requiredWord = 'approve';
+        } elseif ($this->actionType === 'reject') {
+            $requiredWord = 'reject';
+        }
+
+        if ($requiredWord) {
+            if (strtolower(trim($this->confirmationInput)) !== $requiredWord) {
+                $this->addError('confirmationInput', 'Type "' . $requiredWord . '" to proceed.');
+                return;
+            }
+        }
+
+        $decision = $this->actionType === 'approve'
+            ? 'approved'
+            : ($this->actionType === 'reject' ? 'rejected' : $this->actionType);
+
+        $approval->decision = $decision;
+        $approval->updated_at = now();
+        $approval->save();
+
+        $this->dispatch('refreshApprovals');
+
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->resetValidation();
+        session()->flash('message', 'Request ' . $decision . ' successfully.');
     }
 }

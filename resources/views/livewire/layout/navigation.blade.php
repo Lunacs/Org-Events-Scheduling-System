@@ -53,7 +53,7 @@ new class extends Component {
         });
     }
 }" :class="{ 'shadow-lg': scrolled, 'shadow-sm': !scrolled }"
-    class="bg-base-100 border-b border-base-300 sticky top-0 z-10 transition-shadow duration-300">
+    class="bg-base-100 border-b border-base-300 sticky top-0 z-40 transition-shadow duration-300">
     <!-- Primary Navigation Menu -->
     <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">

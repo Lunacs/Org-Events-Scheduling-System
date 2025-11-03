@@ -1,10 +1,10 @@
-<x-slot name="header">
+﻿<x-slot name="header">
     <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
         {{ __('GSO Reports & Analytics') }}
     </h2>
 </x-slot>
 
-<div class="py-12" x-data="gsoReports()">
+<div class="py-12" x-data="gsoReports()" x-ref="reportsContainer">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <!-- Report Controls -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
@@ -108,22 +108,40 @@
             <!-- Chart Section -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4" x-text="chartTitle">
-                    </h3>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="chartTitle">
+                        </h3>
+                        <x-mary-select :options="[
+                                ['id' => 'request_types', 'name' => 'Request Type Distribution'],
+                                ['id' => 'approvals', 'name' => 'Approval Trends']
+                            ]"
+                            option-value="id"
+                            option-label="name"
+                            x-model="selectedChart"
+                            @change="refreshChart({ forceReinit: true })"
+                            class="select-emerald w-full sm:w-60 text-center"
+                            input-class="text-center" />
+                    </div>
 
-                    <!-- Placeholder for Chart - In real app, you'd use Chart.js or similar -->
                     <div
-                        class="h-64 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg flex items-center justify-center">
-                        <div class="text-center">
-                            <svg class="mx-auto h-12 w-12 text-emerald-400 mb-4" fill="none" stroke="currentColor"
+                        class="relative h-64 bg-linear-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
+                        <div class="h-full w-full p-3 box-border">
+                            <canvas x-ref="approvalChart"
+                                class="w-full h-full transition-opacity duration-200"
+                                :class="{ 'opacity-0 pointer-events-none': !hasStatusData }"></canvas>
+                        </div>
+
+                        <div x-show="!hasStatusData"
+                            class="absolute inset-0 flex flex-col items-center justify-center text-center space-y-2 px-6">
+                            <svg class="mx-auto h-12 w-12 text-emerald-400" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                 </path>
                             </svg>
                             <p class="text-emerald-600 dark:text-emerald-400 font-medium">Interactive Chart</p>
-                            <p class="text-sm text-emerald-500 dark:text-emerald-500">Chart visualization would
-                                appear here</p>
+                            <p class="text-sm text-emerald-500 dark:text-emerald-500">Waiting for approval data
+                                to display</p>
                         </div>
                     </div>
                 </div>
@@ -198,7 +216,9 @@
                                     <td x-text="record.eventName"></td>
                                     <td x-text="record.organization"></td>
                                     <td>
-                                        <div class="badge badge-outline" x-text="record.requestType"></div>
+                                        <span
+                                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' + getRequestTypeClass(record.requestType)"
+                                            x-text="record.requestType || 'N/A'"></span>
                                     </td>
                                     <td>
                                         <div class="badge" :class="getDecisionClass(record.decision)"
@@ -228,11 +248,11 @@
                             x-text="currentDataset.length"></span> records
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-sm">«</button>
+                        <button class="btn btn-sm">┬½</button>
                         <button class="btn btn-sm btn-active">1</button>
                         <button class="btn btn-sm">2</button>
                         <button class="btn btn-sm">3</button>
-                        <button class="btn btn-sm">»</button>
+                        <button class="btn btn-sm">┬╗</button>
                     </div>
                 </div>
             </div>
@@ -277,6 +297,7 @@
     function gsoReports() {
         return {
             selectedReport: 'approvals',
+            selectedChart: 'request_types',
             timePeriod: 'this_month',
             customDateRange: {
                 start: '',
@@ -287,10 +308,45 @@
             stats: {
                 totalApproved: 0,
                 totalRejected: 0,
-                approvalRate: 0
+                approvalRate: 0,
+                avgResponseTime: 0
             },
 
             breakdown: [],
+
+            statusSummary: {
+                approved: 0,
+                rejected: 0
+            },
+            statusChart: null,
+            chartColors: {
+                approved: '#10b981',
+                rejected: '#ef4444'
+            },
+            chartWaitHandle: null,
+            chartReadyQueue: [],
+            themeObserver: null,
+            themeChangeDebounce: null,
+
+            requestTypeClassDefaults: {
+                'venue booking': 'badge-primary text-primary-content',
+                'venue': 'badge-primary text-primary-content',
+                'equipment': 'badge-info text-info-content',
+                'logistics': 'badge-secondary text-secondary-content',
+                'catering': 'badge-accent text-accent-content'
+            },
+            requestTypeClassPalette: [
+                'badge-success text-success-content',
+                'badge-warning text-warning-content',
+                'badge-error text-error-content',
+                'badge-neutral text-neutral-content',
+                'badge-info text-info-content',
+                'badge-secondary text-secondary-content',
+                'badge-accent text-accent-content',
+                'badge-primary text-primary-content'
+            ],
+            requestTypeClassMap: {},
+            requestTypePaletteIndex: 0,
 
             records: (gsoReportSeed.records ?? []).map(record => ({
                 ...record,
@@ -314,11 +370,9 @@
             get chartTitle() {
                 const titles = {
                     'approvals': 'Approval Trends',
-                    'performance': 'Performance Metrics',
-                    'workload': 'Workload Distribution',
-                    'trends': 'Request Trends'
+                    'request_types': 'Request Type Distribution'
                 };
-                return titles[this.selectedReport] || 'Report Chart';
+                return titles[this.selectedChart] || 'Report Chart';
             },
 
             get tableTitle() {
@@ -331,8 +385,57 @@
                 return titles[this.selectedReport] || 'Report Data';
             },
 
+            get statusDataset() {
+                if (this.selectedChart === 'approvals') {
+                    return [
+                        Number(this.statusSummary.approved || 0),
+                        Number(this.statusSummary.rejected || 0)
+                    ];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => Number(item.count) || 0);
+                }
+
+                return [];
+            },
+
+            get statusLabels() {
+                if (this.selectedChart === 'approvals') {
+                    return ['Approved', 'Rejected'];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => item.type || 'Unspecified');
+                }
+
+                return [];
+            },
+
+            get statusColors() {
+                if (this.selectedChart === 'approvals') {
+                    return [
+                        this.chartColors.approved,
+                        this.chartColors.rejected
+                    ];
+                }
+
+                if (this.selectedChart === 'request_types') {
+                    return (this.breakdown || []).map(item => item.color || '#10b981');
+                }
+
+                return [];
+            },
+
+            get hasStatusData() {
+                return this.statusDataset.some(value => Number(value) > 0);
+            },
+
             init() {
+                this.bootstrapRequestTypeClasses();
                 this.applyFilters();
+                this.handleThemeChange();
+                this.initDownloadListener();
             },
 
             generateReport() {
@@ -396,11 +499,17 @@
                     approvalRate: Math.round((approved / total) * 100),
                     avgResponseTime: Number(avgResponse.toFixed(1))
                 };
+
+                this.statusSummary = {
+                    approved,
+                    rejected
+                };
             },
 
             updateBreakdown(dataset) {
                 if (!dataset.length) {
                     this.breakdown = [];
+                    this.refreshChart();
                     return;
                 }
 
@@ -425,6 +534,8 @@
                         color,
                     };
                 });
+
+                this.refreshChart();
             },
 
             resolveRange(period) {
@@ -515,7 +626,270 @@
                     this.searchTerm || null
                 );
             },
+            // Listen for the signed-download URL from the Livewire component and navigate
+            // the browser there to trigger a native file download.
+            initDownloadListener() {
+                window.addEventListener('gso:export-download', (ev) => {
+                    try {
+                        const url = ev?.detail?.url;
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    } catch (err) {
+                        // ignore failures silently
+                    }
+                });
+            },
 
+            refreshChart(options = {}) {
+                this.waitForChart(() => {
+                    if (!this.hasStatusData) {
+                        this.destroyChart();
+                        return;
+                    }
+
+                    if (options.forceReinit && this.statusChart) {
+                        this.destroyChart();
+                    }
+
+                    if (!this.statusChart || options.forceReinit) {
+                        this.initChart();
+                    } else {
+                        this.updateChartData();
+                    }
+                });
+            },
+
+            waitForChart(callback) {
+                if (window.Chart) {
+                    this.$nextTick(callback);
+                    return;
+                }
+
+                this.chartReadyQueue.push(callback);
+
+                if (this.chartWaitHandle) {
+                    return;
+                }
+
+                this.chartWaitHandle = setInterval(() => {
+                    if (window.Chart) {
+                        clearInterval(this.chartWaitHandle);
+                        this.chartWaitHandle = null;
+
+                        const pendingCallbacks = [...this.chartReadyQueue];
+                        this.chartReadyQueue = [];
+
+                        pendingCallbacks.forEach(cb => this.$nextTick(cb));
+                    }
+                }, 100);
+            },
+
+            initChart() {
+                const canvas = this.$refs.approvalChart;
+
+                if (!canvas || !window.Chart) {
+                    return;
+                }
+
+                const context = canvas.getContext('2d');
+
+                if (!context) {
+                    return;
+                }
+
+                this.statusChart = new Chart(context, {
+                    type: 'doughnut',
+                    data: {
+                        labels: this.statusLabels,
+                        datasets: [
+                            {
+                                data: this.statusDataset,
+                                backgroundColor: this.statusColors,
+                                hoverBackgroundColor: this.statusColors,
+                                borderWidth: 0,
+                                hoverOffset: 6,
+                                cutout: '55%',
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: this.chartLegendColor(),
+                                    font: {
+                                        size: 12
+                                    },
+                                    usePointStyle: true,
+                                },
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                },
+                            },
+                        },
+                    },
+                });
+            },
+
+            updateChartData() {
+                if (!this.statusChart) {
+                    return;
+                }
+
+                this.statusChart.data.labels = this.statusLabels;
+                this.statusChart.data.datasets[0].data = this.statusDataset;
+                this.statusChart.data.datasets[0].backgroundColor = this.statusColors;
+                this.statusChart.data.datasets[0].hoverBackgroundColor = this.statusColors;
+
+                if (this.statusChart.options?.plugins?.legend?.labels) {
+                    this.statusChart.options.plugins.legend.labels.color = this.chartLegendColor();
+                }
+
+                this.statusChart.update();
+            },
+
+            destroyChart() {
+                if (this.statusChart) {
+                    this.statusChart.destroy();
+                    this.statusChart = null;
+                }
+
+                if (this.$refs.approvalChart) {
+                    const context = this.$refs.approvalChart.getContext('2d');
+                    context?.clearRect(0, 0, this.$refs.approvalChart.width, this.$refs.approvalChart.height);
+                }
+            },
+
+            isDarkMode() {
+                const root = document.documentElement;
+                const body = document.body;
+                const themeAttr = ((root.getAttribute('data-theme') || body.getAttribute('data-theme') || '').toLowerCase());
+                const themeClass = `${root.className} ${body.className}`.toLowerCase();
+
+                if (themeClass.includes('dark') || themeAttr.includes('dark')) {
+                    return true;
+                }
+
+                if (this.$refs?.reportsContainer) {
+                    const container = this.$refs.reportsContainer;
+                    const containerThemeAttr = (container.getAttribute('data-theme') || '').toLowerCase();
+                    const containerClass = (container.className || '').toLowerCase();
+
+                    if (containerThemeAttr.includes('dark') || containerClass.includes('dark')) {
+                        return true;
+                    }
+                }
+
+                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            },
+
+            handleThemeChange() {
+                const triggerRefresh = () => {
+                    if (this.themeChangeDebounce) {
+                        clearTimeout(this.themeChangeDebounce);
+                    }
+
+                    this.themeChangeDebounce = setTimeout(() => {
+                        this.refreshChart({ forceReinit: true });
+                    }, 60);
+                };
+
+                if (window.matchMedia) {
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    const listener = triggerRefresh;
+
+                    if (mediaQuery.addEventListener) {
+                        mediaQuery.addEventListener('change', listener);
+                    } else if (mediaQuery.addListener) {
+                        mediaQuery.addListener(listener);
+                    }
+                }
+
+                document.addEventListener('mary-theme-changed', triggerRefresh);
+
+                if (window.MutationObserver) {
+                    if (this.themeObserver) {
+                        this.themeObserver.disconnect();
+                    }
+
+                    const observer = new MutationObserver(triggerRefresh);
+                    this.themeObserver = observer;
+
+                    observer.observe(document.documentElement, {
+                        attributes: true,
+                        attributeFilter: ['class', 'data-theme']
+                    });
+
+                    observer.observe(document.body, {
+                        attributes: true,
+                        attributeFilter: ['class', 'data-theme']
+                    });
+
+                    if (this.$refs?.reportsContainer) {
+                        observer.observe(this.$refs.reportsContainer, {
+                            attributes: true,
+                            attributeFilter: ['class', 'data-theme']
+                        });
+                    }
+                }
+            },
+
+            bootstrapRequestTypeClasses() {
+                this.requestTypeClassMap = { ...this.requestTypeClassDefaults };
+                this.requestTypePaletteIndex = 0;
+
+                (this.records || []).forEach(record => {
+                    const key = (record.requestType || '').toLowerCase();
+                    if (!key) {
+                        return;
+                    }
+
+                    if (!Object.prototype.hasOwnProperty.call(this.requestTypeClassMap, key)) {
+                        this.requestTypeClassMap[key] = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                        this.requestTypePaletteIndex += 1;
+                    }
+                });
+            },
+
+            chartLegendColor() {
+                const container = this.$refs?.reportsContainer ?? document.body;
+
+                if (container && window.getComputedStyle) {
+                    const computed = window.getComputedStyle(container);
+                    if (computed?.color) {
+                        return computed.color;
+                    }
+                }
+
+                return this.isDarkMode() ? '#f3f4f6' : '#1f2937';
+            },
+
+            getRequestTypeClass(typeLabel) {
+                if (!typeLabel) {
+                    return 'badge-ghost';
+                }
+
+                const key = typeLabel.toLowerCase();
+
+                if (!Object.prototype.hasOwnProperty.call(this.requestTypeClassMap, key)) {
+                    this.requestTypeClassMap[key] = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                    this.requestTypePaletteIndex += 1;
+                }
+
+                return this.requestTypeClassMap[key];
+            },
             getDecisionClass(decision) {
                 const classes = {
                     'Approved': 'badge-success',

@@ -94,10 +94,10 @@
                                             <div class="badge" :class="getTypeClass(ticket.type)" x-text="ticket.type">
                                             </div>
                                         </td>
-                                        <td x-text="ticket.event_date"></td>
+                                        <td x-text="ticket.event_date_display"></td>
                                         <td>
                                             <div class="badge" :class="getPriorityClass(ticket.priority)"
-                                                x-text="ticket.priority"></div>
+                                                x-text="ticket.priority_label"></div>
                                         </td>
                                         <td>
                                             <div class="badge" :class="getStatusClass(ticket.status)"
@@ -176,8 +176,8 @@
                                                 x-text="selectedTicket.event_name"></span></div>
                                         <div><strong>Organization:</strong> <span
                                                 x-text="selectedTicket.organization"></span></div>
-                                        <div><strong>Event Date:</strong> <span
-                                                x-text="selectedTicket.event_date"></span></div>
+                    <div><strong>Event Date:</strong> <span
+                        x-text="selectedTicket.event_date_display"></span></div>
                                         <div><strong>Venue:</strong> <span x-text="selectedTicket.venue"></span></div>
                                         <div><strong>Expected Attendees:</strong> <span
                                                 x-text="selectedTicket.attendees"></span></div>
@@ -190,7 +190,7 @@
                                     <div class="space-y-2 text-sm">
                                         <div><strong>Request Type:</strong> <span x-text="selectedTicket.type"></span>
                                         </div>
-                                        <div><strong>Priority:</strong> <span x-text="selectedTicket.priority"></span>
+                                        <div><strong>Priority:</strong> <span x-text="selectedTicket.priority_label"></span>
                                         </div>
                                         <div><strong>Status:</strong> <span x-text="selectedTicket.status"></span>
                                         </div>
@@ -272,9 +272,8 @@
                         event_name: 'Leadership Summit 2024',
                         organization: 'Student Council',
                         type: 'Venue Booking',
-                        event_date: 'Nov 15, 2024',
+                        event_date: '2024-11-15',
                         venue: 'Main Auditorium',
-                        priority: 'High',
                         status: 'pending',
                         attendees: '200',
                         submitted_date: 'Oct 1, 2024',
@@ -287,9 +286,8 @@
                         event_name: 'Science Fair',
                         organization: 'Science Club',
                         type: 'Equipment',
-                        event_date: 'Nov 20, 2024',
+                        event_date: '2024-11-20',
                         venue: 'Science Building',
-                        priority: 'Medium',
                         status: 'under_review',
                         attendees: '150',
                         submitted_date: 'Sep 28, 2024',
@@ -302,9 +300,8 @@
                         event_name: 'Cultural Night',
                         organization: 'Cultural Society',
                         type: 'Logistics',
-                        event_date: 'Dec 1, 2024',
+                        event_date: '2024-12-01',
                         venue: 'University Plaza',
-                        priority: 'Low',
                         status: 'approved',
                         attendees: '300',
                         submitted_date: 'Sep 25, 2024',
@@ -316,6 +313,7 @@
                 filteredTickets: [],
 
                 init() {
+                    this.allTickets = this.allTickets.map(ticket => this.prepareTicket(ticket));
                     this.filteredTickets = this.allTickets;
                 },
 
@@ -323,8 +321,7 @@
                     this.filteredTickets = this.allTickets.filter(ticket => {
                         const matchesType = !this.filters.type || ticket.type.toLowerCase().includes(this.filters
                             .type.toLowerCase());
-                        const matchesPriority = !this.filters.priority || ticket.priority.toLowerCase() === this
-                            .filters.priority.toLowerCase();
+                        const matchesPriority = !this.filters.priority || ticket.priority === this.filters.priority;
                         const matchesStatus = !this.filters.status || ticket.status.toLowerCase() === this.filters
                             .status.toLowerCase();
                         const matchesSearch = !this.filters.search ||
@@ -380,9 +377,9 @@
 
                 getPriorityClass(priority) {
                     const classes = {
-                        'High': 'badge-error',
-                        'Medium': 'badge-warning',
-                        'Low': 'badge-success'
+                        'high': 'badge-error',
+                        'medium': 'badge-warning',
+                        'low': 'badge-success'
                     };
                     return classes[priority] || 'badge-ghost';
                 },
@@ -395,6 +392,82 @@
                         'rejected': 'badge-error'
                     };
                     return classes[status] || 'badge-ghost';
+                },
+
+                prepareTicket(ticket) {
+                    const eventDate = this.parseEventDate(ticket.event_date);
+                    const daysUntil = this.daysUntil(eventDate);
+                    const priorityKey = this.determinePriorityKey(daysUntil);
+
+                    return {
+                        ...ticket,
+                        event_date_display: this.formatEventDate(eventDate),
+                        priority: priorityKey,
+                        priority_label: this.resolvePriorityLabel(priorityKey),
+                        days_until_event: daysUntil,
+                    };
+                },
+
+                parseEventDate(value) {
+                    if (!value) {
+                        return null;
+                    }
+
+                    const parsed = new Date(value);
+                    return Number.isNaN(parsed.getTime()) ? null : parsed;
+                },
+
+                formatEventDate(eventDate) {
+                    if (!eventDate) {
+                        return 'TBD';
+                    }
+
+                    return eventDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: '2-digit',
+                        year: 'numeric'
+                    });
+                },
+
+                daysUntil(eventDate) {
+                    if (!eventDate) {
+                        return null;
+                    }
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const event = new Date(eventDate);
+                    event.setHours(0, 0, 0, 0);
+
+                    const diffMs = event.getTime() - today.getTime();
+                    return Math.round(diffMs / 86400000);
+                },
+
+                determinePriorityKey(daysUntil) {
+                    if (daysUntil === null || Number.isNaN(daysUntil)) {
+                        return 'low';
+                    }
+
+                    if (daysUntil <= 3) {
+                        return 'high';
+                    }
+
+                    if (daysUntil <= 7) {
+                        return 'medium';
+                    }
+
+                    return 'low';
+                },
+
+                resolvePriorityLabel(priorityKey) {
+                    const labels = {
+                        'high': 'High Priority',
+                        'medium': 'Medium Priority',
+                        'low': 'Low Priority'
+                    };
+
+                    return labels[priorityKey] || 'Low Priority';
                 }
             }
         }

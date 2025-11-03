@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class TicketReview extends Component
 {
+    use ResolvesOfficeContext;
+
     #[Title('Ticket Review - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public string $filterType = '';
@@ -25,29 +28,36 @@ class TicketReview extends Component
 
     public function render()
     {
-        $user = Auth::user();
-        $officeId = $user?->office_id;
+    $user = Auth::user();
+    $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
+        $pendingApprovals = (clone $baseQuery)->where('decision', 'pending')->get();
+
         $stats = [
-            'pending' => (clone $baseQuery)->where('decision', 'pending')->count(),
+            'pending' => $pendingApprovals->count(),
             'approvedToday' => (clone $baseQuery)
                 ->where('decision', 'approved')
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
-            'urgent' => (clone $baseQuery)
-                ->where('decision', 'pending')
-                ->whereHas('ticket', fn(Builder $query) => $query->where('total_participants', '>=', 200))
+            'urgent' => $pendingApprovals
+                ->filter(fn(Office_Approval $approval) => $this->determinePriorityKey($this->extractEventDate($approval)) === 'high')
                 ->count(),
         ];
 
         $totalTickets = (clone $baseQuery)->count();
 
-        $tickets = $this->filteredQuery($officeId)
+        $ticketCollection = $this->filteredQuery($officeId)
             ->orderByDesc('updated_at')
             ->get()
             ->map(fn(Office_Approval $approval) => $this->formatTicket($approval));
+
+        if ($this->filterPriority !== '') {
+            $ticketCollection = $ticketCollection->filter(fn(array $ticket) => ($ticket['priority'] ?? 'low') === $this->filterPriority);
+        }
+
+        $tickets = $ticketCollection->values();
 
         return view('livewire.gso.ticket-review', [
             'tickets' => $tickets,
@@ -57,17 +67,17 @@ class TicketReview extends Component
         ]);
     }
 
-    protected function baseQuery(?int $officeId): Builder
+    protected function baseQuery(int $officeId): Builder
     {
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->when($officeId, fn(Builder $query) => $query->where('office_id', $officeId));
+            ->where('office_id', $officeId);
     }
 
-    protected function filteredQuery(?int $officeId): Builder
+    protected function filteredQuery(int $officeId): Builder
     {
         return $this->baseQuery($officeId)
             ->when($this->filterStatus !== '', fn(Builder $query) => $this->applyStatusFilter($query, $this->filterStatus))
@@ -77,19 +87,6 @@ class TicketReview extends Component
                 if ($type) {
                     $query->whereHas('ticket.eventType', fn(Builder $typeQuery) => $typeQuery->whereRaw('LOWER(type_name) = ?', [Str::lower($type)]));
                 }
-            })
-            ->when($this->filterPriority !== '', function (Builder $query) {
-                $priority = $this->filterPriority;
-
-                $query->whereHas('ticket', function (Builder $ticketQuery) use ($priority) {
-                    if ($priority === 'high') {
-                        $ticketQuery->where('total_participants', '>=', 200);
-                    } elseif ($priority === 'medium') {
-                        $ticketQuery->whereBetween('total_participants', [100, 199]);
-                    } elseif ($priority === 'low') {
-                        $ticketQuery->where('total_participants', '<', 100);
-                    }
-                });
             })
             ->when($this->search !== '', function (Builder $query) {
                 $term = '%' . Str::of($this->search)->trim() . '%';
@@ -107,8 +104,8 @@ class TicketReview extends Component
     {
         $ticket = $approval->ticket;
 
-        $eventDate = $this->parseDate($ticket?->getAttribute('date-from'));
-        $dueDate = $this->parseDate($ticket?->getAttribute('date-to'));
+    $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
+    $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
 
         $requirements = collect(preg_split('/[,\n]+/', (string) ($ticket?->special_requirements ?? '')))
             ->map(fn(string $item) => trim($item))
@@ -116,7 +113,7 @@ class TicketReview extends Component
             ->values()
             ->all();
 
-        $priority = $this->resolvePriority($ticket?->total_participants);
+        $priority = $this->resolvePriority($eventDate);
         [$statusKey, $statusLabel] = $this->resolveStatusAttributes($approval);
 
         return [
@@ -130,10 +127,12 @@ class TicketReview extends Component
             'request_type' => $ticket?->eventType?->type_name ?? 'N/A',
             'event_date' => $eventDate?->format('M d, Y') ?? 'N/A',
             'venue' => $ticket?->venue_requested ?? 'TBD',
-            'priority' => strtolower($priority),
-            'priority_label' => $priority,
+            'priority' => $priority['key'],
+            'priority_label' => $priority['label'],
+            'priority_days_until' => $priority['days_until'],
             'status' => $statusKey,
             'status_label' => $statusLabel,
+            'office_id' => $approval->office_id ?? $this->resolveOfficeId(Auth::user()),
             'attendees' => $ticket?->total_participants,
             'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
@@ -142,17 +141,60 @@ class TicketReview extends Component
         ];
     }
 
-    protected function resolvePriority(?int $totalParticipants): string
+    protected function resolvePriority(?Carbon $eventDate): array
     {
-        if ($totalParticipants === null) {
-            return 'Low';
+        $priorityKey = $this->determinePriorityKey($eventDate);
+
+        $labels = [
+            'high' => 'High Priority',
+            'medium' => 'Medium Priority',
+            'low' => 'Low Priority',
+        ];
+
+        return [
+            'key' => $priorityKey,
+            'label' => $labels[$priorityKey] ?? 'Low Priority',
+            'days_until' => $this->daysUntilEvent($eventDate),
+        ];
+    }
+
+    protected function determinePriorityKey(?Carbon $eventDate): string
+    {
+        $daysUntil = $this->daysUntilEvent($eventDate);
+
+        if ($daysUntil === null) {
+            return 'low';
         }
 
-        return match (true) {
-            $totalParticipants >= 200 => 'High',
-            $totalParticipants >= 100 => 'Medium',
-            default => 'Low',
-        };
+        if ($daysUntil <= 3) {
+            return 'high';
+        }
+
+        if ($daysUntil <= 7) {
+            return 'medium';
+        }
+
+        return 'low';
+    }
+
+    protected function daysUntilEvent(?Carbon $eventDate): ?int
+    {
+        if (! $eventDate) {
+            return null;
+        }
+
+        return Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+    }
+
+    protected function extractEventDate(Office_Approval $approval): ?Carbon
+    {
+        $ticket = $approval->ticket;
+
+        if (! $ticket) {
+            return null;
+        }
+
+    return $this->parseDate($ticket->getAttribute('date_from'));
     }
 
     protected function parseDate(?string $value): ?Carbon

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -86,12 +87,22 @@ class TicketSeeder extends Seeder
             ],
         ];
 
+        $priorityDateOffsets = [
+            'Annual Tech Summit 2024' => 2, // high priority (<= 3 days)
+            'Cultural Festival Celebration' => 5, // medium priority (<= 7 days)
+            'Sports Week Competition' => 10, // low priority (> 7 days)
+        ];
+
         foreach ($ticketData as $index => $data) {
             $user = $users->random();
             $eventType = $eventTypes->random();
             $fundSource = $fundSources->random();
             $plvParticipants = rand(50, 300);
             $externalParticipants = rand(0, 100);
+
+            $daysUntil = $priorityDateOffsets[$data['title']] ?? rand(12, 90);
+            $dateFrom = Carbon::now()->addDays($daysUntil);
+            $dateTo = (clone $dateFrom)->addDays(rand(0, 2));
 
             \App\Models\Ticket::create([
                 'ticket_number' => 'TKT-' . date('Y') . '-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
@@ -115,8 +126,8 @@ class TicketSeeder extends Seeder
                 'oc_vehicle_type' => null,
                 'oc_vehicle_plate_number' => null,
                 'oc_driver_contact_number' => null,
-                'date_from' => now()->addDays(rand(7, 90))->format('Y-m-d'),
-                'date_to' => now()->addDays(rand(7, 90))->format('Y-m-d'),
+                'date_from' => $dateFrom->format('Y-m-d'),
+                'date_to' => $dateTo->format('Y-m-d'),
                 'time_from' => '08:00',
                 'time_to' => '17:00',
                 'estimated_budget' => rand(5000, 50000),
