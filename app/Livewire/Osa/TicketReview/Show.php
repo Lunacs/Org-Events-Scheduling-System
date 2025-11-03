@@ -2,35 +2,31 @@
 
 namespace App\Livewire\Osa\TicketReview;
 
+use App\Models\Event;
+use App\Models\Event_Schedule;
 use App\Models\Office_Approval;
 use App\Models\OSA_Approval;
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\User;
+use App\Notifications\TicketCommentNotification;
+use App\Notifications\TicketForwardedToGsoNotification;
 use App\Notifications\TicketStatusUpdatedNotification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 class Show extends Component
 {
+    use Toast;
+
     #[Title('Ticket Review - OSA Admin')]
     #[Layout('components.layouts.app')]
     public Ticket $ticket;
 
     public $comment = '';
-
-    // Modal states
-    public $showApprovalModal = false;
-
-    public $showRejectionModal = false;
-
-    public $showRevisionModal = false;
-
-    public $showForwardModal = false;
-
-    public $showFinalApprovalModal = false;
-
-    public $showFinalRejectionModal = false;
 
     // Remarks for each action
     public $approvalRemarks = '';
@@ -47,31 +43,36 @@ class Show extends Component
 
     public function mount($ticketNumber)
     {
-        $this->ticket = Ticket::with([
-            'user.studentOrganization.course',
-            'user.position',
-            'events.eventSchedules',
-            'attachments',
-            'eventType',
-            'fundSource',
-            'comments.user',
-            'osaApprovals.user',
-            'officeApprovals.office',
-            'officeApprovals.user',
+        // Optimize: Select only needed columns from tickets table
+        $this->ticket = Ticket::select([
+            'ticket_id', 'ticket_number', 'title', 'description', 'status', 'date_from', 'date_to',
+            'time_from', 'time_to', 'venue_requested', 'participants_count', 'expected_participants',
+            'additional_notes', 'user_id', 'event_type_id', 'fund_source_id', 'created_at', 'updated_at'
+        ])->with([
+            'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
+            'user.role:role_id,role_name',
+            'user.studentOrganization:org_id,org_name,org_code',
+            'user.studentOrganization.course:course_id,course_name',
+            'user.position:position_id,position_name',
+            'events:event_id,ticket_id,event__type_id,notes',
+            'events.eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue,status',
+            'attachments:attachment_id,ticket_id,file_path,file_name,file_type',
+            'eventType:event_type_id,type_name',
+            'fundSource:source_id,source_name',
+            'comments:id,ticket_id,user_id,content,created_at',
+            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user.role:role_id,role_name',
+            'osaApprovals:osa_approval_id,ticket_id,user_id,decision,remarks,created_at',
+            'osaApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'osaApprovals.user.role:role_id,role_name',
+            'officeApprovals:id,ticket_id,office_id,user_id,decision,remarks,created_at',
+            'officeApprovals.office:office_id,office_name',
+            'officeApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'officeApprovals.user.role:role_id,role_name',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }
 
-    public function openApprovalModal()
-    {
-        $this->showApprovalModal = true;
-        $this->approvalRemarks = '';
-    }
-
-    public function closeApprovalModal()
-    {
-        $this->showApprovalModal = false;
-        $this->approvalRemarks = '';
-    }
+    // Open/close modal methods removed; handled by Alpine.js
 
     public function approveTicket()
     {
@@ -105,14 +106,14 @@ class Show extends Component
         ]);
 
         // Create Event record
-        $event = \App\Models\Event::create([
+        $event = Event::create([
             'ticket_id' => $this->ticket->ticket_id,
             'event__type_id' => $this->ticket->event_type_id,
             'notes' => 'Event created from approved ticket',
         ]);
 
         // Create Event Schedule record
-        \App\Models\Event_Schedule::create([
+        Event_Schedule::create([
             'event_id' => $event->event_id,
             'start_date' => $this->ticket->date_from,
             'end_date' => $this->ticket->date_to,
@@ -123,27 +124,22 @@ class Show extends Component
             'remarks' => 'Schedule created from approved ticket',
         ]);
 
-        // Close modal and reset
-        $this->closeApprovalModal();
+        // Client-side modal closing handled via Alpine.js
 
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user', 'events.eventSchedules');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
 
-        // Fix notification dispatch
-        session()->flash('success', 'Ticket has been approved and event has been created successfully.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'approved');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Approved',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been approved!",
+            'type' => 'success',
+        ]);
+
+        $this->success('Ticket has been approved and event has been created successfully.');
         $this->dispatch('ticket-approved');
-    }
-
-    public function openForwardModal()
-    {
-        $this->showForwardModal = true;
-        $this->forwardRemarks = '';
-    }
-
-    public function closeForwardModal()
-    {
-        $this->showForwardModal = false;
-        $this->forwardRemarks = '';
     }
 
     public function forwardToGso()
@@ -185,27 +181,32 @@ class Show extends Component
             'remarks' => $this->forwardRemarks,
         ]);
 
-        // Close modal and reset
-        $this->closeForwardModal();
+        // Notify all GSO users in the GSO office about the forwarded ticket
+        $gsoUsers = User::where('role_id', User::ROLE_GSO)
+            ->where('office_id', 1)
+            ->get();
+
+        foreach ($gsoUsers as $gsoUser) {
+            $gsoUser->notify(new TicketForwardedToGsoNotification(
+                $this->ticket,
+                $this->forwardRemarks
+            ));
+        }
 
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
-        // Fix notification dispatch
-        session()->flash('success', 'Ticket has been forwarded to GSO for approval.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'gso_review');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Forwarded to GSO',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been forwarded to GSO for review.",
+            'type' => 'info',
+        ]);
+
+        $this->success('Ticket has been forwarded to GSO for approval.');
         $this->dispatch('ticket-forwarded');
-    }
-
-    public function openRevisionModal()
-    {
-        $this->showRevisionModal = true;
-        $this->revisionRemarks = '';
-    }
-
-    public function closeRevisionModal()
-    {
-        $this->showRevisionModal = false;
-        $this->revisionRemarks = '';
     }
 
     public function requestRevision()
@@ -238,27 +239,20 @@ class Show extends Component
             'remarks' => $this->revisionRemarks,
         ]);
 
-        // Close modal and reset
-        $this->closeRevisionModal();
-
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
-        // Fix notification dispatch
-        session()->flash('info', 'Ticket has been sent back for revision.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'needs_revision');
+        $this->dispatch('notification-received', [
+            'title' => 'Revision Requested',
+            'message' => "Your ticket {$this->ticket->ticket_number} needs revision. Please check the remarks.",
+            'type' => 'warning',
+        ]);
+
+        $this->warning('Ticket has been sent back for revision.');
         $this->dispatch('ticket-revision-requested');
-    }
-
-    public function openRejectionModal()
-    {
-        $this->showRejectionModal = true;
-        $this->rejectionRemarks = '';
-    }
-
-    public function closeRejectionModal()
-    {
-        $this->showRejectionModal = false;
-        $this->rejectionRemarks = '';
     }
 
     public function rejectTicket()
@@ -291,27 +285,20 @@ class Show extends Component
             $this->rejectionRemarks
         ));
 
-        // Close modal and reset
-        $this->closeRejectionModal();
-
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
-        // Fix notification dispatch
-        session()->flash('error', 'Ticket has been rejected.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Rejected',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been rejected. Please check the remarks.",
+            'type' => 'error',
+        ]);
+
+        $this->error('Ticket has been rejected.');
         $this->dispatch('ticket-rejected');
-    }
-
-    public function openFinalApprovalModal()
-    {
-        $this->showFinalApprovalModal = true;
-        $this->finalApprovalRemarks = '';
-    }
-
-    public function closeFinalApprovalModal()
-    {
-        $this->showFinalApprovalModal = false;
-        $this->finalApprovalRemarks = '';
     }
 
     public function finalApproval()
@@ -348,14 +335,14 @@ class Show extends Component
         ));
 
         // Create Event record
-        $event = \App\Models\Event::create([
+        $event = Event::create([
             'ticket_id' => $this->ticket->ticket_id,
             'event__type_id' => $this->ticket->event_type_id,
             'notes' => 'Event created from approved ticket after GSO review',
         ]);
 
         // Create Event Schedule record
-        \App\Models\Event_Schedule::create([
+        Event_Schedule::create([
             'event_id' => $event->event_id,
             'start_date' => $this->ticket->date_from,
             'end_date' => $this->ticket->date_to,
@@ -366,27 +353,20 @@ class Show extends Component
             'remarks' => 'Schedule created from approved ticket after GSO review',
         ]);
 
-        // Close modal and reset
-        $this->closeFinalApprovalModal();
-
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user', 'events.eventSchedules');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
 
-        // Fix notification dispatch
-        session()->flash('success', 'Ticket has been approved and event has been created successfully.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'approved');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Finally Approved',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been finally approved after GSO review!",
+            'type' => 'success',
+        ]);
+
+        $this->success('Ticket has been approved and event has been created successfully.');
         $this->dispatch('ticket-final-approved');
-    }
-
-    public function openFinalRejectionModal()
-    {
-        $this->showFinalRejectionModal = true;
-        $this->finalRejectionRemarks = '';
-    }
-
-    public function closeFinalRejectionModal()
-    {
-        $this->showFinalRejectionModal = false;
-        $this->finalRejectionRemarks = '';
     }
 
     public function finalRejection()
@@ -421,36 +401,163 @@ class Show extends Component
             $this->finalRejectionRemarks
         ));
 
-        // Close modal and reset
-        $this->closeFinalRejectionModal();
+        // Client-side modal closing handled via Alpine.js
 
         // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user', 'officeApprovals.office', 'officeApprovals.user');
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
-        // Fix notification dispatch
-        session()->flash('error', 'Ticket has been rejected after GSO review.');
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Finally Rejected',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been finally rejected after GSO review.",
+            'type' => 'error',
+        ]);
+
+        $this->error('Ticket has been rejected after GSO review.');
         $this->dispatch('ticket-final-rejected');
     }
 
     public function addComment()
     {
         if (empty(trim($this->comment))) {
-            session()->flash('warning', 'Please enter a comment.');
+            $this->warning('Please enter a comment.');
 
             return;
         }
 
-        TicketComment::create([
+        // Create comment
+        $newComment = TicketComment::create([
             'ticket_id' => $this->ticket->ticket_id,
             'user_id' => auth()->id(),
             'content' => $this->comment,
         ]);
 
+        // Clear the input
         $this->comment = '';
-        $this->ticket->load('comments.user');
 
-        session()->flash('success', 'Your comment has been added successfully.');
+        // Reload only the comments relationship with minimal data
+        $this->ticket->load([
+            'comments:id,ticket_id,user_id,content,created_at',
+            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user.role:role_id,role_name',
+        ]);
+
+        // Notify relevant parties (server-side concern)
+        $this->notifyCommentAdded($newComment);
+
+        // Simple success message (no heavy notifications)
+        $this->success('Comment added successfully.');
+
+        // Dispatch event for avatar initialization (client-side UI)
         $this->dispatch('comment-added');
+    }
+
+    /**
+     * Notify relevant users when a comment is added
+     * OSA comment → Notify ticket owner (Student Org)
+     * Student Org comment → Notify OSA
+     * If ticket forwarded to GSO → Also notify GSO
+     */
+    private function notifyCommentAdded(TicketComment $comment)
+    {
+        $commenter = auth()->user();
+        $ticketOwner = $this->ticket->user;
+
+        // Don't notify the person who made the comment
+        $usersToNotify = collect();
+
+        // Always notify the ticket owner if they didn't make the comment
+        if ($ticketOwner->user_id !== $commenter->user_id) {
+            $usersToNotify->push($ticketOwner);
+        }
+
+        // If commenter is Student Org, notify OSA users
+        if ($commenter->isStudentOrg()) {
+            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            $usersToNotify = $usersToNotify->merge($osaUsers);
+        }
+
+        // If ticket is in GSO review status, notify GSO users (but only if they didn't comment)
+        // if (in_array($this->ticket->status, ['gso_review', 'pending_osa_approval'])) {
+        //     $gsoUsers = User::where('role_id', User::ROLE_GSO)
+        //         ->where('user_id', '!=', $commenter->user_id)
+        //         ->get();
+        //     $usersToNotify = $usersToNotify->merge($gsoUsers);
+        // }
+
+        // Send DB + broadcast immediately; queue mail separately to avoid UI delay
+        $usersToNotify->unique('user_id')->each(function ($user) use ($comment, $commenter) {
+            // immediate
+            $user->notifyNow(new TicketCommentNotification($this->ticket, $comment, $commenter, ['database', 'broadcast']));
+
+            // queued mail only
+            $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
+        });
+
+        // Dispatch real-time notification event
+        if ($usersToNotify->isNotEmpty()) {
+            $this->dispatch('refresh-notifications');
+        }
+    }
+
+    /**
+     * Generate a temporary URL and open in a new tab for preview.
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, false);
+
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Generate a temporary URL that forces download and redirect to it.
+     */
+    public function downloadAttachment(int $attachmentId)
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return null;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
+
+        return redirect()->away($url);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem. Falls back to public URL if unsupported.
+     */
+    private function makeTemporaryUrl(string $path, string $filename, bool $forceDownload = false): string
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+
+        try {
+            if (method_exists($disk, 'temporaryUrl')) {
+                $options = [
+                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline').'; filename="'.addslashes($filename).'"',
+                ];
+
+                return $disk->temporaryUrl($path, now()->addMinutes(5), $options);
+            }
+        } catch (\Throwable $e) {
+            // Fallback below if temporary URLs are unavailable for the disk
+        }
+
+        return Storage::url($path);
     }
 
     public function render()

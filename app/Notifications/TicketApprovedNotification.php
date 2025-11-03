@@ -39,10 +39,15 @@ class TicketApprovedNotification extends Notification implements ShouldBroadcast
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->line('Your ticket has been approved!')
-            ->action('View Ticket', route('student-org.my-tickets'))
-            ->line('Ticket Number: ' . $this->ticket->ticket_number);
+		$actionUrl = route('student-org.my-tickets');
+
+		return (new MailMessage)
+			->subject('Ticket Approved - ' . $this->ticket->ticket_number)
+			->view('emails.tickets.ticket-approved', [
+				'ticket' => $this->ticket,
+				'actionUrl' => $actionUrl,
+				'actionText' => 'View Ticket',
+			]);
     }
 
     /**

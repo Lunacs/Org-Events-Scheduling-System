@@ -285,9 +285,9 @@
                                     {{ $attachment->file_type ?? 'Unknown type' }}</p>
                             </div>
                         </div>
-                        @if($attachment->file_path)
+                        @if ($attachment->file_path)
                             <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
-                               class="btn btn-primary btn-sm">
+                                class="btn btn-primary btn-sm">
                                 <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
                                 Download
                             </a>

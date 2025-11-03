@@ -68,8 +68,9 @@
                     </div>
 
                     <!-- Actions -->
-                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ url()->previous() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a href="{{ url()->previous() }}"
+                            class="btn btn-outline hover:outline-primary bg-primary text-white">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Go Back
                         </a>
@@ -78,16 +79,6 @@
                             Go to Login
                         </a>
                     </div>
-{{--                    <div class="flex flex-col sm:flex-row gap-3 justify-center">--}}
-{{--                        <a href="{{ route('login') }}" class="btn btn-outline hover:outline-primary bg-primary">--}}
-{{--                            <i class="fas fa-sign-in-alt mr-2"></i>--}}
-{{--                            Login Now--}}
-{{--                        </a>--}}
-{{--                        <a href="{{ url('/') }}" class="btn btn-outline hover:outline-primary text-black">--}}
-{{--                            <i class="fas fa-home mr-2"></i>--}}
-{{--                            Go to Home--}}
-{{--                        </a>--}}
-{{--                    </div>--}}
 
                     <!-- Additional Help -->
                     <div class="mt-8 pt-6 border-t border-base-300 text-center">

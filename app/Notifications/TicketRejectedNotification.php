@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -15,12 +14,13 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
     use Queueable;
 
     public $ticket;
+
     public $remarks;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Ticket $ticket, string $remarks = null)
+    public function __construct(Ticket $ticket, ?string $remarks = null)
     {
         $this->ticket = $ticket;
         $this->remarks = $remarks;
@@ -41,11 +41,16 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $actionUrl = route('student-org.my-tickets');
+
         return (new MailMessage)
-            ->line('Your ticket has been rejected.')
-            ->line($this->remarks ? 'Remarks: ' . $this->remarks : '')
-            ->action('View Ticket', route('student-org.my-tickets'))
-            ->line('Ticket Number: ' . $this->ticket->ticket_number);
+            ->subject('Ticket Rejected - '.$this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-rejected', [
+                'ticket' => $this->ticket,
+                'remarks' => $this->remarks,
+                'actionUrl' => $actionUrl,
+                'actionText' => 'View Ticket',
+            ]);
     }
 
     /**
@@ -57,7 +62,7 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
     {
         return [
             'title' => 'Ticket Rejected',
-            'message' => 'Your ticket "' . $this->ticket->title . '" has been rejected',
+            'message' => 'Your ticket "'.$this->ticket->title.'" has been rejected',
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_rejected',
@@ -74,7 +79,7 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
     {
         return new BroadcastMessage([
             'title' => 'Ticket Rejected',
-            'message' => 'Your ticket "' . $this->ticket->title . '" has been rejected',
+            'message' => 'Your ticket "'.$this->ticket->title.'" has been rejected',
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_rejected',

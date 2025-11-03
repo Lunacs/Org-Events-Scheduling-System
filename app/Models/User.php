@@ -209,18 +209,15 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the user's role name
-     */
-    public function getRoleNameAttribute(): string
-    {
-        return $this->role?->role_name ?? 'Unknown';
-    }
-
-    /**
      * Get the user's formatted role name (for display)
      */
     public function getRoleDisplayAttribute(): string
     {
+        // Load role relationship if not already loaded
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+        
         $roleName = $this->role?->role_name ?? 'unknown';
         return ucfirst(str_replace('-', ' ', $roleName));
     }

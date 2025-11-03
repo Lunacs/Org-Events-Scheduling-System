@@ -89,14 +89,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Technical Notice -->
-            <div class="mt-6 text-center">
-                <div class="inline-flex items-center gap-2 text-sm text-base-content/50">
-                    <i class="fas fa-tools"></i>
-                    <span>Our technical team has been automatically notified of this error</span>
-                </div>
-            </div>
         </div>
     </div>
 </body>
