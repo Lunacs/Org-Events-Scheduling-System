@@ -2,36 +2,18 @@
 
 namespace App\Livewire\StudentOrg;
 
-use Livewire\Component;
-use Livewire\Attributes\Title;
+use App\Livewire\Components\EventCalendar as ComponentsEventCalendar;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
-class Calendar extends Component
+class Calendar extends ComponentsEventCalendar
 {
     #[Title('Event Calendar - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
 
-    public $eventTypeFilter = '';
-    public $venueFilter = '';
-
-    public function previousMonth()
+    // All functionality is inherited from ComponentsEventCalendar
+    protected function getRoleSpecificData(): array
     {
-        // Implement month navigation logic
-    }
-
-    public function nextMonth()
-    {
-        // Implement month navigation logic
-    }
-
-    public function resetFilters()
-    {
-        $this->eventTypeFilter = '';
-        $this->venueFilter = '';
-    }
-
-    public function render()
-    {
-        return view('livewire.student-org.calendar');
+        return [];
     }
 }

@@ -143,6 +143,8 @@ return [
     'navigate' => [
         'show_progress_bar' => true,
         'progress_bar_color' => '#f68067',
+        // Optimize navigation speed by disabling progress delay
+        'progress_bar_delay' => 0, // Show immediately (default is 200ms)
     ],
 
     /*

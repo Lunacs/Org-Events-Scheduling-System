@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Gso\ReportsExportController;
+use App\Livewire\Osa\Archive;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
 use App\Livewire\Osa\Notifications as OsaNotifications;
@@ -67,6 +68,7 @@ Route::prefix('admin')
         Route::get('/notifications', OsaNotifications::class)->name('admin.notifications');
         //        Route::view('/student-organizations', 'osa.organizations')->name('admin.organizations');
         Route::get('/reports', Reports::class)->name('admin.reports');
+        Route::get('/archive', Archive::class)->name('admin.archive');
         Route::view('/accounts', 'osa.accounts')->name('admin.accounts');
         Route::get('/profile', OsaProfile::class)->name('admin.profile');
     });

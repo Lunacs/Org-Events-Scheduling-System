@@ -53,6 +53,7 @@ class Ticket extends Model
         'additional_notes',
         'fund_source_id',
         'status',
+        'content',
     ];
 
     /**
@@ -104,8 +105,9 @@ class Ticket extends Model
      */
     public function latestOsaApproval()
     {
+        // Use the correct primary key for OSA_Approval to determine the latest record
         return $this->hasOne(OSA_Approval::class, 'ticket_id')
-                    ->latestOfMany();
+                    ->latestOfMany('osa_approval_id');
     }
 
     /**
@@ -148,6 +150,12 @@ class Ticket extends Model
         return $this->hasMany(TicketComment::class, 'ticket_id');
     }
 
+    public function latestComment()
+    {
+        return $this->hasOne(TicketComment::class, 'ticket_id')
+            ->latest('updated_at');
+    }
+
     /**
      * Check if ticket is ready for final OSA approval
      */
@@ -161,7 +169,7 @@ class Ticket extends Model
      */
     public function needsGsoApproval()
     {
-        return in_array($this->status, ['received', 'amended']) && 
+        return in_array($this->status, ['received', 'amended']) &&
                ($this->venue_requested || $this->special_requirements);
     }
 

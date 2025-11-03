@@ -13,36 +13,24 @@ class EventTypeSeeder extends Seeder
     {
         $eventTypes = [
             [
-                'type_name' => 'Academic Conference',
-                'description' => 'Educational conferences, seminars, and workshops organized by student organizations.',
+                'type_name' => 'General Assemblies and Similar Activities',
+                'description' => 'Activities mainly catered for Student Organization members. (Ex. Socstud Week, Educ Week, etc.)',
             ],
             [
-                'type_name' => 'Cultural Event',
-                'description' => 'Cultural celebrations, festivals, and heritage showcases.',
+                'type_name' => 'Organization Shirts / IGP',
+                'description' => 'Activities related to the production and distribution of organization shirts.',
             ],
             [
-                'type_name' => 'Sports Competition',
-                'description' => 'Athletic events, tournaments, and sports competitions.',
+                'type_name' => 'Off-Campus Activities',
+                'description' => 'Activities held outside the campus premises.',
             ],
             [
-                'type_name' => 'Community Service',
-                'description' => 'Outreach programs, volunteer activities, and community engagement.',
+                'type_name' => 'Online Activities',
+                'description' => 'Activities conducted through online platforms.',
             ],
             [
-                'type_name' => 'Workshop',
-                'description' => 'Skills training sessions, hands-on learning, and professional development.',
-            ],
-            [
-                'type_name' => 'Fundraising',
-                'description' => 'Fundraising activities and charity events.',
-            ],
-            [
-                'type_name' => 'Social Gathering',
-                'description' => 'Social events, parties, and recreational activities.',
-            ],
-            [
-                'type_name' => 'Competition',
-                'description' => 'Academic and talent competitions.',
+                'type_name' => 'Training, Rehearsals, Practices',
+                'description' => 'Activities focused on skill development and preparation.',
             ],
         ];
 

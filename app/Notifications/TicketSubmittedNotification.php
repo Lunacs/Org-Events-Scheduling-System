@@ -30,7 +30,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
     }
 
     /**
@@ -38,10 +38,15 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $actionUrl = route('admin.tickets');
+
         return (new MailMessage)
-            ->line('A new ticket has been submitted.')
-            ->action('View Ticket', route('admin.tickets'))
-            ->line('Ticket Number: '.$this->ticket->ticket_number);
+            ->subject('New Ticket Submitted - '.$this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-submitted', [
+                'ticket' => $this->ticket,
+                'actionUrl' => $actionUrl,
+                'actionText' => 'View Tickets',
+            ]);
     }
 
     /**

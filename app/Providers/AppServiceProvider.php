@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,5 +18,12 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void {}
+    public function boot(): void
+    {
+        // Automatically eager load relationships (Laravel 12.0.8+)
+        Model::automaticallyEagerLoadRelationships();
+
+        // Prevent lazy loading in non-production (catch N+1 issues early)
+        Model::preventLazyLoading(! app()->isProduction());
+    }
 }

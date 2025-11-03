@@ -2,9 +2,13 @@
 
 namespace App\Livewire\StudentOrg;
 
+use App\Models\Attachment;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
 use App\Models\Ticket;
+use App\Models\User;
+use App\Notifications\TicketSubmittedNotification;
+use Exception;
 use Livewire\Attributes\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -48,7 +52,7 @@ class SubmitTicket extends Component
 
     #[Validate('required|integer|min:1')]
     public $expectedPLVParticipants = 0;
-    #[Validate('nullable|integer|min:1')]
+    #[Validate('nullable|integer|min:0')]
     public $expectedNonPLVParticipants = 0;
 
     #[Validate('required|string|max:255')]
@@ -66,10 +70,10 @@ class SubmitTicket extends Component
     #[Validate('nullable|string|max:2000')]
     public $specialRequirements = '';
 
-    #[Validate('required|date|after_or_equal:today')]
+    #[Validate('required|date')]
     public $eventStartDate = '';
 
-    #[Validate('required|date|after_or_equal:eventStartDate')]
+    #[Validate('required|date')]
     public $eventEndDate = '';
 
     #[Validate('required|date_format:H:i')]
@@ -122,6 +126,97 @@ class SubmitTicket extends Component
 
     #[Validate('nullable|array', 'attachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
     public $attachments = [];
+
+    #[Validate('nullable|array', 'newAttachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
+    public $newAttachments = [];
+
+    public $showPreviewModal = false;
+
+    protected function rules()
+    {
+        return [
+            'eventStartDate' => 'required|date|after_or_equal:today',
+            'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
+            'eventStartTime' => 'required|date_format:H:i|after_or_equal:08:00',
+            'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
+        ];
+    }
+
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName);
+
+        // Additional time range validation
+        if ($propertyName === 'eventStartTime' && $this->eventStartTime < '08:00') {
+            $this->addError('eventStartTime', 'Event start time must be at or after 8:00 AM.');
+        }
+
+        if ($propertyName === 'eventEndTime' && $this->eventEndTime > '21:00') {
+            $this->addError('eventEndTime', 'Event end time must be at or before 9:00 PM.');
+        }
+    }
+
+
+    public function openPreviewModal()
+    {
+        $this->showPreviewModal = true;
+    }
+
+    public function closePreviewModal()
+    {
+        $this->showPreviewModal = false;
+    }
+
+    public function getPreviewTicketProperty()
+    {
+        $currentUser = auth()->user();
+        $currentUserinfo = $currentUser->studentOrganization;
+
+        // Create a temporary ticket object for preview
+        $ticket = new Ticket();
+        $ticket->user = $currentUser;
+        $ticket->title = $this->eventTitle;
+        $ticket->description = $this->eventDescription;
+        $ticket->plv_participants = $this->expectedPLVParticipants;
+        $ticket->external_participants = $this->expectedNonPLVParticipants;
+        $ticket->total_participants = $this->expectedParticipants;
+        $ticket->proponent_contact = $this->proponent_contact;
+        $ticket->adviser_contact = $this->adviser_contact;
+        $ticket->date_from = $this->eventStartDate;
+        $ticket->date_to = $this->eventEndDate;
+        $ticket->time_from = $this->eventStartTime;
+        $ticket->time_to = $this->eventEndTime;
+        $ticket->venue_requested = $this->preferredVenue;
+        $ticket->alternate_venue = $this->alternativeVenue;
+        $ticket->special_requirements = $this->specialRequirements;
+        $ticket->estimated_budget = $this->totalBudget;
+        $ticket->budget_breakdown = $this->budgetBreakdown;
+        $ticket->igp_requested = $this->igp_requested === 'true';
+        $ticket->igp_details = $this->igp_details;
+        $ticket->oc_accommodation = $this->oc_accommodation;
+        $ticket->oc_tsp = $this->oc_tsp;
+        $ticket->oc_driver_name = $this->oc_driver_name;
+        $ticket->oc_vehicle_type = $this->oc_vehicle_type;
+        $ticket->oc_vehicle_plate_number = $this->oc_vehicle_plate_number;
+        $ticket->oc_driver_contact_number = $this->oc_driver_contact_number;
+        $ticket->additional_notes = $this->additionalNotes;
+
+        // Create temporary attachment objects for preview
+        $previewAttachments = collect($this->attachments)->map(function ($file) {
+            $attachment = new Attachment();
+            $attachment->file_name = $file->getClientOriginalName();
+            $attachment->file_type = $file->getMimeType();
+            $attachment->file_path = null; // Not stored yet
+            return $attachment;
+        });
+
+        // Load relationships
+        $ticket->setRelation('eventType', Event_Type::find($this->eventType));
+        $ticket->setRelation('fundSource', Fund_Sources::find($this->fundingSource));
+        $ticket->setRelation('attachments', $previewAttachments);
+
+        return $ticket;
+    }
 
     public function mount()
     {
@@ -187,7 +282,7 @@ class SubmitTicket extends Component
                         $filename
                     );
 
-                    \App\Models\Attachment::create([
+                    Attachment::create([
                         'ticket_id' => $ticket->ticket_id,
                         'file_name' => $originalName,
                         'file_path' => $path,
@@ -197,9 +292,9 @@ class SubmitTicket extends Component
             }
 
             // Notify OSA admins about the new ticket
-            $osaUsers = \App\Models\User::where('role_id', \App\Models\User::ROLE_OSA)->get();
+            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
             foreach ($osaUsers as $osaUser) {
-                $osaUser->notify(new \App\Notifications\TicketSubmittedNotification($ticket));
+                $osaUser->notify(new TicketSubmittedNotification($ticket));
             }
 
             $this->toast(
@@ -212,7 +307,7 @@ class SubmitTicket extends Component
                 timeout: 3000,
                 redirectTo: route('student-org.dashboard')
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             session()->flash('error', 'Failed to submit ticket: '.$e->getMessage());
             $this->toast(
                 type: 'error',
@@ -232,11 +327,34 @@ class SubmitTicket extends Component
         return (int) $this->expectedPLVParticipants + (int) $this->expectedNonPLVParticipants;
     }
 
+    public function removeAttachment($index)
+    {
+        array_splice($this->attachments, $index, 1);
+    }
+
+    public function updatedNewAttachments()
+    {
+        $this->validate([
+            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx'
+        ]);
+
+        // Merge new files with existing attachments
+        $this->attachments = array_merge($this->attachments, $this->newAttachments);
+
+        // Clear the temporary input
+        $this->reset('newAttachments');
+    }
+
     public function clearFilters()
     {
         $this->search = '';
         $this->statusFilter = '';
         $this->dateFilter = '';
+    }
+
+    public function getRequiredDocuments()
+    {
+        return config("event_requirements.documents.{$this->eventType}", ['Pick an event type to see needed attachments.']);
     }
 
     public function render()
