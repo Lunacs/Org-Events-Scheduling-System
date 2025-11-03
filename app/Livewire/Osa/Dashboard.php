@@ -33,7 +33,7 @@ class Dashboard extends Component
             $now = now();
             $currentMonth = $now->month;
             $currentYear = $now->year;
-            
+
             // Optimize: Use raw queries for faster counts
             return [
                 'pending' => Ticket::where('status', 'pending')->count(),
@@ -144,6 +144,20 @@ class Dashboard extends Component
         unset($this->stats, $this->recentTickets, $this->pendingApprovals, $this->upcomingEvents);
 
         $this->success('Dashboard data refreshed!', position: 'toast-top');
+    }
+
+    /**
+     * Warm up cache with frequently accessed data to prevent N+1 queries
+     */
+    public function warmCache()
+    {
+        // Pre-warm all dashboard data
+        $this->stats;
+        $this->recentTickets;
+        $this->pendingApprovals;
+        $this->upcomingEvents;
+
+        $this->success('Cache warmed successfully!', position: 'toast-top');
     }
 
     #[Computed]

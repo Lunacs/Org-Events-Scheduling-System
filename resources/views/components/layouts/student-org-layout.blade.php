@@ -32,8 +32,7 @@
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" collapsible
-                class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
                 {{-- BRAND --}}
                 <div class="ml-3 mr-5 pt-5 flex items-center justify-between">

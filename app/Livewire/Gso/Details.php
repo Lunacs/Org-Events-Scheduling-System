@@ -5,24 +5,37 @@ namespace App\Livewire\Gso;
 use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use App\Models\Ticket;
+use App\Models\TicketComment;
+use App\Models\User;
+use App\Notifications\TicketCommentNotification;
+use App\Notifications\TicketStatusUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 class Details extends Component
 {
-    use ResolvesOfficeContext;
+    use ResolvesOfficeContext, Toast;
 
     #[Title('Ticket Details - GSO')]
     #[Layout('components.layouts.gso-layout')]
     public Ticket $ticket;
 
     public ?int $ticketId = null;
+
     public ?int $officeId = null;
+
+    public $comment = '';
+
+    public $approvalRemarks = '';
+
+    public $rejectionRemarks = '';
 
     /**
      * The office approval record matched to the active office context.
@@ -35,16 +48,24 @@ class Details extends Component
      * @var array<string, mixed>
      */
     public array $overview = [];
+
     public array $organization = [];
+
     public array $eventDetails = [];
+
     public array $participants = [];
+
     public array $requirements = [];
+
     public array $schedules = [];
+
     public array $attachments = [];
+
     public array $osaApprovals = [];
+
     public array $officeApprovals = [];
 
-    public function mount(Ticket $ticket = null, ?int $ticketId = null): void
+    public function mount(?Ticket $ticket = null, ?int $ticketId = null): void
     {
         $this->officeId = $this->resolveActiveOfficeId();
         $resolved = $this->resolveTicket($ticket, $ticketId);
@@ -52,7 +73,7 @@ class Details extends Component
         $this->hydrateFromTicket($resolved);
     }
 
-    public function loadTicket(int $ticketId): void
+    public function loadTicket(?int $ticketId): void
     {
         $this->hydrateFromTicket($this->resolveTicket(null, $ticketId));
     }
@@ -83,6 +104,8 @@ class Details extends Component
             'osaApprovals.user',
             'officeApprovals.office',
             'officeApprovals.user',
+            'comments.user.role',
+            'fundSource',
         ]);
 
         return $resolved;
@@ -150,7 +173,7 @@ class Details extends Component
     }
 
     /**
-     * @param array<int, string> $requirements
+     * @param  array<int, string>  $requirements
      * @return array<string, mixed>
      */
     protected function buildEventDetails(array $requirements): array
@@ -200,7 +223,7 @@ class Details extends Component
         return Str::of($raw)
             ->replace([';', '|'], ',')
             ->explode(',')
-            ->map(fn(string $item) => trim($item))
+            ->map(fn (string $item) => trim($item))
             ->filter()
             ->values()
             ->all();
@@ -214,7 +237,7 @@ class Details extends Component
         return $this->ticket->events
             ->values()
             ->flatMap(function ($event, int $eventIndex) {
-                $label = 'Event ' . ($eventIndex + 1);
+                $label = 'Event '.($eventIndex + 1);
 
                 return $event->eventSchedules
                     ->map(function ($schedule) use ($event, $label) {
@@ -290,7 +313,7 @@ class Details extends Component
         $officeId = $this->officeId ?? $this->resolveOfficeId(Auth::user());
 
         return $this->ticket->officeApprovals
-            ->when($officeId, fn($collection) => $collection->where('office_id', $officeId))
+            ->when($officeId, fn ($collection) => $collection->where('office_id', $officeId))
             ->sortByDesc('updated_at')
             ->map(function ($approval) {
                 $decision = $this->normalizeStatus($approval->decision ?? 'pending');
@@ -510,5 +533,285 @@ class Details extends Component
 
         return $ticket->officeApprovals
             ->firstWhere('office_id', $this->officeId);
+    }
+
+    /**
+     * Approve ticket from GSO perspective
+     */
+    public function approveTicket()
+    {
+        // Authorize using policy
+        Gate::authorize('approve', $this->ticket);
+
+        // Validate remarks
+        $this->validate([
+            'approvalRemarks' => 'required|string|min:3',
+        ], [
+            'approvalRemarks.required' => 'Please provide remarks for approval.',
+            'approvalRemarks.min' => 'Remarks must be at least 3 characters.',
+        ]);
+
+        $oldStatus = $this->ticket->status;
+
+        // Update ticket status to pending_osa_approval (waiting for OSA final decision)
+        $this->ticket->update(['status' => 'pending_osa_approval']);
+
+        // Update or create Office_Approval record
+        $officeApproval = $this->resolveOfficeApproval($this->ticket);
+
+        if ($officeApproval && $officeApproval->decision === 'pending') {
+            // Update existing pending approval
+            $officeApproval->update([
+                'decision' => 'approved',
+                'remarks' => $this->approvalRemarks,
+                'user_id' => auth()->id(),
+            ]);
+        } else {
+            // Create new approval record
+            Office_Approval::create([
+                'ticket_id' => $this->ticket->ticket_id,
+                'office_id' => $this->officeId,
+                'user_id' => auth()->id(),
+                'decision' => 'approved',
+                'remarks' => $this->approvalRemarks,
+            ]);
+        }
+
+        // Notify ticket owner about status change
+        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
+            $this->ticket,
+            $oldStatus,
+            'pending_osa_approval',
+            $this->approvalRemarks
+        ));
+
+        // Notify OSA users that GSO has approved
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+        foreach ($osaUsers as $osaUser) {
+            $osaUser->notify(new TicketStatusUpdatedNotification(
+                $this->ticket,
+                $oldStatus,
+                'pending_osa_approval',
+                "GSO has approved this ticket. Remarks: {$this->approvalRemarks}"
+            ));
+        }
+
+        // Reload the ticket with fresh approval data
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
+
+        // Clear remarks
+        $this->approvalRemarks = '';
+
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'pending_osa_approval');
+        $this->dispatch('ticket-approved');
+
+        $this->success('Ticket has been approved. Waiting for OSA final decision.');
+    }
+
+    /**
+     * Reject ticket from GSO perspective
+     */
+    public function rejectTicket()
+    {
+        // Authorize using policy
+        Gate::authorize('reject', $this->ticket);
+
+        // Validate remarks
+        $this->validate([
+            'rejectionRemarks' => 'required|string|min:10',
+        ], [
+            'rejectionRemarks.required' => 'Please provide detailed remarks explaining the reason for rejection.',
+            'rejectionRemarks.min' => 'Remarks must be at least 10 characters to provide clear reasoning.',
+        ]);
+
+        $oldStatus = $this->ticket->status;
+
+        // Update ticket status to rejected
+        $this->ticket->update(['status' => 'rejected']);
+
+        // Update or create Office_Approval record
+        $officeApproval = $this->resolveOfficeApproval($this->ticket);
+
+        if ($officeApproval && $officeApproval->decision === 'pending') {
+            // Update existing pending approval
+            $officeApproval->update([
+                'decision' => 'rejected',
+                'remarks' => $this->rejectionRemarks,
+                'user_id' => auth()->id(),
+            ]);
+        } else {
+            // Create new approval record
+            Office_Approval::create([
+                'ticket_id' => $this->ticket->ticket_id,
+                'office_id' => $this->officeId,
+                'user_id' => auth()->id(),
+                'decision' => 'rejected',
+                'remarks' => $this->rejectionRemarks,
+            ]);
+        }
+
+        // Notify ticket owner about status change
+        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
+            $this->ticket,
+            $oldStatus,
+            'rejected',
+            $this->rejectionRemarks
+        ));
+
+        // Notify OSA users that GSO has rejected
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+        foreach ($osaUsers as $osaUser) {
+            $osaUser->notify(new TicketStatusUpdatedNotification(
+                $this->ticket,
+                $oldStatus,
+                'rejected',
+                "GSO has rejected this ticket. Remarks: {$this->rejectionRemarks}"
+            ));
+        }
+
+        // Reload the ticket with fresh approval data
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
+
+        // Clear remarks
+        $this->rejectionRemarks = '';
+
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('ticket-rejected');
+
+        $this->error('Ticket has been rejected.');
+    }
+
+    /**
+     * Add a comment to the ticket
+     */
+    public function addComment()
+    {
+        if (empty(trim($this->comment))) {
+            $this->warning('Please enter a comment.');
+
+            return;
+        }
+
+        // Create comment
+        $newComment = TicketComment::create([
+            'ticket_id' => $this->ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'content' => $this->comment,
+        ]);
+
+        // Clear the input
+        $this->comment = '';
+
+        // Reload ticket with comments and user relationship
+        $this->ticket->load([
+            'comments:id,ticket_id,user_id,content,created_at',
+            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user.role:role_id,role_name',
+            'user:user_id,name,email,role_id',
+        ]);
+
+        // Notify relevant parties
+        $this->notifyCommentAdded($newComment);
+
+        $this->success('Comment added successfully.');
+        $this->dispatch('comment-added');
+    }
+
+    /**
+     * Notify relevant users when a comment is added
+     * GSO comment → Notify ticket owner (Student Org) and OSA
+     */
+    private function notifyCommentAdded(TicketComment $comment)
+    {
+        $commenter = auth()->user();
+
+        // Ensure ticket user relationship is loaded
+        if (! $this->ticket->relationLoaded('user')) {
+            $this->ticket->load('user:user_id,name,email,role_id');
+        }
+
+        $ticketOwner = $this->ticket->user;
+        $usersToNotify = collect();
+
+        // Always notify the ticket owner (Student Org) if they didn't make the comment
+        if ($ticketOwner && $ticketOwner->user_id !== $commenter->user_id) {
+            $usersToNotify->push($ticketOwner);
+        }
+
+        // Notify OSA users
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+        $usersToNotify = $usersToNotify->merge($osaUsers);
+
+        // Send DB + broadcast immediately; queue mail separately
+        $usersToNotify->unique('user_id')->each(function ($user) use ($comment, $commenter) {
+            $user->notifyNow(new TicketCommentNotification($this->ticket, $comment, $commenter, ['database', 'broadcast']));
+            $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
+        });
+
+        // Dispatch real-time notification event
+        if ($usersToNotify->isNotEmpty()) {
+            $this->dispatch('refresh-notifications');
+        }
+    }
+
+    /**
+     * Preview attachment
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, false);
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Download attachment
+     */
+    public function downloadAttachment(int $attachmentId)
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return null;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
+
+        return redirect()->away($url);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem
+     */
+    private function makeTemporaryUrl(string $path, string $filename, bool $forceDownload = false): string
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+
+        try {
+            if (method_exists($disk, 'temporaryUrl')) {
+                $options = [
+                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline').'; filename="'.addslashes($filename).'"',
+                ];
+
+                return $disk->temporaryUrl($path, now()->addMinutes(5), $options);
+            }
+        } catch (\Throwable $e) {
+            // Fallback below if temporary URLs are unavailable
+        }
+
+        return Storage::url($path);
     }
 }

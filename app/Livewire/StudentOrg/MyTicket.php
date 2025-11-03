@@ -5,6 +5,7 @@ namespace App\Livewire\StudentOrg;
 use App\Models\TicketComment;
 use App\Models\User;
 use App\Notifications\TicketCommentNotification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Rule;
@@ -181,6 +182,90 @@ class MyTicket extends Component
         if ($usersToNotify->isNotEmpty()) {
             $this->dispatch('refresh-notifications');
         }
+    }
+
+    /**
+     * Generate a temporary URL and open in a new tab for preview.
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        if (! $this->selectedTicketId) {
+            $this->warning('No ticket selected.');
+
+            return;
+        }
+
+        $ticket = auth()->user()->tickets()->with('attachments')->find($this->selectedTicketId);
+        if (! $ticket) {
+            $this->warning('You do not have access to that ticket.');
+
+            return;
+        }
+
+        $attachment = $ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, false);
+
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Generate a temporary URL that forces download and dispatch it for JavaScript handling.
+     */
+    public function downloadAttachment(int $attachmentId): void
+    {
+        if (! $this->selectedTicketId) {
+            $this->warning('No ticket selected.');
+
+            return;
+        }
+
+        $ticket = auth()->user()->tickets()->with('attachments')->find($this->selectedTicketId);
+        if (! $ticket) {
+            $this->warning('You do not have access to that ticket.');
+
+            return;
+        }
+
+        $attachment = $ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
+
+        $this->dispatch('download-attachment', url: $url, filename: $attachment->file_name);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem. Falls back to public URL if unsupported.
+     */
+    private function makeTemporaryUrl(string $path, string $filename, bool $forceDownload = false): string
+    {
+        $disk = Storage::disk(config('filesystems.default'));
+
+        try {
+            if (method_exists($disk, 'temporaryUrl')) {
+                $options = [
+                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline').'; filename="'.addslashes($filename).'"',
+                ];
+
+                return $disk->temporaryUrl($path, now()->addMinutes(5), $options);
+            }
+        } catch (\Throwable $e) {
+            // Fallback below if temporary URLs are unavailable for the disk
+        }
+
+        return Storage::url($path);
     }
 
     public function render()

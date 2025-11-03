@@ -122,10 +122,10 @@ class TicketCommentNotification extends Notification implements ShouldQueue
             return route('osa.ticket-review.show', $this->ticket->ticket_number);
         }
 
-        // GSO users go to GSO ticket review
-        // if ($notifiable->isGso()) {
-        //     return route('gso.ticket-review.show', $this->ticket->ticket_number);
-        // }
+        // GSO users go to GSO ticket details
+        if ($notifiable->isGso()) {
+            return route('gso.ticket-details', ['ticket' => $this->ticket->ticket_id]);
+        }
 
         return route('student-org.my-tickets');
     }

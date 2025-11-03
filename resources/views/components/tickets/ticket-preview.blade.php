@@ -277,23 +277,20 @@
                 @foreach ($ticket->attachments as $attachment)
                     <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                         <div class="flex items-center gap-3">
-                            <x-mary-icon name="o-document" class="w-5 h-5 text-primary" />
                             <div>
-                                <p class="font-medium text-base-content">
-                                    {{ $attachment->file_name }}</p>
+                                <button type="button" class="link link-neutral font-medium"
+                                    wire:click="previewAttachment({{ $attachment->attachment_id }})">
+                                    {{ $attachment->file_name }}
+                                </button>
                                 <p class="text-sm text-base-content/70">
-                                    {{ $attachment->file_type ?? 'Unknown type' }}</p>
+                                    {{ $attachment->file_type ? strtoupper($attachment->file_type) : (strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) ?: 'FILE') }}
+                                </p>
                             </div>
                         </div>
-                        @if ($attachment->file_path)
-                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
-                                class="btn btn-primary btn-sm">
-                                <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
-                                Download
-                            </a>
-                        @else
-                            <span class="badge badge-info">Preview</span>
-                        @endif
+                        <button type="button" class="btn btn-primary btn-sm"
+                            wire:click="downloadAttachment({{ $attachment->attachment_id }})">
+                            Download
+                        </button>
                     </div>
                 @endforeach
             </div>

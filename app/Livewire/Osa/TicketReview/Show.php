@@ -46,12 +46,12 @@ class Show extends Component
         // Optimize: Select only needed columns from tickets table
         $this->ticket = Ticket::select([
             'ticket_id', 'ticket_number', 'title', 'description', 'status', 'date_from', 'date_to',
-            'time_from', 'time_to', 'venue_requested', 'participants_count', 'expected_participants',
+            'time_from', 'time_to', 'venue_requested', 'plv_participants','external_participants', 'total_participants',
             'additional_notes', 'user_id', 'event_type_id', 'fund_source_id', 'created_at', 'updated_at'
         ])->with([
             'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
             'user.role:role_id,role_name',
-            'user.studentOrganization:org_id,org_name,org_code',
+            'user.studentOrganization:org_id,org_name,org_code,course_id',
             'user.studentOrganization.course:course_id,course_name',
             'user.position:position_id,position_name',
             'events:event_id,ticket_id,event__type_id,notes',
@@ -182,9 +182,13 @@ class Show extends Component
         ]);
 
         // Notify all GSO users in the GSO office about the forwarded ticket
-        $gsoUsers = User::where('role_id', User::ROLE_GSO)
-            ->where('office_id', 1)
-            ->get();
+        // Optimize: Cache GSO users query and select only needed columns
+        $gsoUsers = \Illuminate\Support\Facades\Cache::remember('gso_users_notifications', 3600, function () {
+            return User::select(['user_id', 'name', 'email', 'role_id', 'office_id'])
+                ->where('role_id', User::ROLE_GSO)
+                ->where('office_id', 1)
+                ->get();
+        });
 
         foreach ($gsoUsers as $gsoUser) {
             $gsoUser->notify(new TicketForwardedToGsoNotification(
@@ -474,8 +478,13 @@ class Show extends Component
         }
 
         // If commenter is Student Org, notify OSA users
+        // Optimize: Cache OSA users query and select only needed columns
         if ($commenter->isStudentOrg()) {
-            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            $osaUsers = \Illuminate\Support\Facades\Cache::remember('osa_users_notifications', 3600, function () {
+                return User::select(['user_id', 'name', 'email', 'role_id'])
+                    ->where('role_id', User::ROLE_OSA)
+                    ->get();
+            });
             $usersToNotify = $usersToNotify->merge($osaUsers);
         }
 

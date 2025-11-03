@@ -161,5 +161,33 @@
         @endif
     </x-mary-drawer>
 
+    {{-- Add JavaScript for handling attachment preview and download --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('open-attachment-preview', ({
+                url
+            }) => {
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            });
+
+            Livewire.on('download-attachment', ({
+                url,
+                filename
+            }) => {
+                if (url) {
+                    // Create a temporary anchor element to trigger download
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename || 'download';
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        });
+    </script>
 
 </div>

@@ -56,7 +56,11 @@ class TicketManagement extends Component
 
     public function approveTicket($ticketId)
     {
-        $ticket = Ticket::findOrFail($ticketId);
+        // Optimize: Load ticket with required relationships to avoid N+1
+        $ticket = Ticket::select(['ticket_id', 'ticket_number', 'status', 'user_id', 'event_type_id'])
+            ->with(['user:user_id,name,email'])
+            ->findOrFail($ticketId);
+
         $oldStatus = $ticket->status;
 
         $ticket->update(['status' => 'approved']);
@@ -95,7 +99,11 @@ class TicketManagement extends Component
 
     public function rejectTicket($ticketId)
     {
-        $ticket = Ticket::findOrFail($ticketId);
+        // Optimize: Load ticket with required relationships to avoid N+1
+        $ticket = Ticket::select(['ticket_id', 'ticket_number', 'status', 'user_id'])
+            ->with(['user:user_id,name,email'])
+            ->findOrFail($ticketId);
+
         $oldStatus = $ticket->status;
 
         $ticket->update(['status' => 'rejected']);
@@ -134,7 +142,11 @@ class TicketManagement extends Component
 
     public function rescheduleTicket($ticketId)
     {
-        $ticket = Ticket::findOrFail($ticketId);
+        // Optimize: Load ticket with required relationships to avoid N+1
+        $ticket = Ticket::select(['ticket_id', 'ticket_number', 'status', 'user_id'])
+            ->with(['user:user_id,name,email'])
+            ->findOrFail($ticketId);
+
         $oldStatus = $ticket->status;
 
         $ticket->update(['status' => 'for_rescheduling']);

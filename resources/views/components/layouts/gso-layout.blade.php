@@ -58,18 +58,6 @@
                         link="{{ route('gso.communication') }}" wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate />
                 </x-mary-menu>
-
-                {{-- Logout Menu Item --}}
-                <x-mary-menu-separator />
-                <form method="POST" action="{{ route('logout') }}" class="w-full">
-                    @csrf
-                    <button type="submit"
-                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
-                        onclick="return confirm('Are you sure you want to logout?')">
-                        <i class="fas fa-sign-out-alt mr-3"></i>
-                        Logout
-                    </button>
-                </form>
             </x-slot:sidebar>
 
             {{-- The `$slot` goes here --}}

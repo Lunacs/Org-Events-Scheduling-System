@@ -116,7 +116,7 @@ class Archive extends Component
             ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
             ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
             ->orderBy('created_at', 'desc')
-            ->paginate(12); // Reduced from 15 to 12
+            ->paginate(10); // Reduced from 12 to 10 for faster loads
     }
 
     public function render()

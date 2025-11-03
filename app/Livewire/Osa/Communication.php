@@ -80,22 +80,26 @@ class Communication extends Component
         ]);
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 3600)]
     public function organizations()
     {
-        return Student_Organization::select(['org_id', 'org_name', 'org_code'])
-            ->where('status', 'active')
-            ->orderBy('org_name')
-            ->get();
+        return \Illuminate\Support\Facades\Cache::remember('osa_communication_organizations', 3600, function () {
+            return Student_Organization::select(['org_id', 'org_name', 'org_code'])
+                ->where('status', 'active')
+                ->orderBy('org_name')
+                ->get();
+        });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 3600)]
     public function users()
     {
-        return User::select(['user_id', 'name', 'email', 'org_id'])
-            ->where('role_id', User::ROLE_STUDENT_ORG)
-            ->with('studentOrganization:org_id,org_name')
-            ->orderBy('name')
-            ->get();
+        return \Illuminate\Support\Facades\Cache::remember('osa_communication_users', 3600, function () {
+            return User::select(['user_id', 'name', 'email', 'org_id'])
+                ->where('role_id', User::ROLE_STUDENT_ORG)
+                ->with('studentOrganization:org_id,org_name')
+                ->orderBy('name')
+                ->get();
+        });
     }
 }

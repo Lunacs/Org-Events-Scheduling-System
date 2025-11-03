@@ -8,7 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use App\Models\Ticket;
-use App\Models\Attachment;
+use Illuminate\Support\Facades\Cache;
 
 class TicketReview extends Component
 {
@@ -19,16 +19,20 @@ class TicketReview extends Component
 
     public $selectedTicket = null;
     public $showModal = false;
-    
+
     #[Url(except: '')]
     public $search = '';
-    
+
     #[Url(except: 'received')]
     public $statusFilter = 'received';
 
     public function viewTicket($ticketId)
     {
-        $this->selectedTicket = Ticket::select([
+        // Optimize: Use caching for frequently viewed tickets
+        $cacheKey = "ticket_modal_data_{$ticketId}";
+
+        $this->selectedTicket = Cache::remember($cacheKey, 300, function () use ($ticketId) {
+            return Ticket::select([
                 'ticket_id', 'ticket_number', 'title', 'description', 'status',
                 'venue_requested', 'total_participants', 'user_id', 'event_type_id'
             ])
@@ -40,6 +44,8 @@ class TicketReview extends Component
                 'eventType:event_type_id,type_name'
             ])
             ->find($ticketId);
+        });
+
         $this->showModal = true;
     }
 
