@@ -24,6 +24,11 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        [x-cloak] {
+            display: none !important
+        }
+    </style>
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
@@ -47,19 +52,19 @@
                 <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
                     <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard" wire:navigate />
-                    <x-mary-menu-item title="Ticket Management" icon="s-calendar-days" link="/admin/tickets"
-                        wire:navigate />
-                    <x-mary-menu-item title="Ticket Review & Approvals" icon="s-calendar-days"
+                    <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets" wire:navigate />
+                    <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
                         link="/admin/ticket-review" wire:navigate />
-                    <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="/admin/calendar"
+                    <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
                         wire:navigate />
                     <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate />
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
+                    <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate />
                 </x-mary-menu>
             </x-slot:sidebar>
             <x-slot:footer>
                 <div class="bg-accent text-center py-2">
-                    <p class="text-sm">© 2025 PLV Event Scheduling System - OSA Admin</p>
+                    <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
                 </div>
             </x-slot:footer>
 

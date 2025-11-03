@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\OSA_Approval;
 use App\Models\Ticket;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -76,6 +77,15 @@ class TicketManagement extends Component
             'Ticket approved from ticket management.'
         ));
 
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'approved');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Approved',
+            'message' => "Your ticket {$ticket->ticket_number} has been approved!",
+            'type' => 'success',
+        ])->to($ticket->user);
+
         $this->dispatch('toast', [
             'type' => 'success',
             'title' => 'Success',
@@ -105,6 +115,15 @@ class TicketManagement extends Component
             'rejected',
             'Ticket rejected from ticket management.'
         ));
+
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('notification-received', [
+            'title' => 'Ticket Rejected',
+            'message' => "Your ticket {$ticket->ticket_number} has been rejected.",
+            'type' => 'error',
+        ])->to($ticket->user);
 
         $this->dispatch('toast', [
             'type' => 'error',
@@ -136,6 +155,15 @@ class TicketManagement extends Component
             'Reschedule requested from ticket management.'
         ));
 
+        // Dispatch events for instant notifications
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: 'for_rescheduling');
+        $this->dispatch('notification-received', [
+            'title' => 'Reschedule Requested',
+            'message' => "Your ticket {$ticket->ticket_number} has been marked for rescheduling.",
+            'type' => 'info',
+        ])->to($ticket->user);
+
         $this->dispatch('toast', [
             'type' => 'info',
             'title' => 'Reschedule Requested',
@@ -143,11 +171,18 @@ class TicketManagement extends Component
         ]);
     }
 
-    public function render()
+    #[Computed]
+    public function tickets()
     {
-        $tickets = Ticket::select([
-            'ticket_id', 'ticket_number', 'title', 'description', 'status',
-            'created_at', 'user_id', 'event_type_id',
+        return Ticket::select([
+            'ticket_id',
+            'ticket_number',
+            'title',
+            'description',
+            'status',
+            'created_at',
+            'user_id',
+            'event_type_id',
         ])
             ->with([
                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])
@@ -161,8 +196,24 @@ class TicketManagement extends Component
             }))
             ->when($this->dateFilter, fn ($query) => $query->whereDate('created_at', $this->dateFilter))
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->paginate(10); // Increased from 5 to 10 for better UX
+    }
 
-        return view('livewire.osa.ticket-management', compact('tickets'));
+    public function render()
+    {
+        return view('livewire.osa.ticket-management', [
+            'tickets' => $this->tickets,
+            'organizations' => $this->organizations,
+        ]);
+    }
+
+    #[Computed(persist: true, seconds: 3600)]
+    public function organizations()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('osa_organizations_list', 3600, function () {
+            return \App\Models\Student_Organization::select(['org_id', 'org_name'])
+                ->orderBy('org_name')
+                ->get();
+        });
     }
 }

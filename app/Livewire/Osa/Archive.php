@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\Event;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -33,7 +34,9 @@ class Archive extends Component
     #[Url(except: '')]
     public $eventTypeFilter = '';
 
-    public $selectedEvent = null;
+    public $selectedEvent = null; // deprecated; kept for BC, not used now
+
+    public ?int $selectedEventId = null;
 
     public $showModal = false;
 
@@ -44,17 +47,8 @@ class Archive extends Component
 
     public function viewArchivedEvent($eventId)
     {
-        $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
-            ->with([
-                'ticket:ticket_id,ticket_number,title,description,status,user_id,venue_requested,total_participants,created_at' => fn ($q) => $q->with([
-                    'user:user_id,org_id' => fn ($q) => $q->with('studentOrganization:org_id,org_name'),
-                    'osaApprovals:osa_approval_id,ticket_id,status,comments,approved_at',
-                    'attachments:attachment_id,ticket_id,file_path,file_name',
-                ]),
-                'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
-                'eventType:event_type_id,type_name',
-            ])
-            ->find($eventId);
+        // Open modal immediately; child component will fetch details
+        $this->selectedEventId = (int) $eventId;
         $this->showModal = true;
     }
 
@@ -62,6 +56,7 @@ class Archive extends Component
     {
         $this->showModal = false;
         $this->selectedEvent = null;
+        $this->selectedEventId = null;
     }
 
     public function updatingSearch()
@@ -94,40 +89,63 @@ class Archive extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function applyFilters()
     {
-        $archivedEvents = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
+        // Explicitly re-query with current deferred filter values
+        $this->resetPage();
+    }
+
+    #[Computed(persist: true, seconds: 300)]
+    public function archivedEvents()
+    {
+        return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
             ->with([
-                'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
                     ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
-                        'attachments:attachment_id,ticket_id',
-                    ]),
+                        'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
+                            ->with('studentOrganization:org_id,org_name')
+                    ])
+                    ->withCount('attachments'),
                 'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                 'eventType:event_type_id,type_name',
             ])
-            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
-            ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
-            ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
-            ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->yearFilter, fn ($query) => $query->whereYear('created_at', $this->yearFilter))
-            ->when($this->eventTypeFilter, fn ($query) => $query->where('event__type_id', $this->eventTypeFilter))
+            ->whereHas('ticket', fn($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
+            ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
+            ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
+            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(12); // Reduced from 15 to 12
+    }
 
+    public function render()
+    {
         return view('livewire.osa.archive', [
-            'archivedEvents' => $archivedEvents,
+            'archivedEvents' => $this->archivedEvents,
             'availableYears' => $this->availableYears,
+            'organizations' => $this->organizations,
         ]);
     }
 
     #[Computed]
     public function availableYears()
     {
-        return Event::selectRaw('YEAR(created_at) as year')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        return Cache::remember('osa_archive_available_years', 600, function () {
+            return Event::selectRaw('YEAR(created_at) as year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year');
+        });
+    }
+
+    #[Computed(persist: true, seconds: 3600)]
+    public function organizations()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('osa_organizations_list', 3600, function () {
+            return \App\Models\Student_Organization::select(['org_id', 'org_name'])
+                ->orderBy('org_name')
+                ->get();
+        });
     }
 }

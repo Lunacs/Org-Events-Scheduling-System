@@ -5,6 +5,7 @@ namespace App\Livewire\Osa;
 use App\Models\Student_Organization;
 use App\Models\Ticket;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -45,8 +46,7 @@ class Reports extends Component
             'exportFormat' => 'required|in:pdf,excel,csv',
         ]);
 
-        // Logic to generate and download report
-        session()->flash('message', 'Report generated successfully!');
+        return $this->export();
     }
 
     public function clearFilters()
@@ -72,7 +72,7 @@ class Reports extends Component
             ->get();
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 300)]
     public function reportData()
     {
         if (empty($this->dateFrom) || empty($this->dateTo)) {
@@ -82,54 +82,162 @@ class Reports extends Component
         $dateFrom = Carbon::parse($this->dateFrom);
         $dateTo = Carbon::parse($this->dateTo)->endOfDay();
 
-        switch ($this->reportType) {
-            case 'approved_events':
-                return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                    ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
-                        'events:event_id,ticket_id',
-                        'eventType:event_type_id,type_name',
-                    ])
-                    ->where('status', 'approved')
-                    ->whereBetween('created_at', [$dateFrom, $dateTo])
-                    ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+        $cacheKey = "osa_report_{$this->reportType}_{$this->dateFrom}_{$this->dateTo}_{$this->organizationFilter}";
 
-            case 'rejected_events':
-                return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                    ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name'),
-                        'events:event_id,ticket_id',
-                        'eventType:event_type_id,type_name',
-                    ])
-                    ->where('status', 'rejected')
-                    ->whereBetween('created_at', [$dateFrom, $dateTo])
-                    ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+        return Cache::remember($cacheKey, 600, function () use ($dateFrom, $dateTo) {
+            switch ($this->reportType) {
+                case 'approved_events':
+                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        ->with([
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name'),
+                            'events:event_id,ticket_id',
+                            'eventType:event_type_id,type_name',
+                        ])
+                        ->where('status', 'approved')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo])
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->orderBy('created_at', 'desc')
+                        ->limit(1000) // Add limit for performance
+                        ->get();
 
-            case 'org_participation':
-                return Student_Organization::select(['org_id', 'org_name', 'org_code'])
-                    ->withCount([
-                        'tickets' => fn ($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
-                    ])
-                    ->when($this->organizationFilter, fn ($query) => $query->where('org_id', $this->organizationFilter))
-                    ->orderBy('tickets_count', 'desc')
-                    ->get();
+                case 'rejected_events':
+                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        ->with([
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name'),
+                            'events:event_id,ticket_id',
+                            'eventType:event_type_id,type_name',
+                        ])
+                        ->where('status', 'rejected')
+                        ->whereBetween('created_at', [$dateFrom, $dateTo])
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->orderBy('created_at', 'desc')
+                        ->limit(1000) // Add limit for performance
+                        ->get();
 
-            case 'monthly_summary':
-                return [
-                    'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'rejected_tickets' => Ticket::where('status', 'rejected')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                ];
+                case 'org_participation':
+                    return Student_Organization::select(['org_id', 'org_name', 'org_code'])
+                        ->withCount([
+                            'tickets' => fn($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
+                        ])
+                        ->when($this->organizationFilter, fn($query) => $query->where('org_id', $this->organizationFilter))
+                        ->orderBy('tickets_count', 'desc')
+                        ->limit(100) // Add limit for performance
+                        ->get();
 
-            default:
-                return collect();
+                case 'monthly_summary':
+                    // Use more efficient counting
+                    return [
+                        'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'rejected_tickets' => Ticket::where('status', 'rejected')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                    ];
+
+                default:
+                    return collect();
+            }
+        });
+    }
+
+    protected function export()
+    {
+        $data = $this->reportData;
+
+        // Excel fallback to CSV to avoid extra package dependency
+        if ($this->exportFormat === 'excel') {
+            $this->exportFormat = 'csv';
         }
+
+        if ($this->exportFormat === 'csv') {
+            return $this->exportCsv($data);
+        }
+
+        if ($this->exportFormat === 'pdf') {
+            return $this->exportPdf($data);
+        }
+
+        abort(400, 'Unsupported export format.');
+    }
+
+    protected function exportCsv($data)
+    {
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.csv';
+
+        return response()->streamDownload(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+
+            // Header
+            fputcsv($handle, ['OSA Reports']);
+            fputcsv($handle, ['Report Type', ucfirst(str_replace('_', ' ', $this->reportType))]);
+            fputcsv($handle, ['Date Range', $this->dateFrom, $this->dateTo]);
+            if ($this->organizationFilter) {
+                fputcsv($handle, ['Organization Filter', (string) $this->organizationFilter]);
+            }
+            fputcsv($handle, []);
+
+            switch ($this->reportType) {
+                case 'approved_events':
+                case 'rejected_events':
+                    fputcsv($handle, ['Ticket #', 'Title', 'Organization', 'Event Type', 'Status', 'Created At', 'Updated At']);
+                    foreach ($data as $ticket) {
+                        fputcsv($handle, [
+                            $ticket->ticket_number,
+                            $ticket->title,
+                            optional($ticket->user->studentOrganization)->org_name ?? 'N/A',
+                            optional($ticket->eventType)->type_name ?? 'N/A',
+                            $ticket->status,
+                            optional($ticket->created_at)?->format('Y-m-d H:i'),
+                            optional($ticket->updated_at)?->format('Y-m-d H:i'),
+                        ]);
+                    }
+                    break;
+
+                case 'org_participation':
+                    fputcsv($handle, ['Organization', 'Tickets Count']);
+                    foreach ($data as $org) {
+                        fputcsv($handle, [
+                            $org->org_name,
+                            $org->tickets_count,
+                        ]);
+                    }
+                    break;
+
+                case 'monthly_summary':
+                    fputcsv($handle, ['Metric', 'Value']);
+                    fputcsv($handle, ['Total Tickets', $data['total_tickets']]);
+                    fputcsv($handle, ['Approved', $data['approved_tickets']]);
+                    fputcsv($handle, ['Rejected', $data['rejected_tickets']]);
+                    fputcsv($handle, ['Pending', $data['pending_tickets']]);
+                    break;
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    protected function exportPdf($data)
+    {
+        if (! class_exists('Barryvdh\\DomPDF\\Facade\\Pdf')) {
+            throw new \RuntimeException('PDF export requires the barryvdh/laravel-dompdf package.');
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.osa.summary-pdf', [
+            'reportType' => $this->reportType,
+            'data' => $data,
+            'dateFrom' => $this->dateFrom,
+            'dateTo' => $this->dateTo,
+            'organizationFilter' => $this->organizationFilter,
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.pdf';
+
+        return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

@@ -35,7 +35,7 @@
                 </div>
                 <span class="text-sm text-gray-400">Approved</span>
             </div>
-        @elseif(in_array(strtolower($status), ['gso_review']))
+        @elseif(strtolower($status) == 'gso_review')
             <div class="flex items-center space-x-2">
                 <div
                     class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
@@ -67,7 +67,7 @@
                 </div>
                 <span class="text-sm text-gray-400">Approved</span>
             </div>
-        @elseif(in_array(strtolower($status), ['approved']))
+        @elseif(strtolower($status) == 'approved')
             <div class="flex items-center space-x-2">
                 <div
                     class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
@@ -135,6 +135,38 @@
                     <x-mary-icon name="s-check-circle" class="w-4 h-4 text-gray-400"/>
                 </div>
                 <span class="text-sm text-gray-400">Approved</span>
+            </div>
+        @elseif(strtolower($status) == 'rejected')
+            <div class="flex items-center space-x-2">
+                <div
+                    class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                    <x-mary-icon name="s-check" class="w-4 h-4 text-white"/>
+                </div>
+                <span class="text-sm font-medium">Submitted</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-success"></div>
+            <div class="flex items-center space-x-2">
+                <div
+                    class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                    <x-mary-icon name="s-check" class="w-4 h-4 text-white"/>
+                </div>
+                <span class="text-sm font-medium">OSA Review</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-success"></div>
+            <div class="flex items-center space-x-2">
+                <div
+                    class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                    <x-mary-icon name="s-check" class="w-4 h-4 text-white"/>
+                </div>
+                <span class="text-sm font-medium">GSO Review</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-error"></div>
+            <div class="flex items-center space-x-2">
+                <div
+                    class="w-8 h-8 bg-error rounded-full flex items-center justify-center">
+                    <x-mary-icon name="s-x-circle" class="w-4 h-4 text-white"/>
+                </div>
+                <span class="text-sm font-medium">Rejected</span>
             </div>
         @endif
 

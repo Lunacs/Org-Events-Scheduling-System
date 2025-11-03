@@ -39,19 +39,18 @@
 
                     <x-mary-select label="Type" wire:model.live="typeFilter" :options="[
                         ['id' => '', 'name' => 'All Types'],
-                        ['id' => 'ticket_submission', 'name' => 'Ticket Submissions'],
-                        ['id' => 'approval_request', 'name' => 'Approval Requests'],
-                        ['id' => 'conflict', 'name' => 'Schedule Conflicts'],
-                        ['id' => 'reminder', 'name' => 'Reminders'],
-                        ['id' => 'announcement', 'name' => 'Announcements'],
-                        ['id' => 'system', 'name' => 'System Updates'],
+                        ['id' => 'ticket_status', 'name' => 'Ticket Status Updates'],
+                        ['id' => 'ticket_status_approved', 'name' => 'Ticket Approved'],
+                        ['id' => 'ticket_status_rejected', 'name' => 'Ticket Rejected'],
+                        ['id' => 'ticket_status_needs_revision', 'name' => 'Revision Required'],
+                        ['id' => 'ticket_status_gso_review', 'name' => 'GSO Review'],
+                        ['id' => 'ticket_status_for_rescheduling', 'name' => 'Rescheduling'],
                     ]" class="w-48" />
 
                     <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
                         ['id' => 'unread', 'name' => 'Unread'],
                         ['id' => 'read', 'name' => 'Read'],
-                        ['id' => 'archived', 'name' => 'Archived'],
                     ]" class="w-32" />
 
                     <x-mary-button icon="s-funnel" class="btn-ghost btn-sm" wire:click="clearFilters"
