@@ -367,8 +367,10 @@ class Details extends Component
      */
     protected function buildOsaApprovals(): array
     {
-        return $this->ticket->osaApprovals
-            ->sortByDesc('updated_at')
+        return collect($this->ticket->osaApprovals)
+            ->sortBy(function ($approval) {
+                return $approval->updated_at ?? $approval->created_at;
+            })
             ->map(function ($approval) {
                 $decision = $this->normalizeStatus($approval->decision ?? 'pending');
 
@@ -393,14 +395,8 @@ class Details extends Component
     {
         $approvals = collect($this->ticket->officeApprovals);
 
-        if ($this->approvalId !== null) {
-            $approvals = $approvals->where('id', $this->approvalId);
-        } elseif ($this->officeId !== null) {
-            $approvals = $approvals->where('office_id', $this->officeId);
-        }
-
         return $approvals
-            ->sortByDesc(function ($approval) {
+            ->sortBy(function ($approval) {
                 return $approval->updated_at ?? $approval->created_at;
             })
             ->map(function ($approval) {
