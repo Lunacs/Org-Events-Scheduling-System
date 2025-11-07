@@ -803,10 +803,9 @@ class Details extends Component
         $officeApproval = $this->resolveOfficeApproval($this->ticket);
 
         if ($officeApproval && $officeApproval->decision === 'pending') {
-            // Update existing pending approval
+            // Update existing pending approval without altering stored remarks
             $officeApproval->update([
                 'decision' => 'approved',
-                'remarks' => $this->approvalRemarks,
                 'user_id' => auth()->id(),
             ]);
         } else {
@@ -816,7 +815,7 @@ class Details extends Component
                 'office_id' => $this->officeId,
                 'user_id' => auth()->id(),
                 'decision' => 'approved',
-                'remarks' => $this->approvalRemarks,
+                'remarks' => null,
             ]);
         }
 
@@ -893,10 +892,9 @@ class Details extends Component
         $officeApproval = $this->resolveOfficeApproval($this->ticket);
 
         if ($officeApproval && $officeApproval->decision === 'pending') {
-            // Update existing pending approval
+            // Update existing pending approval without altering stored remarks
             $officeApproval->update([
                 'decision' => 'rejected',
-                'remarks' => $this->rejectionRemarks,
                 'user_id' => auth()->id(),
             ]);
         } else {
@@ -906,7 +904,7 @@ class Details extends Component
                 'office_id' => $this->officeId,
                 'user_id' => auth()->id(),
                 'decision' => 'rejected',
-                'remarks' => $this->rejectionRemarks,
+                'remarks' => null,
             ]);
         }
 
