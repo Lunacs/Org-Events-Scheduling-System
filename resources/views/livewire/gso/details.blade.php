@@ -1,1 +1,1 @@
-<x-tickets.review :ticket="$ticket" :allowed-actions="['approve', 'reject']" />
+<x-tickets.review :ticket="$ticket" :allowed-actions="['approve', 'reject']" :status-overview="$overview" />

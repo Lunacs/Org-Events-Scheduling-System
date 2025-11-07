@@ -1,4 +1,4 @@
-@props(['ticket', 'allowedActions' => [], 'backRoute' => null])
+@props(['ticket', 'allowedActions' => [], 'backRoute' => null, 'statusOverview' => null])
 
 <div x-data="{
     showApproval: false,
@@ -65,7 +65,10 @@
                     <h1 class="text-3xl font-bold text-base-content">Ticket Review</h1>
                     <p class="text-base-content/70 mt-1">Review event proposal and attached documents</p>
                 </div>
-                <div class="flex items-center gap-2">
+                @php
+                    $statusOverview = is_array($statusOverview) ? $statusOverview : null;
+                @endphp
+                <div class="flex flex-wrap items-center gap-2">
                     @php
                         $statusClasses = [
                             'received' => 'badge-info',
@@ -78,11 +81,33 @@
                             'approved' => 'badge-success',
                             'rejected' => 'badge-error',
                         ];
+                        $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
+                        $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
+                        $ticketTextClass = $ticketBadgeClass === 'badge-warning'
+                            ? 'text-neutral-900 dark:text-neutral-900'
+                            : 'text-white';
+                        $officeStatusLabel = $statusOverview['status_label'] ?? null;
+                        $officeBadgeClass = $statusOverview['status_badge'] ?? null;
+                        $officeName = $statusOverview['office_name'] ?? null;
+                        $officeLabel = $officeName
+                            ? (\Illuminate\Support\Str::headline($officeName) . ' Decision: ')
+                            : 'Office Decision: ';
                     @endphp
-                    <span
-                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
+                    <span class="badge {{ $ticketBadgeClass }} {{ $ticketTextClass }}">Ticket: {{ $ticketStatusLabel }}</span>
+                    @if ($officeStatusLabel)
+                        @php
+                            $resolvedOfficeBadge = $officeBadgeClass ?? 'badge-warning';
+                            $resolvedOfficeTextClass = $resolvedOfficeBadge === 'badge-warning'
+                                ? 'text-neutral-900 dark:text-neutral-900'
+                                : 'text-white';
+                        @endphp
+                        <span class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }}">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+                    @endif
                 </div>
             </div>
+            @if ($statusOverview && !empty($statusOverview['status_detail']))
+                <p class="text-sm text-base-content/70 mt-3">{{ $statusOverview['status_detail'] }}</p>
+            @endif
         </div>
     </div>
 
@@ -551,6 +576,15 @@
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4">Actions</h2>
 
+                @php
+                    $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
+                    $officeDecisionStatus = isset($overviewData['status'])
+                        ? \Illuminate\Support\Str::of($overviewData['status'])->lower()->toString()
+                        : null;
+                    $hasOfficeActions = in_array('approve', $allowedActions, true) || in_array('reject', $allowedActions, true);
+                    $officeDecisionPending = $hasOfficeActions && $officeDecisionStatus === 'pending';
+                @endphp
+
                 @if ($ticket->status === 'pending_osa_approval')
                     {{-- Final Decision After GSO Review --}}
                     @php
@@ -585,6 +619,23 @@
                                     Final Rejection
                                 </button>
                             @endcan
+                        @endif
+                    </div>
+                @elseif ($officeDecisionPending)
+                    {{-- Office-specific pending decision (e.g., GSO awaiting action) --}}
+                    <div class="space-y-3">
+                        @if (in_array('approve', $allowedActions))
+                            <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                @click="showApproval = true">
+                                Approve Ticket
+                            </button>
+                        @endif
+
+                        @if (in_array('reject', $allowedActions))
+                            <button class="btn btn-error w-full text-base-200 flex justify-between"
+                                @click="showRejection = true">
+                                Reject Ticket
+                            </button>
                         @endif
                     </div>
                 @elseif ($ticket->status === 'gso_review')

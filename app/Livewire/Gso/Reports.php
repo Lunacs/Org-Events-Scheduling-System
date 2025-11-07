@@ -127,7 +127,7 @@ class Reports extends Component
                 'decided_at' => $decidedAt->toIso8601String(),
                 'date' => $decidedAt->format('Y-m-d'),
                 'ticketId' => $ticket?->ticket_number ?? 'N/A',
-                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', ['ticket' => $ticket, 'office' => $officeId]) : null,
+                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', ['ticket' => $ticket, 'office' => $officeId, 'approval' => $approval->id]) : null,
                 'eventName' => $ticket?->title ?? 'N/A',
                 'organization' => $ticket?->user?->studentOrganization?->org_name
                     ?? $ticket?->user?->name
