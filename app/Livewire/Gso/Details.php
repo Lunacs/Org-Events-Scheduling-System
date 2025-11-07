@@ -3,6 +3,7 @@
 namespace App\Livewire\Gso;
 
 use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
+use App\Models\OSA_Approval;
 use App\Models\Office_Approval;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -12,6 +13,7 @@ use App\Notifications\TicketStatusUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -168,13 +170,16 @@ class Details extends Component
             )->office?->office_name;
         }
 
+        $statusDetail = $status === 'pending' ? null : $this->officeApproval?->remarks;
+
         return [
             'ticket_number' => $this->ticket->ticket_number ?? 'N/A',
             'status' => $status,
             'status_label' => $this->resolveStatusLabel($status),
             'status_badge' => $this->resolveStatusBadge($status),
-            'status_detail' => $this->officeApproval?->remarks,
+            'status_detail' => $statusDetail,
             'office_name' => $officeName,
+            'office_id' => $this->officeApproval?->office_id ?? $this->officeId,
             'priority_label' => $priorityLabel,
             'priority_badge' => $this->resolvePriorityBadge($priorityKey),
             'event_type' => $this->ticket->eventType?->type_name ?? '—',
@@ -815,24 +820,39 @@ class Details extends Component
             ]);
         }
 
-        // Notify ticket owner about status change
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'pending_osa_approval',
-            $this->approvalRemarks
-        ));
+        $formattedRemarks = sprintf('APPROVED by GSO - %s', $this->approvalRemarks);
+
+        OSA_Approval::create([
+            'ticket_id' => $this->ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'pending',
+            'remarks' => $formattedRemarks,
+        ]);
+
+        // Notify ticket owner about status change (DB + broadcast only)
+        Notification::sendNow(
+            $this->ticket->user,
+            new TicketStatusUpdatedNotification(
+                $this->ticket,
+                $oldStatus,
+                'pending_osa_approval',
+                $this->approvalRemarks
+            ),
+            ['database', 'broadcast']
+        );
 
         // Notify OSA users that GSO has approved
         $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
-        foreach ($osaUsers as $osaUser) {
-            $osaUser->notify(new TicketStatusUpdatedNotification(
+        Notification::sendNow(
+            $osaUsers,
+            new TicketStatusUpdatedNotification(
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
                 "GSO has approved this ticket. Remarks: {$this->approvalRemarks}"
-            ));
-        }
+            ),
+            ['database', 'broadcast']
+        );
 
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
@@ -890,24 +910,39 @@ class Details extends Component
             ]);
         }
 
-        // Notify ticket owner about status change
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'rejected',
-            $this->rejectionRemarks
-        ));
+        $formattedRemarks = sprintf('REJECTED by GSO - %s', $this->rejectionRemarks);
+
+        OSA_Approval::create([
+            'ticket_id' => $this->ticket->ticket_id,
+            'user_id' => auth()->id(),
+            'decision' => 'rejected',
+            'remarks' => $formattedRemarks,
+        ]);
+
+        // Notify ticket owner about status change (DB + broadcast only)
+        Notification::sendNow(
+            $this->ticket->user,
+            new TicketStatusUpdatedNotification(
+                $this->ticket,
+                $oldStatus,
+                'rejected',
+                $this->rejectionRemarks
+            ),
+            ['database', 'broadcast']
+        );
 
         // Notify OSA users that GSO has rejected
         $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
-        foreach ($osaUsers as $osaUser) {
-            $osaUser->notify(new TicketStatusUpdatedNotification(
+        Notification::sendNow(
+            $osaUsers,
+            new TicketStatusUpdatedNotification(
                 $this->ticket,
                 $oldStatus,
                 'rejected',
                 "GSO has rejected this ticket. Remarks: {$this->rejectionRemarks}"
-            ));
-        }
+            ),
+            ['database', 'broadcast']
+        );
 
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
