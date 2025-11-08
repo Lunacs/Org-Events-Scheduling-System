@@ -1,5 +1,5 @@
 ﻿<x-slot name="header">
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+    <h2 class="font-semibold text-xl font-heading text-base-content leading-tight">
         {{ __('GSO Reports & Analytics') }}
     </h2>
 </x-slot>
@@ -10,21 +10,7 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <div class="flex flex-wrap justify-between items-end gap-4">
-                    <div class="flex items-end space-x-4">
-
-                        <div>
-                            <x-mary-select label="Time Period" :options="[
-        ['id' => 'this_week', 'name' => 'This Week'],
-        ['id' => 'this_month', 'name' => 'This Month'],
-        ['id' => 'last_month', 'name' => 'Last Month'],
-        ['id' => 'this_quarter', 'name' => 'This Quarter'],
-        ['id' => 'this_year', 'name' => 'This Year'],
-        ['id' => 'custom', 'name' => 'Custom Range'],
-    ]" option-value="id"
-                                option-label="name" x-model="timePeriod" @change="generateReport()"
-                                class="select-emerald" />
-                        </div>
-
+                    <div class="flex gap-4">
                         <div x-show="timePeriod === 'custom'" x-cloak>
                             <x-mary-input label="Start Date" type="date" x-model="customDateRange.start"
                                 class="input-emerald" @change="applyFilters()" />
@@ -59,7 +45,7 @@
         </div>
 
         <!-- Quick Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="stats shadow bg-emerald-50 dark:bg-emerald-900/20">
                 <div class="stat">
                     <div class="stat-figure text-emerald-500">
@@ -109,22 +95,22 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="chartTitle">
-                        </h3>
-                        <x-mary-select :options="[
-                                ['id' => 'request_types', 'name' => 'Request Type Distribution'],
-                                ['id' => 'approvals', 'name' => 'Approval Trends']
-                            ]"
-                            option-value="id"
-                            option-label="name"
+                        <h3 class="text-lg font-semibold font-heading text-base-content" x-text="chartTitle"></h3>
+                        <x-mary-select
                             x-model="selectedChart"
+                            :options="[
+                                ['id' => 'request_types', 'name' => 'Request Types'],
+                                ['id' => 'approvals', 'name' => 'Approvals']
+                            ]"
+                            option-label="name"
+                            option-value="id"
                             @change="refreshChart({ forceReinit: true })"
                             class="select-emerald w-full sm:w-60 text-center"
                             input-class="text-center" />
                     </div>
 
                     <div
-                        class="relative h-64 bg-linear-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
+                        class="relative h-64 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
                         <div class="h-full w-full p-3 box-border">
                             <canvas x-ref="approvalChart"
                                 class="w-full h-full transition-opacity duration-200"
@@ -147,28 +133,30 @@
                 </div>
             </div>
 
-            <!-- Breakdown Section -->
+            <!-- Request Type Breakdown -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Request Type Breakdown
+                    <h3 class="text-lg font-semibold font-heading text-base-content mb-4">Request Type Breakdown
                     </h3>
-
                     <div class="space-y-4">
                         <template x-for="item in breakdown" :key="item.type">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
+                            <div class="flex items-center justify-between p-3 bg-base-200 dark:bg-base-700 rounded-lg">
+                                <div class="flex items-center gap-3">
                                     <div class="w-4 h-4 rounded" :style="`background-color: ${item.color}`"></div>
-                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                    <span class="text-sm font-medium text-base-content"
                                         x-text="item.type"></span>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                    <div class="text-sm font-medium text-base-content"
                                         x-text="item.count"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400"
+                                    <div class="text-xs text-base-content/70"
                                         x-text="item.percentage + '%'"></div>
                                 </div>
                             </div>
                         </template>
+                        <div x-show="breakdown.length === 0" class="text-center py-8 text-base-content/50">
+                            <p>No data available</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,19 +165,19 @@
         <!-- Detailed Report Table -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
             <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="tableTitle"></h3>
-                    <div class="flex space-x-2">
-                        <x-mary-input placeholder="Search records..." x-model="searchTerm"
-                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm">
-                            <x-slot:prepend>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </x-slot:prepend>
-                        </x-mary-input>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h3 class="text-lg font-semibold font-heading text-base-content" x-text="tableTitle"></h3>
+                    <div class="relative">
+                        <input type="text" placeholder="Search records..." x-model="searchTerm"
+                            @input.debounce.300ms="filterRecords()"
+                            class="input input-bordered input-emerald input-sm w-64 pl-10">
+                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-base-content/40" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -207,7 +195,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="record in filteredRecords" :key="record.id">
+                            <template x-for="record in paginatedRecords" :key="record.id">
                                 <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
                                     <td x-text="record.date"></td>
                                     <td>
@@ -237,53 +225,41 @@
                                     </td>
                                 </tr>
                             </template>
+                            <tr x-show="paginatedRecords.length === 0">
+                                <td colspan="7" class="text-center py-8 text-base-content/50">
+                                    No records found
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination -->
-                <div class="flex justify-between items-center mt-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing <span x-text="filteredRecords.length"></span> of <span
-                            x-text="currentDataset.length"></span> records
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                    <div class="text-sm font-medium text-base-content/70">
+                        Showing <span class="font-semibold text-base-content" x-text="Math.min((currentPage - 1) * perPage + 1, filteredRecords.length)"></span> to <span
+                            class="font-semibold text-base-content" x-text="Math.min(currentPage * perPage, filteredRecords.length)"></span> of <span
+                            class="font-semibold text-base-content" x-text="filteredRecords.length"></span> records
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-sm">┬½</button>
-                        <button class="btn btn-sm btn-active">1</button>
-                        <button class="btn btn-sm">2</button>
-                        <button class="btn btn-sm">3</button>
-                        <button class="btn btn-sm">┬╗</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Performance Metrics (shown when performance report is selected) -->
-        <div x-show="selectedReport === 'performance'" x-cloak
-            class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Performance Metrics</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <div class="radial-progress text-emerald-600 border-emerald-200" style="--value:85;"
-                            role="progressbar">85%</div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">On-time Completion</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Meeting deadlines</p>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="radial-progress text-blue-600 border-blue-200" style="--value:92;"
-                            role="progressbar">92%</div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Accuracy Rate</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Correct decisions</p>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="radial-progress text-purple-600 border-purple-200" style="--value:78;"
-                            role="progressbar">78%</div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Satisfaction Score</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">User feedback</p>
+                    <div class="btn-group" x-show="totalPages > 1">
+                        <button class="btn btn-sm btn-emerald" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1"
+                            :class="{ 'btn-disabled opacity-50': currentPage === 1 }">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            Previous
+                        </button>
+                        <template x-for="page in visiblePages" :key="page">
+                            <button class="btn btn-sm" :class="{ 'btn-emerald btn-active': page === currentPage, 'btn-ghost': page !== currentPage }" @click="goToPage(page)"
+                                x-text="page"></button>
+                        </template>
+                        <button class="btn btn-sm btn-emerald" @click="goToPage(currentPage + 1)"
+                            :disabled="currentPage === totalPages" :class="{ 'btn-disabled opacity-50': currentPage === totalPages }">
+                            Next
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -296,14 +272,13 @@
 
     function gsoReports() {
         return {
-            selectedReport: 'approvals',
+            searchTerm: '',
             selectedChart: 'request_types',
             timePeriod: 'this_month',
             customDateRange: {
                 start: '',
                 end: ''
             },
-            searchTerm: '',
 
             stats: {
                 totalApproved: 0,
@@ -329,21 +304,21 @@
             themeChangeDebounce: null,
 
             requestTypeClassDefaults: {
-                'venue booking': 'badge-primary text-primary-content',
-                'venue': 'badge-primary text-primary-content',
-                'equipment': 'badge-info text-info-content',
-                'logistics': 'badge-secondary text-secondary-content',
-                'catering': 'badge-accent text-accent-content'
+                'venue booking': 'badge-primary text-white',
+                'venue': 'badge-primary text-white',
+                'equipment': 'badge-info text-white',
+                'logistics': 'badge-secondary text-white',
+                'catering': 'badge-accent text-white'
             },
             requestTypeClassPalette: [
-                'badge-success text-success-content',
-                'badge-warning text-warning-content',
-                'badge-error text-error-content',
-                'badge-neutral text-neutral-content',
-                'badge-info text-info-content',
-                'badge-secondary text-secondary-content',
-                'badge-accent text-accent-content',
-                'badge-primary text-primary-content'
+                'badge-success text-white',
+                'badge-warning text-white',
+                'badge-error text-white',
+                'badge-neutral text-white',
+                'badge-info text-white',
+                'badge-secondary text-white',
+                'badge-accent text-white',
+                'badge-primary text-white'
             ],
             requestTypeClassMap: {},
             requestTypePaletteIndex: 0,
@@ -354,35 +329,74 @@
             })),
             currentDataset: [],
             filteredRecords: [],
+            currentPage: 1,
+            perPage: 10,
+
+            get totalPages() {
+                return Math.ceil(this.filteredRecords.length / this.perPage);
+            },
+
+            get visiblePages() {
+                const total = this.totalPages;
+                const current = this.currentPage;
+                const maxVisible = 5;
+                const pages = [];
+
+                if (total <= maxVisible) {
+                    for (let i = 1; i <= total; i++) {
+                        pages.push(i);
+                    }
+                } else {
+                    if (current <= 3) {
+                        for (let i = 1; i <= 5; i++) {
+                            pages.push(i);
+                        }
+                    } else if (current >= total - 2) {
+                        for (let i = total - 4; i <= total; i++) {
+                            pages.push(i);
+                        }
+                    } else {
+                        for (let i = current - 2; i <= current + 2; i++) {
+                            pages.push(i);
+                        }
+                    }
+                }
+
+                return pages;
+            },
+
+            get paginatedRecords() {
+                const start = (this.currentPage - 1) * this.perPage;
+                const end = start + this.perPage;
+                return this.filteredRecords.slice(start, end);
+            },
 
             get timePeriodLabel() {
                 const labels = {
-                    'this_week': 'This Week',
                     'this_month': 'This Month',
                     'last_month': 'Last Month',
                     'this_quarter': 'This Quarter',
                     'this_year': 'This Year',
-                    'custom': 'Custom Range'
                 };
-                return labels[this.timePeriod] || 'This Month';
+                return labels[this.timePeriod] || 'Custom Period';
             },
 
             get chartTitle() {
                 const titles = {
-                    'approvals': 'Approval Trends',
-                    'request_types': 'Request Type Distribution'
+                    'request_types': 'Request Types Distribution',
+                    'approvals': 'Approval Status'
                 };
                 return titles[this.selectedChart] || 'Report Chart';
             },
 
             get tableTitle() {
                 const titles = {
-                    'approvals': 'Approval History',
-                    'performance': 'Performance Records',
+                    'request_types': 'Request Type Analysis',
+                    'approvals': 'Approval Status Report',
                     'workload': 'Workload Analysis',
                     'trends': 'Trend Data'
                 };
-                return titles[this.selectedReport] || 'Report Data';
+                return titles[this.selectedChart] || 'Detailed Report';
             },
 
             get statusDataset() {
@@ -448,6 +462,13 @@
 
             filterRecords() {
                 this.filteredRecords = this.applySearch(this.currentDataset);
+                this.currentPage = 1;
+            },
+
+            goToPage(page) {
+                if (page >= 1 && page <= this.totalPages) {
+                    this.currentPage = page;
+                }
             },
 
             applyFilters() {
@@ -455,7 +476,7 @@
 
                 this.currentDataset = this.records.filter(record => {
                     if (!record.decidedAt) {
-                        return true;
+                        return false;
                     }
 
                     if (!start || !end) {
@@ -466,6 +487,7 @@
                 });
 
                 this.filteredRecords = this.applySearch(this.currentDataset);
+                this.currentPage = 1;
                 this.updateStats(this.currentDataset);
                 this.updateBreakdown(this.currentDataset);
             },
@@ -485,9 +507,9 @@
             },
 
             updateStats(dataset) {
-                const approved = dataset.filter(record => record.decision === 'Approved').length;
-                const rejected = dataset.filter(record => record.decision === 'Rejected').length;
-                const total = Math.max(approved + rejected, 1);
+                const approved = dataset.filter(r => (r.decision || '').toLowerCase() === 'approved').length;
+                const rejected = dataset.filter(r => (r.decision || '').toLowerCase() === 'rejected').length;
+                const total = approved + rejected;
 
                 const avgResponse = dataset.length
                     ? dataset.reduce((sum, record) => sum + Number(record.responseTime ?? 0), 0) / dataset.length
@@ -496,7 +518,7 @@
                 this.stats = {
                     totalApproved: approved,
                     totalRejected: rejected,
-                    approvalRate: Math.round((approved / total) * 100),
+                    approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
                     avgResponseTime: Number(avgResponse.toFixed(1))
                 };
 
@@ -626,8 +648,7 @@
                     this.searchTerm || null
                 );
             },
-            // Listen for the signed-download URL from the Livewire component and navigate
-            // the browser there to trigger a native file download.
+
             initDownloadListener() {
                 window.addEventListener('gso:export-download', (ev) => {
                     try {
@@ -733,7 +754,7 @@
                                         const label = context.label || '';
                                         const value = context.parsed || 0;
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                                         return `${label}: ${value} (${percentage}%)`;
                                     }
                                 },
@@ -890,11 +911,12 @@
 
                 return this.requestTypeClassMap[key];
             },
+
             getDecisionClass(decision) {
                 const classes = {
-                    'Approved': 'badge-success',
-                    'Rejected': 'badge-error',
-                    'Pending': 'badge-warning'
+                    'Approved': 'badge-success text-white',
+                    'Rejected': 'badge-error text-white',
+                    'Pending': 'badge-warning text-white'
                 };
                 return classes[decision] || 'badge-ghost';
             }

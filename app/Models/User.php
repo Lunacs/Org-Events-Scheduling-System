@@ -8,17 +8,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
-    // User roles constants
-    const ROLE_SUPERADMIN = 1;
-    const ROLE_OSA = 2;
-    const ROLE_GSO = 3;
-    const ROLE_STUDENT_ORG = 4;
 
     /**
      * The primary key for the model.
@@ -69,13 +64,37 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get role ID by role name (cached for performance)
+     *
+     * @param string $roleName
+     * @return int|null
+     */
+    public static function getRoleId(string $roleName): ?int
+    {
+        return Cache::rememberForever("role_id_{$roleName}", function () use ($roleName) {
+            return Roles::where('role_name', $roleName)->value('role_id');
+        });
+    }
+
+    /**
+     * Check if user has a specific role
+     *
+     * @param string $roleName
+     * @return bool
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role_id === self::getRoleId($roleName);
+    }
+
+    /**
      * Check if user is a superadmin
      *
      * @return bool
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role_id === self::ROLE_SUPERADMIN;
+        return $this->hasRole('superadmin');
     }
 
     /**
@@ -85,7 +104,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isOSA(): bool
     {
-        return $this->role_id === self::ROLE_OSA;
+        return $this->hasRole('osa');
     }
 
     /**
@@ -95,7 +114,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isGSO(): bool
     {
-        return $this->role_id === self::ROLE_GSO;
+        return $this->hasRole('gso');
     }
 
     /**
@@ -105,7 +124,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isStudentOrg(): bool
     {
-        return $this->role_id === self::ROLE_STUDENT_ORG;
+        return $this->hasRole('student-org');
     }
 
     /**
@@ -115,11 +134,16 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getDashboardRoute(): string
     {
-        return match ($this->role_id) {
-            self::ROLE_SUPERADMIN => 'superadmin.dashboard',
-            self::ROLE_OSA => 'admin.dashboard',
-            self::ROLE_GSO => 'gso.dashboard',
-            self::ROLE_STUDENT_ORG => 'student-org.dashboard',
+        // Load role relationship if not already loaded
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        return match ($this->role?->role_name) {
+            'superadmin' => 'superadmin.dashboard',
+            'osa' => 'admin.dashboard',
+            'gso' => 'gso.dashboard',
+            'student-org' => 'student-org.dashboard',
             default => 'admin.dashboard',
         };
     }
@@ -217,7 +241,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!$this->relationLoaded('role')) {
             $this->load('role');
         }
-        
+
         $roleName = $this->role?->role_name ?? 'unknown';
         return ucfirst(str_replace('-', ' ', $roleName));
     }

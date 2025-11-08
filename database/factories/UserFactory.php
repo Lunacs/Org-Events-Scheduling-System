@@ -24,17 +24,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $roles = ['superadmin', 'osa', 'gso', 'student-org'];
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'role_id' => fake()->randomElement([
-                User::ROLE_SUPERADMIN,
-                User::ROLE_OSA,
-                User::ROLE_GSO,
-                User::ROLE_STUDENT_ORG,
-            ]),
+            'role_id' => User::getRoleId(fake()->randomElement($roles)),
             'org_id' => null, // Will be set by seeder if needed
             'office_id' => null, // Will be set by seeder if needed
             'remember_token' => Str::random(10),

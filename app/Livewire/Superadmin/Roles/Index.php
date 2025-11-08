@@ -23,10 +23,6 @@ class Index extends Component
     // Cache duration
     protected $cacheDuration = 10;
 
-    // Drawer states
-    public $showRoleDrawer = false;
-
-    public $showDeleteModal = false;
 
     // Form data using arrays
     public $roleForm = [
@@ -69,50 +65,37 @@ class Index extends Component
                     'id' => 'superadmin',
                     'name' => 'Super Admin',
                     'description' => 'Full system access and control',
-                    'user_count' => User::where('role_id', User::ROLE_SUPERADMIN)->count(),
+                    'user_count' => User::where('role_id', User::getRoleId('superadmin'))->count(),
                     'permissions' => ['All Permissions'],
                 ],
                 [
                     'id' => 'osa',
                     'name' => 'OSA Staff',
                     'description' => 'Office of Student Affairs staff',
-                    'user_count' => User::where('role_id', User::ROLE_OSA)->count(),
+                    'user_count' => User::where('role_id', User::getRoleId('osa'))->count(),
                     'permissions' => ['View Events', 'Approve Events', 'Manage Users'],
                 ],
                 [
                     'id' => 'gso',
                     'name' => 'GSO Staff',
                     'description' => 'General Services Office staff',
-                    'user_count' => User::where('role_id', User::ROLE_GSO)->count(),
+                    'user_count' => User::where('role_id', User::getRoleId('gso'))->count(),
                     'permissions' => ['View Events', 'Final Approval', 'Resource Management'],
                 ],
                 [
                     'id' => 'student_org',
                     'name' => 'Student Organization',
                     'description' => 'Student organization members',
-                    'user_count' => User::where('role_id', User::ROLE_STUDENT_ORG)->count(),
+                    'user_count' => User::where('role_id', User::getRoleId('student-org'))->count(),
                     'permissions' => ['Create Events', 'View Own Events', 'Submit Requests'],
                 ],
             ];
         });
     }
 
-    public function openCreateRoleDrawer()
-    {
-        $this->resetRoleForm();
-        $this->showRoleDrawer = true;
-    }
-
-    public function openEditRoleDrawer($roleId)
-    {
-        $this->loadRoleForm($roleId);
-        $this->showRoleDrawer = true;
-    }
-
-    public function openDeleteModal($roleId)
+    public function loadRoleForDeletion($roleId)
     {
         $this->deletingRoleId = $roleId;
-        $this->showDeleteModal = true;
     }
 
     public function loadRoleForm($roleId)
@@ -154,8 +137,8 @@ class Index extends Component
         // In a real application, you would create the role in the database
 
         $this->resetRoleForm();
-        $this->showRoleDrawer = false;
         $this->clearRolesCache();
+        $this->dispatch('role-drawer-close');
 
         $this->success('Role created successfully!', position: 'toast-top');
     }
@@ -176,8 +159,8 @@ class Index extends Component
         // In a real application, you would update the role in the database
 
         $this->resetRoleForm();
-        $this->showRoleDrawer = false;
         $this->clearRolesCache();
+        $this->dispatch('role-drawer-close');
 
         $this->success('Role updated successfully!', position: 'toast-top');
     }
@@ -187,8 +170,8 @@ class Index extends Component
         // In a real application, you would delete the role from the database
 
         $this->deletingRoleId = null;
-        $this->showDeleteModal = false;
         $this->clearRolesCache();
+        $this->dispatch('delete-modal-close');
 
         $this->success('Role deleted successfully!', position: 'toast-top');
     }
@@ -207,7 +190,6 @@ class Index extends Component
     public function resetDeleteModal()
     {
         $this->deletingRoleId = null;
-        $this->showDeleteModal = false;
     }
 
     protected function clearRolesCache()

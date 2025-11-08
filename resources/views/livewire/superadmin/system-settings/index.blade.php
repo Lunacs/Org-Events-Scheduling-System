@@ -1,4 +1,25 @@
-<div x-data="{ eventTypeFormOpen: false, deleteModalOpen: false }" @event-type-form-close.window="eventTypeFormOpen = false"
+<div x-data="{ 
+    eventTypeFormOpen: false,
+    deleteModalOpen: false,
+    openEventTypeForm(eventTypeId) {
+        if (eventTypeId) {
+            $wire.loadEventTypeForm(eventTypeId);
+        }
+        this.eventTypeFormOpen = true;
+    },
+    closeEventTypeForm() {
+        this.eventTypeFormOpen = false;
+        $wire.resetEventTypeForm();
+    },
+    openDeleteModal(eventTypeId) {
+        $wire.loadEventTypeForDeletion(eventTypeId);
+        this.deleteModalOpen = true;
+    },
+    closeDeleteModal() {
+        this.deleteModalOpen = false;
+        $wire.resetDeleteModal();
+    }
+}" @event-type-form-close.window="eventTypeFormOpen = false" 
     @delete-modal-close.window="deleteModalOpen = false">
     <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
@@ -24,11 +45,11 @@
                                 <x-mary-list-item :item="['title' => $eventType->type_name]" value="title" icon="o-tag" />
                                 <div class="flex gap-1">
                                     <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                                        @click="$wire.loadEventTypeForm({{ $eventType->event_type_id }}).then(() => { eventTypeFormOpen = true })"
+                                        @click="openEventTypeForm({{ $eventType->event_type_id }})"
                                         wire:loading.attr="disabled">
                                     </x-mary-button>
                                     <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                        @click="$wire.loadEventTypeForDeletion({{ $eventType->event_type_id }}).then(() => { deleteModalOpen = true })"
+                                        @click="openDeleteModal({{ $eventType->event_type_id }})"
                                         wire:loading.attr="disabled">
                                     </x-mary-button>
                                 </div>
@@ -88,8 +109,8 @@
     </div>
 
     {{-- Event Type Form Drawer --}}
-    <x-mary-drawer x-show="eventTypeFormOpen" title="Edit Event Type" subtitle="Update event type information" separator
-        with-close-button close-on-escape class="w-11/12 lg:w-1/3" right>
+    <x-mary-drawer x-model="eventTypeFormOpen" title="Edit Event Type" subtitle="Update event type information" separator
+        with-close-button close-on-escape class="w-11/12 lg:w-1/3" right @close="closeEventTypeForm()">
 
         <form wire:submit="saveEventType" class="space-y-4">
             <x-mary-input wire:model="eventTypeName" label="Event Type Name" placeholder="Enter event type name"
@@ -97,9 +118,8 @@
         </form>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="eventTypeFormOpen = false; $wire.call('resetEventTypeForm')" />
-            <x-mary-button label="Update" wire:click="saveEventType" class="btn-primary" spinner="saveEventType"
-                wire:loading.attr="disabled" />
+            <x-mary-button label="Cancel" @click="closeEventTypeForm()" />
+            <x-mary-button label="Update" wire:click="saveEventType" class="btn-primary" spinner="saveEventType" />
         </x-slot:actions>
     </x-mary-drawer>
 
@@ -136,9 +156,9 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="deleteModalOpen = false; $wire.call('resetDeleteModal')" />
+                <x-mary-button label="Cancel" @click="closeDeleteModal()" />
                 <x-mary-button label="Delete Event Type" wire:click="confirmDelete" class="btn-error"
-                    spinner="confirmDelete" :disabled="$hasAssociatedEvents" wire:loading.attr="disabled" />
+                    spinner="confirmDelete" :disabled="$hasAssociatedEvents" />
             </x-slot:actions>
         </x-mary-modal>
     @endif

@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+    <h2 class="font-semibold text-xl font-heading text-base-content leading-tight">
         {{ __('Event Calendar') }}
     </h2>
 </x-slot>
@@ -10,6 +10,11 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <div class="flex flex-wrap justify-between items-center gap-4">
+        </div>
+
+        <!-- Calendar Controls -->
+        <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
                     <div class="flex items-center space-x-4">
                         <button class="btn btn-circle btn-emerald" @click="goPrevious()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,50 +57,51 @@
                         </div>
 
                         <div class="flex items-center space-x-2">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">View:</span>
+                            <span class="text-sm text-base-content/70">View:</span>
                             <div class="btn-group">
-                                <button class="btn btn-sm" :class="viewMode === 'month' ? 'btn-emerald' : 'btn-outline'"
+                                <button class="btn btn-sm"
+                                    :class="viewMode === 'month' ? 'btn-emerald' : 'btn-outline'"
                                     @click="setViewMode('month')">Month</button>
-                                <button class="btn btn-sm" :class="viewMode === 'week' ? 'btn-emerald' : 'btn-outline'"
+                                <button class="btn btn-sm"
+                                    :class="viewMode === 'week' ? 'btn-emerald' : 'btn-outline'"
                                     @click="setViewMode('week')">Week</button>
-                                <button class="btn btn-sm" :class="viewMode === 'list' ? 'btn-emerald' : 'btn-outline'"
+                                <button class="btn btn-sm"
+                                    :class="viewMode === 'list' ? 'btn-emerald' : 'btn-outline'"
                                     @click="setViewMode('list')">List</button>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Legend -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-4">
                 <div class="flex flex-wrap items-center gap-4">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Legend:</span>
+
+        <!-- Legend -->
+        <div class="bg-base-100 rounded-box shadow-lg p-4 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                    <span class="text-sm font-medium text-base-content/70">Legend:</span>
                     <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-emerald-500 rounded"></div>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Approved</span>
+                        <span class="text-sm text-base-content/70">Approved</span>
                     </div>
                     <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-yellow-500 rounded"></div>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Pending</span>
+                        <span class="text-sm text-base-content/70">Pending</span>
                     </div>
                     <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-red-500 rounded"></div>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Rejected</span>
+                        <span class="text-sm text-base-content/70">Rejected</span>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-purple-500 rounded"></div>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">My Office Involved</span>
+        <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <!-- Month View -->
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Calendar View -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <!-- Month View -->
+        <!-- Calendar View -->
+        <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <!-- Month View -->
                 <div x-show="viewMode === 'month'" class="calendar-grid">
                     <!-- Days of Week Header -->
                     <div class="grid grid-cols-7 gap-px mb-2">
@@ -111,9 +117,11 @@
                             <div class="bg-white dark:bg-gray-800 min-h-24 p-1 border-r border-b border-gray-200 dark:border-gray-600"
                                 :class="day.isCurrentMonth ? '' : 'bg-gray-50 dark:bg-gray-700'">
                                 <div class="flex justify-between items-start mb-1">
-                                    <span class="text-xs font-medium" :class="day.isToday ? 'text-emerald-600 dark:text-emerald-400 font-bold' :
-                                                day.isCurrentMonth ? 'text-gray-900 dark:text-gray-100' :
-                                                'text-gray-400'" x-text="day.dayNumber"></span>
+                                    <span class="text-xs font-medium"
+                                        :class="day.isToday ? 'text-emerald-600 dark:text-emerald-400 font-bold' :
+                                            day.isCurrentMonth ? 'text-base-content' :
+                                            'text-base-content/40'"
+                                        x-text="day.dayNumber"></span>
                                 </div>
 
                                 <div class="space-y-1">
@@ -140,7 +148,8 @@
                                 <span class="ml-1">Previous Week</span>
                             </button>
 
-                            <div class="text-lg font-semibold text-emerald-700 dark:text-emerald-300" x-text="weekRangeLabel"></div>
+                            <div class="text-lg font-semibold text-emerald-700 dark:text-emerald-300"
+                                x-text="weekRangeLabel"></div>
 
                             <button class="btn btn-outline btn-sm btn-emerald" @click="goNext()">
                                 <span class="mr-1">Next Week</span>
@@ -157,7 +166,8 @@
                                 Time
                             </div>
                             <template x-for="day in weekDays" :key="`week-header-${day.date}`">
-                                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center border-l border-gray-200 dark:border-gray-700">
+                                <div
+                                    class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center border-l border-gray-200 dark:border-gray-700">
                                     <div class="text-sm font-medium text-emerald-700 dark:text-emerald-300"
                                         x-text="day.dayName"></div>
                                     <div class="text-xs text-emerald-600 dark:text-emerald-400" x-text="day.date">
@@ -166,11 +176,13 @@
                             </template>
                         </div>
 
-                        <div class="grid grid-cols-8 min-w-full border border-t-0 border-gray-200 dark:border-gray-600 relative">
+                        <div
+                            class="grid grid-cols-8 min-w-full border border-t-0 border-gray-200 dark:border-gray-600 relative">
                             <div class="relative bg-white dark:bg-gray-800 pt-6">
                                 <div class="grid" :style="weekGridTemplateStyle()">
                                     <template x-for="hour in timeSlots" :key="`time-label-${hour}`">
-                                        <div class="border-b border-gray-200 dark:border-gray-700 flex items-start justify-center text-xs text-gray-600 dark:text-gray-400 pt-2">
+                                        <div
+                                            class="border-b border-gray-200 dark:border-gray-700 flex items-start justify-center text-xs text-base-content/70 pt-2">
                                             <span x-text="hour"></span>
                                         </div>
                                     </template>
@@ -178,7 +190,8 @@
                             </div>
 
                             <template x-for="day in weekDays" :key="`week-column-${day.date}`">
-                                <div class="relative border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden pt-6">
+                                <div
+                                    class="relative border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden pt-6">
                                     <div class="grid h-full" :style="weekGridTemplateStyle()">
                                         <template x-for="hour in timeSlots" :key="`gridline-${day.date}-${hour}`">
                                             <div class="border-b border-gray-200 dark:border-gray-700"></div>
@@ -187,10 +200,10 @@
 
                                     <template x-for="layout in getWeekDayLayouts(day.date)" :key="layout.key">
                                         <div class="absolute rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer px-2 py-1 text-xs text-white"
-                                            :class="layout.event.colorClass"
-                                            :style="layout.style"
+                                            :class="layout.event.colorClass" :style="layout.style"
                                             @click="viewEventDetails(layout.event)">
-                                            <div class="font-semibold whitespace-normal wrap-break-word" x-text="layout.event.title"></div>
+                                            <div class="font-semibold whitespace-normal wrap-break-word"
+                                                x-text="layout.event.title"></div>
                                             <div class="text-[10px] opacity-90" x-text="layout.event.time"></div>
                                         </div>
                                     </template>
@@ -209,15 +222,15 @@
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-3 mb-2">
-                                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                                                x-text="event.title"></h4>
+                                            <h4 class="text-lg font-medium text-base-content" x-text="event.title">
+                                            </h4>
                                             <div class="w-3 h-3 rounded" :class="getEventColorClass(event)"></div>
                                             <div class="badge" :class="getStatusClass(event.status)"
                                                 x-text="event.status"></div>
                                         </div>
 
                                         <div
-                                            class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                            class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-base-content/70 mb-2">
                                             <div>
                                                 <strong>Date:</strong> <span x-text="event.date"></span>
                                             </div>
@@ -229,7 +242,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-base-content/70">
                                             <strong>Organization:</strong> <span x-text="event.organization"></span>
                                         </div>
                                     </div>
@@ -252,9 +265,10 @@
                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                 <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" x-text="selectedEvent?.title">
+                        <h3 class="text-lg font-medium text-base-content" x-text="selectedEvent?.title">
                         </h3>
-                        <button @click="showEventModal = false" class="text-gray-400 hover:text-gray-600">
+                        <button @click="showEventModal = false"
+                            class="text-base-content/40 hover:text-base-content/60">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12"></path>
@@ -266,59 +280,47 @@
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Organization</label>
-                                    <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                        x-text="selectedEvent.organization"></p>
+                                    <label class="block text-sm font-medium text-base-content/70">Organization</label>
+                                    <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.organization"></p>
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                    <label class="block text-sm font-medium text-base-content/70">Status</label>
                                     <div class="mt-1">
                                         <div class="badge" :class="getStatusClass(selectedEvent.status)"
                                             x-text="selectedEvent.status"></div>
                                     </div>
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-                                    <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                        x-text="selectedEvent.date"></p>
+                                    <label class="block text-sm font-medium text-base-content/70">Date</label>
+                                    <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.date"></p>
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
-                                    <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                        x-text="selectedEvent.time"></p>
+                                    <label class="block text-sm font-medium text-base-content/70">Time</label>
+                                    <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.time"></p>
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Venue</label>
-                                    <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                        x-text="selectedEvent.venue"></p>
+                                    <label class="block text-sm font-medium text-base-content/70">Venue</label>
+                                    <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.venue"></p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected
+                                    <label class="block text-sm font-medium text-base-content/70">Expected
                                         Attendees</label>
-                                    <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                        x-text="selectedEvent.attendees"></p>
+                                    <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.attendees"></p>
                                 </div>
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-gray-100"
-                                    x-text="selectedEvent.description"></p>
+                                <label class="block text-sm font-medium text-base-content/70">Description</label>
+                                <p class="mt-1 text-sm text-base-content" x-text="selectedEvent.description"></p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">GSO
+                                <label class="block text-sm font-medium text-base-content/70">GSO
                                     Requirements</label>
                                 <div class="mt-1">
                                     <template
                                         x-if="selectedEvent.gso_requirements && selectedEvent.gso_requirements.length > 0">
-                                        <ul class="list-disc list-inside text-sm text-gray-900 dark:text-gray-100">
+                                        <ul class="list-disc list-inside text-sm text-base-content">
                                             <template x-for="requirement in selectedEvent.gso_requirements"
                                                 :key="requirement">
                                                 <li x-text="requirement"></li>
@@ -327,7 +329,7 @@
                                     </template>
                                     <template
                                         x-if="!selectedEvent.gso_requirements || selectedEvent.gso_requirements.length === 0">
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">No GSO requirements</p>
+                                        <p class="text-sm text-base-content/70">No GSO requirements</p>
                                     </template>
                                 </div>
                             </div>
@@ -448,7 +450,8 @@
 
             setViewMode(mode) {
                 this.viewMode = mode;
-                this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this.currentDate.getDate());
+                this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), this
+                    .currentDate.getDate());
                 this.computeCalendar();
             },
 
@@ -562,7 +565,7 @@
                     })
                     .filter(entry => entry.end > entry.start);
 
-                if (! events.length) {
+                if (!events.length) {
                     return [];
                 }
 
@@ -636,7 +639,8 @@
                     adjustedLeft = formatPercent(adjustedLeft);
                     adjustedWidth = formatPercent(adjustedWidth);
 
-                    const style = `top:${topPercent}%;height:${heightPercent}%;left:${adjustedLeft}%;width:${adjustedWidth}%;z-index:${10 + entry.column};`;
+                    const style =
+                        `top:${topPercent}%;height:${heightPercent}%;left:${adjustedLeft}%;width:${adjustedWidth}%;z-index:${10 + entry.column};`;
 
                     return {
                         ...entry,
@@ -690,7 +694,7 @@
                     return value;
                 }
 
-                if (! value || value === '—') {
+                if (!value || value === '—') {
                     return null;
                 }
 
@@ -710,13 +714,13 @@
             },
 
             enhanceEvent(event, index) {
-                let startMinutes = typeof event.start_minutes === 'number'
-                    ? event.start_minutes
-                    : this.parseTimeToMinutes(event.start_time);
+                let startMinutes = typeof event.start_minutes === 'number' ?
+                    event.start_minutes :
+                    this.parseTimeToMinutes(event.start_time);
 
-                let endMinutes = typeof event.end_minutes === 'number'
-                    ? event.end_minutes
-                    : this.parseTimeToMinutes(event.end_time);
+                let endMinutes = typeof event.end_minutes === 'number' ?
+                    event.end_minutes :
+                    this.parseTimeToMinutes(event.end_time);
 
                 if (startMinutes !== null && endMinutes !== null && endMinutes < startMinutes) {
                     endMinutes = startMinutes + 60;
@@ -745,7 +749,7 @@
 
             getPaletteColor(event, index) {
                 const palette = this.eventPalette;
-                if (! palette.length) {
+                if (!palette.length) {
                     return 'bg-emerald-500';
                 }
 
@@ -767,9 +771,9 @@
 
             getStatusClass(status) {
                 const classes = {
-                    'approved': 'badge-success',
-                    'pending': 'badge-warning',
-                    'rejected': 'badge-error'
+                    'approved': 'badge-success text-white',
+                    'pending': 'badge-warning text-white',
+                    'rejected': 'badge-error text-white'
                 };
                 return classes[status] || 'badge-ghost';
             }

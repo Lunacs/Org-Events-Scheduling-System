@@ -52,8 +52,8 @@ new class extends Component {
             this.scrolled = window.scrollY > 10;
         });
     }
-}" :class="{ 'shadow-lg': scrolled, 'shadow-sm': !scrolled }"
-    class="bg-base-100 border-b border-base-300 sticky top-0 z-40 transition-shadow duration-300">
+}" class="bg-base-100 border-b border-base-300 transition-shadow duration-300"
+    :class="{ 'shadow-lg': scrolled, 'shadow-sm': !scrolled }">
     <!-- Primary Navigation Menu -->
     <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -87,7 +87,7 @@ new class extends Component {
                 <div class="dropdown dropdown-end" data-tip="Profile" wire:key="nav-profile-dropdown">
                     <div tabindex="0" role="button"
                         class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
-                        <div wire:key="nav-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
+                        <div wire:key="nav-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}" wire:ignore>
                             <x-ui.avatar :user="$user" size="sm" nav="true" />
                         </div>
                         <span class="hidden md:inline-block max-w-[150px] truncate">{{ $user->name }}</span>
@@ -103,7 +103,8 @@ new class extends Component {
                             <li
                                 class="menu-title px-4 py-3 bg-base-200 rounded-t-box -mx-2 -mt-2 mb-2 focus:bg-base-200 pointer-events-none">
                                 <div class="flex items-center gap-3">
-                                    <div wire:key="dropdown-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
+                                    <div wire:key="dropdown-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}"
+                                        wire:ignore>
                                         <x-ui.avatar :user="$user" size="lg" />
                                     </div>
                                     <div class="flex-1 min-w-0">

@@ -15,6 +15,7 @@ use App\Notifications\TicketStatusUpdatedNotification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -46,7 +47,7 @@ class Show extends Component
         // Optimize: Select only needed columns from tickets table
         $this->ticket = Ticket::select([
             'ticket_id', 'ticket_number', 'title', 'description', 'status', 'date_from', 'date_to',
-            'time_from', 'time_to', 'venue_requested', 'plv_participants','external_participants', 'total_participants',
+            'time_from', 'time_to', 'venue_requested', 'plv_participants', 'external_participants', 'total_participants',
             'additional_notes', 'user_id', 'event_type_id', 'fund_source_id', 'created_at', 'updated_at'
         ])->with([
             'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
@@ -425,11 +426,14 @@ class Show extends Component
 
     public function addComment()
     {
-        if (empty(trim($this->comment))) {
-            $this->warning('Please enter a comment.');
-
-            return;
-        }
+        $this->validate(
+            ['comment' => 'required|string|min:3|max:1000'],
+            [
+                'comment.required' => 'Please enter a comment.',
+                'comment.min' => 'Comment must be at least 3 characters.',
+                'comment.max' => 'Comment cannot exceed 1000 characters.',
+            ]
+        );
 
         // Create comment
         $newComment = TicketComment::create([
@@ -441,7 +445,7 @@ class Show extends Component
         // Clear the input
         $this->comment = '';
 
-        // Reload only the comments relationship with minimal data
+        // Reload only the comment relationship with minimal data
         $this->ticket->load([
             'comments:id,ticket_id,user_id,content,created_at',
             'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
@@ -518,7 +522,7 @@ class Show extends Component
     {
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
-        if (! $attachment) {
+        if (!$attachment) {
             $this->warning('Attachment not found.');
 
             return;
@@ -530,21 +534,21 @@ class Show extends Component
     }
 
     /**
-     * Generate a temporary URL that forces download and redirect to it.
+     * Generate a temporary URL that forces download and dispatch to client.
      */
-    public function downloadAttachment(int $attachmentId)
+    public function downloadAttachment(int $attachmentId): void
     {
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
-        if (! $attachment) {
+        if (!$attachment) {
             $this->warning('Attachment not found.');
 
-            return null;
+            return;
         }
 
         $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
 
-        return redirect()->away($url);
+        $this->dispatch('download-attachment', url: $url);
     }
 
     /**
@@ -557,7 +561,7 @@ class Show extends Component
         try {
             if (method_exists($disk, 'temporaryUrl')) {
                 $options = [
-                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline').'; filename="'.addslashes($filename).'"',
+                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline') . '; filename="' . addslashes($filename) . '"',
                 ];
 
                 return $disk->temporaryUrl($path, now()->addMinutes(5), $options);

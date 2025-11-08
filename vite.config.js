@@ -11,6 +11,9 @@ export default defineConfig({
         }),
     ],
     build: {
+        // Use esbuild for faster minification (built-in, no extra dependency)
+        minify: "esbuild",
+        // Optimize chunk sizes
         rollupOptions: {
             external: [
                 "@fullcalendar/core",
@@ -28,6 +31,16 @@ export default defineConfig({
                     "@fullcalendar/list": "FullCalendarList",
                 },
             },
+        },
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
+        // Target modern browsers for smaller bundles
+        target: "es2015",
+    },
+    // Optimize dev server for faster HMR
+    server: {
+        hmr: {
+            overlay: false, // Disable error overlay for faster dev
         },
     },
 });

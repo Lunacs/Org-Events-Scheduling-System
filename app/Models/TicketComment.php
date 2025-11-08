@@ -38,12 +38,17 @@ class TicketComment extends Model
 
         $user = $this->user;
 
+        // Load role relationship if not already loaded
+        if (!$user->relationLoaded('role')) {
+            $user->load('role');
+        }
+
         // Return based on user's role
-        return match ($user->role_id) {
-            User::ROLE_OSA => 'OSA',
-            User::ROLE_GSO => $user->office?->office_code ?? 'GSO',
-            User::ROLE_STUDENT_ORG => $user->studentOrganization?->org_code ?? 'Student Org',
-            User::ROLE_SUPERADMIN => 'Admin',
+        return match ($user->role?->role_name) {
+            'osa' => 'OSA',
+            'gso' => $user->office?->office_code ?? 'GSO',
+            'student-org' => $user->studentOrganization?->org_code ?? 'Student Org',
+            'superadmin' => 'Admin',
             default => $user->name,
         };
     }

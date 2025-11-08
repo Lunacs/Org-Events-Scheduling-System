@@ -14,45 +14,52 @@ class AvatarSelector extends Component
 
     public $selectedSeed;
 
-    public $avatarOptions = [];
-
-    public $availableStyles = [
+    protected const AVAILABLE_STYLES = [
         'big-ears' => 'Big Ears',
     ];
+
+    protected const AVATAR_SEEDS = [
+        'felix', 'aneka', 'bob', 'charlie', 'david', 'emma', 'frank', 'grace',
+        'hannah', 'ivan', 'julia', 'kevin', 'laura', 'mike', 'nina', 'oliver',
+        'peter', 'quinn', 'rachel', 'sam', 'tina', 'uma', 'victor', 'wendy',
+    ];
+
+    protected const DEFAULT_STYLE = 'big-ears';
+    protected const DEFAULT_SEED = 'felix';
 
     public function mount()
     {
         $user = Auth::user();
-        $this->selectedStyle = $user->avatar_style ?? 'big-ears';
-        $this->selectedSeed = $user->avatar_seed ?? '';
-
-        // Generate avatar options (mix of styles with different seeds)
-        $this->generateAvatarOptions();
+        $this->selectedStyle = $user->avatar_style ?? self::DEFAULT_STYLE;
+        $this->selectedSeed = $user->avatar_seed ?? self::DEFAULT_SEED;
     }
 
-    public function generateAvatarOptions()
+    public function getAvatarOptionsProperty()
     {
-        $this->avatarOptions = [];
-        // Generate 24 Big Ears variations using different seeds
-        $seeds = [
-            'felix', 'aneka', 'bob', 'charlie', 'david', 'emma', 'frank', 'grace',
-            'hannah', 'ivan', 'julia', 'kevin', 'laura', 'mike', 'nina', 'oliver',
-            'peter', 'quinn', 'rachel', 'sam', 'tina', 'uma', 'victor', 'wendy',
-        ];
+        // Generate flat array of avatar options
+        $options = [];
 
-        foreach ($this->availableStyles as $styleId => $styleName) {
-            foreach ($seeds as $seed) {
-                $this->avatarOptions[] = [
+        foreach (self::AVAILABLE_STYLES as $styleId => $styleName) {
+            foreach (self::AVATAR_SEEDS as $seed) {
+                $options[] = [
                     'style' => $styleId,
                     'seed' => $seed,
-                    'id' => $styleId.'-'.$seed,
+                    'id' => "{$styleId}-{$seed}",
                 ];
             }
         }
+
+        return $options;
     }
 
     public function saveAvatar($style, $seed)
     {
+        // Validate inputs
+        if (!isset(self::AVAILABLE_STYLES[$style]) || !in_array($seed, self::AVATAR_SEEDS, true)) {
+            $this->error('Invalid avatar selection.', position: 'toast-top');
+            return;
+        }
+
         $user = Auth::user();
 
         $user->update([
@@ -75,6 +82,8 @@ class AvatarSelector extends Component
 
     public function render()
     {
-        return view('livewire.avatar-selector');
+        return view('livewire.avatar-selector', [
+            'avatarOptions' => $this->avatarOptions,
+        ]);
     }
 }

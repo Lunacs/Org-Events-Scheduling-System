@@ -19,14 +19,16 @@
 @if ($nav == 'true')
     <div class="avatar placeholder {{ $class }}">
         <div class="bg-base-300 text-base-content rounded-full {{ $sizeClass }}">
-            <img data-avatar="{{ $avatarData }}" alt="{{ $user->name }}'s avatar"
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+                data-avatar="{{ $avatarData }}" alt="{{ $user->email }}'s avatar"
                 class="rounded-full w-full h-full object-cover" />
         </div>
     </div>
 @else
     <div class="avatar placeholder {{ $class }}">
         <div class="bg-primary text-primary-content rounded-full {{ $sizeClass }}">
-            <img data-avatar="{{ $avatarData }}" alt="{{ $user->name }}'s avatar"
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+                data-avatar="{{ $avatarData }}" alt="{{ $user->name }}'s avatar"
                 class="rounded-full w-full h-full object-cover" />
         </div>
     </div>
