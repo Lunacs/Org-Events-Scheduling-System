@@ -106,7 +106,10 @@ Route::prefix('gso')
     ->group(function () {
         Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard');
         Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
-        Route::get('/tickets/{ticket}', GsoDetails::class)->name('gso.ticket-details');
+        Route::get('/tickets/{ticket}/{office?}/{approval?}', GsoDetails::class)
+            ->name('gso.ticket-details')
+            ->whereNumber('office')
+            ->whereNumber('approval');
         Route::get('/approvals', GsoApprovals::class)->name('gso.approvals');
         Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
         Route::view('/communication', 'gso.communication')->name('gso.communication');

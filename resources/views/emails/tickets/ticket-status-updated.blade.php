@@ -1,6 +1,6 @@
 <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, 'Apple Color Emoji', 'Segoe UI Emoji'; max-width: 560px; margin: 0 auto; padding: 24px;">
 	<h1 style="font-size: 18px; margin: 0 0 12px;">{{ $title ?? 'Ticket Status Updated' }}</h1>
-	<p style="margin: 0 0 8px; color: #374151;">{{ $message }}</p>
+	<p style="margin: 0 0 8px; color: #374151;">{{ $statusMessage }}</p>
 	@if(!empty($remarks))
 		<p style="margin: 0 0 8px; color: #374151;"><strong>Remarks:</strong> {{ $remarks }}</p>
 	@endif

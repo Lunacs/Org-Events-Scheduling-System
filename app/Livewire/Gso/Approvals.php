@@ -3,7 +3,11 @@
 namespace App\Livewire\Gso;
 
 use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
+use App\Models\OSA_Approval;
 use App\Models\Office_Approval;
+use App\Models\User;
+use App\Notifications\TicketStatusUpdatedNotification;
+use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +32,7 @@ class Approvals extends Component
     public bool $showConfirmationModal = false;
     public ?int $selectedApprovalId = null;
     public string $actionType = '';
-    public string $confirmationInput = '';
+    public string $actionRemarks = '';
 
     protected $listeners = [
         'refreshApprovals' => '$refresh',
@@ -36,8 +40,8 @@ class Approvals extends Component
 
     public function render()
     {
-    $user = Auth::user();
-    $officeId = $this->resolveOfficeId($user);
+        $user = Auth::user();
+        $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
@@ -197,6 +201,7 @@ class Approvals extends Component
             'description' => $ticket?->description ?? 'No description provided.',
             'requirements' => $requirements,
             'submitted_date' => optional($ticket?->created_at)->format('M d, Y') ?? '—',
+            'submitted_human' => $approval->created_at?->diffForHumans() ?? null,
             'due_date' => $dueDate?->format('M d, Y') ?? '—',
             'remarks' => $approval->remarks ?? null,
             'participants' => $ticket?->total_participants,
@@ -276,7 +281,7 @@ class Approvals extends Component
     public function confirmAction(int $approvalId, string $action)
     {
         $this->resetValidation();
-        $this->confirmationInput = '';
+        $this->actionRemarks = '';
         $this->selectedApprovalId = $approvalId;
         $this->actionType = $action;
         $this->showConfirmationModal = true;
@@ -284,7 +289,7 @@ class Approvals extends Component
 
     public function cancelConfirmation()
     {
-        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'actionRemarks']);
         $this->resetValidation();
     }
 
@@ -296,41 +301,103 @@ class Approvals extends Component
 
     public function performAction()
     {
-        if (! $this->selectedApprovalId) {
+        if (! $this->selectedApprovalId || ! in_array($this->actionType, ['approve', 'reject'], true)) {
             return;
         }
 
-        $approval = Office_Approval::find($this->selectedApprovalId);
-        if (! $approval) {
-            return;
-        }
+        $rules = [];
+        $messages = [];
 
-        $requiredWord = null;
         if ($this->actionType === 'approve') {
-            $requiredWord = 'approve';
+            $rules = ['actionRemarks' => 'required|string|min:3'];
+            $messages = [
+                'actionRemarks.required' => 'Please provide remarks for approval.',
+                'actionRemarks.min' => 'Remarks must be at least 3 characters.',
+            ];
         } elseif ($this->actionType === 'reject') {
-            $requiredWord = 'reject';
+            $rules = ['actionRemarks' => 'required|string|min:10'];
+            $messages = [
+                'actionRemarks.required' => 'Please provide remarks for rejection.',
+                'actionRemarks.min' => 'Remarks must be at least 10 characters.',
+            ];
         }
 
-        if ($requiredWord) {
-            if (strtolower(trim($this->confirmationInput)) !== $requiredWord) {
-                $this->addError('confirmationInput', 'Type "' . $requiredWord . '" to proceed.');
-                return;
-            }
+        if (! empty($rules)) {
+            $this->validate($rules, $messages);
         }
 
-        $decision = $this->actionType === 'approve'
-            ? 'approved'
-            : ($this->actionType === 'reject' ? 'rejected' : $this->actionType);
+        $approval = Office_Approval::with(['ticket.user'])->find($this->selectedApprovalId);
 
-        $approval->decision = $decision;
+        if (! $approval || ! $approval->ticket) {
+            $this->addError('actionType', 'Approval or ticket record not found.');
+            return;
+        }
+
+        $decision = $this->actionType === 'approve' ? 'approved' : 'rejected';
+        $remarks = trim((string) $this->actionRemarks);
+
+        $approval->fill([
+            'decision' => $decision,
+            'user_id' => Auth::id(),
+        ]);
         $approval->updated_at = now();
         $approval->save();
 
+        $ticket = $approval->ticket;
+        $ticket->loadMissing('user');
+        $oldStatus = $ticket->status;
+        $newStatus = $decision === 'approved' ? 'pending_osa_approval' : 'rejected';
+
+        if ($ticket->status !== $newStatus) {
+            $ticket->update(['status' => $newStatus]);
+        }
+
+        $formattedRemarks = sprintf('%s by GSO - %s', strtoupper($decision), $remarks ?: 'No remarks provided');
+        $osaDecision = $decision === 'approved' ? 'pending' : 'rejected';
+
+        OSA_Approval::create([
+            'ticket_id' => $ticket->ticket_id,
+            'user_id' => Auth::id(),
+            'decision' => $osaDecision,
+            'remarks' => $formattedRemarks,
+        ]);
+
+        if ($ticket->relationLoaded('user') && $ticket->user) {
+            Notification::sendNow(
+                $ticket->user,
+                new TicketStatusUpdatedNotification(
+                    $ticket,
+                    $oldStatus,
+                    $newStatus,
+                    $remarks ?: ($decision === 'approved' ? 'Approved by GSO.' : 'Rejected by GSO.')
+                ),
+                ['database', 'broadcast']
+            );
+        }
+
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+        $osaMessage = $decision === 'approved'
+            ? "GSO has approved this ticket. Remarks: " . ($remarks ?: 'None provided.')
+            : "GSO has rejected this ticket. Remarks: " . ($remarks ?: 'None provided.')
+        ;
+
+        Notification::sendNow(
+            $osaUsers,
+            new TicketStatusUpdatedNotification(
+                $ticket,
+                $oldStatus,
+                $newStatus,
+                $osaMessage
+            ),
+            ['database', 'broadcast']
+        );
+
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $ticket->ticket_id, newStatus: $newStatus);
         $this->dispatch('refreshApprovals');
 
-        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'confirmationInput']);
+        $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'actionRemarks']);
         $this->resetValidation();
-        session()->flash('message', 'Request ' . $decision . ' successfully.');
+        session()->flash('message', 'Request ' . Str::headline($decision) . ' successfully.');
     }
 }

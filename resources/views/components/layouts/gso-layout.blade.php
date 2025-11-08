@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }} - GSO Portal</title>
+    <title>{{ isset($title) ? $title . ' - ' . config('app.name') : config('app.name') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
@@ -64,6 +64,12 @@
                     <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate />
                 </x-mary-menu>
             </x-slot:sidebar>
+
+            <x-slot:footer>
+                <div class="bg-accent text-center py-2">
+                    <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - GSO Admin</p>
+                </div>
+            </x-slot:footer>
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
