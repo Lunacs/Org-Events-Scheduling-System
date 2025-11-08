@@ -1,6 +1,19 @@
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div>
+    <div class="p-6">
+        {{-- Header --}}
+        <div class="mb-8">
+            <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-base-content">GSO Dashboard</h1>
+                        <p class="text-base-content/70 mt-1">General Services Office - Event Management System</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <x-mary-stat title="Pending Approvals"
                 :value="number_format(data_get($stats, 'pending', 0))"
                 description="Awaiting your approval"
@@ -26,22 +39,22 @@
             $defaultRequestTypeBadge = 'badge-ghost text-base-content';
 
             $requestTypeBadgeDefaults = [
-                'venue booking' => 'badge-primary text-primary-content',
-                'venue' => 'badge-primary text-primary-content',
-                'equipment' => 'badge-info text-info-content',
-                'logistics' => 'badge-secondary text-secondary-content',
-                'catering' => 'badge-accent text-accent-content',
+                'venue booking' => 'badge-primary text-white',
+                'venue' => 'badge-primary text-white',
+                'equipment' => 'badge-info text-white',
+                'logistics' => 'badge-secondary text-white',
+                'catering' => 'badge-accent text-white',
             ];
 
             $requestTypeBadgePalette = [
-                'badge-success text-success-content',
-                'badge-warning text-warning-content',
-                'badge-error text-error-content',
-                'badge-neutral text-neutral-content',
-                'badge-info text-info-content',
-                'badge-secondary text-secondary-content',
-                'badge-accent text-accent-content',
-                'badge-primary text-primary-content',
+                'badge-success text-white',
+                'badge-warning text-white',
+                'badge-error text-white',
+                'badge-neutral text-white',
+                'badge-info text-white',
+                'badge-secondary text-white',
+                'badge-accent text-white',
+                'badge-primary text-white',
             ];
 
             $requestTypeBadgeMap = $requestTypeBadgeDefaults;
@@ -99,9 +112,9 @@
                         @php
                             $priorityKey = \Illuminate\Support\Str::of($row['priority'] ?? 'low')->lower()->toString();
                             $priorityClass = match ($priorityKey) {
-                                'high' => 'badge-error text-error-content',
-                                'medium' => 'badge-warning text-warning-content',
-                                'low' => 'badge-success text-success-content',
+                                'high' => 'badge-error text-white',
+                                'medium' => 'badge-warning text-white',
+                                'low' => 'badge-success text-white',
                                 default => 'badge-ghost text-base-content',
                             };
                         @endphp
@@ -110,7 +123,7 @@
                     @endscope
                 </x-mary-table>
             @else
-                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div class="text-center py-8 text-base-content/70">
                     <x-mary-icon name="s-check-circle" class="w-10 h-10 mx-auto mb-2 text-success" />
                     <p>You're all caught up. No pending approvals right now.</p>
                 </div>
@@ -140,13 +153,13 @@
                                 <x-mary-icon :name="$icon" class="w-6 h-6 {{ $iconColor }}" />
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <p class="text-sm font-medium text-base-content">
                                     {{ $activity['action'] ?? 'Activity' }}
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <p class="text-xs text-base-content/70">
                                     {{ $activity['details'] ?? 'Details unavailable.' }}
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <p class="text-xs text-base-content/70">
                                     {{ $activity['time_ago'] ?? 'Just now' }}
                                 </p>
                             </div>
@@ -154,11 +167,12 @@
                     @endforeach
                 </ul>
             @else
-                <div class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-                    <x-mary-icon name="s-document" class="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <div class="text-center py-6 text-sm text-base-content/70">
+                    <x-mary-icon name="s-document" class="w-8 h-8 mx-auto mb-2 text-base-content/40" />
                     <p>Activity logs will appear here once actions are taken.</p>
                 </div>
             @endif
         </x-mary-card>
+        </div>
     </div>
 </div>

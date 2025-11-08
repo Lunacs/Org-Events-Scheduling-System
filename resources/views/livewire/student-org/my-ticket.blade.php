@@ -99,6 +99,7 @@
         </div>
     </div>
 
+{{-- Details modal --}}
     <x-mary-modal wire:model="showDetailsModal" title="Ticket Details" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
 
@@ -111,6 +112,7 @@
         @endif
     </x-mary-modal>
 
+{{-- Comments modal --}}
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
@@ -118,26 +120,9 @@
             @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'rejected']))
                 <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket" />
             @endif
-            @if ($this->selectedTicketComments)
-                <div wire:key="comments-list-{{ $this->selectedTicket->ticket_id }}">
-                    @foreach ($this->selectedTicketComments as $comment)
-                        <div wire:key="comment-{{ $comment->id }}">
-                            <x-comment-boxes.normal-comment :comment="$comment" />
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-            <div class="space-y-3 mt-6" x-data="{ isSubmitting: false }" @comment-added.window="isSubmitting = false">
-                <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
-                    x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
-                <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
-                    :disabled="isSubmitting" wire:loading.attr="disabled">
-                    <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4" wire:loading.remove
-                        wire:target="addComment" />
-                    <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
-                    <span wire:loading.remove wire:target="addComment">Add Comment</span>
-                    <span wire:loading wire:target="addComment">Adding...</span>
-                </button>
+
+            <div class="mt-4">
+                <x-comment-boxes.ticket-comments :ticket="$this->selectedTicket" />
             </div>
         @else
             <div class="text-center py-8">

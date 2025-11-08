@@ -53,7 +53,7 @@ class Notifications extends Component
                 $weekEnd = now()->endOfWeek();
 
                 $allNotifications = $user->notifications();
-                
+
                 return [
                     'unread' => (clone $allNotifications)->whereNull('read_at')->count(),
                     'total' => $allNotifications->count(),
@@ -117,7 +117,7 @@ class Notifications extends Component
 
         // Get notifications
         $this->notifications = $query->get();
-        
+
         // Reload counts if filters changed (but not on initial mount)
         if (!$limitOnly) {
             $this->loadCounts();

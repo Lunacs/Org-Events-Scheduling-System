@@ -96,7 +96,7 @@ class Communication extends Component
     {
         return \Illuminate\Support\Facades\Cache::remember('osa_communication_users', 3600, function () {
             return User::select(['user_id', 'name', 'email', 'org_id'])
-                ->where('role_id', User::ROLE_STUDENT_ORG)
+                ->where('role_id', User::getRoleId('student-org'))
                 ->with('studentOrganization:org_id,org_name')
                 ->orderBy('name')
                 ->get();

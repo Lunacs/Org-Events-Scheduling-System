@@ -14,9 +14,6 @@
         </div>
     </div>
 
-    {{-- Header --}}
-
-
     {{-- Calendar Controls --}}
     <div x-data="osaCalendar()" x-init="init()" x-cloak
         class="bg-base-100 rounded-box shadow-lg p-4 sm:p-6 mb-6">
@@ -99,10 +96,10 @@
         initialType: '{{ $eventTypeFilter }}'
     })" x-init="init()" x-on:open-filters.window="open = true" x-cloak
         x-on:clear-filters.window="clearAll()">
-        <div x-show="open" x-transition.opacity class="fixed inset-0 z-50">
+        <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
             <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
             <div
-                class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col">
+                class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
                 <div class="px-6 py-4 border-b border-base-300">
                     <h3 class="text-base font-semibold">Filter Events</h3>
                     <p class="text-sm opacity-70">Refine your calendar view</p>

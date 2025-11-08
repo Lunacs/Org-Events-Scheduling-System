@@ -4,7 +4,8 @@
         <div class="bg-gradient-to-r from-primary to-secondary rounded-box shadow-lg p-6 text-primary-content">
             <div class="flex items-center gap-4">
                 <div wire:key="profile-header-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
-                    <x-ui.avatar :user="$user" size="2xl" class="ring-4 ring-base-100" nav="false" />
+                    <x-ui.avatar :user="$user" size="2xl" class="ring-4 ring-base-100" nav="false"
+                        wire:ignore />
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold">{{ $user->name }}</h1>
@@ -64,15 +65,44 @@
                     </x-slot:menu>
 
                     <div class="space-y-4">
-                        <x-mary-input wire:model="current_password" label="Current Password" type="password"
-                            placeholder="Enter current password" icon="o-key" />
+                        {{-- Current Password with Toggle --}}
+                        <div x-data="{ show: false }" class="relative">
+                            <x-mary-input wire:model="current_password" label="Current Password"
+                                x-bind:type="show ? 'text' : 'password'" placeholder="Enter current password"
+                                icon="o-key" />
+                            <button type="button" @click="show = !show"
+                                class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye" x-show="!show"></i>
+                                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                            </button>
+                        </div>
 
+                        {{-- New Password Fields --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input wire:model="new_password" label="New Password" type="password"
-                                placeholder="Enter new password" icon="o-lock-closed" />
+                            <div x-data="{ show: false }" class="relative">
+                                <x-mary-input wire:model="new_password" label="New Password"
+                                    x-bind:type="show ? 'text' : 'password'" placeholder="Enter new password"
+                                    icon="o-lock-closed" />
+                                <button type="button" @click="show = !show"
+                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                    tabindex="-1">
+                                    <i class="fas fa-eye" x-show="!show"></i>
+                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                </button>
+                            </div>
 
-                            <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
-                                type="password" placeholder="Confirm new password" icon="o-lock-closed" />
+                            <div x-data="{ show: false }" class="relative">
+                                <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
+                                    x-bind:type="show ? 'text' : 'password'" placeholder="Confirm new password"
+                                    icon="o-lock-closed" />
+                                <button type="button" @click="show = !show"
+                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                    tabindex="-1">
+                                    <i class="fas fa-eye" x-show="!show"></i>
+                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="alert alert-info">
@@ -187,47 +217,6 @@
                         </div>
                     </div>
                 </x-mary-card>
-
-                {{-- Quick Actions --}}
-                <x-mary-card title="Quick Actions" class="shadow-lg">
-                    <div class="space-y-2">
-                        <x-mary-button icon="o-key" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'password' })">
-                            Change Password
-                        </x-mary-button>
-
-                        <x-mary-button icon="o-photo" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'avatar' })">
-                            Change Avatar
-                        </x-mary-button>
-
-                        <x-mary-button icon="o-bell" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'notifications' })">
-                            Notification Settings
-                        </x-mary-button>
-
-                        <div class="divider my-2"></div>
-
-                        <x-mary-button icon="o-arrow-left-on-rectangle"
-                            class="btn-ghost btn-block justify-start text-error" wire:click="$dispatch('logout')">
-                            Sign Out
-                        </x-mary-button>
-                    </div>
-                </x-mary-card>
-
-                {{-- Security Tips --}}
-                <div class="alert alert-warning shadow-lg">
-                    <x-mary-icon name="o-shield-exclamation" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">Security Tips</h3>
-                        <ul class="text-xs mt-2 space-y-1">
-                            <li>• Use a strong, unique password</li>
-                            <li>• Never share your credentials</li>
-                            <li>• Log out on shared computers</li>
-                            <li>• Review your account regularly</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

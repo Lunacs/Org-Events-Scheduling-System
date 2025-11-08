@@ -32,34 +32,43 @@
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+            @persist('student-drawer')
+                <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
-                {{-- BRAND --}}
-                <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10">
-                        <h2 class="p-3 text-lg font-semibold font-heading ml-2">Student Org</h2>
+                    {{-- BRAND --}}
+                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10">
+                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Student Org</h2>
+                        </div>
                     </div>
-                </div>
 
-                {{-- MENU --}}
-                <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
-                    @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
-                        <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
-                    @endforeach
-                </x-mary-menu>
-            </x-slot:sidebar>
+                    {{-- MENU --}}
+                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
+                        @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
+                            <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
+                        @endforeach
+                    </x-mary-menu>
+                </x-slot:sidebar>
+            @endpersist
 
-            <x-slot:footer>
-                <div class="bg-accent text-center py-2">
-                    <p class="text-sm">© 2025 PLV Event Scheduling System - Student Organization Portal</p>
-                </div>
-            </x-slot:footer>
+            @persist('student-footer')
+                <x-slot:footer>
+                    <div class="bg-accent text-center py-2">
+                        <p class="text-sm">© 2025 PLV Event Scheduling System - Student Organization Portal</p>
+                    </div>
+                </x-slot:footer>
+            @endpersist
+
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
-                {{-- Top Navigation Bar --}}
-                <livewire:layout.navigation />
+                <div class="sticky top-0 z-15">
+                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+                    @persist('student-navigation')
+                        <livewire:layout.navigation />
+                    @endpersist
+                </div>
 
                 {{-- Page Content --}}
                 {{ $slot }}

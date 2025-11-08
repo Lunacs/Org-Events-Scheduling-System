@@ -8,7 +8,6 @@ use App\Notifications\TicketCommentNotification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -33,7 +32,6 @@ class MyTicket extends Component
 
     public $selectedTicketId;
 
-    #[Rule('string|max:1000')]
     public $comment = '';
 
     #[On('open-ticket-details')]
@@ -116,7 +114,14 @@ class MyTicket extends Component
 
     public function addComment()
     {
-        $this->validate(['comment' => 'required|string|max:1000']);
+        $this->validate(
+            ['comment' => 'required|string|min:3|max:1000'],
+            [
+                'comment.required' => 'Please enter a comment.',
+                'comment.min' => 'Comment must be at least 3 characters.',
+                'comment.max' => 'Comment cannot exceed 1000 characters.'
+            ]
+        );
 
         if (! $this->selectedTicketId) {
             session()->flash('warning', 'No ticket selected.');

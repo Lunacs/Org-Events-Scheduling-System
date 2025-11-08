@@ -36,42 +36,54 @@
 
         {{-- MAIN --}}
         <x-mary-main full-width>
-            {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+            {{-- SIDEBAR - Persisted for SPA-like experience --}}
+            @persist('osa-sidebar')
+                <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
-                {{-- BRAND --}}
-                <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <img src="{{ asset('images/plv-logo.png') }}" alt="My Logo" class="h-10 w-10">
-                        <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
+                    {{-- BRAND --}}
+                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="My Logo" class="h-10 w-10">
+                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
+                        </div>
+
                     </div>
 
-                </div>
-
-                {{-- MENU --}}
-                <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
-                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard" wire:navigate />
-                    <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets" wire:navigate />
-                    <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
-                        link="/admin/ticket-review" wire:navigate />
-                    <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
-                        wire:navigate />
-                    <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate />
-                    <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
-                    <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate />
-                </x-mary-menu>
-            </x-slot:sidebar>
-            <x-slot:footer>
-                <div class="bg-accent text-center py-2">
-                    <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
-                </div>
-            </x-slot:footer>
+                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
+                        {{-- MENU --}}
+                        <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard"
+                            wire:navigate.prefetch />
+                        <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets"
+                            wire:navigate.prefetch />
+                        <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
+                            link="/admin/ticket-review" wire:navigate.prefetch />
+                        <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
+                            wire:navigate.prefetch />
+                        <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate.prefetch />
+                        <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate.prefetch />
+                        <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive"
+                            wire:navigate.prefetch />
+                    </x-mary-menu>
+                </x-slot:sidebar>
+            @endpersist
+
+            @persist('osa-footer')
+                <x-slot:footer>
+                    <div class="bg-accent text-center py-2">
+                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
+                    </div>
+                </x-slot:footer>
+            @endpersist
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
-                {{-- Top Navigation Bar --}}
-                <livewire:layout.navigation />
+                <div class="sticky top-0 z-15">
+                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+                    @persist('osa-navigation')
+                        <livewire:layout.navigation />
+                    @endpersist
+                </div>
 
                 {{-- Page Content --}}
                 {{ $slot }}

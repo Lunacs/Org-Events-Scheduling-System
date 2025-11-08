@@ -25,7 +25,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -40,7 +40,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -61,7 +61,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -85,7 +85,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -109,7 +109,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -133,7 +133,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_GSO,
+            'role_id' => User::getRoleId('gso'),
         ]);
 
         Volt::test('pages.auth.forgot-password')
@@ -157,7 +157,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'role' => User::ROLE_SUPERADMIN,
+            'role_id' => User::getRoleId('superadmin'),
         ]);
 
         Volt::test('pages.auth.forgot-password')

@@ -95,7 +95,7 @@ class Archive extends Component
         $this->resetPage();
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function archivedEvents()
     {
         return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])

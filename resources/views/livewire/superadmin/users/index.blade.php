@@ -1,9 +1,37 @@
-<div x-data="{ userFormOpen: false, deleteModalOpen: false }" @user-form-close.window="userFormOpen = false"
-    @delete-modal-close.window="deleteModalOpen = false">
+<div x-data="{
+    showCreateUserDrawer: false,
+    showEditUserDrawer: false,
+    showDeleteModal: false,
+    openCreateUserDrawer() {
+        $wire.resetCreateForm();
+        this.showCreateUserDrawer = true;
+    },
+    closeCreateUserDrawer() {
+        this.showCreateUserDrawer = false;
+        $wire.resetCreateForm();
+    },
+    openEditUserDrawer(userId) {
+        $wire.loadEditForm(userId);
+        this.showEditUserDrawer = true;
+    },
+    closeEditUserDrawer() {
+        this.showEditUserDrawer = false;
+        $wire.resetEditForm();
+    },
+    openDeleteModal(userId) {
+        $wire.loadUserForDeletion(userId);
+        this.showDeleteModal = true;
+    },
+    closeDeleteModal() {
+        this.showDeleteModal = false;
+        $wire.resetDeleteModal();
+    }
+}" @user-drawer-close.window="showCreateUserDrawer = false; showEditUserDrawer = false"
+    @delete-modal-close.window="showDeleteModal = false">
     <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold font-heading">User Management</h1>
-            <x-mary-button icon="o-plus" class="btn-accent font-body" @click="$wire.openCreateUserDrawer()">
+            <x-mary-button icon="o-plus" class="btn-accent font-body" @click="openCreateUserDrawer()">
                 Create User
             </x-mary-button>
         </div>
@@ -32,14 +60,17 @@
         </x-mary-card>
 
         <x-mary-card shadow>
-            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination per-page="perPage"
-                :per-page-values="[10, 25, 50]" class="rounded-lg">
+            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination :per-page-values="[10, 25, 50]"
+                class="rounded-lg">
                 @scope('cell_role', $user)
-                    <x-mary-badge :value="$this->getRoleDisplayName($user->role)" :class="match ($user->role) {
+                    @php
+                        $roleString = $user->role?->role_name ?? 'unknown';
+                    @endphp
+                    <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
                         'superadmin' => 'badge-error text-base-200 text-md',
                         'osa' => 'badge-primary text-base-200',
                         'gso' => 'badge-info text-base-200',
-                        'student_org' => 'badge-success text-base-200 whitespace-nowrap',
+                        'student-org' => 'badge-success text-base-200 whitespace-nowrap',
                         default => 'badge-ghost text-base-200',
                     }" />
                 @endscope
@@ -65,12 +96,12 @@
                 @scope('cell_actions', $user)
                     <div class="flex space-x-1">
                         <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                            @click="$wire.openEditUserDrawer({{ $user->user_id }})">
+                            @click="openEditUserDrawer({{ $user->user_id }})">
                             Edit
                         </x-mary-button>
-                        @if ($user->role !== 'superadmin')
+                        @if (!$user->isSuperAdmin())
                             <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                wire:click="openDeleteModal({{ $user->user_id }})">
+                                @click="openDeleteModal({{ $user->user_id }})">
                             </x-mary-button>
                         @endif
                     </div>
@@ -80,8 +111,8 @@
     </div>
 
     {{-- Create User Drawer --}}
-    <x-mary-drawer wire:model="showCreateUserDrawer" title="Create New User" subtitle="Add a new user to the system"
-        separator close-on-escape withCloseButton class="w-11/12 lg:w-1/2" right @close="$wire.resetCreateForm()">
+    <x-mary-drawer x-model="showCreateUserDrawer" title="Create New User" subtitle="Add a new user to the system"
+        separator close-on-escape with-close-button class="w-11/12 lg:w-1/2" right @close="closeCreateUserDrawer()">
 
         <form wire:submit="createUser" class="space-y-4">
             <x-mary-input label="Full Name" wire:model="createForm.name" placeholder="John Dela Cruz" icon="o-user"
@@ -91,7 +122,7 @@
                 placeholder="user@plv.edu.ph" icon="o-envelope" hint="Must be a valid PLV email address" />
 
             <x-mary-input label="Password" wire:model="createForm.password" type="password" placeholder="Enter password"
-                icon="o-lock-closed" hint="Minimum 8 characters" placeholder="Confirm password"/>
+                icon="o-lock-closed" hint="Minimum 8 characters" />
 
             <x-mary-input label="Confirm Password" wire:model="createForm.password_confirmation" type="password"
                 placeholder="Confirm password" icon="o-lock-closed" />
@@ -106,14 +137,14 @@
         </form>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showCreateUserDrawer = false" />
+            <x-mary-button label="Cancel" @click="closeCreateUserDrawer()" />
             <x-mary-button label="Create User" wire:click="createUser" class="btn-primary" spinner="createUser" />
         </x-slot:actions>
     </x-mary-drawer>
 
     {{-- Edit User Drawer --}}
-    <x-mary-drawer wire:model="showEditUserDrawer" title="Edit User" subtitle="Update user information" separator
-        close-on-escape withCloseButton class="w-11/12 lg:w-1/2" right @close="$wire.resetEditForm()">
+    <x-mary-drawer x-model="showEditUserDrawer" title="Edit User" subtitle="Update user information" separator
+        close-on-escape with-close-button class="w-11/12 lg:w-1/2" right @close="closeEditUserDrawer()">
 
         <form wire:submit="updateUser" class="space-y-4">
             <x-mary-input label="Full Name" wire:model="editForm.name" placeholder="John Dela Cruz" icon="o-user"
@@ -144,14 +175,15 @@
         </form>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showEditUserDrawer = false" />
+            <x-mary-button label="Cancel" @click="closeEditUserDrawer()" />
             <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary" spinner="updateUser" />
         </x-slot:actions>
     </x-mary-drawer>
 
     {{-- Delete Confirmation Modal --}}
     @if ($deletingUserName)
-        <x-mary-modal :open="$showDeleteModal" title="Delete User Confirmation" subtitle="This action cannot be undone">
+        <x-mary-modal x-model="showDeleteModal" title="Delete User Confirmation"
+            subtitle="This action cannot be undone">
             <div class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center">
@@ -180,8 +212,7 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel"
-                    @click="$wire.set('showDeleteModal', false); $wire.resetDeleteModal()" />
+                <x-mary-button label="Cancel" @click="closeDeleteModal()" />
                 <x-mary-button label="Delete User" wire:click="confirmDelete" class="btn-error"
                     spinner="confirmDelete" />
             </x-slot:actions>

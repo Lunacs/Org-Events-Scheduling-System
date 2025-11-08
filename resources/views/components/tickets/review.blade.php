@@ -368,6 +368,9 @@
                     </div>
                 @endif
             </div>
+
+            {{-- Comments --}}
+            <x-comment-boxes.ticket-comments :ticket="$ticket" />
         </div>
 
         {{-- Sidebar --}}
@@ -666,47 +669,6 @@
                     </div>
                 @endif
             </div>
-
-            {{-- Comments --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6" x-data="{ isSubmitting: false }" x-init="$nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })"
-                @comment-added.window="
-                    isSubmitting = false;
-                    $nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })
-                ">
-                <h2 class="text-xl font-bold text-base-content mb-4">Comments</h2>
-                @if ($ticket->comments->count() > 0)
-                    <div class="mt-4 space-y-4" wire:key="comments-list">
-                        @foreach ($ticket->comments as $comment)
-                            <div class="chat chat-start" wire:key="comment-{{ $comment->id }}">
-                                <div class="chat-image avatar">
-                                    <div class="w-10 rounded-full bg-base-300">
-                                        <img data-avatar="{{ $comment->user->avatar_url }}"
-                                            alt="{{ $comment->user->name }}" draggable="false"
-                                            class="rounded-full w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                                <div class="chat-header">
-                                    {{ $comment->user->name }}
-                                    <x-mary-badge value="{{ $comment->user->role_display }}"
-                                        class="badge-primary text-xs ml-2" />
-                                    <time
-                                        class="text-xs opacity-50">{{ $comment->created_at->diffForHumans() }}</time>
-                                </div>
-                                <div class="chat-bubble">{{ $comment->content }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-                <div class="space-y-3 mt-4">
-                    <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
-                        x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
-                    <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
-                        :disabled="isSubmitting" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="addComment">Add Comment</span>
-                        <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -896,63 +858,79 @@
     </div>
 
     {{-- Add JavaScript for handling Livewire events --}}
-    <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('ticket-approved', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-approved'));
-            });
+    @script
+        <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.on('ticket-approved', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-approved'));
+                });
 
-            Livewire.on('ticket-forwarded', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-forwarded'));
-            });
+                Livewire.on('ticket-forwarded', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-forwarded'));
+                });
 
-            Livewire.on('ticket-revision-requested', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-revision-requested'));
-            });
+                Livewire.on('ticket-revision-requested', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-revision-requested'));
+                });
 
-            Livewire.on('ticket-rejected', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-rejected'));
-            });
+                Livewire.on('ticket-rejected', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-rejected'));
+                });
 
-            Livewire.on('ticket-final-approved', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-final-approved'));
-            });
+                Livewire.on('ticket-final-approved', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-final-approved'));
+                });
 
-            Livewire.on('ticket-final-rejected', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-final-rejected'));
-            });
+                Livewire.on('ticket-final-rejected', () => {
+                    // Dispatch Alpine event to close modal
+                    window.dispatchEvent(new CustomEvent('ticket-final-rejected'));
+                });
 
-            Livewire.on('comment-added', () => {
-                // Dispatch Alpine event for client-side avatar initialization
-                window.dispatchEvent(new CustomEvent('comment-added'));
-            });
+                Livewire.on('comment-added', () => {
+                    // Dispatch Alpine event for client-side avatar initialization
+                    window.dispatchEvent(new CustomEvent('comment-added'));
+                });
 
-            Livewire.on('open-attachment-preview', ({
-                url
-            }) => {
-                if (url) {
-                    window.open(url, '_blank');
-                }
-            });
+                Livewire.on('open-attachment-preview', ({
+                    url
+                }) => {
+                    if (url) {
+                        window.open(url, '_blank');
+                    }
+                });
 
-            // Re-initialize avatars when returning from a new tab or refocusing
-            window.addEventListener('pageshow', () => {
-                if (window.AvatarHelper) window.AvatarHelper.initAvatars(true);
+                // Add this download listener
+                Livewire.on('download-attachment', ({
+                    url
+                }) => {
+                    if (url) {
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = '';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
+
+                // Re-initialize avatars when returning from a new tab or refocusing
+                window.addEventListener('pageshow', () => {
+                    if (window.AvatarHelper) window.AvatarHelper.initAvatars(true);
+                });
+                window.addEventListener('focus', () => {
+                    if (window.AvatarHelper) window.AvatarHelper.initAvatars(false);
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && window.AvatarHelper) {
+                        window.AvatarHelper.initAvatars(false);
+                    }
+                });
             });
-            window.addEventListener('focus', () => {
-                if (window.AvatarHelper) window.AvatarHelper.initAvatars(false);
-            });
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden && window.AvatarHelper) {
-                    window.AvatarHelper.initAvatars(false);
-                }
-            });
-        });
-    </script>
+        </script>
+    @endscript
 </div>

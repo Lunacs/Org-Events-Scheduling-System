@@ -28,12 +28,6 @@ class Index extends Component
 
     public array $sortBy = ['column' => 'email_verified_at', 'direction' => 'desc'];
 
-    // Modal/Drawer states
-    public $showCreateUserDrawer = false;
-
-    public $showEditUserDrawer = false;
-
-    public $showDeleteModal = false;
 
     // Form data using arrays for better organization
     public $createForm = [
@@ -94,24 +88,6 @@ class Index extends Component
         ];
     }
 
-    public function openCreateUserDrawer()
-    {
-        $this->resetCreateForm();
-        $this->showCreateUserDrawer = true;
-    }
-
-    public function openEditUserDrawer($userId)
-    {
-        $this->loadEditForm($userId);
-        $this->showEditUserDrawer = true;
-    }
-
-    public function openDeleteModal($userId)
-    {
-        $this->loadUserForDeletion($userId);
-        $this->showDeleteModal = true;
-    }
-
     public function loadEditForm($userId)
     {
         $user = User::select(['user_id', 'name', 'email', 'role_id'])->findOrFail($userId);
@@ -156,7 +132,7 @@ class Index extends Component
 
         // Reset and close
         $this->resetCreateForm();
-        $this->showCreateUserDrawer = false;
+        $this->dispatch('user-drawer-close');
 
         // Clear computed cache and refresh
         unset($this->users);
@@ -236,7 +212,7 @@ class Index extends Component
 
         // Reset and close
         $this->resetEditForm();
-        $this->showEditUserDrawer = false;
+        $this->dispatch('user-drawer-close');
 
         // Clear computed cache and refresh
         unset($this->users);
@@ -289,8 +265,6 @@ class Index extends Component
         if ($hasData) {
             $this->reset(['deletingUserId', 'deletingUser', 'deletingUserName']);
         }
-
-        $this->showDeleteModal = false;
     }
 
     public function confirmDelete()
@@ -303,7 +277,7 @@ class Index extends Component
 
             // Reset and notify
             $this->reset(['deletingUserId', 'deletingUser', 'deletingUserName']);
-            $this->showDeleteModal = false;
+            $this->dispatch('delete-modal-close');
 
             // Clear computed cache and refresh
             unset($this->users);
@@ -312,7 +286,7 @@ class Index extends Component
             $this->success('User deleted successfully!', position: 'toast-top');
         } else {
             $this->error('Cannot delete superadmin user!', position: 'toast-top');
-            $this->showDeleteModal = false;
+            $this->dispatch('delete-modal-close');
         }
     }
 

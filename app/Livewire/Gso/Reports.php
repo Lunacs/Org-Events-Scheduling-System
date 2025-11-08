@@ -8,8 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class Reports extends Component
 {
     use ResolvesOfficeContext;
+
     #[Title('GSO Reports & Analytics')]
     #[Layout('components.layouts.gso-layout')]
     public array $reportSeed = [];
@@ -95,14 +96,14 @@ class Reports extends Component
         }
 
         if ($search) {
-            $term = '%' . Str::lower(trim($search)) . '%';
+            $term = '%'.Str::lower(trim($search)).'%';
 
             $query->where(function (Builder $builder) use ($term) {
                 $builder->whereHas('ticket', function (Builder $ticketQuery) use ($term) {
                     $ticketQuery
                         ->whereRaw('LOWER(ticket_number) LIKE ?', [$term])
                         ->orWhereRaw('LOWER(title) LIKE ?', [$term])
-                        ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) => $orgQuery->whereRaw('LOWER(org_name) LIKE ?', [$term]));
+                        ->orWhereHas('user.studentOrganization', fn (Builder $orgQuery) => $orgQuery->whereRaw('LOWER(org_name) LIKE ?', [$term]));
                 });
             });
         }
@@ -142,8 +143,8 @@ class Reports extends Component
 
     protected function computeStats(Collection $approvals): array
     {
-        $approved = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'approved') === 0)->count();
-        $rejected = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'rejected') === 0)->count();
+        $approved = $approvals->filter(fn (Office_Approval $approval) => strcasecmp($approval->decision, 'approved') === 0)->count();
+        $rejected = $approvals->filter(fn (Office_Approval $approval) => strcasecmp($approval->decision, 'rejected') === 0)->count();
         $total = max($approved + $rejected, 1);
 
         $avgResponse = $approvals
@@ -168,7 +169,7 @@ class Reports extends Component
         $colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#6366f1', '#14b8a6'];
 
         $grouped = $approvals
-            ->groupBy(fn(Office_Approval $approval) => Str::title($approval->ticket?->eventType?->type_name ?? 'Unspecified'))
+            ->groupBy(fn (Office_Approval $approval) => Str::title($approval->ticket?->eventType?->type_name ?? 'Unspecified'))
             ->map(function (Collection $collection) {
                 return $collection->count();
             });
@@ -244,7 +245,7 @@ class Reports extends Component
 
     protected function exportCsv(array $records, array $stats, ?Carbon $rangeStart, ?Carbon $rangeEnd): StreamedResponse
     {
-        $fileName = 'gso-report-' . Carbon::now()->format('YmdHis') . '.csv';
+        $fileName = 'gso-report-'.Carbon::now()->format('YmdHis').'.csv';
 
         return response()->streamDownload(function () use ($records, $stats, $rangeStart, $rangeEnd) {
             $handle = fopen('php://output', 'w');
@@ -290,7 +291,7 @@ class Reports extends Component
 
     protected function exportPdf(array $records, array $stats, array $breakdown, ?Carbon $rangeStart, ?Carbon $rangeEnd)
     {
-        $fileName = 'gso-report-' . Carbon::now()->format('YmdHis') . '.pdf';
+        $fileName = 'gso-report-'.Carbon::now()->format('YmdHis').'.pdf';
 
         // If the package bound a wrapper in the container (common with barryvdh), use it first
         if (app()->bound('dompdf.wrapper')) {
@@ -304,14 +305,17 @@ class Reports extends Component
                     'generatedAt' => Carbon::now(),
                 ])->setPaper('a4', 'portrait');
 
-                return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
+                return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
                     'Content-Type' => 'application/pdf',
                 ]);
             } catch (\Throwable $e) {
-                logger()->error('PDF export (dompdf.wrapper) failed: ' . $e->getMessage(), ['exception' => $e]);
-                $errFile = 'gso-report-error-' . Carbon::now()->format('YmdHis') . '.txt';
-                $body = "PDF export failed while generating PDF (dompdf.wrapper).\n" . $e->getMessage() . "\n\n" . $e->getTraceAsString();
-                return response()->streamDownload(function () use ($body) { echo $body; }, $errFile, ['Content-Type' => 'text/plain']);
+                logger()->error('PDF export (dompdf.wrapper) failed: '.$e->getMessage(), ['exception' => $e]);
+                $errFile = 'gso-report-error-'.Carbon::now()->format('YmdHis').'.txt';
+                $body = "PDF export failed while generating PDF (dompdf.wrapper).\n".$e->getMessage()."\n\n".$e->getTraceAsString();
+
+                return response()->streamDownload(function () use ($body) {
+                    echo $body;
+                }, $errFile, ['Content-Type' => 'text/plain']);
             }
         }
 
@@ -327,15 +331,15 @@ class Reports extends Component
                     'generatedAt' => Carbon::now(),
                 ])->setPaper('a4', 'portrait');
 
-                return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
+                return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
                     'Content-Type' => 'application/pdf',
                 ]);
             } catch (\Throwable $e) {
                 // Log and return plain-text error to avoid returning HTML exception page as PDF
-                logger()->error('PDF export (barryvdh) failed: ' . $e->getMessage(), ['exception' => $e]);
+                logger()->error('PDF export (barryvdh) failed: '.$e->getMessage(), ['exception' => $e]);
 
-                $errFile = 'gso-report-error-' . Carbon::now()->format('YmdHis') . '.txt';
-                $body = "PDF export failed while generating PDF (barryvdh).\n" . $e->getMessage() . "\n\n" . $e->getTraceAsString();
+                $errFile = 'gso-report-error-'.Carbon::now()->format('YmdHis').'.txt';
+                $body = "PDF export failed while generating PDF (barryvdh).\n".$e->getMessage()."\n\n".$e->getTraceAsString();
 
                 return response()->streamDownload(function () use ($body) {
                     echo $body;
@@ -357,7 +361,7 @@ class Reports extends Component
                     'generatedAt' => Carbon::now(),
                 ])->render();
 
-                $dompdf = new \Dompdf\Dompdf();
+                $dompdf = new \Dompdf\Dompdf;
                 $dompdf->setPaper('A4', 'portrait');
                 $dompdf->loadHtml($html);
                 $dompdf->render();
@@ -370,10 +374,10 @@ class Reports extends Component
                     'Content-Type' => 'application/pdf',
                 ]);
             } catch (\Throwable $e) {
-                logger()->error('PDF export (dompdf) failed: ' . $e->getMessage(), ['exception' => $e]);
+                logger()->error('PDF export (dompdf) failed: '.$e->getMessage(), ['exception' => $e]);
 
-                $errFile = 'gso-report-error-' . Carbon::now()->format('YmdHis') . '.txt';
-                $body = "PDF export failed while generating PDF (dompdf).\n" . $e->getMessage() . "\n\n" . $e->getTraceAsString();
+                $errFile = 'gso-report-error-'.Carbon::now()->format('YmdHis').'.txt';
+                $body = "PDF export failed while generating PDF (dompdf).\n".$e->getMessage()."\n\n".$e->getTraceAsString();
 
                 return response()->streamDownload(function () use ($body) {
                     echo $body;
@@ -389,7 +393,7 @@ class Reports extends Component
 
     protected function emptyExport(string $format)
     {
-        $fileName = 'gso-report-empty-' . Carbon::now()->format('YmdHis') . '.' . $format;
+        $fileName = 'gso-report-empty-'.Carbon::now()->format('YmdHis').'.'.$format;
 
         return response()->streamDownload(function () use ($format) {
             if ($format === 'csv') {
