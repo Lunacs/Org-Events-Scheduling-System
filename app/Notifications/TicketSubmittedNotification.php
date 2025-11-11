@@ -38,7 +38,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $actionUrl = route('admin.tickets');
+        $actionUrl = route('admin.ticket');
 
         return (new MailMessage)
             ->subject('New Ticket Submitted - '.$this->ticket->ticket_number)

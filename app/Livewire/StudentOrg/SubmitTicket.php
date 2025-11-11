@@ -21,151 +21,173 @@ class SubmitTicket extends Component
 {
     #[Title('Submit Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
-    public $search = '';
-    public $statusFilter = '';
-    public $dateFilter = '';
+    // Step tracking
+    public $currentStep = 1;
+    public $totalSteps = 6;
+    public $agreeToTerms = false;
+
+    // Step 1: Organization
     public $organizationName = '';
-
-    #[Validate('required|boolean')]
-    public $is_oc = false;
-
-    #[Validate('required|string')]
-    public $adviser = '';
-
-    #[Validate('required|string|email')]
-    public $contactEmail = '';
-
-    #[Validate('required|string')]
-    public $proponentName = '';
-
-    #[Validate('required|string')]
-    public $proponentPosition = '';
-
-    #[Validate('required|string')]
     public $organizationCourse = '';
-
-    #[Validate('required|string|max:255')]
+    public $adviser = '';
+    public $contactEmail = '';
+    public $proponentName = '';
+    public $proponentPosition = '';
     public $proponent_contact = '';
-
-    #[Validate('nullable|string|max:255')]
     public $adviser_contact = '';
 
-    #[Validate('required|integer|min:1')]
+    // Step 2: Event Details
+    public $eventTitle = '';
+    public $eventDescription = '';
+    public $eventType = 1;
     public $expectedPLVParticipants = 0;
-    #[Validate('nullable|integer|min:0')]
     public $expectedNonPLVParticipants = 0;
 
-    #[Validate('required|string|max:255')]
-    public $eventTitle = '';
-
-    #[Validate('required|string|max:2000')]
-    public $eventDescription = '';
-
-    #[Validate('required|string|max:255')]
-    public $preferredVenue = '';
-
-    #[Validate('nullable|string|max:255')]
-    public $alternativeVenue = '';
-
-    #[Validate('nullable|string|max:2000')]
-    public $specialRequirements = '';
-
-    #[Validate('required|date')]
+    // Step 3: Schedule & Venue
     public $eventStartDate = '';
-
-    #[Validate('required|date')]
     public $eventEndDate = '';
-
-    #[Validate('required|date_format:H:i')]
     public $eventStartTime = '';
-
-    #[Validate('required|date_format:H:i')]
     public $eventEndTime = '';
-
-    #[Validate('required|integer|exists:event__types,event_type_id')]
-    public $eventType = '';
-
-    #[Validate('required|integer|exists:fund__sources,source_id')]
-    public $fundingSource = '';
-
-    #[Validate('required|numeric|min:0')]
-    public $totalBudget = 0.00;
-
-    #[Validate('nullable|string|max:2000')]
-    public $budgetBreakdown = '';
-
-    #[Validate('nullable|string|max:2000')]
+    public $preferredVenue = '';
+    public $alternativeVenue = '';
+    public $specialRequirements = '';
+    public $is_oc = false;
     public $oc_accommodation = '';
-
-    #[Validate('nullable|string|in:in-house,outsourced')]
     public $oc_tsp = null;
-
-    #[Validate('nullable|string|max:255')]
     public $oc_driver_name = '';
-
-    #[Validate('nullable|string|max:255')]
+    public $oc_driver_contact_number = '';
     public $oc_vehicle_type = '';
-
-    #[Validate('nullable|string|max:255')]
     public $oc_vehicle_plate_number = '';
 
-    #[Validate('nullable|string|max:255')]
-    public $oc_driver_contact_number = '';
-
-    #[Validate('required|string|in:true,false')]
+    // Step 4: Budget
+    public $totalBudget = 0.00;
+    public $fundingSource = '';
+    public $budgetBreakdown = '';
     public $igp_requested = '';
-
-    #[Validate('nullable|string|max:2000')]
     public $igp_details = '';
 
-    #[Validate('nullable|string|max:2000')]
+    // Step 5: Attachments
+    public $attachments = [];
+    public $newAttachments = [];
     public $additionalNotes = '';
+
+    // UI
+    public $isProcessing = false; // To prevent multiple submissions
 
     use WithFileUploads;
     use Toast;
 
-    #[Validate('nullable|array', 'attachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
-    public $attachments = [];
-
-    #[Validate('nullable|array', 'newAttachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
-    public $newAttachments = [];
-
-    public $showPreviewModal = false;
-
-    protected function rules()
+    public function nextStep()
     {
-        return [
-            'eventStartDate' => 'required|date|after_or_equal:today',
-            'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-            'eventStartTime' => 'required|date_format:H:i|after_or_equal:08:00',
-            'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
-        ];
-    }
-
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName);
-
-        // Additional time range validation
-        if ($propertyName === 'eventStartTime' && $this->eventStartTime < '08:00') {
-            $this->addError('eventStartTime', 'Event start time must be at or after 8:00 AM.');
+        if ($this->isProcessing) {
+            return;
         }
 
-        if ($propertyName === 'eventEndTime' && $this->eventEndTime > '21:00') {
-            $this->addError('eventEndTime', 'Event end time must be at or before 9:00 PM.');
+        $this->isProcessing = true;
+
+        try {
+            $this->validateCurrentStep();
+
+            if ($this->currentStep < $this->totalSteps) {
+                $this->currentStep++;
+            }
+        } finally {
+            $this->isProcessing = false;
         }
     }
 
-
-    public function openPreviewModal()
+    public function previousStep()
     {
-        $this->showPreviewModal = true;
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
     }
 
-    public function closePreviewModal()
+    public function goToStep($step)
     {
-        $this->showPreviewModal = false;
+        if ($step >= 1 && $step <= $this->totalSteps) {
+            $this->currentStep = $step;
+        }
     }
+
+    protected function getCurrentStepRules(): array
+    {
+        return match ($this->currentStep) {
+            1 => [
+                'proponent_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+                'adviser_contact' => 'nullable|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+            ],
+            2 => [
+                'eventTitle' => 'required|string|max:255|min:5',
+                'eventDescription' => 'required|string|max:2000|min:20',
+                'eventType' => 'required|integer|exists:event__types,event_type_id',
+                'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
+                'expectedNonPLVParticipants' => 'nullable|integer|min:0|max:100000',
+            ],
+            3 => [
+                'eventStartDate' => 'required|date|after_or_equal:today',
+                'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
+                'eventStartTime' => ['required', 'date_format:H:i'],
+                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
+                'preferredVenue' => 'required|string|max:255|min:3',
+                'alternativeVenue' => 'nullable|string|max:255|min:3',
+                'specialRequirements' => 'nullable|string|max:2000',
+                'is_oc' => 'required|boolean',
+                'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
+                'oc_tsp' => $this->is_oc ? 'required|string|in:in-house,outsourced' : 'nullable',
+                'oc_driver_name' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
+                'oc_driver_contact_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
+                'oc_vehicle_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
+                'oc_vehicle_plate_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
+            ],
+            4 => [
+                'totalBudget' => 'required|numeric|min:0|max:999999999.99',
+                'fundingSource' => 'required|integer|exists:fund__sources,source_id',
+                'igp_requested' => 'required|string|in:true,false',
+                'budgetBreakdown' => 'nullable|string|max:2000',
+                'igp_details' => $this->igp_requested === 'true' ? 'required|string|max:2000|min:10' : 'nullable',
+            ],
+            5 => [
+                'additionalNotes' => 'nullable|string|max:2000',
+                'newAttachments' => 'nullable|array|max:25',
+                'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+            ],
+            6 => [
+                'agreeToTerms' => 'required|accepted',
+            ],
+            default => [],
+        };
+    }
+
+    protected function validateCurrentStep()
+    {
+        $rules = $this->getCurrentStepRules();
+
+        if (!empty($rules)) {
+            $this->validate($rules);
+        }
+
+        // Custom time range validation
+        if ($this->currentStep === 3 && $this->eventStartTime && $this->eventEndTime) {
+            $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
+            $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
+            $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
+            $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
+
+            if ($startTime->lt($minTime)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'eventStartTime' => 'Event start time must be at or after 8:00 AM.'
+                ]);
+            }
+
+            if ($endTime->gt($maxTime)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'eventEndTime' => 'Event end time must be at or before 9:00 PM.'
+                ]);
+            }
+        }
+    }
+
 
     public function getPreviewTicketProperty()
     {
@@ -234,12 +256,25 @@ class SubmitTicket extends Component
 
     public function save()
     {
+        if ($this->isProcessing) {
+            return;
+        }
+
+        $this->isProcessing = true;
         $currentUser = auth()->user();
         $currentUserinfo = $currentUser->studentOrganization;
-        try {
+        $ticketCode = null;
 
-            $ticketCode = "TKT-{$currentUserinfo->org_code}-".(Ticket::count() + 1);
-            $this->validate();
+        try {
+            // Validate all steps before submission
+            $this->validateCurrentStep();
+
+            \DB::beginTransaction();
+
+            // Generate unique ticket number with locking
+            $ticketCount = Ticket::lockForUpdate()->count();
+            $ticketCode = "TKT-{$currentUserinfo->org_code}-" . ($ticketCount + 1);
+
             $ticket = Ticket::create([
                 'user_id' => $currentUser->user_id,
                 'ticket_number' => $ticketCode,
@@ -250,10 +285,10 @@ class SubmitTicket extends Component
                 'description' => $this->eventDescription,
                 'proponent_contact' => $this->proponent_contact,
                 'adviser_contact' => $this->adviser_contact,
-                'igp_requested' => (bool) $this->igp_requested,
+                'igp_requested' => $this->igp_requested === 'true',
                 'igp_details' => $this->igp_details,
                 'oc_accommodation' => $this->oc_accommodation,
-                'oc_tsp' => $this->oc_tsp === '' ? null : $this->oc_tsp,
+                'oc_tsp' => $this->oc_tsp ?: null,
                 'oc_driver_name' => $this->oc_driver_name,
                 'oc_vehicle_type' => $this->oc_vehicle_type,
                 'oc_vehicle_plate_number' => $this->oc_vehicle_plate_number,
@@ -273,7 +308,8 @@ class SubmitTicket extends Component
                 'status' => 'received',
             ]);
 
-            if ($this->attachments) {
+            // Handle file attachments
+            if (!empty($this->attachments)) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
                     $filename = time() . '_' . uniqid() . '_' . $originalName;
@@ -291,31 +327,40 @@ class SubmitTicket extends Component
                 }
             }
 
-            // Notify OSA admins about the new ticket
+            // Notify OSA admins
             $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
             foreach ($osaUsers as $osaUser) {
                 $osaUser->notify(new TicketSubmittedNotification($ticket));
             }
 
+            \DB::commit();
+
             $this->toast(
                 type: 'success',
                 title: 'Ticket Created!',
-                description: null,
+                description: "Your ticket {$ticketCode} has been submitted successfully.",
                 position: 'toast-top toast-end',
-                icon: 'o-information-circle',
-                css: 'alert-info',
+                icon: 'o-check-circle',
+                css: 'alert-success',
                 timeout: 3000,
                 redirectTo: route('student-org.dashboard')
             );
         } catch (Exception $e) {
-            session()->flash('error', 'Failed to submit ticket: '.$e->getMessage());
+            \DB::rollBack();
+
+            \Log::error('Ticket submission failed', [
+                'user_id' => $currentUser->user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             $this->toast(
                 type: 'error',
-                title: 'Ticket Not Created.',
-                description: 'Failed to submit ticket: '.$e->getMessage(),
+                title: 'Ticket Not Created',
+                description: 'Failed to submit ticket. Please try again or contact OSA support.',
                 position: 'toast-top toast-end',
-                icon: 'o-information-circle',
-                css: 'alert-info',
+                icon: 'o-x-circle',
+                css: 'alert-error',
                 timeout: 3000,
                 redirectTo: null
             );
@@ -324,7 +369,7 @@ class SubmitTicket extends Component
 
     public function getExpectedParticipantsProperty()
     {
-        return (int) $this->expectedPLVParticipants + (int) $this->expectedNonPLVParticipants;
+        return (int)$this->expectedPLVParticipants + (int)$this->expectedNonPLVParticipants;
     }
 
     public function removeAttachment($index)
@@ -343,13 +388,6 @@ class SubmitTicket extends Component
 
         // Clear the temporary input
         $this->reset('newAttachments');
-    }
-
-    public function clearFilters()
-    {
-        $this->search = '';
-        $this->statusFilter = '';
-        $this->dateFilter = '';
     }
 
     public function getRequiredDocuments()
