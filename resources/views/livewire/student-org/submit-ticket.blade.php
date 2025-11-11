@@ -8,26 +8,6 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-            {{-- Instructions Card --}}
-            <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
-                         class="mb-6">
-                <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
-                    <div class="flex items-start space-x-2">
-                        <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5"/>
-                        <div class="text-sm">
-                            <p class="font-medium mb-2">Important Guidelines:</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-600">
-                                <li>Submit your request at least 14 days before your event date</li>
-                                <li>All required fields must be completed</li>
-                                <li>Upload all necessary attachments (permit forms, venue reservations, etc.)</li>
-                                <li>Events must comply with university policies and guidelines</li>
-                                <li>You will receive notifications about approval status via email</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </x-mary-card>
-
             <x-mary-form wire:submit="save">
                 {{-- Progress Indicator --}}
                 <div class="mb-8">
@@ -64,6 +44,26 @@
 
                 {{-- Step 1: Organization Information --}}
                 @if($currentStep === 1)
+                    {{-- Instructions Card --}}
+                    <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
+                                 class="mb-6">
+                        <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
+                            <div class="flex items-start space-x-2">
+                                <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5"/>
+                                <div class="text-sm">
+                                    <p class="font-medium mb-2">Important Guidelines:</p>
+                                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                        <li>Submit your request at least 14 days before your event date</li>
+                                        <li>All required fields must be completed</li>
+                                        <li>Upload all necessary attachments (permit forms, venue reservations, etc.)</li>
+                                        <li>Events must comply with university policies and guidelines</li>
+                                        <li>You will receive notifications about approval status via email</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </x-mary-card>
+
                     <x-mary-card title="Organization Information" subtitle="Details about your student organization">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-input label="Organization Name" wire:model="organizationName" readonly/>
@@ -381,4 +381,12 @@
             </x-mary-form>
         </div>
     </div>
+
+    @script
+    <script>
+        $wire.on('step-changed', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+    @endscript
 </div>

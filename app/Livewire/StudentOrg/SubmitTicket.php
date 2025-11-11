@@ -90,6 +90,7 @@ class SubmitTicket extends Component
 
             if ($this->currentStep < $this->totalSteps) {
                 $this->currentStep++;
+                $this->dispatch('step-changed');
             }
         } finally {
             $this->isProcessing = false;
@@ -100,6 +101,7 @@ class SubmitTicket extends Component
     {
         if ($this->currentStep > 1) {
             $this->currentStep--;
+            $this->dispatch('step-changed');
         }
     }
 
@@ -107,6 +109,7 @@ class SubmitTicket extends Component
     {
         if ($step >= 1 && $step <= $this->totalSteps) {
             $this->currentStep = $step;
+            $this->dispatch('step-changed');
         }
     }
 
