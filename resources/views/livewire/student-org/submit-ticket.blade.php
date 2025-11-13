@@ -17,6 +17,8 @@
                                 <button
                                     type="button"
                                     wire:click="goToStep({{ $i }})"
+                                    aria-label="Step {{ $i }}: @switch($i) @case(1) Organization @break @endswitch"
+                                    aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
                                     class="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors
                             {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
                             {{ $currentStep > $i ? 'bg-success text-white' : '' }}
@@ -55,7 +57,8 @@
                                     <ul class="list-disc list-inside space-y-1 text-gray-600">
                                         <li>Submit your request at least 14 days before your event date</li>
                                         <li>All required fields must be completed</li>
-                                        <li>Upload all necessary attachments (permit forms, venue reservations, etc.)</li>
+                                        <li>Upload all necessary attachments (permit forms, venue reservations, etc.)
+                                        </li>
                                         <li>Events must comply with university policies and guidelines</li>
                                         <li>You will receive notifications about approval status via email</li>
                                     </ul>
@@ -229,11 +232,23 @@
                             </div>
 
                             <div class="space-y-2">
+                                <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+                                    @if($errors->any())
+                                        {{ count($errors) }} validation errors found
+                                    @endif
+                                </div>
                                 <x-mary-file
                                     wire:model="newAttachments"
                                     multiple
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
-                                    hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file."/>
+                                    aria-label="Upload event documents"
+                                    aria-describedby="file-help-text"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                                    <x-slot:hint>
+                                        <span id="file-help-text">
+                                            Upload files up to 10MB. Accepted: PDF, DOC, images, Excel
+                                        </span>
+                                    </x-slot:hint>
+                                </x-mary-file>
 
                                 @if($attachments)
                                     <div class="mt-4 space-y-2">
@@ -357,6 +372,9 @@
                         icon="o-arrow-left"
                         wire:click="previousStep"
                         class="btn-outline"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed"
+                        wire:target="previousStep"
                         spinner
                         :disabled="$currentStep === 1 || $isProcessing"/>
                     @if($currentStep < $totalSteps)
@@ -365,6 +383,9 @@
                             icon="o-arrow-right"
                             wire:click="nextStep"
                             class="btn-primary"
+                            wire:loading.attr="disabled"
+                            wire:loading.class="opacity-50 cursor-not-allowed"
+                            wire:target="nextStep"
                             spinner
                             :disabled="$isProcessing"/>
                     @else
@@ -373,6 +394,8 @@
                             icon="s-paper-airplane"
                             type="submit"
                             class="btn-primary"
+                            wire:loading.attr="disabled"
+                            wire:loading.class="opacity-50 cursor-not-allowed"
                             spinner
                             :disabled="$isProcessing"/>
                     @endif
@@ -385,8 +408,346 @@
     @script
     <script>
         $wire.on('step-changed', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        });
+
+        // Prevent form resubmission
+        let isSubmitting = false;
+        $wire.on('form-submitted', () => {
+            isSubmitting = true;
         });
     </script>
     @endscript
+    @script
+    <script>
+        const DRAFT_KEY = 'ticket_draft_{{ auth()->id() }}';
+        const SUBMITTED_FLAG_KEY = 'ticket_submitted_{{ auth()->id() }}';
+        let draftTimeout;
+        let modalShown = false;
+        let isSubmitting = false; // Flag to prevent auto-save during submission
+
+        // Save draft with debouncing
+        $wire.on('save-draft', (event) => {
+            // Don't save if currently submitting
+            if (isSubmitting) {
+                console.log('Skipping auto-save during submission');
+                return;
+            }
+
+            clearTimeout(draftTimeout);
+            draftTimeout = setTimeout(() => {
+                const data = event[0] || event;
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    ...data,
+                    savedAt: new Date().toISOString(),
+                    draftId: Date.now()
+                }));
+                console.log('Draft saved with ID:', Date.now());
+            }, 2000);
+        });
+
+        // Clear draft (regular)
+        $wire.on('clear-draft', () => {
+            localStorage.removeItem(DRAFT_KEY);
+            console.log('Draft cleared');
+        });
+
+        // Clear draft immediately (for submission)
+        $wire.on('clear-draft-immediate', () => {
+            isSubmitting = true; // Set flag to prevent further auto-saves
+            clearTimeout(draftTimeout); // Cancel any pending auto-save
+
+            const draft = localStorage.getItem(DRAFT_KEY);
+            let draftId = null;
+
+            if (draft) {
+                try {
+                    const draftData = JSON.parse(draft);
+                    draftId = draftData.draftId;
+                } catch (e) {
+                    console.error('Error parsing draft:', e);
+                }
+            }
+
+            // Remove the draft
+            localStorage.removeItem(DRAFT_KEY);
+            console.log('Draft removed from storage');
+
+            // Store submission record with the draft ID
+            if (draftId) {
+                let submissions = [];
+
+                try {
+                    const stored = localStorage.getItem(SUBMITTED_FLAG_KEY);
+                    const parsed = stored ? JSON.parse(stored) : [];
+                    submissions = Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    console.error('Error parsing submissions, resetting:', e);
+                    submissions = [];
+                }
+
+                submissions.push({
+                    draftId: draftId,
+                    submittedAt: Date.now()
+                });
+
+                if (submissions.length > 10) {
+                    submissions.shift();
+                }
+
+                localStorage.setItem(SUBMITTED_FLAG_KEY, JSON.stringify(submissions));
+                console.log('Draft cleared immediately after submission, ID:', draftId);
+            }
+
+            // Keep flag set for a few seconds to ensure no race conditions
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 3000);
+        });
+
+        // Function to close and cleanup modal
+        function closeModal() {
+            const modal = document.getElementById('draftModal');
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.remove();
+                    modalShown = false;
+                    console.log('Modal removed from DOM');
+                }, 300);
+            }
+        }
+
+        // Function to remove any existing modals
+        function cleanupExistingModal() {
+            const existingModal = document.getElementById('draftModal');
+            if (existingModal) {
+                console.log('Removing existing modal');
+                existingModal.remove();
+            }
+            modalShown = false;
+        }
+
+        // Function to check if draft is stale (submitted recently)
+        function isDraftStale(draftId) {
+            let submissions = [];
+
+            try {
+                const stored = localStorage.getItem(SUBMITTED_FLAG_KEY);
+                const parsed = stored ? JSON.parse(stored) : [];
+
+                // Ensure it's an array (migration from old format)
+                if (!Array.isArray(parsed)) {
+                    console.log('Invalid submissions format, resetting');
+                    localStorage.removeItem(SUBMITTED_FLAG_KEY);
+                    return false;
+                }
+
+                submissions = parsed;
+            } catch (e) {
+                console.error('Error parsing submissions:', e);
+                localStorage.removeItem(SUBMITTED_FLAG_KEY);
+                return false;
+            }
+
+            const now = Date.now();
+
+            // Clean up old submissions (older than 5 minutes)
+            const cleanedSubmissions = submissions.filter(sub => {
+                return sub && sub.submittedAt && (now - sub.submittedAt) < 5 * 60 * 1000;
+            });
+
+            // Update storage with cleaned list
+            if (cleanedSubmissions.length !== submissions.length) {
+                localStorage.setItem(SUBMITTED_FLAG_KEY, JSON.stringify(cleanedSubmissions));
+            }
+
+            // Check if this specific draft was submitted
+            const wasSubmitted = cleanedSubmissions.some(sub => sub.draftId === draftId);
+
+            if (wasSubmitted) {
+                console.log('Draft is stale (this specific draft was submitted)');
+                return true;
+            }
+
+            return false;
+        }
+
+        // Function to attach button listeners
+        function attachButtonListeners(draftData, retryCount = 0) {
+            const loadBtn = document.getElementById('loadDraftBtn');
+            const discardBtn = document.getElementById('discardDraftBtn');
+
+            console.log('Attempting to attach listeners, retry:', retryCount);
+            console.log('Load button found:', !!loadBtn);
+            console.log('Discard button found:', !!discardBtn);
+
+            if (!loadBtn || !discardBtn) {
+                if (retryCount < 10) {
+                    setTimeout(() => attachButtonListeners(draftData, retryCount + 1), 100);
+                } else {
+                    console.error('Could not find modal buttons after multiple retries');
+                }
+                return;
+            }
+
+            console.log('Attaching click listeners to buttons');
+
+            loadBtn.addEventListener('click', function handleLoadClick() {
+                console.log('Load button clicked');
+                console.log('Draft data:', draftData.data);
+
+                loadBtn.removeEventListener('click', handleLoadClick);
+
+                // Show loading spinner
+                const spinner = document.getElementById('draftLoadingSpinner');
+                if (spinner) {
+                    spinner.classList.remove('hidden');
+                    loadBtn.disabled = true;
+                    discardBtn.disabled = true;
+                }
+
+                // Dispatch load event
+                Livewire.dispatch('load-draft', { data: draftData.data });
+
+                // Wait for draft to be loaded before closing modal
+                const checkDraftLoaded = setInterval(() => {
+                    // Check if draft data has been applied (you can verify by checking a specific property)
+                    if ($wire.currentStep === draftData.data.currentStep) {
+                        clearInterval(checkDraftLoaded);
+                        setTimeout(() => {
+                            closeModal();
+                        }, 300); // Small delay to ensure all data is rendered
+                    }
+                }, 100);
+
+                // Fallback timeout in case check fails
+                setTimeout(() => {
+                    clearInterval(checkDraftLoaded);
+                    closeModal();
+                }, 3000);
+            });
+
+            discardBtn.addEventListener('click', function handleDiscardClick() {
+                console.log('Discard button clicked');
+
+                discardBtn.removeEventListener('click', handleDiscardClick);
+
+                Livewire.dispatch('discard-draft');
+
+                setTimeout(() => {
+                    closeModal();
+                }, 100);
+            });
+        }
+
+        // Function to check and show draft modal
+        function checkAndShowDraftModal() {
+            const draft = localStorage.getItem(DRAFT_KEY);
+            console.log('Checking for draft:', draft);
+            console.log('Modal already shown:', modalShown);
+
+            // Clean up any existing modal first
+            cleanupExistingModal();
+
+            if (draft && !modalShown) {
+                const draftData = JSON.parse(draft);
+                const draftId = draftData.draftId;
+
+                // Check if this specific draft is stale
+                if (isDraftStale(draftId)) {
+                    console.log('Removing stale draft');
+                    localStorage.removeItem(DRAFT_KEY);
+                    return;
+                }
+
+                modalShown = true;
+                const savedDate = new Date(draftData.savedAt);
+                const formattedDate = savedDate.toLocaleString();
+
+                const modalHtml = `
+            <div class="modal modal-open" id="draftModal" style="display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.3s;">
+                <div class="modal-box relative">
+                    <h3 class="font-bold text-lg mb-4">Resume Previous Draft?</h3>
+                    <p class="mb-2">You have an unsaved draft from:</p>
+                    <p class="text-sm text-gray-600 mb-4">${formattedDate}</p>
+                    <p class="mb-4">Would you like to continue where you left off?</p>
+
+                    <!-- Loading spinner (hidden by default) -->
+                    <div id="draftLoadingSpinner" class="hidden absolute inset-0 bg-base-100 bg-opacity-90 flex items-center justify-center rounded-lg">
+                        <div class="flex flex-col items-center gap-3">
+                            <span class="loading loading-spinner loading-lg text-primary"></span>
+                            <p class="text-sm font-medium">Loading draft...</p>
+                        </div>
+                    </div>
+
+                    <div class="modal-action">
+                        <button class="btn btn-ghost" id="discardDraftBtn">
+                            Start Fresh
+                        </button>
+                        <button class="btn btn-primary" id="loadDraftBtn">
+                            Resume Draft
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                console.log('Modal HTML inserted into DOM');
+
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        attachButtonListeners(draftData);
+                    }, 50);
+                });
+            }
+        }
+
+        // Check on initial page load (full reload)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(checkAndShowDraftModal, 500);
+            });
+        } else {
+            setTimeout(checkAndShowDraftModal, 500);
+        }
+
+        // Check when navigating to this page via Livewire (SPA navigation)
+        document.addEventListener('livewire:navigated', () => {
+            console.log('Livewire navigated event fired');
+
+            cleanupExistingModal();
+
+            setTimeout(() => {
+                const ticketForm = document.querySelector('[wire\\:submit="save"]');
+                if (ticketForm) {
+                    console.log('Navigated to ticket submission page, checking for draft');
+                    checkAndShowDraftModal();
+                } else {
+                    console.log('Not on ticket submission page, skipping draft check');
+                }
+            }, 800);
+        });
+
+        // Auto-save indicator
+        $wire.on('save-draft', () => {
+            const indicator = document.getElementById('autosave-indicator');
+            if (indicator) {
+                indicator.classList.remove('hidden');
+                setTimeout(() => indicator.classList.add('hidden'), 2000);
+            }
+        });
+    </script>
+    @endscript
+
+    {{-- Add auto-save indicator to the form --}}
+    <div id="autosave-indicator" class="hidden fixed bottom-4 right-4 bg-base-200 px-4 py-2 rounded-lg shadow-lg">
+    <span class="text-sm flex items-center gap-2">
+        <x-mary-icon name="o-clock" class="w-4 h-4"/>
+        Draft saved
+    </span>
+    </div>
 </div>

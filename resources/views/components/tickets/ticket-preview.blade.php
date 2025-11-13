@@ -1,7 +1,7 @@
 @props(['ticket'])
 
 {{-- Ticket Details --}}
-<div class="lg:col-span-2 space-y-6">
+<div class="lg:col-span-2 space-y-6" data-ticket-loaded>
     {{-- Organization Information --}}
     <div class="bg-base-100 rounded-box shadow-lg p-6">
         <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">

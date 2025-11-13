@@ -100,15 +100,33 @@
     </div>
 
     <x-mary-modal wire:model="showDetailsModal" title="Ticket Details" class="backdrop-blur"
-        box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
+                  box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
 
-        @if ($this->selectedTicket)
-            <x-tickets.ticket-preview :ticket="$this->selectedTicket" />
-        @else
-            <div class="text-center py-8">
-                <x-mary-loading class="loading-lg" />
+        <div x-data="{ isLoading: true }"
+             x-init="
+            $watch('$wire.showDetailsModal', value => {
+                if (value) {
+                    // Reset loading state when modal opens
+                    isLoading = true;
+                } else {
+                    // Reset when modal closes
+                    isLoading = true;
+                }
+            });
+         ">
+            <div x-show="isLoading" class="flex items-center justify-center py-16">
+                <div class="flex flex-col items-center gap-3">
+                    <x-mary-loading class="loading-lg text-primary" />
+                    <p class="text-sm text-base-content/70">Loading ticket details...</p>
+                </div>
             </div>
-        @endif
+
+            <div x-show="!isLoading" x-cloak x-transition>
+                @if ($this->selectedTicket)
+                    <x-tickets.ticket-preview :ticket="$this->selectedTicket" />
+                @endif
+            </div>
+        </div>
     </x-mary-modal>
 
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
@@ -147,19 +165,57 @@
     </x-mary-modal>
 
     <x-mary-drawer wire:model="showEditDrawer"
-        title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
-        subtitle="Revise your event request" separator with-close-button close-on-escape right class="w-11/12 lg:w-2/3"
-        @close="$wire.closeEditDrawer()">
-        @if ($showEditDrawer && $selectedTicketId)
-            @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
-        @else
-            <div class="text-center py-8">
-                <x-mary-loading class="loading-lg" />
-            </div>
-        @endif
-    </x-mary-drawer>
+                   title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
+                   subtitle="Revise your event request"
+                   separator
+                   with-close-button
+                   close-on-escape
+                   right
+                   class="w-11/12 lg:w-2/3 overflow-hidden"
+                   @close="$wire.closeEditDrawer()">
 
-    {{-- Add JavaScript for handling attachment preview and download --}}
+        <div x-data="{ isLoading: true }"
+             x-init="
+        $watch('$wire.showEditDrawer', value => {
+            if (value) {
+                isLoading = true;
+                setTimeout(() => {
+                    const checkInterval = setInterval(() => {
+                        const form = document.querySelector('[wire\\:submit=\'updateTicket\']');
+                        if (form) {
+                            clearInterval(checkInterval);
+                            isLoading = false;
+                        }
+                    }, 50);
+
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        isLoading = false;
+                    }, 2000);
+                }, 100);
+            } else {
+                isLoading = true;
+            }
+        });
+     ">
+        <div x-show="isLoading" class="flex items-center justify-center py-16">
+            <div class="flex flex-col items-center gap-3">
+                <x-mary-loading class="loading-lg text-primary" />
+                <p class="text-sm text-base-content/70">Loading form...</p>
+            </div>
+        </div>
+
+        <div x-show="!isLoading" x-cloak x-transition>
+            @if ($showEditDrawer && $selectedTicketId)
+                @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
+            @endif
+        </div>
+</div>
+</x-mary-drawer>
+
+
+
+{{-- Add JavaScript for handling attachment preview and download --}}
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-attachment-preview', ({
@@ -187,5 +243,48 @@
             });
         });
     </script>
+    @script
+    <script>
+        // Handle modal opened event
+        Livewire.on('modal-opened', ({ticketId}) => {
+            // Wait for modal animation to complete
+            setTimeout(() => {
+                // Load ticket data
+                $wire.call('loadTicketData', ticketId).then(() => {
+                    // Wait for Livewire to render
+                    setTimeout(() => {
+                        // Check if ticket preview exists
+                        const checkInterval = setInterval(() => {
+                            const preview = document.querySelector('[data-ticket-loaded]');
+                            if (preview) {
+                                clearInterval(checkInterval);
+                                // Find the modal's Alpine component
+                                const modalContent = preview.closest('[x-data]');
+                                if (modalContent) {
+                                    Alpine.evaluate(modalContent, 'isLoading = false');
+                                }
+                            }
+                        }, 50);
 
+                        // Fallback - force hide loading after 2 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            const modal = document.querySelector('[x-data*="isLoading"]');
+                            if (modal) {
+                                Alpine.evaluate(modal, 'isLoading = false');
+                            }
+                        }, 2000);
+                    }, 100);
+                });
+            }, 100);
+        });
+
+        // Reset modal state when navigating away
+        document.addEventListener('livewire:navigating', () => {
+            if ($wire.showDetailsModal) {
+                $wire.closeDetailsModal();
+            }
+        });
+    </script>
+    @endscript
 </div>

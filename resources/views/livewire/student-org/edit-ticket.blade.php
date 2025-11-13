@@ -1,15 +1,22 @@
 <div class="space-y-6 p-4">
     @if($ticket)
+        {{-- Display validation errors --}}
+        @if ($errors->any())
+            <x-mary-alert title="Please fix the following errors:" icon="o-exclamation-triangle" class="alert-error">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-mary-alert>
+        @endif
+
         <x-mary-form wire:submit="updateTicket">
             {{-- Show status-specific notice --}}
-            <div class="alert {{ $isForRescheduling ? 'alert-warning' : 'alert-info' }} mb-4">
+            <div class="alert {{ 'alert-info' }} mb-4">
                 <x-mary-icon name="s-information-circle" class="w-5 h-5"/>
                 <span>
-                    @if($isForRescheduling)
-                        <strong>Rescheduling Required:</strong> Only date, time, and venue fields can be modified.
-                    @else
-                        <strong>Revision Required:</strong> Please update the requested information and resubmit.
-                    @endif
+                    <strong>Revision Required:</strong> Please update the requested information and resubmit.
                 </span>
             </div>
 
@@ -89,12 +96,14 @@
             <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                  wire:model.live="totalBudget" placeholder="0.00" prefix="₱" :readonly="!$this->isFieldEditable('totalBudget')"
+                                  wire:model.live="totalBudget" placeholder="0.00" prefix="₱"
+                                  :readonly="!$this->isFieldEditable('totalBudget')"
                     />
 
                     <x-mary-select label="Funding Source" wire:model="fundingSource" :options="$fundSources"
                                    option-value="source_id" option-label="source_name"
-                                   placeholder="Select funding source" :readonly="!$this->isFieldEditable('fundingSource')"
+                                   placeholder="Select funding source"
+                                   :readonly="!$this->isFieldEditable('fundingSource')"
                     />
                 </div>
 
@@ -116,7 +125,7 @@
                     <div class="mt-4">
                         <x-mary-textarea label="IGP Brief Description" wire:model="igp_details"
                                          placeholder="List all descriptions for IGP requested items" rows="4"
-                                            :readonly="!$this->isFieldEditable('igp_details')"
+                                         :readonly="!$this->isFieldEditable('igp_details')"
                         />
                     </div>
                 @endif
@@ -208,17 +217,30 @@
             {{-- Form Actions --}}
             <x-slot:actions>
                 <x-mary-button label="Cancel" @click="$wire.dispatch('close-edit-drawer')"/>
-                <x-mary-button label="Preview Changes" icon="s-eye" class="btn-accent"
-                               wire:click="openPreviewModal"/>
-                <x-mary-button label="Submit Revision" icon="s-paper-airplane" class="btn-primary"
-                               type="submit"/>
+                <x-mary-button
+                    label="Preview Changes"
+                    icon="s-eye"
+                    class="btn-accent"
+                    wire:click="openPreviewModal"
+                    spinner="openPreviewModal"/>
+                <x-mary-button
+                    label="Submit Revision"
+                    icon="s-paper-airplane"
+                    class="btn-primary"
+                    type="submit"
+                    spinner="updateTicket"/>
             </x-slot:actions>
         </x-mary-form>
-
-        {{-- Preview Modal --}}
-        <x-mary-modal wire:model="showPreviewModal" title="Review Changes"
-                      box-class="max-w-5xl max-h-[85vh] overflow-y-auto">
-            <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
-        </x-mary-modal>
     @endif
+
+    {{-- Modal rendered at body level using Alpine teleport --}}
+    <template x-teleport="body">
+        <x-mary-modal wire:model="showPreviewModal" title="Review Changes"
+                      class="backdrop-blur !fixed !z-[9999]"
+                      box-class="max-w-5xl max-h-[85vh] overflow-y-auto relative z-[10000]">
+            @if($this->previewTicket)
+                <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+            @endif
+        </x-mary-modal>
+    </template>
 </div>

@@ -17,7 +17,8 @@
         "livewire/livewire": "^3.6",
         "livewire/volt": "^1.7",
         "owenvoke/blade-fontawesome": "^2.9",
-        "robsontenorio/mary": "^2.4"
+        "robsontenorio/mary": "^2.4",
+        "ext-fileinfo": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",

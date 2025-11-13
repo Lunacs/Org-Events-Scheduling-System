@@ -32,6 +32,7 @@ class MyTicket extends Component
     public $showEditDrawer = false;
 
     public $selectedTicketId;
+    public $isLoadingTicket = false;
 
     #[Rule('string|max:1000')]
     public $comment = '';
@@ -39,14 +40,34 @@ class MyTicket extends Component
     #[On('open-ticket-details')]
     public function openDetailsModal($ticketId = null)
     {
-        $this->selectedTicketId = $ticketId;
         $this->showDetailsModal = true;
+        $this->selectedTicketId = null; // Clear first
+
+        // Use $nextTick in JavaScript to load data after modal is shown
+        $this->dispatch('modal-opened', ticketId: $ticketId);
+    }
+
+    #[On('ticket-updated')]
+    public function refreshTickets()
+    {
+        // Reset pagination to first page
+        $this->resetPage();
+
+        // Close the drawer
+        $this->closeEditDrawer();
+    }
+
+    #[On('load-ticket-data')]
+    public function loadTicketData($ticketId)
+    {
+        $this->selectedTicketId = $ticketId;
     }
 
     public function closeDetailsModal()
     {
         $this->showDetailsModal = false;
         $this->selectedTicketId = null;
+        $this->isLoadingTicket = false;
     }
 
     #[On('open-comment-section')]
@@ -72,6 +93,8 @@ class MyTicket extends Component
         $this->dispatch('load-ticket-for-edit', ticketId: $ticketId);
     }
 
+
+    #[On('close-edit-drawer')]
     public function closeEditDrawer()
     {
         $this->showEditDrawer = false;
@@ -87,14 +110,12 @@ class MyTicket extends Component
 
     public function getSelectedTicketProperty()
     {
-        if (! $this->selectedTicketId) {
-            \Log::info('No ticket ID set');
-
+        if (!$this->selectedTicketId) {
             return null;
         }
 
         return auth()->user()->tickets()
-            ->with(['eventType', 'comments', 'attachments'])
+            ->with(['eventType', 'comments', 'attachments', 'fundSource', 'user.studentOrganization.course', 'user.position'])
             ->find($this->selectedTicketId);
     }
 

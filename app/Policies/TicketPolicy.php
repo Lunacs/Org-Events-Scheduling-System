@@ -35,9 +35,9 @@ class TicketPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Ticket $ticket): bool
+    public function update(User $user, Ticket $ticket)
     {
-        return false;
+        return $user->user_id === $ticket->user_id;
     }
 
     /**

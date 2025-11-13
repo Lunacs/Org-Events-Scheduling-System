@@ -9,6 +9,8 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
 use Exception;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -162,6 +164,26 @@ class SubmitTicket extends Component
         };
     }
 
+    // Auto-save draft on property update
+    public function updated($property)
+    {
+        // Don't auto-save if currently processing submission
+        if ($this->isProcessing) {
+            return;
+        }
+
+        // Exclude certain properties from auto-save
+        if (in_array($property, ['newAttachments', 'isProcessing'])) {
+            return;
+        }
+
+        // Save draft every 2 seconds
+        $this->dispatch('save-draft', [
+            'step' => $this->currentStep,
+            'data' => $this->all(),
+        ]);
+    }
+
     protected function validateCurrentStep()
     {
         $rules = $this->getCurrentStepRules();
@@ -273,10 +295,18 @@ class SubmitTicket extends Component
             $this->validateCurrentStep();
 
             \DB::beginTransaction();
+            $orgCode = $currentUserinfo->org_code;
+            $lastTicket = Ticket::lockForUpdate()
+                ->where('ticket_number', 'LIKE', "TKT-{$orgCode}-%")
+                ->orderByRaw('CAST(SUBSTRING(ticket_number, LOCATE(\'-\', ticket_number, 5) + 1) AS UNSIGNED) DESC')
+                ->first();
+
+            $nextNumber = $lastTicket
+                ? ((int)substr(strrchr($lastTicket->ticket_number, '-'), 1)) + 1
+                : 1;
 
             // Generate unique ticket number with locking
-            $ticketCount = Ticket::lockForUpdate()->count();
-            $ticketCode = "TKT-{$currentUserinfo->org_code}-" . ($ticketCount + 1);
+            $ticketCode = "TKT-{$orgCode}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
             $ticket = Ticket::create([
                 'user_id' => $currentUser->user_id,
@@ -338,6 +368,12 @@ class SubmitTicket extends Component
 
             \DB::commit();
 
+            // Clear draft BEFORE showing success message
+            $this->dispatch('clear-draft-immediate');
+
+            // Short delay to ensure draft clearing completes before redirect
+            usleep(100000); // 100ms delay
+
             $this->toast(
                 type: 'success',
                 title: 'Ticket Created!',
@@ -351,23 +387,41 @@ class SubmitTicket extends Component
         } catch (Exception $e) {
             \DB::rollBack();
 
-            \Log::error('Ticket submission failed', [
-                'user_id' => $currentUser->user_id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
+            // Keep user data on error
             $this->toast(
                 type: 'error',
-                title: 'Ticket Not Created',
-                description: 'Failed to submit ticket. Please try again or contact OSA support.',
+                title: 'Submission Failed',
+                description: 'Your data has been preserved. Please try again.',
                 position: 'toast-top toast-end',
                 icon: 'o-x-circle',
                 css: 'alert-error',
-                timeout: 3000,
+                timeout: 5000,
                 redirectTo: null
             );
+
+            // Log with context
+            \Log::error('Ticket submission failed', [
+                'user_id' => $currentUser->user_id,
+                'step' => $this->currentStep,
+                'error' => $e->getMessage(),
+            ]);
         }
+    }
+
+    public function loadDraft($draftData)
+    {
+        foreach ($draftData as $key => $value) {
+            if (property_exists($this, $key) && !in_array($key, ['newAttachments', 'attachments', 'isProcessing'])) {
+                $this->{$key} = $value;
+            }
+        }
+
+        $this->dispatch('draft-loaded');
+    }
+
+    public function discardDraft()
+    {
+        $this->dispatch('clear-draft');
     }
 
     public function getExpectedParticipantsProperty()
@@ -383,14 +437,55 @@ class SubmitTicket extends Component
     public function updatedNewAttachments()
     {
         $this->validate([
-            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx'
+            'newAttachments.*' => [
+                'file',
+                'max:10240',
+                'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+                function ($attribute, $value, $fail) {
+                    // Check actual file content, not just extension
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mimeType = finfo_file($finfo, $value->getRealPath());
+                    finfo_close($finfo);
+
+                    $allowedMimes = [
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'image/jpeg',
+                        'image/png',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    ];
+
+                    if (!in_array($mimeType, $allowedMimes)) {
+                        $fail('Invalid file type detected.');
+                    }
+                }
+            ]
         ]);
 
-        // Merge new files with existing attachments
-        $this->attachments = array_merge($this->attachments, $this->newAttachments);
+        // Check available disk space
+        $totalSize = collect($this->newAttachments)->sum(fn($file) => $file->getSize());
+        if (disk_free_space(storage_path()) < ($totalSize * 2)) {
+            throw ValidationException::withMessages([
+                'newAttachments' => 'Insufficient storage space.'
+            ]);
+        }
 
-        // Clear the temporary input
+        $this->attachments = array_merge($this->attachments, $this->newAttachments);
         $this->reset('newAttachments');
+    }
+
+    #[On('load-draft')]
+    public function handleLoadDraft($data)
+    {
+        $this->loadDraft($data);
+    }
+
+    #[On('discard-draft')]
+    public function handleDiscardDraft()
+    {
+        $this->discardDraft();
     }
 
     public function getRequiredDocuments()
