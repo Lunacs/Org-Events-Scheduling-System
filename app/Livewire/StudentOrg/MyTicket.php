@@ -302,18 +302,34 @@ class MyTicket extends Component
             })
             ->when($this->statusFilter, function ($query) {
                 if ($this->statusFilter === 'under_review') {
-                    // Show tickets with received, amended, or rescheduled status
-                    $query->whereIn('status', ['received', 'amended', 'rescheduled']);
+                    $query->whereIn('status', ['received', 'amended', 'rescheduled', 'gso_review', 'pending_osa_approval']);
                 } else {
                     $query->where('status', $this->statusFilter);
                 }
             })
-            ->orderBy('created_at', 'desc');
+            ->when($this->dateFilter, function ($query) {
+                $now = now();
+
+                switch ($this->dateFilter) {
+                    case 'last_week':
+                        $query->where('updated_at', '>=', $now->copy()->subWeek());
+                        break;
+                    case 'last_month':
+                        $query->where('updated_at', '>=', $now->copy()->subMonth());
+                        break;
+                    case 'last_3_months':
+                        $query->where('updated_at', '>=', $now->copy()->subMonths(3));
+                        break;
+                    case 'this_year':
+                        $query->whereYear('updated_at', $now->year);
+                        break;
+                }
+            })
+            ->orderBy('updated_at', 'desc');
 
         return view('livewire.student-org.my-ticket', [
             'allTickets' => $allTickets,
             'tickets' => $ticketsQuery->paginate(10),
         ]);
     }
-
 }

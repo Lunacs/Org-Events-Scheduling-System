@@ -27,11 +27,11 @@
 
                     <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
-                        ['id' => 'draft', 'name' => 'Draft'],
                         ['id' => 'under_review', 'name' => 'Under Review'],
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'rejected', 'name' => 'Rejected'],
                         ['id' => 'needs_revision', 'name' => 'Requires Revision'],
+                        ['id' => 'rescheduled', 'name' => 'Requires Rescheduling'],
                     ]"
                         placeholder="Filter by status" />
 
