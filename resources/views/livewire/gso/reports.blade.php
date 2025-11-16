@@ -21,18 +21,18 @@
         ['id' => 'this_year', 'name' => 'This Year'],
         ['id' => 'custom', 'name' => 'Custom Range'],
     ]" option-value="id"
-                                option-label="name" x-model="timePeriod" @change="generateReport()"
-                                class="select-emerald" />
+                                           option-label="name" x-model="timePeriod" @change="generateReport()"
+                                           class="select-emerald"/>
                         </div>
 
                         <div x-show="timePeriod === 'custom'" x-cloak>
                             <x-mary-input label="Start Date" type="date" x-model="customDateRange.start"
-                                class="input-emerald" @change="applyFilters()" />
+                                          class="input-emerald" @change="applyFilters()"/>
                         </div>
 
                         <div x-show="timePeriod === 'custom'" x-cloak>
                             <x-mary-input label="End Date" type="date" x-model="customDateRange.end"
-                                class="input-emerald" @change="applyFilters()" />
+                                          class="input-emerald" @change="applyFilters()"/>
                         </div>
                     </div>
 
@@ -40,7 +40,7 @@
                         <button class="btn btn-emerald" @click.prevent="exportReport()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
                             </svg>
                             Export PDF
@@ -48,7 +48,7 @@
                         <button class="btn btn-outline btn-emerald" @click.prevent="exportCSV()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
                             </svg>
                             Export CSV
@@ -59,13 +59,13 @@
         </div>
 
         <!-- Quick Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="stats shadow bg-emerald-50 dark:bg-emerald-900/20">
                 <div class="stat">
                     <div class="stat-figure text-emerald-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-emerald-700 dark:text-emerald-300">Total Approved</div>
@@ -79,7 +79,7 @@
                     <div class="stat-figure text-red-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-red-700 dark:text-red-300">Total Rejected</div>
@@ -93,7 +93,7 @@
                     <div class="stat-figure text-purple-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-purple-700 dark:text-purple-300">Approval Rate</div>
@@ -115,28 +115,28 @@
                                 ['id' => 'request_types', 'name' => 'Request Type Distribution'],
                                 ['id' => 'approvals', 'name' => 'Approval Trends']
                             ]"
-                            option-value="id"
-                            option-label="name"
-                            x-model="selectedChart"
-                            @change="refreshChart({ forceReinit: true })"
-                            class="select-emerald w-full sm:w-60 text-center"
-                            input-class="text-center" />
+                                       option-value="id"
+                                       option-label="name"
+                                       x-model="selectedChart"
+                                       @change="refreshChart({ forceReinit: true })"
+                                       class="select-emerald w-full sm:w-60 text-center"
+                                       input-class="text-center"/>
                     </div>
 
                     <div
                         class="relative h-64 bg-linear-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
                         <div class="h-full w-full p-3 box-border">
                             <canvas x-ref="approvalChart"
-                                class="w-full h-full transition-opacity duration-200"
-                                :class="{ 'opacity-0 pointer-events-none': !hasStatusData }"></canvas>
+                                    class="w-full h-full transition-opacity duration-200"
+                                    :class="{ 'opacity-0 pointer-events-none': !hasStatusData }"></canvas>
                         </div>
 
                         <div x-show="!hasStatusData"
-                            class="absolute inset-0 flex flex-col items-center justify-center text-center space-y-2 px-6">
+                             class="absolute inset-0 flex flex-col items-center justify-center text-center space-y-2 px-6">
                             <svg class="mx-auto h-12 w-12 text-emerald-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                 </path>
                             </svg>
                             <p class="text-emerald-600 dark:text-emerald-400 font-medium">Interactive Chart</p>
@@ -159,13 +159,13 @@
                                 <div class="flex items-center space-x-3">
                                     <div class="w-4 h-4 rounded" :style="`background-color: ${item.color}`"></div>
                                     <span class="text-sm font-medium text-gray-900 dark:text-gray-100"
-                                        x-text="item.type"></span>
+                                          x-text="item.type"></span>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-sm font-medium text-gray-900 dark:text-gray-100"
-                                        x-text="item.count"></div>
+                                         x-text="item.count"></div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400"
-                                        x-text="item.percentage + '%'"></div>
+                                         x-text="item.percentage + '%'"></div>
                                 </div>
                             </div>
                         </template>
@@ -181,12 +181,12 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="tableTitle"></h3>
                     <div class="flex space-x-2">
                         <x-mary-input placeholder="Search records..." x-model="searchTerm"
-                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm">
+                                      @input.debounce.300ms="filterRecords()" class="input-emerald input-sm">
                             <x-slot:prepend>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </x-slot:prepend>
                         </x-mary-input>
@@ -196,47 +196,47 @@
                 <div class="overflow-x-auto">
                     <table class="table table-zebra w-full">
                         <thead>
-                            <tr class="bg-emerald-50 dark:bg-emerald-900/20">
-                                <th class="text-emerald-700 dark:text-emerald-300">Date</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Ticket ID</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Event</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Organization</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Request Type</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Decision</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Actions</th>
-                            </tr>
+                        <tr class="bg-emerald-50 dark:bg-emerald-900/20">
+                            <th class="text-emerald-700 dark:text-emerald-300">Date</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Ticket ID</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Event</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Organization</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Request Type</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Decision</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Actions</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <template x-for="record in filteredRecords" :key="record.id">
-                                <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
-                                    <td x-text="record.date"></td>
-                                    <td>
-                                        <span class="font-mono text-sm" x-text="record.ticketId"></span>
-                                    </td>
-                                    <td x-text="record.eventName"></td>
-                                    <td x-text="record.organization"></td>
-                                    <td>
+                        <template x-for="record in paginatedRecords" :key="record.id">
+                        <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
+                                <td x-text="record.date"></td>
+                                <td>
+                                    <span class="font-mono text-sm" x-text="record.ticketId"></span>
+                                </td>
+                                <td x-text="record.eventName"></td>
+                                <td x-text="record.organization"></td>
+                                <td>
                                         <span
                                             :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' + getRequestTypeClass(record.requestType)"
                                             x-text="record.requestType || 'N/A'"></span>
-                                    </td>
-                                    <td>
-                                        <div class="badge" :class="getDecisionClass(record.decision)"
-                                            x-text="record.decision"></div>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-ghost" @click="goToDetails(record)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </template>
+                                </td>
+                                <td>
+                                    <div class="badge" :class="getDecisionClass(record.decision)"
+                                         x-text="record.decision"></div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-ghost" @click="goToDetails(record)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
                         </tbody>
                     </table>
                 </div>
@@ -244,15 +244,36 @@
                 <!-- Pagination -->
                 <div class="flex justify-between items-center mt-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing <span x-text="filteredRecords.length"></span> of <span
-                            x-text="currentDataset.length"></span> records
+                        Showing
+                        <span x-text="filteredRecords.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0"></span>
+                        to
+                        <span x-text="Math.min(currentPage * itemsPerPage, filteredRecords.length)"></span>
+                        of
+                        <span x-text="filteredRecords.length"></span>
+                        records
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-sm">┬½</button>
-                        <button class="btn btn-sm btn-active">1</button>
-                        <button class="btn btn-sm">2</button>
-                        <button class="btn btn-sm">3</button>
-                        <button class="btn btn-sm">┬╗</button>
+                    <div class="btn-group" x-show="totalPages > 1">
+                        <button class="btn btn-sm"
+                                @click="goToPage(currentPage - 1)"
+                                :disabled="currentPage === 1"
+                                :class="{ 'btn-disabled': currentPage === 1 }">
+                            «
+                        </button>
+
+                        <template x-for="page in pageNumbers" :key="page">
+                            <button class="btn btn-sm"
+                                    @click="goToPage(page)"
+                                    :class="{ 'btn-active': currentPage === page }"
+                                    x-text="page">
+                            </button>
+                        </template>
+
+                        <button class="btn btn-sm"
+                                @click="goToPage(currentPage + 1)"
+                                :disabled="currentPage === totalPages"
+                                :class="{ 'btn-disabled': currentPage === totalPages }">
+                            »
+                        </button>
                     </div>
                 </div>
             </div>
@@ -260,28 +281,31 @@
 
         <!-- Performance Metrics (shown when performance report is selected) -->
         <div x-show="selectedReport === 'performance'" x-cloak
-            class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
+             class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
             <div class="p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Performance Metrics</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="text-center">
                         <div class="radial-progress text-emerald-600 border-emerald-200" style="--value:85;"
-                            role="progressbar">85%</div>
+                             role="progressbar">85%
+                        </div>
                         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">On-time Completion</p>
                         <p class="text-xs text-gray-600 dark:text-gray-400">Meeting deadlines</p>
                     </div>
 
                     <div class="text-center">
                         <div class="radial-progress text-blue-600 border-blue-200" style="--value:92;"
-                            role="progressbar">92%</div>
+                             role="progressbar">92%
+                        </div>
                         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Accuracy Rate</p>
                         <p class="text-xs text-gray-600 dark:text-gray-400">Correct decisions</p>
                     </div>
 
                     <div class="text-center">
                         <div class="radial-progress text-purple-600 border-purple-200" style="--value:78;"
-                            role="progressbar">78%</div>
+                             role="progressbar">78%
+                        </div>
                         <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Satisfaction Score</p>
                         <p class="text-xs text-gray-600 dark:text-gray-400">User feedback</p>
                     </div>
@@ -354,6 +378,40 @@
             })),
             currentDataset: [],
             filteredRecords: [],
+            currentPage: 1,
+            itemsPerPage: 10,
+
+            get totalPages() {
+                return Math.ceil(this.filteredRecords.length / this.itemsPerPage);
+            },
+
+            get paginatedRecords() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+                return this.filteredRecords.slice(start, end);
+            },
+
+            get pageNumbers() {
+                const pages = [];
+                const maxVisible = 5;
+                let startPage = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+                let endPage = Math.min(this.totalPages, startPage + maxVisible - 1);
+
+                if (endPage - startPage < maxVisible - 1) {
+                    startPage = Math.max(1, endPage - maxVisible + 1);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                }
+                return pages;
+            },
+
+            goToPage(page) {
+                if (page >= 1 && page <= this.totalPages) {
+                    this.currentPage = page;
+                }
+            },
 
             get timePeriodLabel() {
                 const labels = {
@@ -448,10 +506,11 @@
 
             filterRecords() {
                 this.filteredRecords = this.applySearch(this.currentDataset);
+                this.currentPage = 1;
             },
 
             applyFilters() {
-                const { start, end } = this.resolveRange(this.timePeriod);
+                const {start, end} = this.resolveRange(this.timePeriod);
 
                 this.currentDataset = this.records.filter(record => {
                     if (!record.decidedAt) {
@@ -466,6 +525,7 @@
                 });
 
                 this.filteredRecords = this.applySearch(this.currentDataset);
+                this.currentPage = 1; // Add this line
                 this.updateStats(this.currentDataset);
                 this.updateBreakdown(this.currentDataset);
             },
@@ -588,7 +648,7 @@
                     }
                 }
 
-                return { start, end };
+                return {start, end};
             },
 
             isWithinRange(date, start, end) {
@@ -729,7 +789,7 @@
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: function(context) {
+                                    label: function (context) {
                                         const label = context.label || '';
                                         const value = context.parsed || 0;
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -802,7 +862,7 @@
                     }
 
                     this.themeChangeDebounce = setTimeout(() => {
-                        this.refreshChart({ forceReinit: true });
+                        this.refreshChart({forceReinit: true});
                     }, 60);
                 };
 
@@ -847,7 +907,7 @@
             },
 
             bootstrapRequestTypeClasses() {
-                this.requestTypeClassMap = { ...this.requestTypeClassDefaults };
+                this.requestTypeClassMap = {...this.requestTypeClassDefaults};
                 this.requestTypePaletteIndex = 0;
 
                 (this.records || []).forEach(record => {

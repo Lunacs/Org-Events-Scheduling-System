@@ -27,12 +27,15 @@ class Approvals extends Component
 
     public string $priorityFilter = 'all';
 
-    public array $selectedRequests = [];
-
     public bool $showConfirmationModal = false;
     public ?int $selectedApprovalId = null;
     public string $actionType = '';
     public string $actionRemarks = '';
+
+    protected const PRIORITY_HIGH_THRESHOLD = 3;
+    protected const PRIORITY_MEDIUM_THRESHOLD = 7;
+    protected const MIN_APPROVAL_REMARKS_LENGTH = 3;
+    protected const MIN_REJECTION_REMARKS_LENGTH = 10;
 
     protected $listeners = [
         'refreshApprovals' => '$refresh',
@@ -148,18 +151,19 @@ class Approvals extends Component
     protected function applySearchFilter(Builder $query, string $search): void
     {
         $term = Str::lower(trim($search));
+        if ($term === '') return;
 
-        if ($term === '') {
-            return;
-        }
-
-        $likeTerm = '%' . $term . '%';
+        // Escape LIKE wildcards
+        $escaped = addcslashes($term, '%_\\');
+        $likeTerm = '%' . $escaped . '%';
 
         $query->whereHas('ticket', function (Builder $ticketQuery) use ($likeTerm) {
             $ticketQuery
-                ->whereRaw('LOWER(title) LIKE ?', [$likeTerm])
-                ->orWhereRaw('LOWER(ticket_number) LIKE ?', [$likeTerm])
-                ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) => $orgQuery->whereRaw('LOWER(org_name) LIKE ?', [$likeTerm]));
+                ->whereRaw('LOWER(title) LIKE ? ESCAPE "\\\\"', [$likeTerm])
+                ->orWhereRaw('LOWER(ticket_number) LIKE ? ESCAPE "\\\\"', [$likeTerm])
+                ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) =>
+                $orgQuery->whereRaw('LOWER(org_name) LIKE ? ESCAPE "\\\\"', [$likeTerm])
+                );
         });
     }
 
@@ -217,7 +221,12 @@ class Approvals extends Component
 
         try {
             return Carbon::parse($value);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to parse date in GSO Approvals', [
+                'value' => $value,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
@@ -243,17 +252,9 @@ class Approvals extends Component
     {
         $daysUntil = $this->daysUntilEvent($eventDate);
 
-        if ($daysUntil === null) {
-            return 'low';
-        }
-
-        if ($daysUntil <= 3) {
-            return 'high';
-        }
-
-        if ($daysUntil <= 7) {
-            return 'medium';
-        }
+        if ($daysUntil === null) return 'low';
+        if ($daysUntil <= self::PRIORITY_HIGH_THRESHOLD) return 'high';
+        if ($daysUntil <= self::PRIORITY_MEDIUM_THRESHOLD) return 'medium';
 
         return 'low';
     }
@@ -296,7 +297,14 @@ class Approvals extends Component
     public function applyFilters(): void
     {
         $this->search = trim((string) $this->search);
-        $this->selectedRequests = [];
+    }
+
+    protected function formatGsoRemarks(string $decision, string $remarks): string
+    {
+        $decisionLabel = strtoupper($decision);
+        $remarksText = $remarks ?: 'No remarks provided';
+
+        return sprintf('%s by GSO - %s', $decisionLabel, $remarksText);
     }
 
     public function performAction()
@@ -305,17 +313,32 @@ class Approvals extends Component
             return;
         }
 
+        $approval = Office_Approval::with(['ticket.user'])->find($this->selectedApprovalId);
+
+        if (! $approval || ! $approval->ticket) {
+            $this->addError('actionType', 'Approval or ticket record not found.');
+            return;
+        }
+
+        // Add authorization check
+        $user = Auth::user();
+        $expectedOfficeId = $this->resolveOfficeId($user);
+
+        if ($approval->office_id !== $expectedOfficeId) {
+            abort(403, 'Unauthorized to perform this action on this approval.');
+        }
+
         $rules = [];
         $messages = [];
 
         if ($this->actionType === 'approve') {
-            $rules = ['actionRemarks' => 'required|string|min:3'];
+            $rules = ['actionRemarks' => 'required|string|min:' . self::MIN_APPROVAL_REMARKS_LENGTH];
             $messages = [
                 'actionRemarks.required' => 'Please provide remarks for approval.',
                 'actionRemarks.min' => 'Remarks must be at least 3 characters.',
             ];
         } elseif ($this->actionType === 'reject') {
-            $rules = ['actionRemarks' => 'required|string|min:10'];
+            $rules = ['actionRemarks' => 'required|string|min:' . self::MIN_REJECTION_REMARKS_LENGTH];
             $messages = [
                 'actionRemarks.required' => 'Please provide remarks for rejection.',
                 'actionRemarks.min' => 'Remarks must be at least 10 characters.',
@@ -336,10 +359,8 @@ class Approvals extends Component
         $decision = $this->actionType === 'approve' ? 'approved' : 'rejected';
         $remarks = trim((string) $this->actionRemarks);
 
-        $approval->fill([
-            'decision' => $decision,
-            'user_id' => Auth::id(),
-        ]);
+        $approval->decision = $decision;
+        $approval->user_id = Auth::id();
         $approval->updated_at = now();
         $approval->save();
 
@@ -352,7 +373,7 @@ class Approvals extends Component
             $ticket->update(['status' => $newStatus]);
         }
 
-        $formattedRemarks = sprintf('%s by GSO - %s', strtoupper($decision), $remarks ?: 'No remarks provided');
+        $formattedRemarks = $this->formatGsoRemarks($decision, $remarks);
         $osaDecision = $decision === 'approved' ? 'pending' : 'rejected';
 
         OSA_Approval::create([
@@ -399,5 +420,35 @@ class Approvals extends Component
         $this->reset(['showConfirmationModal', 'selectedApprovalId', 'actionType', 'actionRemarks']);
         $this->resetValidation();
         session()->flash('message', 'Request ' . Str::headline($decision) . ' successfully.');
+    }
+
+    protected function notifyTicketOwner($ticket, string $oldStatus, string $newStatus, string $remarks): void
+    {
+        if ($ticket->relationLoaded('user') && $ticket->user) {
+            Notification::sendNow(
+                $ticket->user,
+                new TicketStatusUpdatedNotification($ticket, $oldStatus, $newStatus, $remarks),
+                ['database', 'broadcast']
+            );
+        }
+    }
+
+    protected function notifyOsaUsers($ticket, string $oldStatus, string $newStatus, string $decision, string $remarks): void
+    {
+        $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+
+        if ($osaUsers->isEmpty()) return;
+
+        $message = sprintf(
+            'GSO has %s this ticket. Remarks: %s',
+            $decision === 'approved' ? 'approved' : 'rejected',
+            $remarks ?: 'None provided.'
+        );
+
+        Notification::sendNow(
+            $osaUsers,
+            new TicketStatusUpdatedNotification($ticket, $oldStatus, $newStatus, $message),
+            ['database', 'broadcast']
+        );
     }
 }
