@@ -1,4 +1,4 @@
-@props(['ticket', 'allowedActions' => [], 'backRoute' => null])
+@props(['ticket', 'allowedActions' => [], 'backRoute' => null, 'statusOverview' => null])
 
 <div x-data="{
     showApproval: false,
@@ -65,8 +65,12 @@
                     <h1 class="text-3xl font-bold text-base-content">Ticket Review</h1>
                     <p class="text-base-content/70 mt-1">Review event proposal and attached documents</p>
                 </div>
-                <div class="flex items-center gap-2">
+                @php
+                    $statusOverview = is_array($statusOverview) ? $statusOverview : null;
+                @endphp
+                <div class="flex flex-wrap items-center gap-2">
                     @php
+                        $currentViewer = auth()->user();
                         $statusClasses = [
                             'received' => 'badge-info',
                             'gso_review' => 'badge-secondary',
@@ -78,11 +82,36 @@
                             'approved' => 'badge-success',
                             'rejected' => 'badge-error',
                         ];
+                        $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
+                        $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
+                        $ticketTextClass = $ticketBadgeClass === 'badge-warning'
+                            ? 'text-neutral-900 dark:text-neutral-900'
+                            : 'text-white';
+                        $officeStatusLabel = $statusOverview['status_label'] ?? null;
+                        $officeBadgeClass = $statusOverview['status_badge'] ?? null;
+                        $officeName = $statusOverview['office_name'] ?? null;
+                        $officeLabel = $officeName
+                            ? (\Illuminate\Support\Str::headline($officeName) . ' Decision: ')
+                            : 'Office Decision: ';
+                        $showTicketStatusBadge = ! ($currentViewer && $currentViewer->isGSO());
                     @endphp
-                    <span
-                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
+                    @if ($showTicketStatusBadge)
+                        <span class="badge {{ $ticketBadgeClass }} {{ $ticketTextClass }}">Ticket: {{ $ticketStatusLabel }}</span>
+                    @endif
+                    @if ($officeStatusLabel)
+                        @php
+                            $resolvedOfficeBadge = $officeBadgeClass ?? 'badge-warning';
+                            $resolvedOfficeTextClass = $resolvedOfficeBadge === 'badge-warning'
+                                ? 'text-neutral-900 dark:text-neutral-900'
+                                : 'text-white';
+                        @endphp
+                        <span class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }}">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+                    @endif
                 </div>
             </div>
+            @if ($statusOverview && !empty($statusOverview['status_detail']))
+                <p class="text-sm text-base-content/70 mt-3">{{ $statusOverview['status_detail'] }}</p>
+            @endif
         </div>
     </div>
 
@@ -551,43 +580,129 @@
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4">Actions</h2>
 
-                @if ($ticket->status === 'pending_osa_approval')
-                    {{-- Final Decision After GSO Review --}}
-                    @php
-                        $gsoApproval = $ticket->officeApprovals->first();
-                    @endphp
+                @php
+                    $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
+                    $hasOfficeActions = in_array('approve', $allowedActions, true) || in_array('reject', $allowedActions, true);
+                    $currentUser = auth()->user();
 
-                    @if ($gsoApproval)
-                        <div
-                            class="alert mb-4 {{ $gsoApproval->decision === 'approved' ? 'alert-success' : 'alert-error' }}">
-                            <div>
-                                <p class="font-semibold">GSO has {{ $gsoApproval->decision }} this request
-                                </p>
-                                <p class="text-sm mt-1">{{ $gsoApproval->remarks }}</p>
+                    $targetOfficeId = $overviewData['office_id'] ?? null;
+                    $officeApprovalRecord = null;
+
+                    if ($targetOfficeId !== null) {
+                        $officeApprovalRecord = $ticket->officeApprovals
+                            ->firstWhere('office_id', (int) $targetOfficeId);
+                    }
+
+                    if (! $officeApprovalRecord && $currentUser && $currentUser->isGSO()) {
+                        $fallbackOfficeId = $currentUser->office_id;
+
+                        if ($fallbackOfficeId) {
+                            $officeApprovalRecord = $ticket->officeApprovals
+                                ->firstWhere('office_id', (int) $fallbackOfficeId);
+                        }
+                    }
+
+                    $officeDecisionStatus = $officeApprovalRecord
+                        ? \Illuminate\Support\Str::of($officeApprovalRecord->decision)->lower()->toString()
+                        : (isset($overviewData['status'])
+                            ? \Illuminate\Support\Str::of($overviewData['status'])->lower()->toString()
+                            : null);
+
+                    $officeDecisionPending = false;
+
+                    if ($hasOfficeActions) {
+                        if ($officeApprovalRecord) {
+                            $officeDecisionPending = strcasecmp($officeApprovalRecord->decision ?? '', 'pending') === 0;
+                        } elseif ($officeDecisionStatus === 'pending') {
+                            $officeDecisionPending = true;
+                        }
+                    }
+
+                    $canPerformOfficeDecision = $hasOfficeActions
+                        && $currentUser
+                        && $currentUser->isGSO()
+                        && ($currentUser->can('approve', $ticket) || $currentUser->can('reject', $ticket));
+
+                    $shouldRenderOfficeActions = $officeDecisionPending && $canPerformOfficeDecision;
+
+                    $resolvedGsoApproval = $officeApprovalRecord;
+
+                    if (! $resolvedGsoApproval && $currentUser && $currentUser->isGSO() && $currentUser->office_id) {
+                        $resolvedGsoApproval = $ticket->officeApprovals
+                            ->firstWhere('office_id', (int) $currentUser->office_id);
+                    }
+
+                    $resolvedDecision = $resolvedGsoApproval?->decision;
+
+                    $officeDecisionDetails = null;
+
+                    if ($resolvedGsoApproval && $resolvedDecision && strcasecmp($resolvedDecision, 'pending') !== 0) {
+                        $decisionKey = \Illuminate\Support\Str::of($resolvedDecision)->lower()->toString();
+
+                        $officeDecisionDetails = [
+                            'status' => $decisionKey,
+                            'message' => $decisionKey === 'approved'
+                                ? 'This ticket has been approved.'
+                                : 'This ticket has been rejected.',
+                            'wrapper' => $decisionKey === 'approved'
+                                ? 'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info'
+                                : 'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
+                            'icon' => $decisionKey === 'approved' ? 'o-check-circle' : 'o-x-circle',
+                        ];
+                    }
+                @endphp
+
+                @if ($ticket->status === 'pending_osa_approval')
+                    {{-- Pending OSA decision; GSO may still need to act --}}
+                    @if ($shouldRenderOfficeActions)
+                        <div class="space-y-3">
+                            @if (in_array('approve', $allowedActions))
+                                @can('approve', $ticket)
+                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                        @click="showApproval = true">
+                                        Approve Ticket
+                                    </button>
+                                @endcan
+                            @endif
+
+                            @if (in_array('reject', $allowedActions))
+                                @can('reject', $ticket)
+                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
+                                        @click="showRejection = true">
+                                        Reject Ticket
+                                    </button>
+                                @endcan
+                            @endif
+                        </div>
+                    @else
+                        @if ($officeDecisionDetails)
+                            <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                                <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                             </div>
+                        @endif
+
+                        <div class="space-y-3">
+                            @if (in_array('final_approve', $allowedActions))
+                                @can('finalApprove', $ticket)
+                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                        @click="showFinalApproval = true">
+                                        Final Approval
+                                    </button>
+                                @endcan
+                            @endif
+
+                            @if (in_array('final_reject', $allowedActions))
+                                @can('finalReject', $ticket)
+                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
+                                        @click="showFinalRejection = true">
+                                        Final Rejection
+                                    </button>
+                                @endcan
+                            @endif
                         </div>
                     @endif
-
-                    <div class="space-y-3">
-                        @if (in_array('final_approve', $allowedActions))
-                            @can('finalApprove', $ticket)
-                                <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                    @click="showFinalApproval = true">
-                                    Final Approval
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('final_reject', $allowedActions))
-                            @can('finalReject', $ticket)
-                                <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                    @click="showFinalRejection = true">
-                                    Final Rejection
-                                </button>
-                            @endcan
-                        @endif
-                    </div>
-                @elseif ($ticket->status === 'gso_review')
+                @elseif ($ticket->status === 'gso_review' || ($officeDecisionPending && $canPerformOfficeDecision))
                     {{-- GSO Review Actions --}}
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
@@ -648,22 +763,52 @@
                         @endif
                     </div>
                 @else
-                    <div class="alert alert-info">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5" />
-                        <span>
-                            @if ($ticket->status === 'approved')
-                                This ticket has been <u>approved</u>.
-                            @elseif($ticket->status === 'rejected')
-                                This ticket has been <u>rejected</u>.
-                            @elseif($ticket->status === 'needs_revision')
-                                Waiting for student organization to <u>revise and resubmit</u>.
-                            @elseif($ticket->status === 'gso_review')
-                                This ticket has been <u>forwarded to GSO for review</u>.
-                            @else
-                                No actions available for current ticket status.
-                            @endif
-                        </span>
-                    </div>
+                    @if ($officeDecisionDetails)
+                        <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                            <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
+                        </div>
+                    @else
+                        @php
+                            $resolvedStatus = \Illuminate\Support\Str::of($ticket->status)->lower()->toString();
+                            $statusConfig = [
+                                'approved' => [
+                                    'wrapper' => 'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info',
+                                    'icon' => 'o-check-circle',
+                                    'label' => 'This ticket has been approved.',
+                                ],
+                                'rejected' => [
+                                    'wrapper' => 'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
+                                    'icon' => 'o-x-circle',
+                                    'label' => 'This ticket has been rejected.',
+                                ],
+                                'needs_revision' => [
+                                    'wrapper' => 'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                                    'icon' => 'o-arrow-path',
+                                    'label' => 'Waiting for revision from the student organization.',
+                                ],
+                                'gso_review' => [
+                                    'wrapper' => 'flex items-start gap-3 rounded-2xl bg-secondary/10 border border-secondary/30 px-4 py-3 text-secondary',
+                                    'icon' => 'o-eye',
+                                    'label' => 'Ticket is currently under GSO review.',
+                                ],
+                            ];
+
+                            $statusDisplay = $statusConfig[$resolvedStatus] ?? null;
+                        @endphp
+
+                        @if ($statusDisplay)
+                            <div class="{{ $statusDisplay['wrapper'] }}">
+                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
+                                <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
+                            </div>
+                        @else
+                            <div class="alert alert-info">
+                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                                <span>No actions available for current ticket status.</span>
+                            </div>
+                        @endif
+                    @endif
                 @endif
             </div>
 
