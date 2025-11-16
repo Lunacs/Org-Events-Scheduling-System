@@ -905,7 +905,7 @@ class Details extends Component
                 'user_id' => auth()->id(),
                 'decision' => 'rejected',
                 'remarks' => null,
-            ]);
+            ]);     
         }
 
         $formattedRemarks = sprintf('REJECTED by GSO - %s', $this->rejectionRemarks);
