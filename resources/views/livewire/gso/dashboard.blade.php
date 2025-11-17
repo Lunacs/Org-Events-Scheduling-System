@@ -169,10 +169,10 @@
 
             <x-mary-card id="recent-activity-section" title="Recent Activity" subtitle="Latest actions from your team"
                 class="shadow-md">
-                <x-slot:menu>
-                    <x-mary-button icon="o-document-text" link="{{ route('gso.communication') }}"
-                        class="btn-sm btn-ghost" label="View Logs" wire:navigate />
-                </x-slot:menu>
+{{--                <x-slot:menu>--}}
+{{--                    <x-mary-button icon="o-document-text" link="{{ route('gso.communication') }}"--}}
+{{--                        class="btn-sm btn-ghost" label="View Logs" wire:navigate />--}}
+{{--                </x-slot:menu>--}}
 
                 @if ($recentActivityItems->count() > 0)
                     <div class="space-y-3">
@@ -217,14 +217,14 @@
             </x-mary-card>
         </div>
 
-        <x-mary-card id="approval-snapshot-section" title="Approval Snapshot" subtitle="Quick view of recent tickets"
-            class="shadow-md" wire:loading.class="opacity-50" wire:target="refreshData">
-            <x-slot:menu>
-                <div class="flex gap-2">
-                    <x-mary-button icon="o-funnel" class="btn-sm btn-ghost" label="Filter" />
-                    <x-mary-button icon="o-arrow-down-tray" class="btn-sm btn-ghost" label="Export" />
-                </div>
-            </x-slot:menu>
+    <x-mary-card id="approval-snapshot-section" title="Approval Snapshot" subtitle="Quick view of recent tickets" class="shadow-md"
+            wire:loading.class="opacity-50" wire:target="refreshData">
+{{--            <x-slot:menu>--}}
+{{--                <div class="flex gap-2">--}}
+{{--                    <x-mary-button icon="o-funnel" class="btn-sm btn-ghost" label="Filter" />--}}
+{{--                    <x-mary-button icon="o-arrow-down-tray" class="btn-sm btn-ghost" label="Export" />--}}
+{{--                </div>--}}
+{{--            </x-slot:menu>--}}
 
             @if ($approvalSnapshotRows->count() > 0)
                 <x-mary-table :headers="[

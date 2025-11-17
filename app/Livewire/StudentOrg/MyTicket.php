@@ -28,18 +28,39 @@ class MyTicket extends Component
     public $showEditDrawer = false;
 
     public $selectedTicketId;
+    public $isLoadingTicket = false;
 
     #[On('open-ticket-details')]
     public function openDetailsModal($ticketId = null)
     {
-        $this->selectedTicketId = $ticketId;
         $this->showDetailsModal = true;
+        $this->selectedTicketId = null; // Clear first
+
+        // Use $nextTick in JavaScript to load data after modal is shown
+        $this->dispatch('modal-opened', ticketId: $ticketId);
+    }
+
+    #[On('ticket-updated')]
+    public function refreshTickets()
+    {
+        // Reset pagination to first page
+        $this->resetPage();
+
+        // Close the drawer
+        $this->closeEditDrawer();
+    }
+
+    #[On('load-ticket-data')]
+    public function loadTicketData($ticketId)
+    {
+        $this->selectedTicketId = $ticketId;
     }
 
     public function closeDetailsModal()
     {
         $this->showDetailsModal = false;
         $this->selectedTicketId = null;
+        $this->isLoadingTicket = false;
     }
 
     #[On('open-comment-section')]
@@ -65,6 +86,8 @@ class MyTicket extends Component
         $this->dispatch('load-ticket-for-edit', ticketId: $ticketId);
     }
 
+
+    #[On('close-edit-drawer')]
     public function closeEditDrawer()
     {
         $this->showEditDrawer = false;
@@ -80,14 +103,12 @@ class MyTicket extends Component
 
     public function getSelectedTicketProperty()
     {
-        if (! $this->selectedTicketId) {
-            \Log::info('No ticket ID set');
-
+        if (!$this->selectedTicketId) {
             return null;
         }
 
         return auth()->user()->tickets()
-            ->with(['eventType', 'comments', 'attachments'])
+            ->with(['eventType', 'comments', 'attachments', 'fundSource', 'user.studentOrganization.course', 'user.position'])
             ->find($this->selectedTicketId);
     }
 
@@ -204,13 +225,30 @@ class MyTicket extends Component
             })
             ->when($this->statusFilter, function ($query) {
                 if ($this->statusFilter === 'under_review') {
-                    // Show tickets with received, amended, or rescheduled status
-                    $query->whereIn('status', ['received', 'amended', 'rescheduled']);
+                    $query->whereIn('status', ['received', 'amended', 'rescheduled', 'gso_review', 'pending_osa_approval']);
                 } else {
                     $query->where('status', $this->statusFilter);
                 }
             })
-            ->orderBy('created_at', 'desc');
+            ->when($this->dateFilter, function ($query) {
+                $now = now();
+
+                switch ($this->dateFilter) {
+                    case 'last_week':
+                        $query->where('updated_at', '>=', $now->copy()->subWeek());
+                        break;
+                    case 'last_month':
+                        $query->where('updated_at', '>=', $now->copy()->subMonth());
+                        break;
+                    case 'last_3_months':
+                        $query->where('updated_at', '>=', $now->copy()->subMonths(3));
+                        break;
+                    case 'this_year':
+                        $query->whereYear('updated_at', $now->year);
+                        break;
+                }
+            })
+            ->orderBy('updated_at', 'desc');
 
         return view('livewire.student-org.my-ticket', [
             'allTickets' => $allTickets,

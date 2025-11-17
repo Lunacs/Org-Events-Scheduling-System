@@ -45,21 +45,21 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $statusMessage = $this->getStatusMessage();
-        $actionUrl = $this->getActionUrl();
+		$statusMessage = $this->getStatusMessage();
+		$actionUrl = $this->getActionUrl();
 
-        return (new MailMessage)
-            ->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
-            ->view('emails.tickets.ticket-status-updated', [
-                'ticket' => $this->ticket,
-                'statusMessage' => $statusMessage,
-                'oldStatus' => $this->oldStatus,
-                'newStatus' => $this->newStatus,
-                'remarks' => $this->remarks,
-                'actionUrl' => $actionUrl,
-                'actionText' => 'View Ticket',
-                'title' => $this->getStatusTitle(),
-            ]);
+		return (new MailMessage)
+			->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
+			->view('emails.tickets.ticket-status-updated', [
+				'ticket' => $this->ticket,
+				'statusMessage' => $statusMessage,
+				'oldStatus' => $this->oldStatus,
+				'newStatus' => $this->newStatus,
+				'remarks' => $this->remarks,
+				'actionUrl' => $actionUrl,
+				'actionText' => 'View Ticket',
+				'title' => $this->getStatusTitle(),
+			]);
     }
 
     /**

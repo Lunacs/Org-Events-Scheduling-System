@@ -57,7 +57,7 @@
                 <p class="text-xs text-orange-500 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
                 @if(strtolower($status) == 'for_rescheduling')
                     <x-mary-button label="Reschedule Event" icon="s-arrow-up"
-                                   class="btn-sm btn-primary mt-2" link="reschedule" wire:navigate/>
+                                   class="btn-sm btn-primary mt-2" link="reschedule?ticket={{ $ticket->ticket_number }}" wire:navigate/>
                 @else
                     <x-mary-button label="Submit Revision" icon="s-arrow-up"
                                    class="btn-sm btn-primary mt-2" @click="$dispatch('open-ticket-edit', { ticketId: {{ $ticket->ticket_id }} })" tooltip="Revise Event"/>
