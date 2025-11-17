@@ -12,10 +12,16 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
+    <!-- Resource Hints for Performance -->
+    <link rel="dns-prefetch" href="https://fonts.bunny.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Fonts with optimized loading -->
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900&display=swap"
+        rel="stylesheet" />
 
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -38,7 +44,8 @@
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
                         <div class="flex items-center">
-                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
+                                fetchpriority="high">
                             <h2 class="p-3 text-lg font-semibold font-heading ml-2">Student Org</h2>
                         </div>
                     </div>
@@ -77,10 +84,17 @@
 
         {{-- Toast --}}
         <x-mary-toast />
+
+        {{-- Session Timeout Warning --}}
+        <livewire:session-timeout />
     </div>
 
     {{-- Scripts Stack --}}
     @stack('scripts')
+
+    {{-- Performance Monitoring Scripts --}}
+    <script src="{{ asset('js/network-aware.js') }}" defer></script>
+    <script src="{{ asset('js/lazy-livewire.js') }}" defer></script>
 </body>
 
 </html>

@@ -10,7 +10,7 @@ trait ResolvesOfficeContext
     /**
      * Resolve the office id to scope GSO data when explicit assignment is missing.
      */
-    protected function resolveOfficeId(?User $user): int
+    protected function resolveOfficeId(?User $user): ?int
     {
         if ($user?->office_id) {
             return (int) $user->office_id;
@@ -24,6 +24,6 @@ trait ResolvesOfficeContext
             return (int) $gsoOfficeId;
         }
 
-        return 1;
+        return null;
     }
 }

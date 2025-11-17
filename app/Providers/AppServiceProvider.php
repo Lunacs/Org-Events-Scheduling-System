@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
         Model::automaticallyEagerLoadRelationships();
 
         // Prevent lazy loading in non-production (catch N+1 issues early)
-        Model::preventLazyLoading(! app()->isProduction());
+        // Model::preventLazyLoading(! app()->isProduction());
 
         // Enable HTTPS in production
         if ($this->app->environment('production')) {

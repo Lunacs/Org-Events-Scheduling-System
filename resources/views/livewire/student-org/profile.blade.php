@@ -14,7 +14,7 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success">
+                            <span class="badge badge-lg badge-success text-white">
                                 <i class="fa-solid fa-check-circle mr-1"></i> Verified
                             </span>
                         @endif
@@ -72,8 +72,8 @@
                             <button type="button" @click="show = !show"
                                 class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
-                                <i class="fas fa-eye" x-show="!show"></i>
-                                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                <i class="fas fa-eye-slash" x-show="!show"></i>
+                                <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                             </button>
                         </div>
 
@@ -86,8 +86,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
 
@@ -98,8 +98,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
                         </div>
@@ -216,20 +216,6 @@
                         </div>
                     </div>
                 </x-mary-card>
-
-                {{-- Security Tips --}}
-                <div class="alert alert-warning shadow-lg">
-                    <x-mary-icon name="o-shield-exclamation" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">Security Tips</h3>
-                        <ul class="text-xs mt-2 space-y-1">
-                            <li>• Use a strong, unique password</li>
-                            <li>• Never share your credentials</li>
-                            <li>• Log out on shared computers</li>
-                            <li>• Review your account regularly</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

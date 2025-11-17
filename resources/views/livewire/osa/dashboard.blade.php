@@ -8,18 +8,7 @@
         $upcomingEvents = $this->upcomingEvents;
     @endphp
 
-    {{-- Show skeleton on first load only --}}
-    <div x-data="{ firstLoad: true }" x-init="$nextTick(() => firstLoad = false)">
-        {{-- Skeleton Loading State (First Load Only) --}}
-        <div x-show="firstLoad" x-cloak>
-            @include('livewire.osa.placeholders.dashboard')
-        </div>
-
-        {{-- Actual Dashboard Content --}}
-        <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100">
-            <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6">
                 <!-- Enhanced Header with Breadcrumb and Actions -->
                 @persist('dashboard-header')
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -465,6 +454,4 @@
                     </x-mary-card>
                 @endpersist
             </div>
-        </div>
-    </div>
 </div>

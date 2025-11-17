@@ -16,6 +16,13 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     /**
+     * In-memory cache for role IDs to prevent duplicate cache queries within the same request
+     *
+     * @var array<string, int|null>
+     */
+    protected static array $roleIdCache = [];
+
+    /**
      * The primary key for the model.
      *
      * @var string
@@ -65,22 +72,43 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get role ID by role name (cached for performance)
-     *
-     * @param string $roleName
-     * @return int|null
+     * Uses in-memory cache first to prevent duplicate queries within the same request,
+     * then falls back to persistent cache for cross-request caching.
      */
     public static function getRoleId(string $roleName): ?int
     {
-        return Cache::rememberForever("role_id_{$roleName}", function () use ($roleName) {
+        // Check in-memory cache first (prevents duplicate queries in same request)
+        if (isset(static::$roleIdCache[$roleName])) {
+            return static::$roleIdCache[$roleName];
+        }
+
+        // Get from persistent cache (or database if not cached)
+        $roleId = Cache::rememberForever("role_id_{$roleName}", function () use ($roleName) {
             return Roles::where('role_name', $roleName)->value('role_id');
         });
+
+        // Store in in-memory cache for this request
+        static::$roleIdCache[$roleName] = $roleId;
+
+        return $roleId;
+    }
+
+    /**
+     * Preload commonly used role IDs to prevent duplicate cache queries
+     * Call this method early in the request lifecycle (e.g., in middleware or service provider)
+     *
+     * @param  array<string>  $roleNames  Role names to preload (defaults to common roles)
+     */
+    public static function preloadRoleIds(array $roleNames = ['osa', 'student-org', 'gso', 'superadmin']): void
+    {
+        foreach ($roleNames as $roleName) {
+            // This will populate both in-memory and persistent cache
+            static::getRoleId($roleName);
+        }
     }
 
     /**
      * Check if user has a specific role
-     *
-     * @param string $roleName
-     * @return bool
      */
     public function hasRole(string $roleName): bool
     {
@@ -89,8 +117,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a superadmin
-     *
-     * @return bool
      */
     public function isSuperAdmin(): bool
     {
@@ -99,8 +125,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is an OSA admin
-     *
-     * @return bool
      */
     public function isOSA(): bool
     {
@@ -109,8 +133,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a GSO admin
-     *
-     * @return bool
      */
     public function isGSO(): bool
     {
@@ -119,8 +141,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user is a student organization member
-     *
-     * @return bool
      */
     public function isStudentOrg(): bool
     {
@@ -129,13 +149,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the user's dashboard route based on their role
-     *
-     * @return string
      */
     public function getDashboardRoute(): string
     {
         // Load role relationship if not already loaded
-        if (!$this->relationLoaded('role')) {
+        if (! $this->relationLoaded('role')) {
             $this->load('role');
         }
 
@@ -238,12 +256,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleDisplayAttribute(): string
     {
         // Load role relationship if not already loaded
-        if (!$this->relationLoaded('role')) {
+        if (! $this->relationLoaded('role')) {
             $this->load('role');
         }
 
         $roleName = $this->role?->role_name ?? 'unknown';
+
         return ucfirst(str_replace('-', ' ', $roleName));
+    }
+
+    public function getRoleDisplayName(string $role): string
+    {
+        return ucfirst(str_replace('-', ' ', $role));
     }
 
     /**

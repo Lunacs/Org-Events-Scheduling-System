@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use App\Models\Ticket;
+use App\Models\Event_Type;
+use App\Models\Fund_Sources;
 use Illuminate\Database\Seeder;
 
 class TicketSeeder extends Seeder
@@ -14,9 +17,9 @@ class TicketSeeder extends Seeder
     public function run(): void
     {
         // Get existing data
-        $users = \App\Models\User::where('role_id', \App\Models\User::ROLE_STUDENT_ORG)->get();
-        $eventTypes = \App\Models\Event_Type::all();
-        $fundSources = \App\Models\Fund_Sources::all();
+        $users = User::where('role_id', User::getRoleId('student-org'))->get();
+        $eventTypes = Event_Type::all();
+        $fundSources = Fund_Sources::all();
 
         if ($users->isEmpty() || $eventTypes->isEmpty() || $fundSources->isEmpty()) {
             $this->command->warn('No users, event types, or fund sources found. Skipping ticket seeder.');
@@ -104,7 +107,7 @@ class TicketSeeder extends Seeder
             $dateFrom = Carbon::now()->addDays($daysUntil);
             $dateTo = (clone $dateFrom)->addDays(rand(0, 2));
 
-            \App\Models\Ticket::create([
+            Ticket::create([
                 'ticket_number' => 'TKT-' . date('Y') . '-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
                 'user_id' => $user->user_id,
                 'event_type_id' => $eventType->event_type_id,

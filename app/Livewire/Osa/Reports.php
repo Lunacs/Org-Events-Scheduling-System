@@ -7,11 +7,13 @@ use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
+#[Lazy]
 class Reports extends Component
 {
     #[Title('Reports - OSA Admin')]
@@ -35,6 +37,24 @@ class Reports extends Component
     {
         $this->dateFrom = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = Carbon::now()->endOfMonth()->format('Y-m-d');
+    }
+
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="p-6">
+            <div class="animate-pulse space-y-6">
+                <div class="h-8 bg-base-200 rounded w-1/3"></div>
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="space-y-4">
+                        <div class="h-10 bg-base-200 rounded"></div>
+                        <div class="h-10 bg-base-200 rounded"></div>
+                        <div class="h-96 bg-base-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        HTML;
     }
 
     public function generateReport()
@@ -89,14 +109,14 @@ class Reports extends Component
                 case 'approved_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                         ->with([
-                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                                ->with('studentOrganization:org_id,org_name'),
+                            'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name,logo'),
                             'events:event_id,ticket_id',
                             'eventType:event_type_id,type_name',
                         ])
                         ->where('status', 'approved')
                         ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
                         ->orderBy('created_at', 'desc')
                         ->limit(1000) // Add limit for performance
                         ->get();
@@ -104,14 +124,14 @@ class Reports extends Component
                 case 'rejected_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                         ->with([
-                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                                ->with('studentOrganization:org_id,org_name'),
+                            'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                ->with('studentOrganization:org_id,org_name,logo'),
                             'events:event_id,ticket_id',
                             'eventType:event_type_id,type_name',
                         ])
                         ->where('status', 'rejected')
                         ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
                         ->orderBy('created_at', 'desc')
                         ->limit(1000) // Add limit for performance
                         ->get();
@@ -119,9 +139,9 @@ class Reports extends Component
                 case 'org_participation':
                     return Student_Organization::select(['org_id', 'org_name', 'org_code'])
                         ->withCount([
-                            'tickets' => fn($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
+                            'tickets' => fn ($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
                         ])
-                        ->when($this->organizationFilter, fn($query) => $query->where('org_id', $this->organizationFilter))
+                        ->when($this->organizationFilter, fn ($query) => $query->where('org_id', $this->organizationFilter))
                         ->orderBy('tickets_count', 'desc')
                         ->limit(100) // Add limit for performance
                         ->get();
@@ -163,7 +183,7 @@ class Reports extends Component
 
     protected function exportCsv($data)
     {
-        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.csv';
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');
@@ -234,9 +254,9 @@ class Reports extends Component
             'generatedAt' => now(),
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.pdf';
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.pdf';
 
-        return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
+        return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
             'Content-Type' => 'application/pdf',
         ]);
     }

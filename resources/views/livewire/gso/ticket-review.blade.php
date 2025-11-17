@@ -7,12 +7,12 @@
 
     $statusOptions = collect($statusDefinitions)
         ->map(fn($definition) => ['id' => $definition['key'], 'name' => $definition['label']])
-        ->prepend(['id' => '', 'name' => 'All Status'])
+        ->prepend(['id' => '', 'name' => 'All Statuses'])
         ->values()
         ->all();
 
     $typeOptions = [
-        ['id' => '', 'name' => 'All Types'],
+        ['id' => '', 'name' => 'All Request Types'],
         ['id' => 'venue', 'name' => 'Venue Booking'],
         ['id' => 'equipment', 'name' => 'Equipment'],
         ['id' => 'logistics', 'name' => 'Logistics'],
@@ -26,178 +26,196 @@
         ['id' => 'low', 'name' => 'Low'],
     ];
 
-    $tableHeaders = [
-        ['key' => 'ticket_number', 'label' => 'Ticket ID'],
-        ['key' => 'event_name', 'label' => 'Event Name'],
-        ['key' => 'organization', 'label' => 'Organization'],
-        ['key' => 'request_type', 'label' => 'Request Type'],
-        ['key' => 'event_date', 'label' => 'Event Date'],
-        ['key' => 'priority', 'label' => 'Priority'],
-        ['key' => 'status', 'label' => 'Status'],
-        ['key' => 'actions', 'label' => 'Actions'],
+    $statusBadges = [
+        'pending' => 'badge-outline border-warning/60 text-warning',
+        'approved' => 'badge-outline border-success/60 text-success',
+        'rejected' => 'badge-outline border-error/60 text-error',
+        'completed' => 'badge-outline border-neutral/60 text-neutral',
     ];
 
-    $tableRows = collect($tickets)->map(fn($ticket) => is_array($ticket) ? $ticket : (array) $ticket)->values()->all();
-
-    $defaultRequestTypeBadge = 'badge-ghost text-base-content';
-
-    $requestTypeBadgeDefaults = [
-        'venue booking' => 'badge-primary text-white',
-        'venue' => 'badge-primary text-white',
-        'equipment' => 'badge-info text-white',
-        'logistics' => 'badge-secondary text-white',
-        'catering' => 'badge-accent text-white',
+    $priorityBadges = [
+        'high' => 'badge-outline border-error/50 text-error',
+        'medium' => 'badge-outline border-warning/50 text-warning',
+        'low' => 'badge-outline border-success/50 text-success',
     ];
 
-    $requestTypeBadgePalette = [
-        'badge-success text-white',
-        'badge-warning text-white',
-        'badge-error text-white',
-        'badge-neutral text-white',
-        'badge-info text-white',
-        'badge-secondary text-white',
-        'badge-accent text-white',
-        'badge-primary text-white',
-    ];
-
-    $requestTypeBadgeMap = $requestTypeBadgeDefaults;
-    $paletteIndex = 0;
-
-    foreach (collect($tableRows)->pluck('request_type')->filter()->unique()->values() as $typeLabel) {
-        $lookupKey = \Illuminate\Support\Str::of($typeLabel)->lower()->toString();
-
-        if (!array_key_exists($lookupKey, $requestTypeBadgeMap)) {
-            $requestTypeBadgeMap[$lookupKey] =
-                $requestTypeBadgePalette[$paletteIndex % count($requestTypeBadgePalette)];
-            $paletteIndex++;
-        }
-    }
-
-    $tableRows = collect($tableRows)
-        ->map(function ($row) use ($requestTypeBadgeMap, $defaultRequestTypeBadge) {
-            $typeKey = \Illuminate\Support\Str::of($row['request_type'] ?? '')
-                ->lower()
-                ->toString();
-            $row['request_type_badge_class'] = $requestTypeBadgeMap[$typeKey] ?? $defaultRequestTypeBadge;
-
-            return $row;
-        })
-        ->values()
-        ->all();
+    // Get the paginated items
+    $approvalCollection = collect($approvals->items())->map(fn($a) => is_array($a) ? $a : (array) $a)->values();
+    $approvalsCount = $approvals->total();
 @endphp
 
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <x-mary-card title="Filter Tickets" subtitle="Refine your assigned requests">
-            <div class="flex flex-wrap gap-4 items-end">
-                <div class="flex-1 min-w-64">
-                    <x-mary-input wire:model.defer="search" label="Search"
-                        placeholder="Search by event name, ticket number, organization..." class="input-emerald">
-                        <x-slot:prepend>
-                            <svg class="w-5 h-5 text-base-content/40" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </x-slot:prepend>
-                    </x-mary-input>
-                </div>
+<div>
+    <x-mary-toast />
 
+    <div class="mb-8">
+        <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <x-mary-select wire:model.live="filterStatus" label="Status" :options="$statusOptions" option-value="id"
-                        option-label="name" class="select-emerald" />
+                    <h1 class="text-3xl font-bold text-base-content font-heading">Ticket Review</h1>
+                    <p class="text-base-content/70 mt-1">Track, prioritize, and review requests assigned to the
+                        General
+                        Services Office.</p>
                 </div>
-
-                <div>
-                    <x-mary-select wire:model.live="filterType" label="Type" :options="$typeOptions" option-value="id"
-                        option-label="name" class="select-emerald" />
-                </div>
-
-                <div>
-                    <x-mary-select wire:model.live="filterPriority" label="Priority" :options="$priorityOptions" option-value="id"
-                        option-label="name" class="select-emerald" />
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-outline border-primary/60 text-primary">
+                        <span wire:loading.remove wire:target="search,filterStatus,filterType,filterPriority">
+                            {{ number_format($approvalsCount) }} Tickets
+                        </span>
+                        <span wire:loading wire:target="search,filterStatus,filterType,filterPriority"
+                            class="loading loading-spinner loading-xs"></span>
+                    </span>
                 </div>
             </div>
-        </x-mary-card>
-
-        <x-mary-card title="Assigned Tickets">
-            @if (count($tickets) > 0)
-                <x-mary-table :headers="$tableHeaders" :rows="$tableRows">
-                    @scope('cell_ticket_number', $row)
-                        <span class="text-sm font-medium text-base-content/80">{{ $row['ticket_number'] }}</span>
-                    @endscope
-
-                    @scope('cell_event_name', $row)
-                        <div class="font-medium text-sm text-base-content/80">{{ $row['event_name'] }}</div>
-                    @endscope
-
-                    @scope('cell_organization', $row)
-                        <span class="text-sm font-medium text-base-content/80">{{ $row['organization'] }}</span>
-                    @endscope
-
-                    @scope('cell_request_type', $row)
-                        <x-mary-badge :value="$row['request_type'] ?? 'N/A'"
-                            class="{{ $row['request_type_badge_class'] ?? 'badge-ghost text-base-content' }} border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1" />
-                    @endscope
-
-                    @scope('cell_event_date', $row)
-                        <span class="text-sm font-medium text-base-content/80">{{ $row['event_date'] }}</span>
-                    @endscope
-
-                    @scope('cell_priority', $row)
-                        @php
-                            $priorityKey = \Illuminate\Support\Str::of($row['priority'] ?? 'low')
-                                ->lower()
-                                ->toString();
-                            $priorityClass = match ($priorityKey) {
-                                'high' => 'badge-error text-white',
-                                'medium' => 'badge-warning text-white',
-                                'low' => 'badge-success text-white',
-                                default => 'badge-ghost text-base-content',
-                            };
-                        @endphp
-                        <x-mary-badge :value="\Illuminate\Support\Str::title($priorityKey)"
-                            class="{{ $priorityClass }} border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1" />
-                    @endscope
-
-                    @scope('cell_status', $row)
-                        @php
-                            $statusKey = \Illuminate\Support\Str::of($row['status'] ?? 'pending')
-                                ->lower()
-                                ->toString();
-                            $statusClass = match ($statusKey) {
-                                'pending' => 'badge-warning text-white',
-                                'approved' => 'badge-success text-white',
-                                'rejected' => 'badge-error text-white',
-                                default => 'badge-ghost text-base-content',
-                            };
-                            $statusLabel =
-                                $row['status_label'] ??
-                                \Illuminate\Support\Str::of($statusKey)->replace('_', ' ')->title()->toString();
-                            $statusDetail = $row['remarks'] ?? null;
-                        @endphp
-                        <div class="flex flex-col gap-1 max-w-xs">
-                            <x-mary-badge :value="$statusLabel"
-                                class="{{ $statusClass }} border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1" />
-                            @if ($statusDetail)
-                                <span class="text-xs text-base-content/60">{{ $statusDetail }}</span>
-                            @endif
-                        </div>
-                    @endscope
-
-                    @scope('cell_actions', $row)
-                        <x-mary-button label="View" icon="s-eye" class="btn-outline btn-emerald btn-sm"
-                            link="{{ route('gso.ticket-details', ['ticket' => $row['ticket_id'], 'office' => $row['office_id'] ?? null]) }}"
-                            wire:navigate />
-                    @endscope
-                </x-mary-table>
-            @else
-                <div class="text-center py-12 space-y-2">
-                    <x-mary-icon name="s-clipboard-document" class="w-12 h-12 mx-auto text-base-content/40" />
-                    <p class="text-sm font-medium text-base-content">No approval requests</p>
-                    <p class="text-sm text-base-content/60">No tickets match your current filters.</p>
-                </div>
-            @endif
-        </x-mary-card>
+        </div>
     </div>
+
+    <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                icon="o-magnifying-glass" clearable />
+
+            <x-mary-select wire:model.live="filterStatus" placeholder="Filter by Status" :options="$statusOptions"
+                option-value="id" option-label="name" />
+
+            <x-mary-select wire:model.live="filterOrganization" placeholder="Filter by Organization" :options="$organizations"
+                option-value="org_id" option-label="org_name" />
+
+            <x-mary-select wire:model.live="filterPriority" placeholder="Filter by Priority" :options="$priorityOptions"
+                option-value="id" option-label="name" />
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative min-h-[400px]">
+        <div wire:loading.flex wire:target="search,filterStatus,filterOrganization,filterPriority"
+            class="absolute inset-0 bg-base-100/60 backdrop-blur-sm z-10 items-center justify-center rounded-box">
+            <div class="text-center">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="mt-2 text-sm text-base-content/70">Loading tickets...</p>
+            </div>
+        </div>
+
+        @forelse ($approvalCollection as $approval)
+            @php
+                $priorityKey = $approval['priority'] ?? 'low';
+                $priorityLabel = $approval['priority_label'] ?? ucfirst($priorityKey);
+                $statusKey = $approval['status'] ?? 'pending';
+                $statusLabel = $approval['status_label'] ?? ucfirst($statusKey);
+                $statusBadgeClass = $statusBadges[$statusKey] ?? 'badge-neutral';
+                $priorityBadgeClass = $priorityBadges[$priorityKey] ?? 'badge-neutral';
+                $requestType = $approval['request_type'] ?? 'N/A';
+                $requirements = $approval['requirements'] ?? [];
+                $ticketKey = $approval['approval_id'] ?? \Illuminate\Support\Str::uuid()->toString();
+                $detailUrl = !empty($approval['ticket_number'])
+                    ? route('gso.ticket-details', ['ticketNumber' => $approval['ticket_number']])
+                    : null;
+            @endphp
+
+            <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
+                wire:key="approval-card-{{ $ticketKey }}">
+                <div class="p-6 flex-1 flex flex-col">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-lg text-base-content line-clamp-2">
+                                {{ $approval['event_name'] }}
+                            </h3>
+                            <p class="text-sm text-base-content/70">{{ $approval['organization'] }}</p>
+                        </div>
+                        <span class="badge badge-sm {{ $statusBadgeClass }}">
+                            {{ $statusLabel }}
+                        </span>
+                    </div>
+
+                    <p class="text-sm text-base-content/80 mb-4 line-clamp-3">{{ $approval['description'] }}</p>
+
+                    <div class="space-y-3 text-sm text-base-content/80 mb-4">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-base-content/60" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span>{{ $approval['event_date'] }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-base-content/60" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>{{ $requestType }}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="badge {{ $priorityBadgeClass }} badge-sm">{{ $priorityLabel }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex flex-wrap gap-2">
+                            @forelse ($requirements as $requirement)
+                                <span class="badge badge-outline badge-sm">{{ $requirement }}</span>
+                            @empty
+                                <span class="text-xs text-base-content/50">No special requirements provided.</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="flex-1"></div>
+
+                    <div class="pt-2">
+                        @if ($detailUrl)
+                            <a href="{{ $detailUrl }}" class="btn btn-outline btn-sm w-full group" wire:navigate
+                                title="Review ticket details">
+                                <span>Review Details</span>
+                                <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        @else
+                            <button type="button" class="btn btn-outline btn-sm w-full" disabled>
+                                Details Unavailable
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <div
+                    class="bg-base-200 px-6 py-3 border-t border-base-300 text-xs text-base-content/70 flex items-center justify-between">
+                    <span class="flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>{{ $approval['submitted_date'] }}</span>
+                    </span>
+                    <span class="font-mono">#{{ $approval['ticket_number'] ?? 'N/A' }}</span>
+                </div>
+            </div>
+        @empty
+            <div class="col-span-full text-center py-12">
+                <div class="flex flex-col items-center gap-4">
+                    <svg class="w-16 h-16 text-base-content/20" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                        </path>
+                    </svg>
+                    <div>
+                        <h3 class="text-lg font-semibold text-base-content/70">No tickets found</h3>
+                        <p class="text-sm text-base-content/50 mt-1">No tickets match your current filters.</p>
+                    </div>
+                </div>
+            </div>
+        @endforelse
+    </div>
+
+    {{-- Pagination --}}
+    @if ($approvals->total() > 0)
+        <x-tickets.ticket-pagination :tickets="$approvals" />
+    @endif
 </div>

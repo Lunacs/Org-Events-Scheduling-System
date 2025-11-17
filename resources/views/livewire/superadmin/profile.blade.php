@@ -21,7 +21,7 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success">
+                            <span class="badge badge-lg badge-success text-white">
                                 <i class="fa-solid fa-check-circle mr-1"></i> Verified
                             </span>
                         @endif
@@ -82,8 +82,8 @@
                             <button type="button" @click="show = !show"
                                 class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
-                                <i class="fas fa-eye" x-show="!show"></i>
-                                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                <i class="fas fa-eye-slash" x-show="!show"></i>
+                                <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                             </button>
                         </div>
 
@@ -96,8 +96,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
 
@@ -108,8 +108,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
                         </div>

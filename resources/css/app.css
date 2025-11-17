@@ -82,8 +82,7 @@
 @theme {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
         "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-heading: Poppins;
-    --font-body: Inter;
+    --font-heading: "Poppins", sans-serif;
 }
 
 @layer base {
@@ -218,6 +217,10 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type="number"] {
     -moz-appearance: textfield;
+}
+/* Override MaryUI Dropdown padding */
+.dropdown .menu {
+    padding: 0 !important;
 }
 /* FullCalendar Custom Styles - Matching DaisyUI Emerald Theme */
 .fc {

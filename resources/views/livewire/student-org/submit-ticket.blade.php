@@ -10,10 +10,10 @@
 
             {{-- Instructions Card --}}
             <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
-                         class="mb-6">
+                class="mb-6">
                 <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
                     <div class="flex items-start space-x-2">
-                        <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5"/>
+                        <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
                         <div class="text-sm">
                             <p class="font-medium mb-2">Important Guidelines:</p>
                             <ul class="list-disc list-inside space-y-1 text-gray-600">
@@ -34,28 +34,28 @@
                 <x-mary-card title="Organization Information" subtitle="Details about your student organization">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-input label="Organization Name" wire:model="organizationName"
-                                      placeholder="Enter your organization name" readonly/>
+                            placeholder="Enter your organization name" readonly />
 
                         <x-mary-input label="Organization Course" wire:model="organizationCourse"
-                                      placeholder="e.g., Academic, Cultural, Sports" readonly/>
+                            placeholder="e.g., Academic, Cultural, Sports" readonly />
 
                         <x-mary-input label="Name of Proponent" wire:model="proponentName"
-                                      placeholder="Name of primary contact" readonly/>
+                            placeholder="Name of primary contact" readonly />
 
                         <x-mary-input label="Contact Email" type="email" wire:model="contactEmail"
-                                      placeholder="contact@example.com" readonly/>
+                            placeholder="contact@example.com" readonly />
 
                         <x-mary-input label="Proponent Position" wire:model="proponentPosition" placeholder="Position"
-                                      readonly/>
+                            readonly />
 
                         <x-mary-input label="Organization Adviser" wire:model="adviser"
-                                      placeholder="Name of faculty adviser" readonly/>
+                            placeholder="Name of faculty adviser" readonly />
 
                         <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
-                                      placeholder="0999 999 9999"/>
+                            placeholder="0999 999 9999" readonly />
 
                         <x-mary-input label="Contact of Adviser" wire:model="adviser_contact"
-                                      placeholder="0999 999 9999"/>
+                            placeholder="0999 999 9999" />
                     </div>
                 </x-mary-card>
 
@@ -63,31 +63,28 @@
                 <x-mary-card title="Event Details" subtitle="Information about your proposed event">
                     <div class="space-y-4">
                         <x-mary-input label="Event Title" wire:model="eventTitle" placeholder="Enter your event title"
-                                      required/>
+                            required />
 
                         <x-mary-textarea label="Event Description" wire:model="eventDescription"
-                                         placeholder="Provide a detailed description of your event, including objectives and activities, or your rationale."
-                                         rows="4" required/>
+                            placeholder="Provide a detailed description of your event, including objectives and activities, or your rationale."
+                            rows="4" required />
 
                         <div class="grid grid-cols-1 gap-4">
                             <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
-                                           option-value="event_type_id" option-label="type_name"
-                                           placeholder="Select event type"
-                                           required/>
+                                option-value="event_type_id" option-label="type_name" placeholder="Select event type"
+                                required />
 
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                             <x-mary-input label="Number of PLV Participants" type="number"
-                                          wire:model.live="expectedPLVParticipants" placeholder="Number of attendees"/>
+                                wire:model.live="expectedPLVParticipants" placeholder="Number of attendees" />
 
                             <x-mary-input label="Number of non PLV Participants" type="number"
-                                          wire:model.live="expectedNonPLVParticipants" placeholder="Number of attendees"
-                            />
+                                wire:model.live="expectedNonPLVParticipants" placeholder="Number of attendees" />
 
                             <x-mary-input label="Expected Participants" type="number"
-                                          value="{{ $this->expectedParticipants }}" placeholder="Number of attendees"
-                                          readonly/>
+                                value="{{ $this->expectedParticipants }}" placeholder="Number of attendees" readonly />
                         </div>
                     </div>
                 </x-mary-card>
@@ -95,59 +92,59 @@
                 {{-- Schedule & Venue --}}
                 <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <x-mary-datetime label="Event Start Date" wire:model.live="eventStartDate" required/>
+                        <x-mary-datetime label="Event Start Date" wire:model.live="eventStartDate" required />
 
-                        <x-mary-datetime label="Event End Date" wire:model.live="eventEndDate" required/>
+                        <x-mary-datetime label="Event End Date" wire:model.live="eventEndDate" required />
 
                         <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
-                                         required/>
+                            required />
 
-                        <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time" required/>
+                        <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
+                            required />
 
                         <x-mary-input label="Preferred Venue" wire:model="preferredVenue"
-                                      placeholder="e.g., Student Center Auditorium" required/>
+                            placeholder="e.g., Student Center Auditorium" required />
 
                         <x-mary-input label="Alternative Venue" wire:model="alternativeVenue"
-                                      placeholder="Backup venue option"/>
+                            placeholder="Backup venue option" />
                     </div>
 
                     <div class="mt-4">
                         <x-mary-textarea label="Special Requirements" wire:model="specialRequirements"
-                                         placeholder="Audio/visual equipment, seating arrangement, catering, etc."
-                                         rows="3"/>
+                            placeholder="Audio/visual equipment, seating arrangement, catering, etc." rows="3" />
                     </div>
 
                     <div class="mt-4">
-                        <x-mary-checkbox label="Check this box if the activity is off-campus" wire:model.live="is_oc"/>
+                        <x-mary-checkbox label="Check this box if the activity is off-campus" wire:model.live="is_oc" />
                     </div>
 
                     @if ($is_oc)
                         <div class="mt-4">
                             <x-mary-textarea label="Accommodation Provider (if any)" wire:model="oc_accommodation"
-                                             placeholder="Accommodation Provider Details" rows="2"/>
+                                placeholder="Accommodation Provider Details" rows="2" />
                         </div>
 
                         <div class="mb-4">
                             <x-mary-radio label="Transportation Service Provider" wire:model.live="oc_tsp"
-                                          :options="[
+                                :options="[
                                     ['id' => 'in-house', 'name' => 'In-house'],
                                     ['id' => 'outsourced', 'name' => 'Outsourced'],
-                                ]" inline/>
+                                ]" inline />
                         </div>
 
                         @if ($oc_tsp === 'outsourced')
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <x-mary-input label="Name of Driver" wire:model="oc_driver_name"
-                                              placeholder="Enter the driver name"/>
+                                    placeholder="Enter the driver name" />
 
                                 <x-mary-input label="Contact Details" wire:model="oc_driver_contact_number"
-                                              placeholder="Enter the driver's contact"/>
+                                    placeholder="Enter the driver's contact" />
 
                                 <x-mary-input label="Type of Car" wire:model="oc_vehicle_type"
-                                              placeholder="Enter the type of car"/>
+                                    placeholder="Enter the type of car" />
 
                                 <x-mary-input label="Plate Number" wire:model="oc_vehicle_plate_number"
-                                              placeholder="Enter the plate number"/>
+                                    placeholder="Enter the plate number" />
                             </div>
                         @endif
                     @endif
@@ -157,30 +154,30 @@
                 <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                      wire:model.live="totalBudget" placeholder="0.00" prefix="₱"/>
+                            wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
 
                         <x-mary-select label="Funding Source" wire:model="fundingSource" :options="$fundSources"
-                                       option-value="source_id" option-label="source_name"
-                                       placeholder="Select funding source"/>
+                            option-value="source_id" option-label="source_name"
+                            placeholder="Select funding source" />
                     </div>
 
                     <div class="mt-4">
                         <x-mary-textarea label="Budget Breakdown" wire:model="budgetBreakdown"
-                                         placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
-                                         rows="4"/>
+                            placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
+                            rows="4" />
                     </div>
 
                     <div class="mt-4">
                         <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
                             ['id' => 'true', 'name' => 'Requested'],
                             ['id' => 'false', 'name' => 'Not Requested'],
-                        ]" inline/>
+                        ]" inline />
                     </div>
 
                     @if ($igp_requested === 'true')
                         <div class="mt-4">
                             <x-mary-textarea label="IGP Brief Description" wire:model="igp_details"
-                                             placeholder="List all descriptions for IGP requested items" rows="4"/>
+                                placeholder="List all descriptions for IGP requested items" rows="4" />
                         </div>
                     @endif
                 </x-mary-card>
@@ -190,16 +187,16 @@
                     <div class="space-y-4">
                         <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
                             <div class="flex items-start space-x-2">
-                                <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5"/>
+                                <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                                 <div class="text-sm">
                                     <p class="font-medium mb-1">Required Documents:</p>
                                     <ul class="list-disc list-inside space-y-1 text-gray-600">
                                         <li>Document containing the Rationale</li>
-                                        @foreach($this->getRequiredDocuments() as $document)
-                                            @if(is_array($document) && isset($document['nested']))
+                                        @foreach ($this->getRequiredDocuments() as $document)
+                                            @if (is_array($document) && isset($document['nested']))
                                                 <li>{{ $document[0] }}</li>
                                                 <ul class="list-disc list-inside ml-8 mt-1 space-y-1 text-gray-600">
-                                                    @foreach($document['nested'] as $nestedDoc)
+                                                    @foreach ($document['nested'] as $nestedDoc)
                                                         <li>{{ $nestedDoc }}</li>
                                                     @endforeach
                                                 </ul>
@@ -213,23 +210,19 @@
                         </div>
 
                         <div class="space-y-2">
-                            <x-mary-file
-                                wire:model="newAttachments"
-                                multiple
+                            <x-mary-file wire:model="newAttachments" multiple
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
-                                hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file."/>
+                                hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file." />
 
-                            @if($attachments)
+                            @if ($attachments)
                                 <div class="mt-4 space-y-2">
                                     <p class="text-sm font-medium">Attached Files:</p>
-                                    @foreach($attachments as $index => $file)
+                                    @foreach ($attachments as $index => $file)
                                         <div class="flex items-center justify-between bg-base-200 p-2 rounded">
                                             <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
-                                            <x-mary-button
-                                                icon="o-x-mark"
+                                            <x-mary-button icon="o-x-mark"
                                                 wire:click="removeAttachment({{ $index }})"
-                                                class="btn-ghost btn-sm"
-                                                spinner/>
+                                                class="btn-ghost btn-sm" spinner />
                                         </div>
                                     @endforeach
                                 </div>
@@ -243,8 +236,8 @@
                 <x-mary-card title="Additional Information" subtitle="Any other relevant details">
                     <div class="space-y-4">
                         <x-mary-textarea label="Additional Notes" wire:model="additionalNotes"
-                                         placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
-                                         rows="3"/>
+                            placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
+                            rows="3" />
                     </div>
                 </x-mary-card>
 
@@ -292,7 +285,8 @@
                                         updated form.
                                     </li>
                                 </ol>
-                                <p class="mt-4">&nbsp;&nbsp;&nbsp; I hereby certify that the details provided herein are
+                                <p class="mt-4">&nbsp;&nbsp;&nbsp; I hereby certify that the details provided herein
+                                    are
                                     true and accurate to the best
                                     of my knowledge. The university shall exercise due diligence; thereby, the
                                     administrator and its faculty member shall not be held liable for any loss, injury,
@@ -303,31 +297,28 @@
                         </div>
 
                         <x-mary-checkbox label="I agree to the terms and conditions above" wire:model="agreeToTerms"
-                                         required/>
+                            required />
                     </div>
                 </x-mary-card>
 
                 {{-- Form Actions --}}
                 <div class="flex justify-between items-center pt-6">
-                    <x-mary-button label="Preview" icon="s-eye" class="btn-accent" wire:click="openPreviewModal"/>
+                    <x-mary-button label="Preview" icon="s-eye" class="btn-accent"
+                        wire:click="openPreviewModal" />
 
                     <x-mary-button label="Submit Ticket" icon="s-paper-airplane" class="btn-primary"
-                                   type="submit"/>
+                        type="submit" />
 
                 </div>
-                <x-mary-toast/>
+                <x-mary-toast />
             </x-mary-form>
         </div>
     </div>
 
-    <x-mary-modal
-        wire:model="showPreviewModal"
-        title="Ticket Preview"
-        class="backdrop-blur"
-        box-class="max-w-5xl max-h-[85vh] overflow-y-auto"
-        @close="$wire.closePreviewModal()">
+    <x-mary-modal wire:model="showPreviewModal" title="Ticket Preview" class="backdrop-blur"
+        box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closePreviewModal()">
 
-        <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+        <x-tickets.ticket-preview :ticket="$this->previewTicket" />
 
     </x-mary-modal>
 </div>

@@ -204,7 +204,7 @@ class Reschedule extends Component
             }
 
             // Notify OSA admins
-            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
             foreach ($osaUsers as $osaUser) {
                 $osaUser->notify(new TicketSubmittedNotification($ticket));
             }

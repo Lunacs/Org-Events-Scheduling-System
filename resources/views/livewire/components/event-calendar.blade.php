@@ -4,7 +4,7 @@
         <div class="bg-base-100 rounded-box shadow-lg p-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-base-content">Event Calendar</h1>
+                    <h1 class="text-3xl font-bold text-base-content font-heading">Event Calendar</h1>
                     <p class="text-base-content/70 mt-1">View all approved and scheduled events</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -13,6 +13,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- Calendar Controls --}}
     <div x-data="osaCalendar()" x-init="init()" x-cloak
@@ -64,8 +65,15 @@
                     </x-mary-button>
                 </div>
 
-                {{-- Filter Button with Notification Badge --}}
-                <div class="flex justify-center md:justify-end order-1 md:order-2 shrink-0">
+                {{-- Toggle Past Events & Filter Button --}}
+                <div class="flex justify-center md:justify-end order-1 md:order-2 shrink-0 gap-2">
+                    {{-- Toggle Past Events Button --}}
+                    <x-mary-button wire:click="togglePastEvents" class="btn-ghost btn-sm shrink-0" :icon="$showPastEvents ? 'o-eye' : 'o-eye-slash'"
+                        tooltip="{{ $showPastEvents ? 'Hide Past Events' : 'Show Past Events' }}">
+                        <span class="hidden sm:inline">{{ $showPastEvents ? 'Hide Past' : 'Show Past' }}</span>
+                    </x-mary-button>
+
+                    {{-- Filter Button with Notification Badge --}}
                     <div x-data x-init="if (window.Alpine && !Alpine.store('filters')) { Alpine.store('filters', { status: 'approved', org: '', etype: '' }) }" class="relative">
                         {{-- Notification Badge --}}
                         <div x-show="[$store.filters?.status, $store.filters?.org, $store.filters?.etype].filter(v => v).length > 0"
@@ -216,82 +224,89 @@
                 @foreach ($this->upcomingEventsThisMonth as $index => $event)
                     @php
                         $color = $event['color'];
+                        // Dark mode compatible background colors
                         $bgColor = match ($color) {
-                            'blue' => 'bg-blue-50',
-                            'green' => 'bg-green-50',
-                            'purple' => 'bg-purple-50',
-                            'yellow' => 'bg-yellow-50',
-                            'red' => 'bg-red-50',
-                            'cyan' => 'bg-cyan-50',
-                            'lime' => 'bg-lime-50',
-                            'orange' => 'bg-orange-50',
-                            default => 'bg-blue-50',
+                            'blue' => 'bg-blue-50 dark:bg-blue-950/30',
+                            'green' => 'bg-green-50 dark:bg-green-950/30',
+                            'purple' => 'bg-purple-50 dark:bg-purple-950/30',
+                            'yellow' => 'bg-yellow-50 dark:bg-yellow-950/30',
+                            'red' => 'bg-red-50 dark:bg-red-950/30',
+                            'cyan' => 'bg-cyan-50 dark:bg-cyan-950/30',
+                            'lime' => 'bg-lime-50 dark:bg-lime-950/30',
+                            'orange' => 'bg-orange-50 dark:bg-orange-950/30',
+                            default => 'bg-blue-50 dark:bg-blue-950/30',
                         };
+                        // Dark mode compatible border colors
                         $borderColor = match ($color) {
-                            'blue' => 'border-blue-400',
-                            'green' => 'border-green-400',
-                            'purple' => 'border-purple-400',
-                            'yellow' => 'border-yellow-400',
-                            'red' => 'border-red-400',
-                            'cyan' => 'border-cyan-400',
-                            'lime' => 'border-lime-400',
-                            'orange' => 'border-orange-400',
-                            default => 'border-blue-400',
+                            'blue' => 'border-blue-400 dark:border-blue-500',
+                            'green' => 'border-green-400 dark:border-green-500',
+                            'purple' => 'border-purple-400 dark:border-purple-500',
+                            'yellow' => 'border-yellow-400 dark:border-yellow-500',
+                            'red' => 'border-red-400 dark:border-red-500',
+                            'cyan' => 'border-cyan-400 dark:border-cyan-500',
+                            'lime' => 'border-lime-400 dark:border-lime-500',
+                            'orange' => 'border-orange-400 dark:border-orange-500',
+                            default => 'border-blue-400 dark:border-blue-500',
                         };
+                        // Dark mode compatible icon background
                         $iconBg = match ($color) {
-                            'blue' => 'bg-blue-100',
-                            'green' => 'bg-green-100',
-                            'purple' => 'bg-purple-100',
-                            'yellow' => 'bg-yellow-100',
-                            'red' => 'bg-red-100',
-                            'cyan' => 'bg-cyan-100',
-                            'lime' => 'bg-lime-100',
-                            'orange' => 'bg-orange-100',
-                            default => 'bg-blue-100',
+                            'blue' => 'bg-blue-100 dark:bg-blue-900/50',
+                            'green' => 'bg-green-100 dark:bg-green-900/50',
+                            'purple' => 'bg-purple-100 dark:bg-purple-900/50',
+                            'yellow' => 'bg-yellow-100 dark:bg-yellow-900/50',
+                            'red' => 'bg-red-100 dark:bg-red-900/50',
+                            'cyan' => 'bg-cyan-100 dark:bg-cyan-900/50',
+                            'lime' => 'bg-lime-100 dark:bg-lime-900/50',
+                            'orange' => 'bg-orange-100 dark:bg-orange-900/50',
+                            default => 'bg-blue-100 dark:bg-blue-900/50',
                         };
+                        // Dark mode compatible icon text
                         $iconText = match ($color) {
-                            'blue' => 'text-blue-600',
-                            'green' => 'text-green-600',
-                            'purple' => 'text-purple-600',
-                            'yellow' => 'text-yellow-600',
-                            'red' => 'text-red-600',
-                            'cyan' => 'text-cyan-600',
-                            'lime' => 'text-lime-600',
-                            'orange' => 'text-orange-600',
-                            default => 'text-blue-600',
+                            'blue' => 'text-blue-600 dark:text-blue-400',
+                            'green' => 'text-green-600 dark:text-green-400',
+                            'purple' => 'text-purple-600 dark:text-purple-400',
+                            'yellow' => 'text-yellow-600 dark:text-yellow-400',
+                            'red' => 'text-red-600 dark:text-red-400',
+                            'cyan' => 'text-cyan-600 dark:text-cyan-400',
+                            'lime' => 'text-lime-600 dark:text-lime-400',
+                            'orange' => 'text-orange-600 dark:text-orange-400',
+                            default => 'text-blue-600 dark:text-blue-400',
                         };
+                        // Dark mode compatible title color
                         $titleColor = match ($color) {
-                            'blue' => 'text-blue-900',
-                            'green' => 'text-green-900',
-                            'purple' => 'text-purple-900',
-                            'yellow' => 'text-yellow-900',
-                            'red' => 'text-red-900',
-                            'cyan' => 'text-cyan-900',
-                            'lime' => 'text-lime-900',
-                            'orange' => 'text-orange-900',
-                            default => 'text-blue-900',
+                            'blue' => 'text-blue-900 dark:text-blue-100',
+                            'green' => 'text-green-900 dark:text-green-100',
+                            'purple' => 'text-purple-900 dark:text-purple-100',
+                            'yellow' => 'text-yellow-900 dark:text-yellow-100',
+                            'red' => 'text-red-900 dark:text-red-100',
+                            'cyan' => 'text-cyan-900 dark:text-cyan-100',
+                            'lime' => 'text-lime-900 dark:text-lime-100',
+                            'orange' => 'text-orange-900 dark:text-orange-100',
+                            default => 'text-blue-900 dark:text-blue-100',
                         };
+                        // Dark mode compatible text color
                         $textColor = match ($color) {
-                            'blue' => 'text-blue-700',
-                            'green' => 'text-green-700',
-                            'purple' => 'text-purple-700',
-                            'yellow' => 'text-yellow-700',
-                            'red' => 'text-red-700',
-                            'cyan' => 'text-cyan-700',
-                            'lime' => 'text-lime-700',
-                            'orange' => 'text-orange-700',
-                            default => 'text-blue-700',
+                            'blue' => 'text-blue-700 dark:text-blue-300',
+                            'green' => 'text-green-700 dark:text-green-300',
+                            'purple' => 'text-purple-700 dark:text-purple-300',
+                            'yellow' => 'text-yellow-700 dark:text-yellow-300',
+                            'red' => 'text-red-700 dark:text-red-300',
+                            'cyan' => 'text-cyan-700 dark:text-cyan-300',
+                            'lime' => 'text-lime-700 dark:text-lime-300',
+                            'orange' => 'text-orange-700 dark:text-orange-300',
+                            default => 'text-blue-700 dark:text-blue-300',
                         };
+                        // Dark mode compatible meta color
                         $metaColor = match ($color) {
-                            'blue' => 'text-blue-600',
-                            'green' => 'text-green-600',
-                            'purple' => 'text-purple-600',
-                            'yellow' => 'text-yellow-600',
-                            'red' => 'text-red-600',
-                            'cyan' => 'text-cyan-600',
-                            'lime' => 'text-lime-600',
-                            'orange' => 'text-orange-600',
-                            default => 'text-blue-600',
+                            'blue' => 'text-blue-600 dark:text-blue-400',
+                            'green' => 'text-green-600 dark:text-green-400',
+                            'purple' => 'text-purple-600 dark:text-purple-400',
+                            'yellow' => 'text-yellow-600 dark:text-yellow-400',
+                            'red' => 'text-red-600 dark:text-red-400',
+                            'cyan' => 'text-cyan-600 dark:text-cyan-400',
+                            'lime' => 'text-lime-600 dark:text-lime-400',
+                            'orange' => 'text-orange-600 dark:text-orange-400',
+                            default => 'text-blue-600 dark:text-blue-400',
                         };
                         $badgeClass = match ($color) {
                             'blue' => 'badge-info',
@@ -305,45 +320,59 @@
                             default => 'badge-info',
                         };
                     @endphp
-                    <div class="flex items-start space-x-4 p-4 {{ $bgColor }} rounded-lg border-l-4 {{ $borderColor }} hover:shadow-md transition-all cursor-pointer"
+                    <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }} 
+                                hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20 
+                                hover:scale-[1.01] hover:-translate-y-0.5
+                                transition-all duration-300 ease-out cursor-pointer
+                                border border-base-300 dark:border-base-700"
                         wire:key="upcoming-{{ $index }}"
                         onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
-                        <div class="flex-shrink-0">
-                            <div class="w-12 h-12 {{ $iconBg }} rounded-lg flex items-center justify-center">
-                                <x-mary-icon name="{{ $event['icon'] }}" class="w-6 h-6 {{ $iconText }}" />
+                        <div class="shrink-0">
+                            <div
+                                class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
+                                        group-hover:scale-110 transition-transform duration-300
+                                        shadow-sm dark:shadow-md">
+                                <x-mary-icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
                             </div>
                         </div>
-                        <div class="flex-1">
-                            <h4 class="font-semibold {{ $titleColor }}">{{ $event['title'] }}</h4>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-base {{ $titleColor }} mb-1.5 line-clamp-1">
+                                {{ $event['title'] }}
+                            </h4>
                             @if ($event['description'])
-                                <p class="text-sm {{ $textColor }} mt-1">
-                                    {{ Str::limit($event['description'], 80) }}</p>
+                                <p class="text-sm {{ $textColor }} mt-1.5 mb-3 line-clamp-2 leading-relaxed">
+                                    {{ Str::limit($event['description'], 100) }}
+                                </p>
                             @endif
-                            <div class="flex flex-wrap items-center gap-4 mt-2 text-sm {{ $metaColor }}">
-                                <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-calendar" class="w-4 h-4" />
-                                    <span>{{ $event['datetime'] }}</span>
+                            <div
+                                class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
+                                <span class="flex items-center gap-1.5 font-medium">
+                                    <x-mary-icon name="o-calendar" class="w-4 h-4 shrink-0" />
+                                    <span class="truncate">{{ $event['datetime'] }}</span>
                                 </span>
-                                <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-map-pin" class="w-4 h-4" />
-                                    <span>{{ $event['venue'] }}</span>
+                                <span class="flex items-center gap-1.5 font-medium">
+                                    <x-mary-icon name="o-map-pin" class="w-4 h-4 shrink-0" />
+                                    <span class="truncate">{{ $event['venue'] }}</span>
                                 </span>
-                                <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-user-group" class="w-4 h-4" />
-                                    <span>{{ $event['organization'] }}</span>
+                                <span class="flex items-center gap-1.5 font-medium">
+                                    <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                    <span class="truncate">{{ $event['organization'] }}</span>
                                 </span>
                             </div>
-                            <div class="flex items-center space-x-2 mt-2">
-                                <x-mary-badge value="{{ $event['eventType'] }}" class="{{ $badgeClass }}" />
+                            <div class="flex items-center gap-2 mt-3">
+                                <x-mary-badge value="{{ $event['eventType'] }}"
+                                    class="{{ $badgeClass }} text-xs font-medium text-neutral-content" />
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <div class="text-center py-12">
-                <x-mary-icon name="o-calendar-days" class="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                <p class="text-sm text-gray-500">No upcoming events scheduled for this month</p>
+            <div class="text-center py-16">
+                <x-mary-icon name="o-calendar-days" class="w-20 h-20 mx-auto mb-4 text-base-300 dark:text-base-600" />
+                <p class="text-sm text-base-content/60 dark:text-base-content/50 font-medium">
+                    No upcoming events scheduled for this month
+                </p>
             </div>
         @endif
     </x-mary-card>
@@ -355,9 +384,14 @@
                 <div class="absolute inset-0 bg-black/40" @click="close()"></div>
                 <div class="relative bg-base-100 w-11/12 max-w-3xl rounded-box shadow-xl border border-base-300 p-6">
                     <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
-                            <p class="text-base-content/70" x-text="data?.organization || ''"></p>
+                        <div class="flex items-center gap-4 flex-1">
+                            <img :src="data?.organizationLogo || '{{ asset('images/default-org-logo.svg') }}'"
+                                :alt="(data?.organization || 'Organization') + ' logo'"
+                                class="w-16 h-16 object-cover rounded-lg border border-base-300 bg-base-200">
+                            <div>
+                                <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
+                                <p class="text-base-content/70" x-text="data?.organization || ''"></p>
+                            </div>
                         </div>
                         <span class="badge"
                             :class="{
@@ -552,49 +586,63 @@
                             // Month view: Show spanning events (forMonthView: true) or single-day events
                             // Week/Day/List views: Show recurring events (forTimeView: true) or single-day events
                             events: function(info, successCallback, failureCallback) {
-                                // Safely get current view
-                                let currentView = null;
+                                // Performance optimization: Use requestIdleCallback for non-blocking event processing
+                                const processEvents = () => {
+                                    // Safely get current view
+                                    let currentView = null;
 
-                                // Try to get view from info parameter first
-                                if (info && info.view && info.view.type) {
-                                    currentView = info.view.type;
-                                }
-                                // Fallback to component's tracked current view
-                                else if (component && component.currentView) {
-                                    currentView = component.currentView;
-                                }
-                                // Fallback to calendar's view if available
-                                else if (component && component.calendar && component.calendar.view && component
-                                    .calendar.view.type) {
-                                    currentView = component.calendar.view.type;
-                                }
-                                // Final fallback to initial view
-                                else {
-                                    currentView = initialView;
-                                }
-
-                                // Filter events based on view type
-                                // Use component's allEvents which gets updated when filters change
-                                const eventsToFilter = component.allEvents || [];
-                                const filteredEvents = eventsToFilter.filter(event => {
-                                    const props = event.extendedProps || {};
-                                    const isMultiDay = props.forMonthView || props.forTimeView;
-
-                                    // Single-day events: Show in all views
-                                    if (!isMultiDay) {
-                                        return true;
+                                    // Try to get view from info parameter first
+                                    if (info && info.view && info.view.type) {
+                                        currentView = info.view.type;
+                                    }
+                                    // Fallback to component's tracked current view
+                                    else if (component && component.currentView) {
+                                        currentView = component.currentView;
+                                    }
+                                    // Fallback to calendar's view if available
+                                    else if (component && component.calendar && component.calendar.view &&
+                                        component
+                                        .calendar.view.type) {
+                                        currentView = component.calendar.view.type;
+                                    }
+                                    // Final fallback to initial view
+                                    else {
+                                        currentView = initialView;
                                     }
 
-                                    // Month view: Only show spanning events
-                                    if (currentView === 'dayGridMonth') {
-                                        return props.forMonthView === true;
-                                    }
+                                    // Filter events based on view type
+                                    // Use component's allEvents which gets updated when filters change
+                                    const eventsToFilter = component.allEvents || [];
+                                    const filteredEvents = eventsToFilter.filter(event => {
+                                        const props = event.extendedProps || {};
+                                        const isMultiDay = props.forMonthView || props.forTimeView;
 
-                                    // Week/Day/List views: Only show recurring events
-                                    return props.forTimeView === true;
-                                });
+                                        // Single-day events: Show in all views
+                                        if (!isMultiDay) {
+                                            return true;
+                                        }
 
-                                successCallback(filteredEvents);
+                                        // Month view: Only show spanning events
+                                        if (currentView === 'dayGridMonth') {
+                                            return props.forMonthView === true;
+                                        }
+
+                                        // Week/Day/List views: Only show recurring events
+                                        return props.forTimeView === true;
+                                    });
+
+                                    successCallback(filteredEvents);
+                                };
+
+                                // Use requestIdleCallback if available for better performance
+                                if ('requestIdleCallback' in window) {
+                                    requestIdleCallback(processEvents, {
+                                        timeout: 100
+                                    });
+                                } else {
+                                    // Fallback to setTimeout for browsers without requestIdleCallback
+                                    setTimeout(processEvents, 0);
+                                }
                             },
                             themeSystem: 'standard',
 
@@ -675,6 +723,20 @@
                                 this.openEventModal(info.event.id)
                             },
 
+                            // Performance: Debounce date range changes
+                            datesSet: (info) => {
+                                // Clear existing timeout
+                                if (component.dateSetTimeout) {
+                                    clearTimeout(component.dateSetTimeout);
+                                }
+
+                                // Debounce calendar refetch on date range changes
+                                component.dateSetTimeout = setTimeout(() => {
+                                    // Only refetch if needed (e.g., when loading from server)
+                                    // Currently, events are client-side filtered, so no need to refetch
+                                }, 300);
+                            },
+
                             // Display settings
                             eventDisplay: 'auto', // Auto sizing based on duration
                             eventTextColor: '#ffffff',
@@ -710,6 +772,12 @@
                             },
                             listDaySideFormat: false,
                             eventDidMount: (info) => {
+                                // Performance: Optimize element for better scrolling
+                                const element = info.el;
+                                if (element) {
+                                    element.style.willChange = 'transform'; // Hint for browser optimization
+                                }
+
                                 const e = info.event;
                                 const p = e.extendedProps || {};
 

@@ -25,7 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="h-full font-body antialiased bg-base-200">
+<body class="h-full font-sans antialiased bg-base-200">
     <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-4">
         <div class="max-w-2xl w-full">
             <!-- Error Card -->
@@ -51,7 +51,8 @@
                             Oops! Something went wrong on our end.
                         </p>
                         <p class="text-base-content/70 text-base">
-                            We're experiencing technical difficulties. Our team has been notified and is working on a fix.
+                            We're experiencing technical difficulties. Our team has been notified and is working on a
+                            fix.
                         </p>
                     </div>
 
@@ -61,14 +62,16 @@
                         <div>
                             <h3 class="font-semibold">What happened?</h3>
                             <div class="text-sm opacity-90">
-                                An unexpected error occurred while processing your request. This issue has been automatically logged.
+                                An unexpected error occurred while processing your request. This issue has been
+                                automatically logged.
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ url()->previous() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
+                        <a href="{{ url()->previous() }}"
+                            class="btn btn-outline hover:outline-primary bg-primary text-white">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Go Back
                         </a>
@@ -94,4 +97,3 @@
 </body>
 
 </html>
-

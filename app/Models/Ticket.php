@@ -97,7 +97,7 @@ class Ticket extends Model
     public function osaApprovals()
     {
         return $this->hasMany(OSA_Approval::class, 'ticket_id')
-                    ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -107,7 +107,7 @@ class Ticket extends Model
     {
         // Use the correct primary key for OSA_Approval to determine the latest record
         return $this->hasOne(OSA_Approval::class, 'ticket_id')
-                    ->latestOfMany('osa_approval_id');
+            ->latestOfMany('osa_approval_id');
     }
 
     /**
@@ -117,7 +117,7 @@ class Ticket extends Model
     public function officeApprovals()
     {
         return $this->hasMany(Office_Approval::class, 'ticket_id')
-                    ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -126,7 +126,7 @@ class Ticket extends Model
     public function latestOfficeApproval()
     {
         return $this->hasOne(Office_Approval::class, 'ticket_id')
-                    ->latestOfMany();
+            ->latestOfMany();
     }
 
     /**
@@ -148,6 +148,16 @@ class Ticket extends Model
     public function comments()
     {
         return $this->hasMany(TicketComment::class, 'ticket_id');
+    }
+
+    /**
+     * Approval history for this ticket (immutable audit trail)
+     * Ordered by most recent first
+     */
+    public function approvalHistory()
+    {
+        return $this->hasMany(ApprovalHistory::class, 'ticket_id')
+            ->orderBy('created_at', 'desc');
     }
 
     public function latestComment()
@@ -174,38 +184,51 @@ class Ticket extends Model
     }
 
     /**
-     * Get the complete approval history combining OSA and Office approvals
+     * Get the complete approval history from the approval_history table
      * Sorted by most recent first
+     *
+     * This method now uses the dedicated approval_history table instead of
+     * combining osa_approvals and office_approvals for better performance
+     * and to avoid bloat in those tables.
      */
     public function getApprovalHistoryAttribute()
     {
-        $allApprovals = collect();
+        return $this->approvalHistory()
+            ->with('user')
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'type' => strtoupper($history->approval_type),
+                    'office_name' => $history->office_display_name,
+                    'user' => $history->user,
+                    'decision' => $history->action,
+                    'remarks' => $history->remarks,
+                    'created_at' => $history->created_at,
+                ];
+            });
+    }
 
-        // Add OSA approvals
-        foreach ($this->osaApprovals as $approval) {
-            $allApprovals->push([
-                'type' => 'OSA',
-                'office_name' => 'Office of Student Affairs',
-                'user' => $approval->user,
-                'decision' => $approval->decision,
-                'remarks' => $approval->remarks,
-                'created_at' => $approval->created_at,
-            ]);
-        }
-
-        // Add Office approvals
-        foreach ($this->officeApprovals as $approval) {
-            $allApprovals->push([
-                'type' => 'Office',
-                'office_name' => $approval->office->office_name ?? 'Unknown Office',
-                'user' => $approval->user,
-                'decision' => $approval->decision,
-                'remarks' => $approval->remarks,
-                'created_at' => $approval->created_at,
-            ]);
-        }
-
-        return $allApprovals->sortByDesc('created_at');
+    /**
+     * Helper method to log approval history
+     *
+     * @param  string  $approvalType  'osa' or 'office'
+     * @param  string  $action  'pending', 'approved', 'rejected', 'forwarded', 'revision_requested'
+     */
+    public function logApprovalHistory(
+        string $approvalType,
+        string $action,
+        ?string $remarks = null,
+        ?int $officeId = null,
+        ?int $userId = null
+    ): ApprovalHistory {
+        return ApprovalHistory::log(
+            $this->ticket_id,
+            $approvalType,
+            $action,
+            $remarks,
+            $officeId,
+            $userId
+        );
     }
 
     /**
@@ -214,8 +237,8 @@ class Ticket extends Model
     public function hasBeenForwardedToGso()
     {
         return $this->osaApprovals()
-                    ->where('decision', 'forwarded')
-                    ->exists();
+            ->where('decision', 'forwarded')
+            ->exists();
     }
 
     /**
@@ -224,7 +247,49 @@ class Ticket extends Model
     public function hasRevisionRequests()
     {
         return $this->osaApprovals()
-                    ->where('decision', 'revision_requested')
-                    ->exists();
+            ->where('decision', 'revision_requested')
+            ->exists();
+    }
+
+    /**
+     * Check if the event date has passed
+     */
+    public function isEventDatePassed(): bool
+    {
+        // Check if event end date has passed
+        if ($this->date_to) {
+            try {
+                $endDate = \Carbon\Carbon::parse($this->date_to);
+
+                return now()->isAfter($endDate->endOfDay());
+            } catch (\Throwable) {
+                return false;
+            }
+        }
+
+        // If no end date, check start date
+        if ($this->date_from) {
+            try {
+                $startDate = \Carbon\Carbon::parse($this->date_from);
+
+                return now()->isAfter($startDate->endOfDay());
+            } catch (\Throwable) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if comments should be disabled for this ticket
+     *
+     * Comments are disabled if:
+     * - Ticket status is 'completed', OR
+     * - Event date has passed
+     */
+    public function areCommentsDisabled(): bool
+    {
+        return $this->status === 'completed' || $this->isEventDatePassed();
     }
 }

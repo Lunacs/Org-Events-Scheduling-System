@@ -4,8 +4,10 @@ namespace App\Livewire\Superadmin\Roles;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -17,12 +19,9 @@ class Index extends Component
     #[Title('Superadmin - Roles & Permissions')]
     #[Layout('components.layouts.superadmin')]
 
-    // Search and filter
+    // Search and filter with URL state
+    #[Url(except: '')]
     public $search = '';
-
-    // Cache duration
-    protected $cacheDuration = 10;
-
 
     // Form data using arrays
     public $roleForm = [
@@ -53,13 +52,14 @@ class Index extends Component
     public function render()
     {
         return view('livewire.superadmin.roles.index')->with([
-            'roles' => $this->getRoles(),
+            'roles' => $this->roles,
         ]);
     }
 
-    protected function getRoles()
+    #[Computed(persist: true, seconds: 600)] // Cache for 10 minutes
+    protected function roles()
     {
-        return Cache::remember('roles_data', $this->cacheDuration, function () {
+        return Cache::remember('superadmin_roles_data', 600, function () {
             return [
                 [
                     'id' => 'superadmin',
@@ -194,7 +194,8 @@ class Index extends Component
 
     protected function clearRolesCache()
     {
-        Cache::forget('roles_data');
+        Cache::forget('superadmin_roles_data');
+        unset($this->roles); // Clear computed cache
     }
 
     public function refreshRoles()

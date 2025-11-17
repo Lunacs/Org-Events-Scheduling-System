@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        {{-- Filters --}}
+        {{-- Search Filter --}}
         <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="relative">
@@ -50,10 +50,10 @@
                         <span wire:loading wire:target="search" class="loading loading-spinner loading-sm"></span>
                     </div>
                 </div>
-
+                {{-- Status Filter --}}
                 <div class="relative">
                     <select wire:model.live="statusFilter" class="select select-bordered w-full">
-                        <option value="">All Statuses</option>
+                        <option value="">Active Tickets</option>
                         <option value="received">Received</option>
                         <option value="gso_review">GSO Review</option>
                         <option value="pending_osa_approval">Pending Final Approval</option>
@@ -63,6 +63,7 @@
                         <option value="amended">Amended</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
+                        <option value="completed">Completed</option>
                     </select>
                     <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">
                         <span wire:loading wire:target="statusFilter" class="loading loading-spinner loading-sm"></span>
@@ -99,8 +100,7 @@
 
             @forelse($tickets as $ticket)
                 <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
-                    wire:key="ticket-review-{{ $ticket->ticket_id }}" x-data="{ isHovered: false }"
-                    @mouseenter="isHovered = true" @mouseleave="isHovered = false">
+                    wire:key="ticket-review-{{ $ticket->ticket_id }}">
                     <div class="p-6 flex-1 flex flex-col">
                         {{-- Header --}}
                         <div class="flex items-start justify-between mb-4">
@@ -120,6 +120,7 @@
                                     'amended' => 'badge-info',
                                     'approved' => 'badge-success',
                                     'rejected' => 'badge-error',
+                                    'completed' => 'badge-neutral',
                                 ];
                             @endphp
                             <span
@@ -206,9 +207,8 @@
                                 <a href="{{ route('osa.ticket-review.show', $ticket->ticket_number) }}"
                                     class="btn btn-primary btn-sm flex-1 group" wire:navigate title="Review Ticket">
                                     <span>Review</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1"
-                                        :class="{ 'translate-x-1': isHovered }" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 transition duration-300 ease-in-out transform group-hover:translate-x-2"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7"></path>
                                     </svg>
@@ -254,10 +254,6 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($tickets->hasPages())
-            <div class="mt-6" wire:key="pagination-{{ $tickets->currentPage() }}">
-                {{ $tickets->links() }}
-            </div>
-        @endif
+        <x-tickets.ticket-pagination :tickets="$tickets" />
     </div>
 </div>

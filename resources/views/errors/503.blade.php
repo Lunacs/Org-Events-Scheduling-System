@@ -25,7 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="h-full font-body antialiased bg-base-200">
+<body class="h-full font-sans antialiased bg-base-200">
     <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-4">
         <div class="max-w-2xl w-full">
             <!-- Error Card -->
@@ -51,7 +51,8 @@
                             We're currently performing scheduled maintenance.
                         </p>
                         <p class="text-base-content/70 text-base">
-                            Our system is temporarily unavailable while we make improvements. We'll be back online shortly.
+                            Our system is temporarily unavailable while we make improvements. We'll be back online
+                            shortly.
                         </p>
                     </div>
 
@@ -61,7 +62,8 @@
                         <div>
                             <h3 class="font-semibold">What's happening?</h3>
                             <div class="text-sm opacity-90">
-                                We're upgrading our systems to serve you better. This maintenance is necessary to improve performance and add new features.
+                                We're upgrading our systems to serve you better. This maintenance is necessary to
+                                improve performance and add new features.
                             </div>
                         </div>
                     </div>
@@ -76,7 +78,8 @@
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ url()->current() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
+                        <a href="{{ url()->current() }}"
+                            class="btn btn-outline hover:outline-primary bg-primary text-white">
                             <i class="fas fa-refresh mr-2"></i>
                             Refresh Page
                         </a>

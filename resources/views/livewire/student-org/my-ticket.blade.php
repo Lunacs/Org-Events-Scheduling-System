@@ -58,26 +58,7 @@
                 </div>
 
                 {{-- Pagination --}}
-                <div class="mt-6 flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }}
-                        of {{ $tickets->total() }} tickets
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click="previousPage"
-                            :disabled="!$tickets->previousPageUrl()" />
-
-                        @foreach ($tickets->getUrlRange(1, $tickets->lastPage()) as $page => $url)
-                            <x-mary-button :label="$page"
-                                class="btn-sm {{ $page == $tickets->currentPage() ? 'btn-primary' : 'btn-ghost' }}"
-                                wire:click="gotoPage({{ $page }})" />
-                        @endforeach
-
-                        <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click="nextPage"
-                            :disabled="!$tickets->nextPageUrl()" />
-                    </div>
-                </div>
+                <x-tickets.ticket-pagination :tickets="$tickets" />
             </x-mary-card>
 
             {{-- Quick Stats --}}
@@ -99,7 +80,7 @@
         </div>
     </div>
 
-{{-- Details modal --}}
+    {{-- Details modal --}}
     <x-mary-modal wire:model="showDetailsModal" title="Ticket Details" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
 
@@ -112,7 +93,7 @@
         @endif
     </x-mary-modal>
 
-{{-- Comments modal --}}
+    {{-- Comments modal --}}
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
@@ -122,7 +103,7 @@
             @endif
 
             <div class="mt-4">
-                <x-comment-boxes.ticket-comments :ticket="$this->selectedTicket" />
+                <livewire:components.ticket-comments :ticket="$this->selectedTicket" :key="'ticket-comments-' . $this->selectedTicket->ticket_id" />
             </div>
         @else
             <div class="text-center py-8">

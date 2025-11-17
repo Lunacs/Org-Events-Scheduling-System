@@ -96,24 +96,18 @@
                 <div class="p-6">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                         <h3 class="text-lg font-semibold font-heading text-base-content" x-text="chartTitle"></h3>
-                        <x-mary-select
-                            x-model="selectedChart"
-                            :options="[
-                                ['id' => 'request_types', 'name' => 'Request Types'],
-                                ['id' => 'approvals', 'name' => 'Approvals']
-                            ]"
-                            option-label="name"
-                            option-value="id"
+                        <x-mary-select x-model="selectedChart" :options="[
+                            ['id' => 'request_types', 'name' => 'Request Types'],
+                            ['id' => 'approvals', 'name' => 'Approvals'],
+                        ]" option-label="name" option-value="id"
                             @change="refreshChart({ forceReinit: true })"
-                            class="select-emerald w-full sm:w-60 text-center"
-                            input-class="text-center" />
+                            class="select-emerald w-full sm:w-60 text-center" input-class="text-center" />
                     </div>
 
                     <div
                         class="relative h-64 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
                         <div class="h-full w-full p-3 box-border">
-                            <canvas x-ref="approvalChart"
-                                class="w-full h-full transition-opacity duration-200"
+                            <canvas x-ref="approvalChart" class="w-full h-full transition-opacity duration-200"
                                 :class="{ 'opacity-0 pointer-events-none': !hasStatusData }"></canvas>
                         </div>
 
@@ -143,14 +137,11 @@
                             <div class="flex items-center justify-between p-3 bg-base-200 dark:bg-base-700 rounded-lg">
                                 <div class="flex items-center gap-3">
                                     <div class="w-4 h-4 rounded" :style="`background-color: ${item.color}`"></div>
-                                    <span class="text-sm font-medium text-base-content"
-                                        x-text="item.type"></span>
+                                    <span class="text-sm font-medium text-base-content" x-text="item.type"></span>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm font-medium text-base-content"
-                                        x-text="item.count"></div>
-                                    <div class="text-xs text-base-content/70"
-                                        x-text="item.percentage + '%'"></div>
+                                    <div class="text-sm font-medium text-base-content" x-text="item.count"></div>
+                                    <div class="text-xs text-base-content/70" x-text="item.percentage + '%'"></div>
                                 </div>
                             </div>
                         </template>
@@ -205,7 +196,8 @@
                                     <td x-text="record.organization"></td>
                                     <td>
                                         <span
-                                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' + getRequestTypeClass(record.requestType)"
+                                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' +
+                                            getRequestTypeClass(record.requestType)"
                                             x-text="record.requestType || 'N/A'"></span>
                                     </td>
                                     <td>
@@ -214,7 +206,8 @@
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-ghost" @click="goToDetails(record)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -237,27 +230,33 @@
                 <!-- Pagination -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                     <div class="text-sm font-medium text-base-content/70">
-                        Showing <span class="font-semibold text-base-content" x-text="Math.min((currentPage - 1) * perPage + 1, filteredRecords.length)"></span> to <span
-                            class="font-semibold text-base-content" x-text="Math.min(currentPage * perPage, filteredRecords.length)"></span> of <span
+                        Showing <span class="font-semibold text-base-content"
+                            x-text="Math.min((currentPage - 1) * perPage + 1, filteredRecords.length)"></span> to <span
+                            class="font-semibold text-base-content"
+                            x-text="Math.min(currentPage * perPage, filteredRecords.length)"></span> of <span
                             class="font-semibold text-base-content" x-text="filteredRecords.length"></span> records
                     </div>
                     <div class="btn-group" x-show="totalPages > 1">
-                        <button class="btn btn-sm btn-emerald" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1"
-                            :class="{ 'btn-disabled opacity-50': currentPage === 1 }">
+                        <button class="btn btn-sm btn-emerald" @click="goToPage(currentPage - 1)"
+                            :disabled="currentPage === 1" :class="{ 'btn-disabled opacity-50': currentPage === 1 }">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7"></path>
                             </svg>
                             Previous
                         </button>
                         <template x-for="page in visiblePages" :key="page">
-                            <button class="btn btn-sm" :class="{ 'btn-emerald btn-active': page === currentPage, 'btn-ghost': page !== currentPage }" @click="goToPage(page)"
-                                x-text="page"></button>
+                            <button class="btn btn-sm"
+                                :class="{ 'btn-emerald btn-active': page === currentPage, 'btn-ghost': page !== currentPage }"
+                                @click="goToPage(page)" x-text="page"></button>
                         </template>
                         <button class="btn btn-sm btn-emerald" @click="goToPage(currentPage + 1)"
-                            :disabled="currentPage === totalPages" :class="{ 'btn-disabled opacity-50': currentPage === totalPages }">
+                            :disabled="currentPage === totalPages"
+                            :class="{ 'btn-disabled opacity-50': currentPage === totalPages }">
                             Next
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7"></path>
                             </svg>
                         </button>
                     </div>
@@ -472,7 +471,10 @@
             },
 
             applyFilters() {
-                const { start, end } = this.resolveRange(this.timePeriod);
+                const {
+                    start,
+                    end
+                } = this.resolveRange(this.timePeriod);
 
                 this.currentDataset = this.records.filter(record => {
                     if (!record.decidedAt) {
@@ -511,9 +513,9 @@
                 const rejected = dataset.filter(r => (r.decision || '').toLowerCase() === 'rejected').length;
                 const total = approved + rejected;
 
-                const avgResponse = dataset.length
-                    ? dataset.reduce((sum, record) => sum + Number(record.responseTime ?? 0), 0) / dataset.length
-                    : 0;
+                const avgResponse = dataset.length ?
+                    dataset.reduce((sum, record) => sum + Number(record.responseTime ?? 0), 0) / dataset.length :
+                    0;
 
                 this.stats = {
                     totalApproved: approved,
@@ -610,7 +612,10 @@
                     }
                 }
 
-                return { start, end };
+                return {
+                    start,
+                    end
+                };
             },
 
             isWithinRange(date, start, end) {
@@ -723,16 +728,14 @@
                     type: 'doughnut',
                     data: {
                         labels: this.statusLabels,
-                        datasets: [
-                            {
-                                data: this.statusDataset,
-                                backgroundColor: this.statusColors,
-                                hoverBackgroundColor: this.statusColors,
-                                borderWidth: 0,
-                                hoverOffset: 6,
-                                cutout: '55%',
-                            },
-                        ],
+                        datasets: [{
+                            data: this.statusDataset,
+                            backgroundColor: this.statusColors,
+                            hoverBackgroundColor: this.statusColors,
+                            borderWidth: 0,
+                            hoverOffset: 6,
+                            cutout: '55%',
+                        }, ],
                     },
                     options: {
                         responsive: true,
@@ -754,7 +757,8 @@
                                         const label = context.label || '';
                                         const value = context.parsed || 0;
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) :
+                                            0;
                                         return `${label}: ${value} (${percentage}%)`;
                                     }
                                 },
@@ -796,7 +800,8 @@
             isDarkMode() {
                 const root = document.documentElement;
                 const body = document.body;
-                const themeAttr = ((root.getAttribute('data-theme') || body.getAttribute('data-theme') || '').toLowerCase());
+                const themeAttr = ((root.getAttribute('data-theme') || body.getAttribute('data-theme') || '')
+                    .toLowerCase());
                 const themeClass = `${root.className} ${body.className}`.toLowerCase();
 
                 if (themeClass.includes('dark') || themeAttr.includes('dark')) {
@@ -823,7 +828,9 @@
                     }
 
                     this.themeChangeDebounce = setTimeout(() => {
-                        this.refreshChart({ forceReinit: true });
+                        this.refreshChart({
+                            forceReinit: true
+                        });
                     }, 60);
                 };
 
@@ -868,7 +875,9 @@
             },
 
             bootstrapRequestTypeClasses() {
-                this.requestTypeClassMap = { ...this.requestTypeClassDefaults };
+                this.requestTypeClassMap = {
+                    ...this.requestTypeClassDefaults
+                };
                 this.requestTypePaletteIndex = 0;
 
                 (this.records || []).forEach(record => {
@@ -878,7 +887,8 @@
                     }
 
                     if (!Object.prototype.hasOwnProperty.call(this.requestTypeClassMap, key)) {
-                        this.requestTypeClassMap[key] = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                        this.requestTypeClassMap[key] = this.requestTypeClassPalette[this
+                            .requestTypePaletteIndex % this.requestTypeClassPalette.length];
                         this.requestTypePaletteIndex += 1;
                     }
                 });
@@ -905,7 +915,8 @@
                 const key = typeLabel.toLowerCase();
 
                 if (!Object.prototype.hasOwnProperty.call(this.requestTypeClassMap, key)) {
-                    this.requestTypeClassMap[key] = this.requestTypeClassPalette[this.requestTypePaletteIndex % this.requestTypeClassPalette.length];
+                    this.requestTypeClassMap[key] = this.requestTypeClassPalette[this.requestTypePaletteIndex % this
+                        .requestTypeClassPalette.length];
                     this.requestTypePaletteIndex += 1;
                 }
 

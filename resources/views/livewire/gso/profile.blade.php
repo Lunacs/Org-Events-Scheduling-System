@@ -42,7 +42,7 @@
                         <x-mary-input wire:model="email" label="Email Address" type="email"
                             placeholder="you@example.com" icon="o-envelope" required />
 
-                        <x-mary-input wire:model="phone" label="Phone Number" placeholder="(+63) 900 000 0000"
+                        <x-mary-input wire:model="phone" label="Phone Number" placeholder="09123456789"
                             icon="o-phone" />
 
                         <x-mary-input wire:model="office" label="Office" placeholder="Your office"
@@ -72,8 +72,8 @@
                             <button type="button" @click="show = !show"
                                 class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
-                                <i class="fas fa-eye" x-show="!show"></i>
-                                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                <i class="fas fa-eye-slash" x-show="!show"></i>
+                                <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                             </button>
                         </div>
 
@@ -86,8 +86,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
 
@@ -98,8 +98,8 @@
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
-                                    <i class="fas fa-eye" x-show="!show"></i>
-                                    <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
                                 </button>
                             </div>
                         </div>
@@ -118,7 +118,8 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePassword" icon="o-shield-check" class="btn-warning">
+                        <x-mary-button wire:click="updatePassword" icon="o-shield-check"
+                            class="btn-warning text-neutral-content">
                             <span wire:loading.remove wire:target="updatePassword">Update Password</span>
                             <span wire:loading wire:target="updatePassword">Updating...</span>
                         </x-mary-button>
@@ -173,7 +174,8 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePreferences" icon="o-check" class="btn-info">
+                        <x-mary-button wire:click="updatePreferences" icon="o-check"
+                            class="btn-info text-neutral-content">
                             <span wire:loading.remove wire:target="updatePreferences">Save Preferences</span>
                             <span wire:loading wire:target="updatePreferences">Saving...</span>
                         </x-mary-button>
@@ -216,20 +218,6 @@
                         </div>
                     </div>
                 </x-mary-card>
-
-                {{-- Security Tips --}}
-                <div class="alert alert-warning shadow-lg">
-                    <x-mary-icon name="o-shield-exclamation" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">Security Tips</h3>
-                        <ul class="text-xs mt-2 space-y-1">
-                            <li>• Use a strong, unique password</li>
-                            <li>• Never share your credentials</li>
-                            <li>• Log out on shared computers</li>
-                            <li>• Review your account regularly</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

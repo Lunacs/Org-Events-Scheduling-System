@@ -8,12 +8,12 @@ use App\Models\Fund_Sources;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
+use App\Services\TransactionLogService;
 use Exception;
-use Livewire\Attributes\Rule;
-use Livewire\Attributes\Validate;
-use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
 
@@ -22,8 +22,11 @@ class SubmitTicket extends Component
     #[Title('Submit Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
     public $search = '';
+
     public $statusFilter = '';
+
     public $dateFilter = '';
+
     public $organizationName = '';
 
     #[Validate('required|boolean')]
@@ -52,6 +55,7 @@ class SubmitTicket extends Component
 
     #[Validate('required|integer|min:1')]
     public $expectedPLVParticipants = 0;
+
     #[Validate('nullable|integer|min:0')]
     public $expectedNonPLVParticipants = 0;
 
@@ -121,8 +125,8 @@ class SubmitTicket extends Component
     #[Validate('nullable|string|max:2000')]
     public $additionalNotes = '';
 
-    use WithFileUploads;
     use Toast;
+    use WithFileUploads;
 
     #[Validate('nullable|array', 'attachments.*', 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx')]
     public $attachments = [];
@@ -156,7 +160,6 @@ class SubmitTicket extends Component
         }
     }
 
-
     public function openPreviewModal()
     {
         $this->showPreviewModal = true;
@@ -173,7 +176,7 @@ class SubmitTicket extends Component
         $currentUserinfo = $currentUser->studentOrganization;
 
         // Create a temporary ticket object for preview
-        $ticket = new Ticket();
+        $ticket = new Ticket;
         $ticket->user = $currentUser;
         $ticket->title = $this->eventTitle;
         $ticket->description = $this->eventDescription;
@@ -203,10 +206,11 @@ class SubmitTicket extends Component
 
         // Create temporary attachment objects for preview
         $previewAttachments = collect($this->attachments)->map(function ($file) {
-            $attachment = new Attachment();
+            $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
             $attachment->file_path = null; // Not stored yet
+
             return $attachment;
         });
 
@@ -230,10 +234,13 @@ class SubmitTicket extends Component
         $this->proponentName = $currentUser->name ?? '';
         $this->organizationCourse = $currentUserinfo->course->course_name ?? '';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
+        $this->proponent_contact = $currentUser->phone ?? '';
     }
 
     public function save()
     {
+        $this->validate();
+
         $currentUser = auth()->user();
         $currentUserinfo = $currentUser->studentOrganization;
         try {
@@ -276,7 +283,7 @@ class SubmitTicket extends Component
             if ($this->attachments) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
-                    $filename = time() . '_' . uniqid() . '_' . $originalName;
+                    $filename = time().'_'.uniqid().'_'.$originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
                         $filename
@@ -291,8 +298,11 @@ class SubmitTicket extends Component
                 }
             }
 
+            // Log transaction
+            TransactionLogService::logTicketOperation('created', $ticket);
+
             // Notify OSA admins about the new ticket
-            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
             foreach ($osaUsers as $osaUser) {
                 $osaUser->notify(new TicketSubmittedNotification($ticket));
             }
@@ -335,7 +345,7 @@ class SubmitTicket extends Component
     public function updatedNewAttachments()
     {
         $this->validate([
-            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx'
+            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
         ]);
 
         // Merge new files with existing attachments

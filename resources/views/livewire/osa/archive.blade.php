@@ -188,11 +188,10 @@
                                     </td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <div class="avatar placeholder">
-                                                <div class="bg-primary text-primary-content rounded-full w-8">
-                                                    <span
-                                                        class="text-xs">{{ $event->ticket->user->studentOrganization ? substr($event->ticket->user->studentOrganization->org_name, 0, 2) : 'N/A' }}</span>
-                                                </div>
+                                            <div class="avatar flex justify-center items-center">
+                                                <img src="{{ $event->ticket->user->studentOrganization->logo_url }}"
+                                                    alt="{{ $event->ticket->user->studentOrganization->org_name }} logo"
+                                                    class="w-8 h-8 object-cover rounded-full bg-base-200">
                                             </div>
                                             <div>
                                                 <div class="font-medium">

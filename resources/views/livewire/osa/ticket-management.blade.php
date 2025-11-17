@@ -19,8 +19,10 @@
             row.style.pointerEvents = 'auto';
         }
     }
-}" x-init="$nextTick(() => { firstLoad = false;
-    show = true; })">
+}" x-init="$nextTick(() => {
+    firstLoad = false;
+    show = true;
+})">
 
     {{-- Skeleton Loading State (First Load Only) --}}
     <div x-show="firstLoad" x-cloak>
@@ -171,11 +173,10 @@
                                     </td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <div class="avatar placeholder flex justify-center items-center">
-                                                <div class="bg-primary text-primary-content rounded-full w-8">
-                                                    <span
-                                                        class="text-xs">{{ $ticket->user->studentOrganization->org_code }}</span>
-                                                </div>
+                                            <div class="avatar flex justify-center items-center">
+                                                <img src="{{ $ticket->user->studentOrganization->logo_url }}"
+                                                    alt="{{ $ticket->user->studentOrganization->org_name }} logo"
+                                                    class="w-8 h-8 object-cover rounded-full bg-base-200">
                                             </div>
                                             <div>
                                                 <div class="font-medium">

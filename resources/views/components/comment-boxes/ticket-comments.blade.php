@@ -1,4 +1,4 @@
-@props(['ticket', 'comment' => ''])
+@props(['ticket'])
 
 <div class="bg-base-100 rounded-box shadow-lg p-6" x-data="{ isSubmitting: false }" x-init="$nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })"
     @comment-added.window="
@@ -7,7 +7,7 @@
     ">
     <h2 class="text-xl font-bold text-base-content mb-4">Comments</h2>
     @if ($ticket->comments->count() > 0)
-        <div class="mt-4 space-y-4" wire:key="comments-list-{{ $ticket->ticket_id }}" wire:ignore>
+        <div class="mt-4 space-y-4" wire:key="comments-list-{{ $ticket->ticket_id }}">
             @foreach ($ticket->comments as $comment)
                 <div class="chat {{ $comment->user_id === auth()->id() ? 'chat-end' : 'chat-start' }}"
                     wire:key="comment-{{ $comment->id }}">
