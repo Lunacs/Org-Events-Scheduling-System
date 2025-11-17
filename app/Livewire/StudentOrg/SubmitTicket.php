@@ -11,12 +11,11 @@ use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
 use Exception;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
 
@@ -26,59 +25,93 @@ class SubmitTicket extends Component
     #[Layout('components.layouts.student-org-layout')]
     // Step tracking
     public $currentStep = 1;
+
     public $totalSteps = 6;
+
     public $agreeToTerms = false;
 
     // Step 1: Organization
     public $organizationName = '';
+
     public $organizationCourse = '';
+
     public $adviser = '';
+
     public $contactEmail = '';
+
     public $proponentName = '';
+
     public $proponentPosition = '';
+
     public $proponent_contact = '';
+
     public $adviser_contact = '';
 
     // Step 2: Event Details
     public $eventTitle = '';
+
     public $eventDescription = '';
+
     public $eventType = 1;
+
     public $expectedPLVParticipants = 0;
+
     public $expectedNonPLVParticipants = 0;
 
     // Step 3: Schedule & Venue
     public $eventStartDate = '';
+
     public $eventEndDate = '';
+
     public $eventStartTime = '';
+
     public $eventEndTime = '';
+
     public $preferredVenue = '';
+
     public $alternativeVenue = '';
+
     public $specialRequirements = '';
+
     public $is_oc = false;
+
     public $oc_accommodation = '';
+
     public $oc_tsp = null;
+
     public $oc_driver_name = '';
+
     public $oc_driver_contact_number = '';
+
     public $oc_vehicle_type = '';
+
     public $oc_vehicle_plate_number = '';
 
     // Step 4: Budget
     public $totalBudget = 0.00;
+
     public $fundingSource = '';
+
     public $budgetBreakdown = '';
+
     public $igp_requested = '';
+
     public $igp_details = '';
 
     // Step 5: Attachments
     public $attachments = [];
+
     public $newAttachments = [];
+
     public $additionalNotes = '';
 
     // UI
-    public $isProcessing = false; // To prevent multiple submissions
+    public $isProcessing = false;
+
+    use Toast;
+    // To prevent multiple submissions
 
     use WithFileUploads;
-    use Toast;
 
     public function nextStep()
     {
@@ -120,8 +153,7 @@ class SubmitTicket extends Component
     {
         return match ($this->currentStep) {
             1 => [
-                'proponent_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
-                'adviser_contact' => 'nullable|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+                'adviser_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
             ],
             2 => [
                 'eventTitle' => 'required|string|max:255|min:5',
@@ -189,31 +221,63 @@ class SubmitTicket extends Component
     {
         $rules = $this->getCurrentStepRules();
 
-        if (!empty($rules)) {
-            $this->validate($rules);
+        if (! empty($rules)) {
+            $this->validate($rules, [
+                'expectedPLVParticipants.required' => 'The number of PLV participants is required.',
+                'expectedNonPLVParticipants.required' => 'The number of non-PLV participants is required.',
+                'expectedPLVParticipants.integer' => 'The number of PLV participants must be an integer.',
+                'expectedNonPLVParticipants.integer' => 'The number of non-PLV participants must be an integer.',
+                'expectedPLVParticipants.min' => 'The number of PLV participants must be at least 1.',
+                'expectedNonPLVParticipants.min' => 'The number of non-PLV participants must be at least 0.',
+                'expectedPLVParticipants.max' => 'The number of PLV participants must be less than 100000.',
+                'expectedNonPLVParticipants.max' => 'The number of non-PLV participants must be less than 100000.',
+            ]);
         }
 
-        // Custom time range validation
-        if ($this->currentStep === 3 && $this->eventStartTime && $this->eventEndTime) {
-            $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
-            $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
-            $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
-            $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
+        // Custom time range validation (runs for step 3 or when validating all steps)
+        if (($this->currentStep === 3 || $this->currentStep === $this->totalSteps) && $this->eventStartTime && $this->eventEndTime) {
+            try {
+                $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
+                $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
+                $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
+                $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
 
-            if ($startTime->lt($minTime)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'eventStartTime' => 'Event start time must be at or after 8:00 AM.'
-                ]);
-            }
+                if ($startTime->lt($minTime)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'eventStartTime' => 'Event start time must be at or after 8:00 AM.',
+                    ]);
+                }
 
-            if ($endTime->gt($maxTime)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'eventEndTime' => 'Event end time must be at or before 9:00 PM.'
-                ]);
+                if ($endTime->gt($maxTime)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'eventEndTime' => 'Event end time must be at or before 9:00 PM.',
+                    ]);
+                }
+            } catch (\Carbon\Exceptions\InvalidFormatException $e) {
+                // Invalid time format - let the regular validation handle it
             }
         }
     }
 
+    protected function validateAllSteps()
+    {
+        // Validate each step sequentially
+        for ($step = 1; $step <= $this->totalSteps; $step++) {
+            $originalStep = $this->currentStep;
+            $this->currentStep = $step;
+
+            try {
+                $this->validateCurrentStep();
+            } catch (ValidationException $e) {
+                // Restore original step before re-throwing
+                $this->currentStep = $originalStep;
+                throw $e;
+            }
+        }
+
+        // Restore original step
+        $this->currentStep = $this->totalSteps;
+    }
 
     public function getPreviewTicketProperty()
     {
@@ -221,7 +285,7 @@ class SubmitTicket extends Component
         $currentUserinfo = $currentUser->studentOrganization;
 
         // Create a temporary ticket object for preview
-        $ticket = new Ticket();
+        $ticket = new Ticket;
         $ticket->user = $currentUser;
         $ticket->title = $this->eventTitle;
         $ticket->description = $this->eventDescription;
@@ -251,7 +315,7 @@ class SubmitTicket extends Component
 
         // Create temporary attachment objects for preview
         $previewAttachments = collect($this->attachments)->map(function ($file) {
-            $attachment = new Attachment();
+            $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
             $attachment->file_path = null; // Not stored yet
@@ -279,6 +343,7 @@ class SubmitTicket extends Component
         $this->proponentName = $currentUser->name ?? '';
         $this->organizationCourse = $currentUserinfo->course->course_name ?? '';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
+        $this->proponent_contact = $currentUser->phone ?? '';
     }
 
     public function save()
@@ -294,7 +359,12 @@ class SubmitTicket extends Component
 
         try {
             // Validate all steps before submission
-            $this->validateCurrentStep();
+            $this->validateAllSteps();
+
+            // Check for required organization data
+            if (! $currentUserinfo || ! $currentUserinfo->org_code) {
+                throw new \Exception('Organization information is missing. Please contact support.');
+            }
 
             \DB::beginTransaction();
             $orgCode = $currentUserinfo->org_code;
@@ -304,50 +374,54 @@ class SubmitTicket extends Component
                 ->first();
 
             $nextNumber = $lastTicket
-                ? ((int)substr(strrchr($lastTicket->ticket_number, '-'), 1)) + 1
+                ? ((int) substr(strrchr($lastTicket->ticket_number, '-'), 1)) + 1
                 : 1;
 
             // Generate unique ticket number with locking
-            $ticketCode = "TKT-{$orgCode}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $ticketCode = "TKT-{$orgCode}-".str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+            // Helper function to convert empty strings to null for nullable fields
+            $nullIfEmpty = fn ($value) => ($value === '' || $value === null) ? null : $value;
+            $nullIfEmptyInt = fn ($value) => ($value === '' || $value === null) ? null : (int) $value;
 
             $ticket = Ticket::create([
                 'user_id' => $currentUser->user_id,
                 'ticket_number' => $ticketCode,
-                'event_type_id' => $this->eventType,
-                'plv_participants' => $this->expectedPLVParticipants,
-                'external_participants' => $this->expectedNonPLVParticipants,
+                'event_type_id' => (int) $this->eventType,
+                'plv_participants' => (int) $this->expectedPLVParticipants,
+                'external_participants' => $nullIfEmptyInt($this->expectedNonPLVParticipants),
                 'title' => $this->eventTitle,
                 'description' => $this->eventDescription,
                 'proponent_contact' => $this->proponent_contact,
                 'adviser_contact' => $this->adviser_contact,
                 'igp_requested' => $this->igp_requested === 'true',
-                'igp_details' => $this->igp_details,
-                'oc_accommodation' => $this->oc_accommodation,
-                'oc_tsp' => $this->oc_tsp ?: null,
-                'oc_driver_name' => $this->oc_driver_name,
-                'oc_vehicle_type' => $this->oc_vehicle_type,
-                'oc_vehicle_plate_number' => $this->oc_vehicle_plate_number,
-                'oc_driver_contact_number' => $this->oc_driver_contact_number,
-                'estimated_budget' => $this->totalBudget,
-                'budget_breakdown' => $this->budgetBreakdown,
+                'igp_details' => $nullIfEmpty($this->igp_details),
+                'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
+                'oc_tsp' => $nullIfEmpty($this->oc_tsp),
+                'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
+                'oc_vehicle_type' => $nullIfEmpty($this->oc_vehicle_type),
+                'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
+                'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
+                'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
+                'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
                 'venue_requested' => $this->preferredVenue,
-                'alternate_venue' => $this->alternativeVenue,
-                'special_requirements' => $this->specialRequirements,
-                'total_participants' => $this->expectedPLVParticipants + $this->expectedNonPLVParticipants,
-                'fund_source_id' => $this->fundingSource,
+                'alternate_venue' => $nullIfEmpty($this->alternativeVenue),
+                'special_requirements' => $nullIfEmpty($this->specialRequirements),
+                'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
+                'fund_source_id' => (int) $this->fundingSource,
                 'date_from' => $this->eventStartDate,
                 'date_to' => $this->eventEndDate,
                 'time_from' => $this->eventStartTime,
                 'time_to' => $this->eventEndTime,
-                'additional_notes' => $this->additionalNotes,
+                'additional_notes' => $nullIfEmpty($this->additionalNotes),
                 'status' => 'received',
             ]);
 
             // Handle file attachments
-            if (!empty($this->attachments)) {
+            if (! empty($this->attachments)) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
-                    $filename = time() . '_' . uniqid() . '_' . $originalName;
+                    $filename = time().'_'.uniqid().'_'.$originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
                         $filename
@@ -389,34 +463,47 @@ class SubmitTicket extends Component
                 timeout: 3000,
                 redirectTo: route('student-org.dashboard')
             );
+        } catch (ValidationException $e) {
+            \DB::rollBack();
+            $this->isProcessing = false;
+
+            // Re-throw validation exceptions to show field-specific errors
+            throw $e;
         } catch (Exception $e) {
             \DB::rollBack();
 
-            // Keep user data on error
+            // Log with full context
+            \Log::error('Ticket submission failed', [
+                'user_id' => $currentUser->user_id ?? null,
+                'step' => $this->currentStep,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Show user-friendly error message
+            $errorMessage = config('app.debug')
+                ? $e->getMessage()
+                : 'Your data has been preserved. Please try again.';
+
             $this->toast(
                 type: 'error',
                 title: 'Submission Failed',
-                description: 'Your data has been preserved. Please try again.',
+                description: $errorMessage,
                 position: 'toast-top toast-end',
                 icon: 'o-x-circle',
                 css: 'alert-error',
                 timeout: 5000,
                 redirectTo: null
             );
-
-            // Log with context
-            \Log::error('Ticket submission failed', [
-                'user_id' => $currentUser->user_id,
-                'step' => $this->currentStep,
-                'error' => $e->getMessage(),
-            ]);
+        } finally {
+            $this->isProcessing = false;
         }
     }
 
     public function loadDraft($draftData)
     {
         foreach ($draftData as $key => $value) {
-            if (property_exists($this, $key) && !in_array($key, ['newAttachments', 'attachments', 'isProcessing'])) {
+            if (property_exists($this, $key) && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing'])) {
                 $this->{$key} = $value;
             }
         }
@@ -431,7 +518,7 @@ class SubmitTicket extends Component
 
     public function getExpectedParticipantsProperty()
     {
-        return (int)$this->expectedPLVParticipants + (int)$this->expectedNonPLVParticipants;
+        return (int) $this->expectedPLVParticipants + (int) $this->expectedNonPLVParticipants;
     }
 
     public function removeAttachment($index)
@@ -462,18 +549,18 @@ class SubmitTicket extends Component
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     ];
 
-                    if (!in_array($mimeType, $allowedMimes)) {
+                    if (! in_array($mimeType, $allowedMimes)) {
                         $fail('Invalid file type detected.');
                     }
-                }
-            ]
+                },
+            ],
         ]);
 
         // Check available disk space
-        $totalSize = collect($this->newAttachments)->sum(fn($file) => $file->getSize());
+        $totalSize = collect($this->newAttachments)->sum(fn ($file) => $file->getSize());
         if (disk_free_space(storage_path()) < ($totalSize * 2)) {
             throw ValidationException::withMessages([
-                'newAttachments' => 'Insufficient storage space.'
+                'newAttachments' => 'Insufficient storage space.',
             ]);
         }
 

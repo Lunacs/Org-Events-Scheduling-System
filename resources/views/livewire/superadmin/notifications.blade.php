@@ -277,7 +277,8 @@
                             @endif
                         @empty
                             <div class="text-center py-12">
-                                <x-mary-icon name="s-bell-slash" class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
+                                <x-mary-icon name="s-bell-slash"
+                                    class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                                 <p class="text-base-content/70 text-lg font-medium">No system notifications found</p>
                                 <p class="text-base-content/50 text-sm mt-2">
                                     <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting
@@ -302,4 +303,3 @@
         </div>
     </div>
 </div>
-

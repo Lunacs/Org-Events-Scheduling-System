@@ -1,7 +1,7 @@
 @props(['ticket'])
 
 {{-- Ticket Details - Refactored into modular components --}}
-<div class="lg:col-span-2 space-y-6 data-ticket-loaded">
+<div class="space-y-6">
     {{-- Organization Information Section --}}
     <x-tickets.sections.organization-info :ticket="$ticket" />
 

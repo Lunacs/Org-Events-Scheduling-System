@@ -23,7 +23,7 @@
 @elseif ($notifications !== null)
     <div class="mt-6 flex justify-between items-center">
         <div class="text-sm text-gray-600">
-            Showing {{ $notifications->firstItem() ?? 0 }} to {{ $notifications->lastItem() ?? 0 }}
+            Showing {{ $notifications->lastItem() ?? 0 }}
             of {{ $notifications->total() }} notifications
         </div>
 
