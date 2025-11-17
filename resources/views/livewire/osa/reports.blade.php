@@ -147,7 +147,23 @@
             <p class="text-sm text-base-content/70">Preview of {{ ucfirst(str_replace('_', ' ', $reportType)) }}</p>
         </div>
 
-        <div class="p-6">
+        {{-- Loading Skeleton during report generation --}}
+        <div wire:loading.delay wire:target="generateReport,reportType" class="p-6 animate-pulse">
+            <div class="space-y-4">
+                <div class="h-12 bg-base-200 rounded"></div>
+                <div class="h-16 bg-base-200 rounded"></div>
+                <div class="h-16 bg-base-200 rounded"></div>
+                <div class="h-16 bg-base-200 rounded"></div>
+                <div class="h-16 bg-base-200 rounded"></div>
+            </div>
+            <div class="text-center mt-6">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="text-sm text-base-content/70 mt-2">Generating report...</p>
+            </div>
+        </div>
+
+        {{-- Actual Report Content --}}
+        <div wire:loading.remove.delay wire:target="generateReport,reportType" class="p-6">
             @if ($reportType === 'approved_events' && $reportData->count() > 0)
                 {{-- Approved Events Table --}}
                 <div class="overflow-x-auto">
@@ -198,7 +214,8 @@
                             @foreach ($reportData->take(10) as $ticket)
                                 <tr>
                                     <td>{{ $ticket->title }}</td>
-                                    <td>{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</td>
+                                    <td>{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                                    </td>
                                     <td>{{ $ticket->created_at->format('M d, Y') }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
@@ -222,7 +239,8 @@
                                 </div>
                                 <div>
                                     <div class="font-semibold">{{ $org->org_name }}</div>
-                                    <div class="text-sm text-base-content/70">{{ $org->tickets_count }} event requests
+                                    <div class="text-sm text-base-content/70">{{ $org->tickets_count }} event
+                                        requests
                                     </div>
                                 </div>
                             </div>
@@ -279,7 +297,8 @@
                 <div class="text-center py-12">
                     <x-mary-icon name="o-document-chart-bar" class="w-16 h-16 text-base-content/30 mx-auto mb-4" />
                     <h3 class="text-lg font-semibold text-base-content/70">No Data Available</h3>
-                    <p class="text-sm text-base-content/50">Select report parameters and generate a report to see data
+                    <p class="text-sm text-base-content/50">Select report parameters and generate a report to see
+                        data
                     </p>
                 </div>
             @endif

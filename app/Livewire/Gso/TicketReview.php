@@ -4,6 +4,7 @@ namespace App\Livewire\Gso;
 
 use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
+use App\Models\Student_Organization;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -11,14 +12,15 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class TicketReview extends Component
 {
-    use ResolvesOfficeContext;
+    use ResolvesOfficeContext, WithPagination;
 
     #[Title('Ticket Review - GSO')]
     #[Layout('components.layouts.gso-layout')]
-    public string $filterType = '';
+    public string $filterOrganization = '';
 
     public string $filterPriority = '';
 
@@ -26,10 +28,30 @@ class TicketReview extends Component
 
     public string $search = '';
 
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterOrganization()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterPriority()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
-    $user = Auth::user();
-    $officeId = $this->resolveOfficeId($user);
+        $user = Auth::user();
+        $officeId = $this->resolveOfficeId($user);
 
         $baseQuery = $this->baseQuery($officeId);
 
@@ -42,7 +64,7 @@ class TicketReview extends Component
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
             'urgent' => $pendingApprovals
-                ->filter(fn(Office_Approval $approval) => $this->determinePriorityKey($this->extractEventDate($approval)) === 'high')
+                ->filter(fn (Office_Approval $approval) => $this->determinePriorityKey($this->extractEventDate($approval)) === 'high')
                 ->count(),
         ];
 
@@ -51,16 +73,31 @@ class TicketReview extends Component
         $ticketCollection = $this->filteredQuery($officeId)
             ->orderByDesc('updated_at')
             ->get()
-            ->map(fn(Office_Approval $approval) => $this->formatTicket($approval));
+            ->map(fn (Office_Approval $approval) => $this->formatTicket($approval));
 
         if ($this->filterPriority !== '') {
-            $ticketCollection = $ticketCollection->filter(fn(array $ticket) => ($ticket['priority'] ?? 'low') === $this->filterPriority);
+            $ticketCollection = $ticketCollection->filter(fn (array $ticket) => ($ticket['priority'] ?? 'low') === $this->filterPriority);
         }
 
+        // Manual pagination using Collection
+        $perPage = 10;
+        $currentPage = $this->paginators['page'] ?? 1;
         $tickets = $ticketCollection->values();
 
+        // Create paginator manually
+        $paginatedTickets = new \Illuminate\Pagination\LengthAwarePaginator(
+            $tickets->forPage($currentPage, $perPage),
+            $tickets->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
+
+        $organizations = Student_Organization::all();
+
         return view('livewire.gso.ticket-review', [
-            'tickets' => $tickets,
+            'approvals' => $paginatedTickets,
+            'organizations' => $organizations,
             'stats' => $stats,
             'totalTickets' => $totalTickets,
             'statusDefinitions' => $this->statusDefinitions(),
@@ -74,28 +111,35 @@ class TicketReview extends Component
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->where('office_id', $officeId);
+            ->where('office_id', $officeId)
+            // Show tickets that GSO has interacted with, excluding completed by default
+            ->whereHas('ticket', function ($query) {
+                // Exclude completed tickets unless specifically filtered
+                if ($this->filterStatus !== 'completed') {
+                    $query->where('status', '!=', 'completed');
+                }
+            });
     }
 
     protected function filteredQuery(int $officeId): Builder
     {
         return $this->baseQuery($officeId)
-            ->when($this->filterStatus !== '', fn(Builder $query) => $this->applyStatusFilter($query, $this->filterStatus))
-            ->when($this->filterType !== '', function (Builder $query) {
-                $type = $this->mapTypeFilter($this->filterType);
+            ->when($this->filterStatus !== '', fn (Builder $query) => $this->applyStatusFilter($query, $this->filterStatus))
+            ->when($this->filterOrganization !== '', function (Builder $query) {
+                $organization = $this->filterOrganization;
 
-                if ($type) {
-                    $query->whereHas('ticket.eventType', fn(Builder $typeQuery) => $typeQuery->whereRaw('LOWER(type_name) = ?', [Str::lower($type)]));
+                if ($organization) {
+                    $query->whereHas('ticket.user.studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_id', $organization));
                 }
             })
             ->when($this->search !== '', function (Builder $query) {
-                $term = '%' . Str::of($this->search)->trim() . '%';
+                $term = '%'.Str::of($this->search)->trim().'%';
 
                 $query->whereHas('ticket', function (Builder $ticketQuery) use ($term) {
                     $ticketQuery
                         ->where('title', 'like', $term)
                         ->orWhere('ticket_number', 'like', $term)
-                        ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
+                        ->orWhereHas('user.studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
                 });
             });
     }
@@ -104,11 +148,11 @@ class TicketReview extends Component
     {
         $ticket = $approval->ticket;
 
-    $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
-    $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
+        $eventDate = $this->parseDate($ticket?->getAttribute('date_from'));
+        $dueDate = $this->parseDate($ticket?->getAttribute('date_to'));
 
         $requirements = collect(preg_split('/[,\n]+/', (string) ($ticket?->special_requirements ?? '')))
-            ->map(fn(string $item) => trim($item))
+            ->map(fn (string $item) => trim($item))
             ->filter()
             ->values()
             ->all();
@@ -194,7 +238,7 @@ class TicketReview extends Component
             return null;
         }
 
-    return $this->parseDate($ticket->getAttribute('date_from'));
+        return $this->parseDate($ticket->getAttribute('date_from'));
     }
 
     protected function parseDate(?string $value): ?Carbon
@@ -260,6 +304,7 @@ class TicketReview extends Component
             'pending' => ['key' => 'pending', 'label' => 'Pending'],
             'approved' => ['key' => 'approved', 'label' => 'Approved'],
             'rejected' => ['key' => 'rejected', 'label' => 'Rejected'],
+            'completed' => ['key' => 'completed', 'label' => 'Completed'],
         ];
     }
 }

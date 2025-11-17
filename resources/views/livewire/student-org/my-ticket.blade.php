@@ -58,26 +58,7 @@
                 </div>
 
                 {{-- Pagination --}}
-                <div class="mt-6 flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }}
-                        of {{ $tickets->total() }} tickets
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click="previousPage"
-                            :disabled="!$tickets->previousPageUrl()" />
-
-                        @foreach ($tickets->getUrlRange(1, $tickets->lastPage()) as $page => $url)
-                            <x-mary-button :label="$page"
-                                class="btn-sm {{ $page == $tickets->currentPage() ? 'btn-primary' : 'btn-ghost' }}"
-                                wire:click="gotoPage({{ $page }})" />
-                        @endforeach
-
-                        <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click="nextPage"
-                            :disabled="!$tickets->nextPageUrl()" />
-                    </div>
-                </div>
+                <x-tickets.ticket-pagination :tickets="$tickets" />
             </x-mary-card>
 
             {{-- Quick Stats --}}
@@ -99,6 +80,7 @@
         </div>
     </div>
 
+    {{-- Details modal --}}
     <x-mary-modal wire:model="showDetailsModal" title="Ticket Details" class="backdrop-blur"
                   box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
 
@@ -129,6 +111,7 @@
         </div>
     </x-mary-modal>
 
+    {{-- Comments modal --}}
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
@@ -136,26 +119,9 @@
             @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'rejected']))
                 <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket" />
             @endif
-            @if ($this->selectedTicketComments)
-                <div wire:key="comments-list-{{ $this->selectedTicket->ticket_id }}">
-                    @foreach ($this->selectedTicketComments as $comment)
-                        <div wire:key="comment-{{ $comment->id }}">
-                            <x-comment-boxes.normal-comment :comment="$comment" />
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-            <div class="space-y-3 mt-6" x-data="{ isSubmitting: false }" @comment-added.window="isSubmitting = false">
-                <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
-                    x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
-                <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
-                    :disabled="isSubmitting" wire:loading.attr="disabled">
-                    <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4" wire:loading.remove
-                        wire:target="addComment" />
-                    <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
-                    <span wire:loading.remove wire:target="addComment">Add Comment</span>
-                    <span wire:loading wire:target="addComment">Adding...</span>
-                </button>
+
+            <div class="mt-4">
+                <livewire:components.ticket-comments :ticket="$this->selectedTicket" :key="'ticket-comments-' . $this->selectedTicket->ticket_id" />
             </div>
         @else
             <div class="text-center py-8">

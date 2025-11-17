@@ -5,8 +5,10 @@ namespace App\Livewire\Superadmin;
 use App\Models\Transaction_Logs;
 use App\Services\TransactionLogService;
 use Livewire\Component;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Cache;
 use Mary\Traits\Toast;
@@ -18,17 +20,21 @@ class Logs extends Component
     #[Title('Superadmin - Transaction Logs')]
     #[Layout('components.layouts.superadmin')]
 
-    // Search and filter properties
+    // Search and filter properties with URL state
+    #[Url(except: '')]
     public $search = '';
+
+    #[Url(except: '')]
     public $dateFrom = '';
+
+    #[Url(except: '')]
     public $dateTo = '';
 
-    // Cache duration in minutes
-    protected $cacheDuration = 2;
-
+    #[Computed]
     public function logs()
     {
-        return Transaction_Logs::with(['user'])
+        return Transaction_Logs::select(['log_id', 'action', 'details', 'created_at', 'user_id'])
+            ->with(['user:user_id,name,email'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('action', 'like', '%' . $this->search . '%')
@@ -49,6 +55,7 @@ class Logs extends Component
             ->paginate(15);
     }
 
+    #[Computed]
     public function headers(): array
     {
         return [
@@ -64,7 +71,7 @@ class Logs extends Component
     {
         // Use the manual cleanup method to keep only recent logs
         $deletedCount = TransactionLogService::manualCleanup(100); // Keep only last 100 logs
-        
+
         if ($deletedCount > 0) {
             $this->success("Cleared {$deletedCount} old transaction logs. Kept the most recent 100 logs.", position: 'toast-top');
         } else {
@@ -77,28 +84,30 @@ class Logs extends Component
         // This would typically generate a CSV or Excel file
         $this->success('Logs export initiated! Check your downloads.', position: 'toast-top');
     }
-
     public function updatedSearch()
     {
         $this->resetPage();
+        unset($this->logs); // Clear computed cache
     }
 
 
     public function updatedDateFrom()
     {
         $this->resetPage();
+        unset($this->logs); // Clear computed cache
     }
 
     public function updatedDateTo()
     {
         $this->resetPage();
+        unset($this->logs); // Clear computed cache
     }
 
     public function render()
     {
         return view('livewire.superadmin.logs')->with([
-            'logs' => $this->logs(),
-            'headers' => $this->headers(),
+            'logs' => $this->logs,
+            'headers' => $this->headers,
         ]);
     }
 }

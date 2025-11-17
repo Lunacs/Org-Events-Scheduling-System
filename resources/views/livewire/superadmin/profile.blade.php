@@ -1,4 +1,11 @@
-<div class="py-6">
+<div class="py-6" x-data="{
+    scrollToSection(section) {
+        const element = document.getElementById(section);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         {{-- Page Header --}}
         <div class="bg-gradient-to-r from-primary to-secondary rounded-box shadow-lg p-6 text-primary-content">
@@ -14,7 +21,7 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success">
+                            <span class="badge badge-lg badge-success text-white">
                                 <i class="fa-solid fa-check-circle mr-1"></i> Verified
                             </span>
                         @endif
@@ -27,7 +34,9 @@
             {{-- Main Content --}}
             <div class="lg:col-span-2 space-y-6">
                 {{-- Avatar Selector --}}
-                <livewire:avatar-selector />
+                <div id="avatar">
+                    <livewire:avatar-selector />
+                </div>
 
                 {{-- Profile Information --}}
                 <x-mary-card title="Profile Information" subtitle="Update your account details">
@@ -58,21 +67,51 @@
                 </x-mary-card>
 
                 {{-- Password Change --}}
-                <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure">
+                <x-mary-card id="password" title="Change Password"
+                    subtitle="Update your password to keep your account secure">
                     <x-slot:menu>
                         <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
                     </x-slot:menu>
 
                     <div class="space-y-4">
-                        <x-mary-input wire:model="current_password" label="Current Password" type="password"
-                            placeholder="Enter current password" icon="o-key" />
+                        {{-- Current Password with Toggle --}}
+                        <div x-data="{ show: false }" class="relative">
+                            <x-mary-input wire:model="current_password" label="Current Password"
+                                x-bind:type="show ? 'text' : 'password'" placeholder="Enter current password"
+                                icon="o-key" />
+                            <button type="button" @click="show = !show"
+                                class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye-slash" x-show="!show"></i>
+                                <i class="fas fa-eye" x-show="show" style="display: none;"></i>
+                            </button>
+                        </div>
 
+                        {{-- New Password Fields --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input wire:model="new_password" label="New Password" type="password"
-                                placeholder="Enter new password" icon="o-lock-closed" />
+                            <div x-data="{ show: false }" class="relative">
+                                <x-mary-input wire:model="new_password" label="New Password"
+                                    x-bind:type="show ? 'text' : 'password'" placeholder="Enter new password"
+                                    icon="o-lock-closed" />
+                                <button type="button" @click="show = !show"
+                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                    tabindex="-1">
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
+                                </button>
+                            </div>
 
-                            <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
-                                type="password" placeholder="Confirm new password" icon="o-lock-closed" />
+                            <div x-data="{ show: false }" class="relative">
+                                <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
+                                    x-bind:type="show ? 'text' : 'password'" placeholder="Confirm new password"
+                                    icon="o-lock-closed" />
+                                <button type="button" @click="show = !show"
+                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                    tabindex="-1">
+                                    <i class="fas fa-eye-slash" x-show="!show"></i>
+                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="alert alert-info">
@@ -97,7 +136,8 @@
                 </x-mary-card>
 
                 {{-- Notification Preferences --}}
-                <x-mary-card title="System Preferences" subtitle="Manage system notifications and alerts">
+                <x-mary-card id="notifications" title="System Preferences"
+                    subtitle="Manage system notifications and alerts">
                     <x-slot:menu>
                         <x-mary-icon name="o-bell" class="w-6 h-6 text-info" />
                     </x-slot:menu>
@@ -187,48 +227,6 @@
                         </div>
                     </div>
                 </x-mary-card>
-
-                {{-- Quick Actions --}}
-                <x-mary-card title="Quick Actions" class="shadow-lg">
-                    <div class="space-y-2">
-                        <x-mary-button icon="o-key" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'password' })">
-                            Change Password
-                        </x-mary-button>
-
-                        <x-mary-button icon="o-photo" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'avatar' })">
-                            Change Avatar
-                        </x-mary-button>
-
-                        <x-mary-button icon="o-bell" class="btn-ghost btn-block justify-start"
-                            wire:click="$dispatch('scroll-to', { section: 'notifications' })">
-                            System Preferences
-                        </x-mary-button>
-
-                        <div class="divider my-2"></div>
-
-                        <x-mary-button icon="o-arrow-left-on-rectangle"
-                            class="btn-ghost btn-block justify-start text-error" wire:click="$dispatch('logout')">
-                            Sign Out
-                        </x-mary-button>
-                    </div>
-                </x-mary-card>
-
-                {{-- Security Tips --}}
-                <div class="alert alert-error shadow-lg">
-                    <x-mary-icon name="o-shield-exclamation" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">SuperAdmin Security</h3>
-                        <ul class="text-xs mt-2 space-y-1">
-                            <li>• Use strongest possible password</li>
-                            <li>• Enable two-factor authentication</li>
-                            <li>• Never share admin credentials</li>
-                            <li>• Monitor system logs regularly</li>
-                            <li>• Review user access frequently</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

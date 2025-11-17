@@ -8,6 +8,7 @@ use App\Models\Fund_Sources;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
+use App\Services\TransactionLogService;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
@@ -301,7 +302,7 @@ class EditTicket extends Component
     public function updatedNewAttachments()
     {
         $this->validate([
-            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx'
+            'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
         ]);
     }
 
@@ -327,7 +328,7 @@ class EditTicket extends Component
 
         try {
             // Delete removed attachments
-            if (!empty($this->removedAttachmentIds)) {
+            if (! empty($this->removedAttachmentIds)) {
                 foreach ($this->removedAttachmentIds as $attachmentId) {
                     $attachment = Attachment::where('attachment_id', $attachmentId)
                         ->where('ticket_id', $this->ticket->ticket_id)
@@ -374,7 +375,13 @@ class EditTicket extends Component
                 'status' => 'amended',
             ]);
 
-            // Upload new attachments
+            // Refresh the model instance after update
+            $this->ticket->refresh();
+
+            // Log transaction
+            TransactionLogService::logTicketOperation('amended', $this->ticket);
+
+            // Handle new attachments if any
             if ($this->newAttachments) {
                 foreach ($this->newAttachments as $file) {
                     $originalName = $file->getClientOriginalName();
@@ -395,8 +402,8 @@ class EditTicket extends Component
                 }
             }
 
-            // Notify OSA admins
-            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            // Notify OSA admins - now using the refreshed model
+            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
             foreach ($osaUsers as $osaUser) {
                 $osaUser->notify(new TicketSubmittedNotification($this->ticket));
             }

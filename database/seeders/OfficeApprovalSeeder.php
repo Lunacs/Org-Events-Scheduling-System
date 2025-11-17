@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use App\Models\Office;
+use App\Models\Ticket;
 use Illuminate\Database\Seeder;
 
 class OfficeApprovalSeeder extends Seeder
@@ -12,9 +15,9 @@ class OfficeApprovalSeeder extends Seeder
     public function run(): void
     {
         // Get approved tickets and offices
-        $approvedTickets = \App\Models\Ticket::where('status', 'approved')->get();
-        $offices = \App\Models\Office::all();
-        $gsoUsers = \App\Models\User::where('role_id', \App\Models\User::ROLE_GSO)->get();
+        $approvedTickets = Ticket::where('status', 'approved')->get();
+        $offices = Office::all();
+        $gsoUsers = User::where('role_id', User::getRoleId('gso'))->get();
 
         if ($approvedTickets->isEmpty() || $offices->isEmpty()) {
             $this->command->warn('No approved tickets or offices found. Skipping office approval seeder.');

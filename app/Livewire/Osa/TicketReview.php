@@ -38,7 +38,7 @@ class TicketReview extends Component
             ])
             ->with([
                 'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                    ->with('studentOrganization:org_id,org_name'),
+                    ->with('studentOrganization:org_id,org_name,logo'),
                 'events:event_id,ticket_id,event__type_id,notes',
                 'attachments:attachment_id,ticket_id,file_path,file_name',
                 'eventType:event_type_id,type_name'
@@ -79,7 +79,7 @@ class TicketReview extends Component
             ])
             ->with([
                 'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                    ->with('studentOrganization:org_id,org_name'),
+                    ->with('studentOrganization:org_id,org_name,logo'),
                 'events:event_id,ticket_id',
                 'attachments:attachment_id,ticket_id',
                 'eventType:event_type_id,type_name'

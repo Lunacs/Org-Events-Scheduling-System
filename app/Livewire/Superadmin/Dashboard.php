@@ -10,6 +10,7 @@ use App\Services\TransactionLogService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Mary\Traits\Toast;
@@ -20,22 +21,20 @@ class Dashboard extends Component
     #[Title('Superadmin - Dashboard')]
     #[Layout('components.layouts.superadmin')]
 
-    // Cache duration in minutes
-    protected $cacheDuration = 5;
-
     public function render()
     {
         return view('livewire.superadmin.dashboard')->with([
-            'stats' => $this->getStats(),
-            'pendingApprovals' => $this->getPendingApprovals(),
-            'recentLogs' => $this->getRecentLogs(),
-            'headers' => $this->headers(),
+            'stats' => $this->stats,
+            'pendingApprovals' => $this->pendingApprovals,
+            'recentLogs' => $this->recentLogs,
+            'headers' => $this->headers,
         ]);
     }
 
-    protected function getStats(): array
+    #[Computed(persist: true, seconds: 300)] // 5 minutes cache
+    public function stats(): array
     {
-        return Cache::remember('dashboard_stats', $this->cacheDuration, function () {
+        return Cache::remember('superadmin_dashboard_stats', 300, function () {
             return [
                 'totalUsers' => User::count(),
                 'totalTickets' => Ticket::count(),
@@ -45,10 +44,15 @@ class Dashboard extends Component
         });
     }
 
-    protected function getPendingApprovals(): array
+    #[Computed(persist: true, seconds: 180)] // 3 minutes cache
+    public function pendingApprovals(): array
     {
-        return Cache::remember('dashboard_pending_approvals', $this->cacheDuration, function () {
-            return Ticket::with(['eventType', 'user'])
+        return Cache::remember('superadmin_dashboard_pending_approvals', 180, function () {
+            return Ticket::select(['ticket_id', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                ->with([
+                    'eventType:event_type_id,type_name',
+                    'user:user_id,name'
+                ])
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
@@ -67,10 +71,12 @@ class Dashboard extends Component
         });
     }
 
-    protected function getRecentLogs(): array
+    #[Computed(persist: true, seconds: 120)] // 2 minutes cache
+    public function recentLogs(): array
     {
-        return Cache::remember('dashboard_recent_logs', $this->cacheDuration, function () {
-            return Transaction_Logs::with('user')
+        return Cache::remember('superadmin_dashboard_recent_logs', 120, function () {
+            return Transaction_Logs::select(['log_id', 'action', 'details', 'created_at', 'user_id'])
+                ->with('user:user_id,email')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
@@ -88,14 +94,16 @@ class Dashboard extends Component
 
     public function refreshData()
     {
-        // Clear cache to force refresh
-        Cache::forget('dashboard_stats');
-        Cache::forget('dashboard_pending_approvals');
-        Cache::forget('dashboard_recent_logs');
-        
+        // Clear computed properties and cache
+        unset($this->stats, $this->pendingApprovals, $this->recentLogs);
+        Cache::forget('superadmin_dashboard_stats');
+        Cache::forget('superadmin_dashboard_pending_approvals');
+        Cache::forget('superadmin_dashboard_recent_logs');
+
         $this->success('Dashboard data refreshed!', position: 'toast-top');
     }
 
+    #[Computed]
     public function headers(): array
     {
         return [

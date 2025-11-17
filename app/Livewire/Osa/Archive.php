@@ -95,26 +95,26 @@ class Archive extends Component
         $this->resetPage();
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function archivedEvents()
     {
         return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+                'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
                     ->with([
-                        'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name')
+                        'user' => fn ($qu) => $qu->select(['user_id', 'org_id'])
+                            ->with('studentOrganization:org_id,org_name,logo'),
                     ])
                     ->withCount('attachments'),
                 'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                 'eventType:event_type_id,type_name',
             ])
-            ->whereHas('ticket', fn($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
-            ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
-            ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
-            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
+            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
+            ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
+            ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
+            ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->yearFilter, fn ($query) => $query->whereYear('created_at', $this->yearFilter))
+            ->when($this->eventTypeFilter, fn ($query) => $query->where('event__type_id', $this->eventTypeFilter))
             ->orderBy('created_at', 'desc')
             ->paginate(10); // Reduced from 12 to 10 for faster loads
     }

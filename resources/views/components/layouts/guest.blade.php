@@ -12,8 +12,13 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
+    <!-- Resource Hints for Performance -->
+    <link rel="dns-prefetch" href="https://fonts.bunny.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Fonts with optimized loading -->
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Font Awesome -->
@@ -23,6 +28,7 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 
 <body class="font-sans text-gray-900 antialiased">
@@ -31,7 +37,7 @@
         <div class="hidden lg:flex lg:w-[55%] relative">
             <div class="absolute inset-0">
                 <img src="{{ asset('images/suhay husay.png') }}"
-                    class="w-full h-full object-cover opacity-80 rounded-xl" alt="PLV Background">
+                    class="w-full h-full object-cover opacity-80 rounded-xl" alt="PLV Background" loading="eager" fetchpriority="high">
             </div>
             <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
         </div>
@@ -43,7 +49,7 @@
             <div class="mb-6 sm:mb-8">
                 <a href="/" wire:navigate>
                     <img src="{{ asset('images/osa-logo.jpg') }}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shadow-md"
-                        alt="OSA Logo">
+                        alt="OSA Logo" loading="eager" fetchpriority="high">
                 </a>
             </div>
 
@@ -53,6 +59,8 @@
             </div>
         </div>
     </div>
+
+    @stack('scripts')
 </body>
 
 </html>

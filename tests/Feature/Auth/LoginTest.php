@@ -42,7 +42,7 @@ class LoginTest extends TestCase
     public function test_osa_users_can_authenticate_through_admin_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -59,7 +59,7 @@ class LoginTest extends TestCase
     public function test_student_org_users_can_authenticate_through_student_org_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'email' => 'student@plv.edu.ph',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
@@ -77,7 +77,7 @@ class LoginTest extends TestCase
     public function test_gso_users_can_authenticate_through_gso_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_GSO,
+            'role_id' => User::getRoleId('gso'),
             'email' => 'gso@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -94,7 +94,7 @@ class LoginTest extends TestCase
     public function test_superadmin_users_can_authenticate_through_superadmin_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_SUPERADMIN,
+            'role_id' => User::getRoleId('superadmin'),
             'email' => 'superadmin@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -111,7 +111,7 @@ class LoginTest extends TestCase
     public function test_student_org_login_requires_plv_email(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'email' => 'student@gmail.com',
             'password' => bcrypt('password'),
         ]);
@@ -128,7 +128,7 @@ class LoginTest extends TestCase
     public function test_osa_user_cannot_login_through_gso_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -145,7 +145,7 @@ class LoginTest extends TestCase
     public function test_student_org_user_cannot_login_through_admin_portal(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'email' => 'student@plv.edu.ph',
             'password' => bcrypt('password'),
         ]);
@@ -162,7 +162,7 @@ class LoginTest extends TestCase
     public function test_users_cannot_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -179,7 +179,7 @@ class LoginTest extends TestCase
     public function test_login_throttles_after_too_many_attempts(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);
@@ -199,7 +199,7 @@ class LoginTest extends TestCase
     public function test_unverified_student_org_redirected_to_verification(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'email' => 'student@plv.edu.ph',
             'password' => bcrypt('password'),
             'email_verified_at' => null,

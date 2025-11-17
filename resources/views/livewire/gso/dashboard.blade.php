@@ -14,22 +14,22 @@
             $defaultRequestTypeBadge = 'badge-ghost text-base-content';
 
             $requestTypeBadgeDefaults = [
-                'venue booking' => 'badge-primary text-primary-content',
-                'venue' => 'badge-primary text-primary-content',
-                'equipment' => 'badge-info text-info-content',
-                'logistics' => 'badge-secondary text-secondary-content',
-                'catering' => 'badge-accent text-accent-content',
+                'venue booking' => 'badge-primary text-white',
+                'venue' => 'badge-primary text-white',
+                'equipment' => 'badge-info text-white',
+                'logistics' => 'badge-secondary text-white',
+                'catering' => 'badge-accent text-white',
             ];
 
             $requestTypeBadgePalette = [
-                'badge-success text-success-content',
-                'badge-warning text-warning-content',
-                'badge-error text-error-content',
-                'badge-neutral text-neutral-content',
-                'badge-info text-info-content',
-                'badge-secondary text-secondary-content',
-                'badge-accent text-accent-content',
-                'badge-primary text-primary-content',
+                'badge-success text-white',
+                'badge-warning text-white',
+                'badge-error text-white',
+                'badge-neutral text-white',
+                'badge-info text-white',
+                'badge-secondary text-white',
+                'badge-accent text-white',
+                'badge-primary text-white',
             ];
 
             $requestTypeBadgeMap = $requestTypeBadgeDefaults;
@@ -40,15 +40,18 @@
             foreach ($combinedApprovalCollection->pluck('request_type')->filter()->unique()->values() as $typeLabel) {
                 $lookupKey = \Illuminate\Support\Str::of($typeLabel)->lower()->toString();
 
-                if (! array_key_exists($lookupKey, $requestTypeBadgeMap)) {
-                    $requestTypeBadgeMap[$lookupKey] = $requestTypeBadgePalette[$paletteIndex % count($requestTypeBadgePalette)];
+                if (!array_key_exists($lookupKey, $requestTypeBadgeMap)) {
+                    $requestTypeBadgeMap[$lookupKey] =
+                        $requestTypeBadgePalette[$paletteIndex % count($requestTypeBadgePalette)];
                     $paletteIndex++;
                 }
             }
 
             $assignBadgeClass = fn($collection) => $collection
                 ->map(function ($row) use ($requestTypeBadgeMap, $defaultRequestTypeBadge) {
-                    $typeKey = \Illuminate\Support\Str::of($row['request_type'] ?? '')->lower()->toString();
+                    $typeKey = \Illuminate\Support\Str::of($row['request_type'] ?? '')
+                        ->lower()
+                        ->toString();
                     $row['request_type_badge_class'] = $requestTypeBadgeMap[$typeKey] ?? $defaultRequestTypeBadge;
 
                     return $row;
@@ -58,14 +61,9 @@
             $pendingApprovalRows = $assignBadgeClass($pendingApprovalCollection);
             $approvalSnapshotRows = $assignBadgeClass($approvalSnapshotCollection);
 
-            $uniqueOrganizationsCount = $pendingApprovalRows
-                ->pluck('organization')
-                ->filter()
-                ->unique()
-                ->count();
+            $uniqueOrganizationsCount = $pendingApprovalRows->pluck('organization')->filter()->unique()->count();
 
-            $recentActivityItems = collect($recentActivities)
-                ->map(fn($row) => is_array($row) ? $row : (array) $row);
+            $recentActivityItems = collect($recentActivities)->map(fn($row) => is_array($row) ? $row : (array) $row);
         @endphp
 
         <div class="flex items-center justify-between mb-6">
@@ -79,7 +77,8 @@
             </x-mary-button>
         </div>
 
-    <div id="overview-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" wire:loading.class="opacity-50" wire:target="refreshData">
+        <div id="overview-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+            wire:loading.class="opacity-50" wire:target="refreshData">
             <x-mary-stat title="Pending Approvals" :value="number_format(data_get($stats, 'pending', 0))" icon="o-clock"
                 class="bg-linear-to-br from-warning/10 to-warning/5 border border-warning/20"
                 tooltip="Requests awaiting GSO review" />
@@ -97,7 +96,8 @@
                 tooltip="Scheduled approved events" />
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" wire:loading.class="opacity-50" wire:target="refreshData">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" wire:loading.class="opacity-50"
+            wire:target="refreshData">
             <x-mary-card class="border-l-4 border-l-warning shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
@@ -123,18 +123,20 @@
             </x-mary-card>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" wire:loading.class="opacity-50" wire:target="refreshData">
-            <x-mary-card id="ticket-review-section" title="Pending Approvals" subtitle="Requests requiring your attention"
-                class="col-span-1 lg:col-span-2 shadow-md">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" wire:loading.class="opacity-50"
+            wire:target="refreshData">
+            <x-mary-card id="ticket-review-section" title="Pending Ticket Review"
+                subtitle="Requests requiring your attention" class="col-span-1 lg:col-span-2 shadow-md">
                 <x-slot:menu>
-                    <x-mary-button icon="o-eye" link="{{ route('gso.approvals') }}" class="btn-sm btn-ghost"
+                    <x-mary-button icon="o-eye" link="{{ route('gso.ticket-review') }}" class="btn-sm btn-ghost"
                         label="View All" wire:navigate />
                 </x-slot:menu>
 
                 @if ($pendingApprovalRows->count() > 0)
                     <div class="space-y-3">
                         @foreach ($pendingApprovalRows as $approval)
-                            <x-mary-list-item :item="$approval" no-separator wire:key="pending-{{ $approval['approval_id'] }}">
+                            <x-mary-list-item :item="$approval" no-separator
+                                wire:key="pending-{{ $approval['approval_id'] }}">
                                 <x-slot:value>
                                     <div class="flex items-center gap-2">
                                         <x-mary-badge :value="$approval['ticket_number']" class="badge-ghost badge-sm" />
@@ -165,7 +167,8 @@
                 @endif
             </x-mary-card>
 
-            <x-mary-card id="recent-activity-section" title="Recent Activity" subtitle="Latest actions from your team" class="shadow-md">
+            <x-mary-card id="recent-activity-section" title="Recent Activity" subtitle="Latest actions from your team"
+                class="shadow-md">
 {{--                <x-slot:menu>--}}
 {{--                    <x-mary-button icon="o-document-text" link="{{ route('gso.communication') }}"--}}
 {{--                        class="btn-sm btn-ghost" label="View Logs" wire:navigate />--}}
@@ -175,7 +178,9 @@
                     <div class="space-y-3">
                         @foreach ($recentActivityItems as $activity)
                             @php
-                                $actionText = \Illuminate\Support\Str::of($activity['action'] ?? '')->lower()->toString();
+                                $actionText = \Illuminate\Support\Str::of($activity['action'] ?? '')
+                                    ->lower()
+                                    ->toString();
                                 $icon = 'o-chat-bubble-bottom-center-text';
                                 $iconClasses = 'text-info';
 
@@ -188,13 +193,16 @@
                                 }
                             @endphp
 
-                            <div class="p-3 bg-base-200 rounded-lg border border-base-300" wire:key="activity-{{ $activity['id'] ?? \Illuminate\Support\Str::uuid()->toString() }}">
+                            <div class="p-3 bg-base-200 rounded-lg border border-base-300"
+                                wire:key="activity-{{ $activity['id'] ?? \Illuminate\Support\Str::uuid()->toString() }}">
                                 <div class="flex items-start gap-3">
                                     <x-mary-icon :name="$icon" class="w-5 h-5 {{ $iconClasses }} mt-0.5" />
                                     <div class="flex-1">
                                         <p class="font-medium text-sm">{{ $activity['action'] ?? 'Activity' }}</p>
-                                        <p class="text-xs text-gray-500">{{ $activity['details'] ?? 'Details unavailable.' }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">{{ $activity['time_ago'] ?? 'Just now' }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ $activity['details'] ?? 'Details unavailable.' }}</p>
+                                        <p class="text-xs text-gray-400 mt-1">{{ $activity['time_ago'] ?? 'Just now' }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -244,8 +252,8 @@
                 </x-mary-table>
 
                 <div class="mt-4 text-center">
-                    <x-mary-button label="Go to Approvals" link="{{ route('gso.approvals') }}" class="btn-primary"
-                        icon-right="o-arrow-right" wire:navigate />
+                    <x-mary-button label="Go to Ticket Review" link="{{ route('gso.ticket-review') }}"
+                        class="btn-primary" icon-right="o-arrow-right" wire:navigate />
                 </div>
             @else
                 <div class="text-center py-12">
@@ -259,28 +267,17 @@
         <div class="mt-6" wire:loading.class="opacity-50" wire:target="refreshData">
             <h2 class="text-xl font-bold font-heading mb-4">Quick Actions</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="{{ route('gso.ticket-review') }}"
-                    wire:navigate
-                    class="block hover:shadow-lg transition-shadow border-2 border-transparent hover:border-primary duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                    <div class="text-center py-4">
-                        <x-mary-icon name="o-ticket" class="w-12 h-12 mx-auto mb-3 text-primary" />
-                        <h3 class="font-semibold">Ticket Review</h3>
-                        <p class="text-xs text-gray-500 mt-1">Manage event requests</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('gso.approvals') }}"
-                    wire:navigate
+                <a href="{{ route('gso.ticket-review') }}" wire:navigate
                     class="block hover:shadow-lg transition-shadow border-2 border-transparent hover:border-secondary duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2">
                     <div class="text-center py-4">
-                        <x-mary-icon name="o-clipboard-document-check" class="w-12 h-12 mx-auto mb-3 text-secondary" />
-                        <h3 class="font-semibold">Approvals</h3>
+                        <x-mary-icon name="o-clipboard-document-check"
+                            class="w-12 h-12 mx-auto mb-3 text-secondary" />
+                        <h3 class="font-semibold">Ticket Review</h3>
                         <p class="text-xs text-gray-500 mt-1">Process office approvals</p>
                     </div>
                 </a>
 
-                <a href="{{ route('gso.calendar') }}"
-                    wire:navigate
+                <a href="{{ route('gso.calendar') }}" wire:navigate
                     class="block hover:shadow-lg transition-shadow border-2 border-transparent hover:border-accent duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2">
                     <div class="text-center py-4">
                         <x-mary-icon name="o-calendar-days" class="w-12 h-12 mx-auto mb-3 text-accent" />
@@ -289,8 +286,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('gso.reports') }}"
-                    wire:navigate
+                <a href="{{ route('gso.reports') }}" wire:navigate
                     class="block hover:shadow-lg transition-shadow border-2 border-transparent hover:border-info duration-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-info focus:ring-offset-2">
                     <div class="text-center py-4">
                         <x-mary-icon name="o-document-chart-bar" class="w-12 h-12 mx-auto mb-3 text-info" />

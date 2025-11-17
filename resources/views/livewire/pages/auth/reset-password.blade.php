@@ -84,11 +84,11 @@ new #[Layout('components.layouts.guest')] class extends Component {
             return 'login';
         }
 
-        return match ($user->role) {
-            User::ROLE_SUPERADMIN => 'superadmin.login',
-            User::ROLE_OSA => 'admin.login',
-            User::ROLE_GSO => 'gso.login',
-            User::ROLE_STUDENT_ORG => 'student-org.login',
+        return match ($user->role_id) {
+            User::getRoleId('superadmin') => 'superadmin.login',
+            User::getRoleId('osa') => 'admin.login',
+            User::getRoleId('gso') => 'gso.login',
+            User::getRoleId('student-org') => 'student-org.login',
             default => 'login',
         };
     }

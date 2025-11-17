@@ -30,7 +30,7 @@ class TicketForwardedToGsoNotification extends Notification implements ShouldBro
 
     public function toMail(object $notifiable): MailMessage
     {
-		$actionUrl = route('gso.ticket-review');
+		$actionUrl = $this->getActionUrl($notifiable);
 
 		return (new MailMessage)
 			->subject('New Ticket Forwarded for GSO Review - ' . $this->ticket->ticket_number)
@@ -44,21 +44,46 @@ class TicketForwardedToGsoNotification extends Notification implements ShouldBro
 
     public function toArray(object $notifiable): array
     {
+        $message = $notifiable->isGso()
+            ? 'Ticket "' . $this->ticket->title . '" (' . $this->ticket->ticket_number . ') forwarded to GSO for review.'
+            : 'Your ticket "' . $this->ticket->title . '" has been forwarded to GSO for review.';
+
         return [
             'title' => 'Ticket Forwarded to GSO',
-            'message' => 'Ticket "' . $this->ticket->title . '" (' . $this->ticket->ticket_number . ') forwarded to GSO for review.',
+            'message' => $message,
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_forwarded_to_gso',
             'icon' => 's-arrow-right',
             'color' => 'info',
             'remarks' => $this->remarks,
+            'action_url' => $this->getActionUrl($notifiable),
         ];
     }
 
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage($this->toArray($notifiable));
+    }
+
+    private function getActionUrl(object $notifiable): string
+    {
+        // Student Org users go to their tickets page
+        if ($notifiable->isStudentOrg()) {
+            return route('student-org.my-tickets');
+        }
+
+        // GSO users go to ticket review
+        if ($notifiable->isGso()) {
+            return route('gso.ticket-review');
+        }
+
+        // OSA users go to ticket review
+        if ($notifiable->isOsa() || $notifiable->isSuperadmin()) {
+            return route('osa.ticket-review.show', $this->ticket->ticket_number);
+        }
+
+        return route('gso.ticket-review');
     }
 }
 

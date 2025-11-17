@@ -3,8 +3,10 @@
 namespace App\Livewire\Osa;
 
 use App\Models\Event;
+use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
+#[Lazy]
 class ArchivedEventDetails extends Component
 {
     public int $eventId;
@@ -20,7 +22,7 @@ class ArchivedEventDetails extends Component
                 'ticket' => fn ($q) => $q
                     ->select(['ticket_id', 'ticket_number', 'title', 'description', 'status', 'user_id', 'venue_requested', 'total_participants', 'created_at', 'updated_at'])
                     ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])->with('studentOrganization:org_id,org_name'),
+                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])->with('studentOrganization:org_id,org_name,logo'),
                         'latestOsaApproval:osa_approval_id,user_id,decision,remarks,created_at',
                         'attachments:attachment_id,ticket_id,file_path,file_name,file_type',
                     ]),
@@ -28,6 +30,18 @@ class ArchivedEventDetails extends Component
                 'eventType:event_type_id,type_name',
             ])
             ->find($this->eventId);
+    }
+
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="space-y-3 animate-pulse">
+            <div class="h-6 bg-base-200 rounded"></div>
+            <div class="h-4 bg-base-200 rounded"></div>
+            <div class="h-4 bg-base-200 rounded w-3/4"></div>
+            <div class="h-4 bg-base-200 rounded w-5/6"></div>
+        </div>
+        HTML;
     }
 
     public function render()

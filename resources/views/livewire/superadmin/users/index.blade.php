@@ -1,9 +1,26 @@
-<div x-data="{ userFormOpen: false, deleteModalOpen: false }" @user-form-close.window="userFormOpen = false"
-    @delete-modal-close.window="deleteModalOpen = false">
+<div x-data="{
+    openCreateUserDrawer() {
+            $wire.resetCreateForm();
+            document.getElementById('create-user-drawer-toggle').checked = true;
+        },
+        closeCreateUserDrawer() {
+            document.getElementById('create-user-drawer-toggle').checked = false;
+            $wire.resetCreateForm();
+        },
+        openEditUserDrawer(userId) {
+            $wire.loadEditForm(userId);
+            document.getElementById('edit-user-drawer-toggle').checked = true;
+        },
+        closeEditUserDrawer() {
+            document.getElementById('edit-user-drawer-toggle').checked = false;
+            $wire.resetEditForm();
+        }
+}"
+    @user-drawer-close.window="document.getElementById('create-user-drawer-toggle').checked = false; document.getElementById('edit-user-drawer-toggle').checked = false">
     <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold font-heading">User Management</h1>
-            <x-mary-button icon="o-plus" class="btn-accent font-body" @click="$wire.openCreateUserDrawer()">
+            <x-mary-button icon="o-plus" class="btn-accent" @click="openCreateUserDrawer()">
                 Create User
             </x-mary-button>
         </div>
@@ -19,32 +36,35 @@
                     ['id' => 'superadmin', 'name' => 'Super Admin'],
                     ['id' => 'osa', 'name' => 'OSA Staff'],
                     ['id' => 'gso', 'name' => 'GSO Staff'],
-                    ['id' => 'student_org', 'name' => 'Student Organization'],
+                    ['id' => 'student-org', 'name' => 'Student Organization'],
                 ]" option-value="id"
                     option-label="name" />
 
                 <div class="flex items-end">
-                    <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click="$refresh">
-                        Refresh
+                    <x-mary-button icon="o-x-mark" class="btn-outline" wire:click="clearFilters">
+                        Clear Filters
                     </x-mary-button>
                 </div>
             </div>
         </x-mary-card>
 
         <x-mary-card shadow>
-            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination per-page="perPage"
-                :per-page-values="[10, 25, 50]" class="rounded-lg">
-                @scope('cell_role', $user)
-                    <x-mary-badge :value="$this->getRoleDisplayName($user->role)" :class="match ($user->role) {
-                        'superadmin' => 'badge-error text-base-200 text-md',
+            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination :per-page-values="[10, 25, 50]"
+                class="rounded-lg">
+                @scope('cell_role_id', $user)
+                    @php
+                        $roleString = $user->role?->role_name ?? 'unknown';
+                    @endphp
+                    <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
+                        'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap',
                         'osa' => 'badge-primary text-base-200',
                         'gso' => 'badge-info text-base-200',
-                        'student_org' => 'badge-success text-base-200 whitespace-nowrap',
+                        'student-org' => 'badge-success text-base-200 whitespace-nowrap',
                         default => 'badge-ghost text-base-200',
                     }" />
                 @endscope
 
-                @scope('cell_status', $user)
+                @scope('cell_email_verified_at', $user)
                     @if ($user->email_verified_at)
                         <x-mary-badge value="Verified" class="badge-success text-base-200" />
                     @else
@@ -65,12 +85,12 @@
                 @scope('cell_actions', $user)
                     <div class="flex space-x-1">
                         <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                            @click="$wire.openEditUserDrawer({{ $user->user_id }})">
+                            @click="openEditUserDrawer({{ $user->user_id }})">
                             Edit
                         </x-mary-button>
-                        @if ($user->role !== 'superadmin')
+                        @if (!$user->isSuperAdmin())
                             <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                wire:click="openDeleteModal({{ $user->user_id }})">
+                                wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
                             </x-mary-button>
                         @endif
                     </div>
@@ -80,78 +100,206 @@
     </div>
 
     {{-- Create User Drawer --}}
-    <x-mary-drawer wire:model="showCreateUserDrawer" title="Create New User" subtitle="Add a new user to the system"
-        separator close-on-escape withCloseButton class="w-11/12 lg:w-1/2" right @close="$wire.resetCreateForm()">
+    <div class="drawer drawer-end z-50">
+        <input id="create-user-drawer-toggle" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-side">
+            <label for="create-user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="bg-base-100 min-h-full w-11/12 lg:w-1/2 p-6 flex flex-col rounded-l-2xl">
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-base-300">
+                    <div>
+                        <h2 class="text-2xl font-bold text-base-content">Create New User</h2>
+                        <p class="text-sm text-base-content/60 mt-1">Add a new user to the system</p>
+                    </div>
+                    <button @click="closeCreateUserDrawer()" class="btn btn-sm btn-circle btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
-        <form wire:submit="createUser" class="space-y-4">
-            <x-mary-input label="Full Name" wire:model="createForm.name" placeholder="John Dela Cruz" icon="o-user"
-                hint="Enter the user's complete name" />
+                {{-- Form Content --}}
+                <div class="flex-1 overflow-y-auto">
+                    <form wire:submit="createUser" class="space-y-4">
+                        <x-mary-input label="Full Name" wire:model.blur="createForm.name" placeholder="John Dela Cruz"
+                            icon="o-user" required />
 
-            <x-mary-input label="Email Address" wire:model="createForm.email" type="email"
-                placeholder="user@plv.edu.ph" icon="o-envelope" hint="Must be a valid PLV email address" />
+                        <x-mary-input label="Email Address" wire:model.blur="createForm.email" type="email"
+                            placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
-            <x-mary-input label="Password" wire:model="createForm.password" type="password" placeholder="Enter password"
-                icon="o-lock-closed" hint="Minimum 8 characters" placeholder="Confirm password"/>
+                        {{-- In Create User Form - Password Field --}}
+                        <div x-data="{ showPassword: false }" class="relative">
+                            <x-mary-input label="Password" wire:model.blur="createForm.password" ::type="showPassword ? 'text' : 'password'"
+                                placeholder="Enter password" icon="o-lock-closed" required />
+                            <button type="button" @click="showPassword = !showPassword"
+                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye-slash text-sm" x-show="!showPassword"></i>
+                                <i class="fas fa-eye text-sm" x-show="showPassword" style="display: none;"></i>
+                            </button>
+                        </div>
 
-            <x-mary-input label="Confirm Password" wire:model="createForm.password_confirmation" type="password"
-                placeholder="Confirm password" icon="o-lock-closed" />
+                        {{-- In Create User Form - Confirm Password Field --}}
+                        <div x-data="{ showConfirmPassword: false }" class="relative">
+                            <x-mary-input label="Confirm Password" wire:model.blur="createForm.password_confirmation"
+                                ::type="showConfirmPassword ? 'text' : 'password'" placeholder="Confirm password" icon="o-lock-closed" required />
+                            <button type="button" @click="showConfirmPassword = !showConfirmPassword"
+                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye-slash text-sm" x-show="!showConfirmPassword"></i>
+                                <i class="fas fa-eye text-sm" x-show="showConfirmPassword" style="display: none;"></i>
+                            </button>
+                        </div>
 
-            <x-mary-select label="Role" wire:model="createForm.role" :options="[
-                ['value' => 'osa', 'label' => 'OSA Staff'],
-                ['value' => 'gso', 'label' => 'GSO Staff'],
-                ['value' => 'student_org', 'label' => 'Student Organization'],
-            ]" option-value="value"
-                option-label="label" placeholder="Select user role" icon="o-shield-check"
-                hint="Assign the appropriate role for this user" />
-        </form>
+                        <x-mary-select label="Role" wire:model.live="createForm.role" :options="$roles"
+                            option-value="role_name" option-label="role_name" placeholder="Select user role"
+                            icon="o-shield-check" required />
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showCreateUserDrawer = false" />
-            <x-mary-button label="Create User" wire:click="createUser" class="btn-primary" spinner="createUser" />
-        </x-slot:actions>
-    </x-mary-drawer>
+                        @if ($createForm['role'] === 'student-org')
+                            <x-mary-select label="Organization Name" wire:model.blur="createForm.org_name"
+                                :options="$organizations" option-value="org_id" option-label="org_name"
+                                placeholder="Select organization" required />
+
+                            <x-mary-select label="Org Position" wire:model.blur="createForm.position"
+                                :options="$positions" option-value="position_id" option-label="position_name"
+                                placeholder="Select organization position" required />
+                        @endif
+
+                        @if (in_array($createForm['role'], ['osa', 'gso']))
+                            <div class="alert alert-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    class="stroke-current shrink-0 w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Office will be automatically assigned based on the selected role.</span>
+                            </div>
+                        @endif
+
+                        <x-mary-input label="Contact Number" type="number" wire:model.blur="createForm.phone"
+                            placeholder="09123456789" icon="o-phone" required />
+                    </form>
+                </div>
+
+                {{-- Actions --}}
+                <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
+                    <x-mary-button label="Cancel" @click="closeCreateUserDrawer()" />
+                    <x-mary-button label="Create User" wire:click="createUser" class="btn-primary"
+                        spinner="createUser" />
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Edit User Drawer --}}
-    <x-mary-drawer wire:model="showEditUserDrawer" title="Edit User" subtitle="Update user information" separator
-        close-on-escape withCloseButton class="w-11/12 lg:w-1/2" right @close="$wire.resetEditForm()">
+    <div class="drawer drawer-end z-50">
+        <input id="edit-user-drawer-toggle" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-side">
+            <label for="edit-user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="bg-base-100 min-h-full w-11/12 lg:w-1/2 p-6 flex flex-col">
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-base-300">
+                    <div>
+                        <h2 class="text-2xl font-bold text-base-content">Edit User</h2>
+                        <p class="text-sm text-base-content/60 mt-1">Update user information</p>
+                    </div>
+                    <button @click="closeEditUserDrawer()" class="btn btn-sm btn-circle btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
-        <form wire:submit="updateUser" class="space-y-4">
-            <x-mary-input label="Full Name" wire:model="editForm.name" placeholder="John Dela Cruz" icon="o-user"
-                hint="Enter the user's complete name" />
+                {{-- Form Content --}}
+                <div class="flex-1 overflow-y-auto">
+                    <form wire:submit="updateUser" class="space-y-4">
+                        <x-mary-input label="Full Name" wire:model.blur="editForm.name" placeholder="John Dela Cruz"
+                            icon="o-user" required />
 
-            <x-mary-input label="Email Address" wire:model="editForm.email" type="email" placeholder="user@plv.edu.ph"
-                icon="o-envelope" hint="Must be a valid PLV email address" />
+                        <x-mary-input label="Email Address" wire:model.blur="editForm.email" type="email"
+                            placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
-            <x-mary-input label="New Password (leave blank to keep current)" wire:model="editForm.password"
-                type="password" placeholder="Enter new password" icon="o-lock-closed"
-                hint="Only fill if you want to change the password (min 8 characters)" />
+                        {{-- In Edit User Form - Password Field --}}
+                        <div x-data="{ showEditPassword: false }" class="relative">
+                            <x-mary-input label="New Password (leave blank to keep current)"
+                                wire:model.blur="editForm.password" ::type="showEditPassword ? 'text' : 'password'"
+                                placeholder="Enter new password" icon="o-lock-closed"
+                                hint="Only fill if you want to change the password (min 8 characters)" />
+                            <button type="button" @click="showEditPassword = !showEditPassword"
+                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye-slash text-sm" x-show="!showEditPassword"></i>
+                                <i class="fas fa-eye text-sm" x-show="showEditPassword" style="display: none;"></i>
+                            </button>
+                        </div>
 
-            <x-mary-input label="Confirm New Password" wire:model="editForm.password_confirmation" type="password"
-                placeholder="Confirm new password" icon="o-lock-closed" />
+                        {{-- In Edit User Form - Confirm Password Field --}}
+                        <div x-data="{ showEditConfirmPassword: false }" class="relative">
+                            <x-mary-input label="Confirm New Password"
+                                wire:model.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
+                                placeholder="Confirm new password" icon="o-lock-closed" />
+                            <button type="button" @click="showEditConfirmPassword = !showEditConfirmPassword"
+                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                tabindex="-1">
+                                <i class="fas fa-eye-slash text-sm" x-show="!showEditConfirmPassword"></i>
+                                <i class="fas fa-eye text-sm" x-show="showEditConfirmPassword"
+                                    style="display: none;"></i>
+                            </button>
+                        </div>
 
-            @if ($editForm['is_superadmin'] ?? false)
-                <x-mary-input label="Role" value="Super Admin" readonly icon="o-shield-check"
-                    hint="Superadmin role cannot be changed" />
-            @else
-                <x-mary-select label="Role" wire:model="editForm.role" :options="[
-                    ['value' => 'osa', 'label' => 'OSA Staff'],
-                    ['value' => 'gso', 'label' => 'GSO Staff'],
-                    ['value' => 'student_org', 'label' => 'Student Organization'],
-                ]" option-value="value"
-                    option-label="label" placeholder="Select user role" icon="o-shield-check"
-                    hint="Assign the appropriate role for this user" />
-            @endif
-        </form>
+                        @if ($editForm['is_superadmin'] ?? false)
+                            <x-mary-input label="Role" value="Super Admin" readonly icon="o-shield-check"
+                                hint="Superadmin role cannot be changed" />
+                        @else
+                            <x-mary-select label="Role" wire:model.live="editForm.role" :options="$roles"
+                                option-value="role_name" option-label="role_name" placeholder="Select user role"
+                                icon="o-shield-check" required />
 
-        <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showEditUserDrawer = false" />
-            <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary" spinner="updateUser" />
-        </x-slot:actions>
-    </x-mary-drawer>
+                            @if ($editForm['role'] === 'student-org')
+                                <x-mary-select label="Organization Name" wire:model.blur="editForm.org_name"
+                                    :options="$organizations" option-value="org_id" option-label="org_name"
+                                    placeholder="Select organization" required />
+
+                                <x-mary-select label="Org Position" wire:model.blur="editForm.position"
+                                    :options="$positions" option-value="position_id" option-label="position_name"
+                                    placeholder="Select organization position" required />
+                            @endif
+
+                            @if (in_array($editForm['role'], ['osa', 'gso']))
+                                <div class="alert alert-info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        class="stroke-current shrink-0 w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Office will be automatically assigned based on the selected role.</span>
+                                </div>
+                            @endif
+                        @endif
+
+                        <x-mary-input label="Contact Number" type="number" wire:model.blur="editForm.phone"
+                            placeholder="09123456789" icon="o-phone" required />
+                    </form>
+                </div>
+
+                {{-- Actions --}}
+                <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
+                    <x-mary-button label="Cancel" @click="closeEditUserDrawer()" />
+                    <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary"
+                        spinner="updateUser" />
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Delete Confirmation Modal --}}
     @if ($deletingUserName)
-        <x-mary-modal :open="$showDeleteModal" title="Delete User Confirmation" subtitle="This action cannot be undone">
+        <x-mary-modal wire:model="showDeleteModal" title="Delete User Confirmation"
+            subtitle="This action cannot be undone">
             <div class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center">
@@ -180,8 +328,7 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel"
-                    @click="$wire.set('showDeleteModal', false); $wire.resetDeleteModal()" />
+                <x-mary-button label="Cancel" wire:click="closeDeleteModal()" />
                 <x-mary-button label="Delete User" wire:click="confirmDelete" class="btn-error"
                     spinner="confirmDelete" />
             </x-slot:actions>

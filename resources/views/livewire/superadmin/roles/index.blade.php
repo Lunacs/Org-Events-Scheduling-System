@@ -1,4 +1,27 @@
-<div>
+    <div x-data="{ 
+    showRoleDrawer: false,
+    showDeleteModal: false,
+    openRoleDrawer() {
+        $wire.resetRoleForm();
+        this.showRoleDrawer = true;
+    },
+    openEditRoleDrawer(roleId) {
+        $wire.loadRoleForm(roleId);
+        this.showRoleDrawer = true;
+    },
+    closeRoleDrawer() {
+        this.showRoleDrawer = false;
+        $wire.resetRoleForm();
+    },
+    openDeleteModal(roleId) {
+        $wire.loadRoleForDeletion(roleId);
+        this.showDeleteModal = true;
+    },
+    closeDeleteModal() {
+        this.showDeleteModal = false;
+        $wire.resetDeleteModal();
+    }
+}" @role-drawer-close.window="showRoleDrawer = false" @delete-modal-close.window="showDeleteModal = false">
     <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold font-heading">Roles & Permissions</h1>
@@ -6,7 +29,7 @@
                 <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click="refreshRoles">
                     Refresh
                 </x-mary-button>
-                <x-mary-button icon="o-plus" class="btn-accent" @click="$wire.openCreateRoleDrawer()">
+                <x-mary-button icon="o-plus" class="btn-accent" @click="openRoleDrawer()">
                     Create Role
                 </x-mary-button>
             </div>
@@ -46,12 +69,12 @@
                 @scope('cell_actions', $role)
                     <div class="flex space-x-1">
                         <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                            @click="$wire.openEditRoleDrawer('{{ $role['id'] }}')">
+                            @click="openEditRoleDrawer('{{ $role['id'] }}')">
                             Edit
                         </x-mary-button>
                         @if ($role['id'] !== 'superadmin')
                             <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                @click="$wire.openDeleteModal('{{ $role['id'] }}')">
+                                @click="openDeleteModal('{{ $role['id'] }}')">
                             </x-mary-button>
                         @endif
                     </div>
@@ -73,9 +96,9 @@
     </div>
 
     {{-- Role Form Drawer --}}
-    <x-mary-drawer wire:model="showRoleDrawer" title="{{ $roleForm['id'] ? 'Edit Role' : 'Create New Role' }}"
+    <x-mary-drawer x-model="showRoleDrawer" title="{{ $roleForm['id'] ? 'Edit Role' : 'Create New Role' }}"
         subtitle="{{ $roleForm['id'] ? 'Update role information' : 'Add a new role to the system' }}" separator
-        with-close-button close-on-escape class="w-11/12 lg:w-1/2" right @close="$wire.resetRoleForm()">
+        with-close-button close-on-escape class="w-11/12 lg:w-1/2" right @close="closeRoleDrawer()">
 
         <form wire:submit="saveRole" class="space-y-4">
             <x-mary-input wire:model="roleForm.name" label="Role Name" placeholder="Enter role name"
@@ -98,7 +121,7 @@
         </form>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showRoleDrawer = false" />
+            <x-mary-button label="Cancel" @click="closeRoleDrawer()" />
             <x-mary-button label="{{ $roleForm['id'] ? 'Update Role' : 'Create Role' }}" wire:click="saveRole"
                 class="btn-primary" spinner="saveRole" />
         </x-slot:actions>
@@ -106,7 +129,7 @@
 
     {{-- Delete Confirmation Modal --}}
     @if ($deletingRoleId)
-        <x-mary-modal wire:model="showDeleteModal" title="Delete Role Confirmation"
+        <x-mary-modal x-model="showDeleteModal" title="Delete Role Confirmation"
             subtitle="This action cannot be undone">
             <div class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -134,7 +157,7 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.resetDeleteModal()" />
+                <x-mary-button label="Cancel" @click="closeDeleteModal()" />
                 <x-mary-button label="Delete Role" wire:click="confirmDeleteRole" class="btn-error"
                     spinner="confirmDeleteRole" />
             </x-slot:actions>

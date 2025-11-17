@@ -66,7 +66,7 @@ class Profile extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.Auth::id().',user_id',
+            'email' => 'required|email|max:255|unique:users,email,' . Auth::id() . ',user_id',
             'phone' => 'nullable|string|max:20',
         ]);
 

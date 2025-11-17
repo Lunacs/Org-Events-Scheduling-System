@@ -8,17 +8,19 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    // User roles constants
-    const ROLE_SUPERADMIN = 1;
-    const ROLE_OSA = 2;
-    const ROLE_GSO = 3;
-    const ROLE_STUDENT_ORG = 4;
+    /**
+     * In-memory cache for role IDs to prevent duplicate cache queries within the same request
+     *
+     * @var array<string, int|null>
+     */
+    protected static array $roleIdCache = [];
 
     /**
      * The primary key for the model.
@@ -69,57 +71,97 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user is a superadmin
+     * Get role ID by role name (cached for performance)
+     * Uses in-memory cache first to prevent duplicate queries within the same request,
+     * then falls back to persistent cache for cross-request caching.
+     */
+    public static function getRoleId(string $roleName): ?int
+    {
+        // Check in-memory cache first (prevents duplicate queries in same request)
+        if (isset(static::$roleIdCache[$roleName])) {
+            return static::$roleIdCache[$roleName];
+        }
+
+        // Get from persistent cache (or database if not cached)
+        $roleId = Cache::rememberForever("role_id_{$roleName}", function () use ($roleName) {
+            return Roles::where('role_name', $roleName)->value('role_id');
+        });
+
+        // Store in in-memory cache for this request
+        static::$roleIdCache[$roleName] = $roleId;
+
+        return $roleId;
+    }
+
+    /**
+     * Preload commonly used role IDs to prevent duplicate cache queries
+     * Call this method early in the request lifecycle (e.g., in middleware or service provider)
      *
-     * @return bool
+     * @param  array<string>  $roleNames  Role names to preload (defaults to common roles)
+     */
+    public static function preloadRoleIds(array $roleNames = ['osa', 'student-org', 'gso', 'superadmin']): void
+    {
+        foreach ($roleNames as $roleName) {
+            // This will populate both in-memory and persistent cache
+            static::getRoleId($roleName);
+        }
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role_id === self::getRoleId($roleName);
+    }
+
+    /**
+     * Check if user is a superadmin
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role_id === self::ROLE_SUPERADMIN;
+        return $this->hasRole('superadmin');
     }
 
     /**
      * Check if user is an OSA admin
-     *
-     * @return bool
      */
     public function isOSA(): bool
     {
-        return $this->role_id === self::ROLE_OSA;
+        return $this->hasRole('osa');
     }
 
     /**
      * Check if user is a GSO admin
-     *
-     * @return bool
      */
     public function isGSO(): bool
     {
-        return $this->role_id === self::ROLE_GSO;
+        return $this->hasRole('gso');
     }
 
     /**
      * Check if user is a student organization member
-     *
-     * @return bool
      */
     public function isStudentOrg(): bool
     {
-        return $this->role_id === self::ROLE_STUDENT_ORG;
+        return $this->hasRole('student-org');
     }
 
     /**
      * Get the user's dashboard route based on their role
-     *
-     * @return string
      */
     public function getDashboardRoute(): string
     {
-        return match ($this->role_id) {
-            self::ROLE_SUPERADMIN => 'superadmin.dashboard',
-            self::ROLE_OSA => 'admin.dashboard',
-            self::ROLE_GSO => 'gso.dashboard',
-            self::ROLE_STUDENT_ORG => 'student-org.dashboard',
+        // Load role relationship if not already loaded
+        if (! $this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        return match ($this->role?->role_name) {
+            'superadmin' => 'superadmin.dashboard',
+            'osa' => 'admin.dashboard',
+            'gso' => 'gso.dashboard',
+            'student-org' => 'student-org.dashboard',
             default => 'admin.dashboard',
         };
     }
@@ -214,12 +256,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleDisplayAttribute(): string
     {
         // Load role relationship if not already loaded
-        if (!$this->relationLoaded('role')) {
+        if (! $this->relationLoaded('role')) {
             $this->load('role');
         }
-        
+
         $roleName = $this->role?->role_name ?? 'unknown';
+
         return ucfirst(str_replace('-', ' ', $roleName));
+    }
+
+    public function getRoleDisplayName(string $role): string
+    {
+        return ucfirst(str_replace('-', ' ', $role));
     }
 
     /**

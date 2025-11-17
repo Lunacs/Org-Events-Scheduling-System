@@ -11,6 +11,13 @@ export default defineConfig({
         }),
     ],
     build: {
+        // Use esbuild for faster minification (built-in, no extra dependency)
+        minify: "esbuild",
+        // Enable CSS code splitting for better performance
+        cssCodeSplit: true,
+        // Inline small assets as base64 (< 4kb)
+        assetsInlineLimit: 4096,
+        // Optimize chunk sizes
         rollupOptions: {
             external: [
                 "@fullcalendar/core",
@@ -28,6 +35,20 @@ export default defineConfig({
                     "@fullcalendar/list": "FullCalendarList",
                 },
             },
+        },
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
+        // Target modern browsers for smaller bundles
+        target: "es2015",
+        // Enable source maps for production debugging (optional)
+        sourcemap: false,
+        // Report compressed file sizes
+        reportCompressedSize: true,
+    },
+    // Optimize dev server for faster HMR
+    server: {
+        hmr: {
+            overlay: false, // Disable error overlay for faster dev
         },
     },
 });

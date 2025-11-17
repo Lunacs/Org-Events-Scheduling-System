@@ -7,11 +7,11 @@ use App\Models\Event_Schedule;
 use App\Models\Office_Approval;
 use App\Models\OSA_Approval;
 use App\Models\Ticket;
-use App\Models\TicketComment;
 use App\Models\User;
-use App\Notifications\TicketCommentNotification;
 use App\Notifications\TicketForwardedToGsoNotification;
 use App\Notifications\TicketStatusUpdatedNotification;
+use App\Services\TransactionLogService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -22,11 +22,9 @@ class Show extends Component
 {
     use Toast;
 
-    #[Title('Ticket Review - OSA Admin')]
+    #[Title('Ticket Details - OSA Admin')]
     #[Layout('components.layouts.app')]
     public Ticket $ticket;
-
-    public $comment = '';
 
     // Remarks for each action
     public $approvalRemarks = '';
@@ -45,13 +43,43 @@ class Show extends Component
     {
         // Optimize: Select only needed columns from tickets table
         $this->ticket = Ticket::select([
-            'ticket_id', 'ticket_number', 'title', 'description', 'status', 'date_from', 'date_to',
-            'time_from', 'time_to', 'venue_requested', 'plv_participants','external_participants', 'total_participants',
-            'additional_notes', 'user_id', 'event_type_id', 'fund_source_id', 'created_at', 'updated_at'
+            'ticket_id',
+            'ticket_number',
+            'title',
+            'description',
+            'status',
+            'date_from',
+            'date_to',
+            'time_from',
+            'time_to',
+            'venue_requested',
+            'alternate_venue',
+            'special_requirements',
+            'plv_participants',
+            'external_participants',
+            'total_participants',
+            'estimated_budget',
+            'budget_breakdown',
+            'igp_requested',
+            'igp_details',
+            'oc_accommodation',
+            'oc_tsp',
+            'oc_driver_name',
+            'oc_driver_contact_number',
+            'oc_vehicle_type',
+            'oc_vehicle_plate_number',
+            'additional_notes',
+            'proponent_contact',
+            'adviser_contact',
+            'user_id',
+            'event_type_id',
+            'fund_source_id',
+            'created_at',
+            'updated_at',
         ])->with([
             'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
             'user.role:role_id,role_name',
-            'user.studentOrganization:org_id,org_name,org_code,course_id',
+            'user.studentOrganization:org_id,org_name,org_code,course_id,adviser_name,logo',
             'user.studentOrganization.course:course_id,course_name',
             'user.position:position_id,position_name',
             'events:event_id,ticket_id,event__type_id,notes',
@@ -97,13 +125,21 @@ class Show extends Component
             $this->approvalRemarks
         ));
 
-        // Create OSA approval record
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'approved',
-            'remarks' => $this->approvalRemarks,
-        ]);
+        // Update or create current OSA approval state (one record per ticket)
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'approved',
+                'remarks' => $this->approvalRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'approved', $this->approvalRemarks);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('approved', $this->ticket, ['Remarks' => $this->approvalRemarks]);
 
         // Create Event record
         $event = Event::create([
@@ -165,27 +201,41 @@ class Show extends Component
             $this->forwardRemarks
         ));
 
-        // Create OSA approval record showing it was forwarded
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'forwarded',
-            'remarks' => $this->forwardRemarks,
-        ]);
+        // Update or create current OSA approval state
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'forwarded',
+                'remarks' => $this->forwardRemarks,
+            ]
+        );
 
-        Office_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'office_id' => 1, // GSO office ID
-            'user_id' => auth()->id(),
-            'decision' => 'pending',
-            'remarks' => $this->forwardRemarks,
-        ]);
+        // Update or create current Office approval state for GSO
+        Office_Approval::updateOrCreate(
+            [
+                'ticket_id' => $this->ticket->ticket_id,
+                'office_id' => 1, // GSO office ID
+            ],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'pending',
+                'remarks' => $this->forwardRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'forwarded', $this->forwardRemarks);
+        $this->ticket->logApprovalHistory('office', 'pending', $this->forwardRemarks, 1);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('forwarded', $this->ticket, ['Remarks' => $this->forwardRemarks]);
 
         // Notify all GSO users in the GSO office about the forwarded ticket
         // Optimize: Cache GSO users query and select only needed columns
-        $gsoUsers = \Illuminate\Support\Facades\Cache::remember('gso_users_notifications', 3600, function () {
+        $gsoUsers = Cache::remember('gso_users_notifications', 3600, function () {
             return User::select(['user_id', 'name', 'email', 'role_id', 'office_id'])
-                ->where('role_id', User::ROLE_GSO)
+                ->where('role_id', User::getRoleId('gso'))
                 ->where('office_id', 1)
                 ->get();
         });
@@ -235,13 +285,21 @@ class Show extends Component
             $this->revisionRemarks
         ));
 
-        // Create OSA approval record for revision request
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'revision_requested',
-            'remarks' => $this->revisionRemarks,
-        ]);
+        // Update or create current OSA approval state
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'revision_requested',
+                'remarks' => $this->revisionRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'revision_requested', $this->revisionRemarks);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('revision_requested', $this->ticket, ['Remarks' => $this->revisionRemarks]);
 
         // Reload the ticket with fresh approval data
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
@@ -273,13 +331,21 @@ class Show extends Component
 
         $this->ticket->update(['status' => 'rejected']);
 
-        // Create OSA approval record for rejection
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'rejected',
-            'remarks' => $this->rejectionRemarks,
-        ]);
+        // Update or create current OSA approval state
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'rejected',
+                'remarks' => $this->rejectionRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'rejected', $this->rejectionRemarks);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('rejected', $this->ticket, ['Remarks' => $this->rejectionRemarks]);
 
         // Notify the ticket owner about status change
         $this->ticket->user->notify(new TicketStatusUpdatedNotification(
@@ -321,14 +387,21 @@ class Show extends Component
         // Update ticket status to approved
         $this->ticket->update(['status' => 'approved']);
 
-        // Always create a new OSA approval record to maintain audit trail
-        // Never update existing records to preserve history
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'approved',
-            'remarks' => $this->finalApprovalRemarks,
-        ]);
+        // Update or create current OSA approval state
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'approved',
+                'remarks' => $this->finalApprovalRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'approved', $this->finalApprovalRemarks);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('final_approved', $this->ticket, ['Remarks' => $this->finalApprovalRemarks]);
 
         // Notify ticket owner about status change
         $this->ticket->user->notify(new TicketStatusUpdatedNotification(
@@ -388,14 +461,21 @@ class Show extends Component
 
         $this->ticket->update(['status' => 'rejected']);
 
-        // Always create a new OSA approval record to maintain audit trail
-        // Never update existing records to preserve history
-        OSA_Approval::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'decision' => 'rejected',
-            'remarks' => $this->finalRejectionRemarks,
-        ]);
+        // Update or create current OSA approval state
+        OSA_Approval::updateOrCreate(
+            ['ticket_id' => $this->ticket->ticket_id],
+            [
+                'user_id' => auth()->id(),
+                'decision' => 'rejected',
+                'remarks' => $this->finalRejectionRemarks,
+            ]
+        );
+
+        // Log to approval history (immutable audit trail)
+        $this->ticket->logApprovalHistory('osa', 'rejected', $this->finalRejectionRemarks);
+
+        // Log transaction
+        TransactionLogService::logTicketOperation('final_rejected', $this->ticket, ['Remarks' => $this->finalRejectionRemarks]);
 
         // Notify ticket owner about status change
         $this->ticket->user->notify(new TicketStatusUpdatedNotification(
@@ -423,94 +503,6 @@ class Show extends Component
         $this->dispatch('ticket-final-rejected');
     }
 
-    public function addComment()
-    {
-        if (empty(trim($this->comment))) {
-            $this->warning('Please enter a comment.');
-
-            return;
-        }
-
-        // Create comment
-        $newComment = TicketComment::create([
-            'ticket_id' => $this->ticket->ticket_id,
-            'user_id' => auth()->id(),
-            'content' => $this->comment,
-        ]);
-
-        // Clear the input
-        $this->comment = '';
-
-        // Reload only the comments relationship with minimal data
-        $this->ticket->load([
-            'comments:id,ticket_id,user_id,content,created_at',
-            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
-            'comments.user.role:role_id,role_name',
-        ]);
-
-        // Notify relevant parties (server-side concern)
-        $this->notifyCommentAdded($newComment);
-
-        // Simple success message (no heavy notifications)
-        $this->success('Comment added successfully.');
-
-        // Dispatch event for avatar initialization (client-side UI)
-        $this->dispatch('comment-added');
-    }
-
-    /**
-     * Notify relevant users when a comment is added
-     * OSA comment → Notify ticket owner (Student Org)
-     * Student Org comment → Notify OSA
-     * If ticket forwarded to GSO → Also notify GSO
-     */
-    private function notifyCommentAdded(TicketComment $comment)
-    {
-        $commenter = auth()->user();
-        $ticketOwner = $this->ticket->user;
-
-        // Don't notify the person who made the comment
-        $usersToNotify = collect();
-
-        // Always notify the ticket owner if they didn't make the comment
-        if ($ticketOwner->user_id !== $commenter->user_id) {
-            $usersToNotify->push($ticketOwner);
-        }
-
-        // If commenter is Student Org, notify OSA users
-        // Optimize: Cache OSA users query and select only needed columns
-        if ($commenter->isStudentOrg()) {
-            $osaUsers = \Illuminate\Support\Facades\Cache::remember('osa_users_notifications', 3600, function () {
-                return User::select(['user_id', 'name', 'email', 'role_id'])
-                    ->where('role_id', User::ROLE_OSA)
-                    ->get();
-            });
-            $usersToNotify = $usersToNotify->merge($osaUsers);
-        }
-
-        // If ticket is in GSO review status, notify GSO users (but only if they didn't comment)
-        // if (in_array($this->ticket->status, ['gso_review', 'pending_osa_approval'])) {
-        //     $gsoUsers = User::where('role_id', User::ROLE_GSO)
-        //         ->where('user_id', '!=', $commenter->user_id)
-        //         ->get();
-        //     $usersToNotify = $usersToNotify->merge($gsoUsers);
-        // }
-
-        // Send DB + broadcast immediately; queue mail separately to avoid UI delay
-        $usersToNotify->unique('user_id')->each(function ($user) use ($comment, $commenter) {
-            // immediate
-            $user->notifyNow(new TicketCommentNotification($this->ticket, $comment, $commenter, ['database', 'broadcast']));
-
-            // queued mail only
-            $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
-        });
-
-        // Dispatch real-time notification event
-        if ($usersToNotify->isNotEmpty()) {
-            $this->dispatch('refresh-notifications');
-        }
-    }
-
     /**
      * Generate a temporary URL and open in a new tab for preview.
      */
@@ -530,21 +522,21 @@ class Show extends Component
     }
 
     /**
-     * Generate a temporary URL that forces download and redirect to it.
+     * Generate a temporary URL that forces download and dispatch to client.
      */
-    public function downloadAttachment(int $attachmentId)
+    public function downloadAttachment(int $attachmentId): void
     {
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {
             $this->warning('Attachment not found.');
 
-            return null;
+            return;
         }
 
         $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
 
-        return redirect()->away($url);
+        $this->dispatch('download-attachment', url: $url);
     }
 
     /**

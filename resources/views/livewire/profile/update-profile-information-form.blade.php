@@ -71,11 +71,11 @@ new class extends Component {
      */
     private function redirectToDashboard($user): void
     {
-        $dashboardRoute = match ($user->role) {
-            User::ROLE_SUPERADMIN => 'superadmin.dashboard',
-            User::ROLE_OSA => 'admin.dashboard',
-            User::ROLE_GSO => 'gso.dashboard',
-            User::ROLE_STUDENT_ORG => 'student-org.dashboard',
+        $dashboardRoute = match ($user->role_id) {
+            User::getRoleId('superadmin') => 'superadmin.dashboard',
+            User::getRoleId('osa') => 'admin.dashboard',
+            User::getRoleId('gso') => 'gso.dashboard',
+            User::getRoleId('student-org') => 'student-org.dashboard',
             default => 'dashboard',
         };
 

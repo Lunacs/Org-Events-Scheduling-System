@@ -73,10 +73,24 @@
                     'secondary' => 'secondary',
                 ];
                 $color = $colorMap[$data['color'] ?? 'primary'] ?? 'primary';
+                
+                // Determine notification URL based on type and user role
+                $type = $data['type'] ?? '';
+                $ticketNumber = $data['ticket_number'] ?? null;
+                $url = null;
+                
+                if (str_starts_with($type, 'ticket_') && $ticketNumber) {
+                    $url = route('student-org.my-tickets');
+                }
+                
+                // Fallback to notifications page
+                if (!$url) {
+                    $url = route('student-org.notifications');
+                }
             @endphp
 
-            <div class="flex items-start gap-4 p-4 bg-{{ $color }}/5 rounded-lg border-l-4 border-{{ $color }} hover:shadow-md transition-shadow cursor-pointer {{ !$isUnread ? 'opacity-75' : '' }}"
-                 wire:click="markAsRead('{{ $notification->id }}')">
+            <a href="{{ $url }}" wire:navigate wire:click="markAsRead('{{ $notification->id }}')" 
+                class="flex items-start gap-4 p-4 bg-{{ $color }}/5 rounded-lg border-l-4 border-{{ $color }} hover:shadow-md transition-shadow {{ !$isUnread ? 'opacity-75' : '' }} block">
                 <div class="flex-shrink-0">
                     <div class="w-10 h-10 bg-{{ $color }}/20 rounded-full flex items-center justify-center">
                         <x-mary-icon name="s-bell" class="w-5 h-5 text-{{ $color }}" />
@@ -112,7 +126,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
 
             @if (!$loop->last)
                 <div class="divider my-0"></div>

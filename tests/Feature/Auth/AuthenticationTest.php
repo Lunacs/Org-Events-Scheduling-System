@@ -14,7 +14,7 @@ class AuthenticationTest extends TestCase
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role' => User::getRoleId('osa'),
         ]);
 
         $this->actingAs($user);
@@ -35,7 +35,7 @@ class AuthenticationTest extends TestCase
     public function test_authenticated_user_can_access_dashboard(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role' => User::getRoleId('osa'),
         ]);
 
         $response = $this->actingAs($user)->get('/admin/dashboard');
@@ -53,7 +53,7 @@ class AuthenticationTest extends TestCase
     public function test_remember_me_functionality_works(): void
     {
         $user = User::factory()->create([
-            'role' => User::ROLE_OSA,
+            'role' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);

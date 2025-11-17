@@ -6,11 +6,13 @@ use App\Models\Student_Organization;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
+#[Lazy]
 class Dashboard extends Component
 {
     use Toast;
@@ -20,6 +22,11 @@ class Dashboard extends Component
 
     // Cache duration in seconds - optimized for better performance
     protected $cacheDuration = 300; // 5 minutes cache for better performance
+
+    public function placeholder()
+    {
+        return view('livewire.osa.placeholders.dashboard');
+    }
 
     public function render()
     {
@@ -58,7 +65,7 @@ class Dashboard extends Component
                 ->with([
                     'eventType:event_type_id,type_name',
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                        ->with('studentOrganization:org_id,org_name')
+                        ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
@@ -85,7 +92,7 @@ class Dashboard extends Component
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'created_at', 'user_id'])
                 ->with([
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                        ->with('studentOrganization:org_id,org_name')
+                        ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'asc')
@@ -111,7 +118,7 @@ class Dashboard extends Component
             return Ticket::select(['ticket_id', 'title', 'date_from', 'venue_requested', 'user_id'])
                 ->with([
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                        ->with('studentOrganization:org_id,org_name')
+                        ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->where('status', 'approved')
                 ->where('date_from', '>=', now())

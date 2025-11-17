@@ -38,7 +38,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $actionUrl = route('admin.ticket');
+        $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
             ->subject('New Ticket Submitted - '.$this->ticket->ticket_number)
@@ -64,6 +64,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
             'type' => 'ticket_submitted',
             'icon' => 's-document-plus',
             'color' => 'primary',
+            'action_url' => $this->getActionUrl($notifiable),
         ];
     }
 
@@ -72,14 +73,26 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage([
-            'title' => 'New Ticket Submitted',
-            'message' => 'A new ticket has been submitted: '.$this->ticket->title,
-            'ticket_id' => $this->ticket->ticket_id,
-            'ticket_number' => $this->ticket->ticket_number,
-            'type' => 'ticket_submitted',
-            'icon' => 's-document-plus',
-            'color' => 'primary',
-        ]);
+        return new BroadcastMessage($this->toArray($notifiable));
+    }
+
+    private function getActionUrl(object $notifiable): string
+    {
+        // OSA users go to ticket management
+        if ($notifiable->isOsa() || $notifiable->isSuperadmin()) {
+            return route('osa.ticket-review.show', $this->ticket->ticket_number);
+        }
+
+        // Student Org users go to their tickets page
+        if ($notifiable->isStudentOrg()) {
+            return route('student-org.my-tickets');
+        }
+
+        // GSO users go to ticket details
+        if ($notifiable->isGso()) {
+            return route('gso.ticket-details', ['ticketNumber' => $this->ticket->ticket_number]);
+        }
+
+        return route('osa.ticket-management');
     }
 }

@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use App\Models\Ticket;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class OSAApprovalSeeder extends Seeder
 {
@@ -13,8 +15,8 @@ class OSAApprovalSeeder extends Seeder
     public function run(): void
     {
         // Get all tickets and OSA users
-        $tickets = \App\Models\Ticket::all();
-        $osaUsers = \App\Models\User::where('role_id', \App\Models\User::ROLE_OSA)->get();
+        $tickets = Ticket::all();
+        $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
 
         if ($tickets->isEmpty() || $osaUsers->isEmpty()) {
             $this->command->warn('No tickets or OSA users found. Skipping OSA approval seeder.');
@@ -30,7 +32,7 @@ class OSAApprovalSeeder extends Seeder
 
         foreach ($tickets as $ticket) {
             // Create OSA approval based on ticket status
-            $decision = match($ticket->status) {
+            $decision = match ($ticket->status) {
                 'approved' => 'approved',
                 'rejected' => 'rejected',
                 'pending' => 'pending',

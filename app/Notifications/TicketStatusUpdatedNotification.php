@@ -22,7 +22,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     /**
      * Create a new notification instance.
      */
-    public function __construct(Ticket $ticket, string $oldStatus, string $newStatus, string $remarks = null)
+    public function __construct(Ticket $ticket, string $oldStatus, string $newStatus, ?string $remarks = null)
     {
         $this->ticket = $ticket;
         $this->oldStatus = $oldStatus;

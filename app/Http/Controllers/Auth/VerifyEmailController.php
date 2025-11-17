@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\User;
 use App\Http\Controllers\Controller;
-use App\Services\TransactionLogService;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
+use App\Services\TransactionLogService;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 class VerifyEmailController extends Controller
 {
@@ -22,7 +23,7 @@ class VerifyEmailController extends Controller
         if ($request->user()->markEmailAsVerified()) {
             // Log email verification
             TransactionLogService::logAuthEvent('email_verified', $request->user());
-            
+
             event(new Verified($request->user()));
         }
 
@@ -34,11 +35,11 @@ class VerifyEmailController extends Controller
      */
     public function getRedirectRoute($user, $verified = false): RedirectResponse
     {
-        $routeName = match ($user->role) {
-            \App\Models\User::ROLE_SUPERADMIN => 'superadmin.dashboard',
-            \App\Models\User::ROLE_OSA => 'admin.dashboard',
-            \App\Models\User::ROLE_GSO => 'gso.dashboard',
-            \App\Models\User::ROLE_STUDENT_ORG => 'student-org.dashboard',
+        $routeName = match ($user->role_id) {
+            User::getRoleId('superadmin') => 'superadmin.dashboard',
+            User::getRoleId('osa') => 'admin.dashboard',
+            User::getRoleId('gso') => 'gso.dashboard',
+            User::getRoleId('student-org') => 'student-org.dashboard',
             default => 'dashboard',
         };
 

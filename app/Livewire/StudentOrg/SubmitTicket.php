@@ -8,6 +8,7 @@ use App\Models\Fund_Sources;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
+use App\Services\TransactionLogService;
 use Exception;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
@@ -254,6 +255,7 @@ class SubmitTicket extends Component
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
             $attachment->file_path = null; // Not stored yet
+
             return $attachment;
         });
 
@@ -360,8 +362,11 @@ class SubmitTicket extends Component
                 }
             }
 
-            // Notify OSA admins
-            $osaUsers = User::where('role_id', User::ROLE_OSA)->get();
+            // Log transaction
+            TransactionLogService::logTicketOperation('created', $ticket);
+
+            // Notify OSA admins about the new ticket
+            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
             foreach ($osaUsers as $osaUser) {
                 $osaUser->notify(new TicketSubmittedNotification($ticket));
             }

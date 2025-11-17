@@ -8,8 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class Reports extends Component
 {
     use ResolvesOfficeContext;
+
     #[Title('GSO Reports & Analytics')]
     #[Layout('components.layouts.gso-layout')]
     public array $reportSeed = [];
@@ -127,7 +128,9 @@ class Reports extends Component
                 'decided_at' => $decidedAt->toIso8601String(),
                 'date' => $decidedAt->format('Y-m-d'),
                 'ticketId' => $ticket?->ticket_number ?? 'N/A',
-                'ticketDetailsUrl' => $ticket ? route('gso.ticket-details', ['ticket' => $ticket, 'office' => $officeId, 'approval' => $approval->id]) : null,
+                'ticketDetailsUrl' => $ticket?->ticket_number
+                    ? route('gso.ticket-details', ['ticketNumber' => $ticket->ticket_number])
+                    : null,
                 'eventName' => $ticket?->title ?? 'N/A',
                 'organization' => $ticket?->user?->studentOrganization?->org_name
                     ?? $ticket?->user?->name
@@ -253,7 +256,8 @@ class Reports extends Component
             fputcsv($handle, ['Generated At', Carbon::now()->format('Y-m-d H:i')]);
 
             if ($rangeStart || $rangeEnd) {
-                fputcsv($handle, ['Date Range',
+                fputcsv($handle, [
+                    'Date Range',
                     optional($rangeStart)->format('Y-m-d') ?? 'N/A',
                     optional($rangeEnd)->format('Y-m-d') ?? 'N/A',
                 ]);
@@ -311,7 +315,10 @@ class Reports extends Component
                 logger()->error('PDF export (dompdf.wrapper) failed: ' . $e->getMessage(), ['exception' => $e]);
                 $errFile = 'gso-report-error-' . Carbon::now()->format('YmdHis') . '.txt';
                 $body = "PDF export failed while generating PDF (dompdf.wrapper).\n" . $e->getMessage() . "\n\n" . $e->getTraceAsString();
-                return response()->streamDownload(function () use ($body) { echo $body; }, $errFile, ['Content-Type' => 'text/plain']);
+
+                return response()->streamDownload(function () use ($body) {
+                    echo $body;
+                }, $errFile, ['Content-Type' => 'text/plain']);
             }
         }
 
@@ -357,7 +364,7 @@ class Reports extends Component
                     'generatedAt' => Carbon::now(),
                 ])->render();
 
-                $dompdf = new \Dompdf\Dompdf();
+                $dompdf = new \Dompdf\Dompdf;
                 $dompdf->setPaper('A4', 'portrait');
                 $dompdf->loadHtml($html);
                 $dompdf->render();
