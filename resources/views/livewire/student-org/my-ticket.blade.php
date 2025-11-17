@@ -27,11 +27,11 @@
 
                     <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
-                        ['id' => 'draft', 'name' => 'Draft'],
                         ['id' => 'under_review', 'name' => 'Under Review'],
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'rejected', 'name' => 'Rejected'],
                         ['id' => 'needs_revision', 'name' => 'Requires Revision'],
+                        ['id' => 'rescheduled', 'name' => 'Requires Rescheduling'],
                     ]"
                         placeholder="Filter by status" />
 
@@ -58,26 +58,7 @@
                 </div>
 
                 {{-- Pagination --}}
-                <div class="mt-6 flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }}
-                        of {{ $tickets->total() }} tickets
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click="previousPage"
-                            :disabled="!$tickets->previousPageUrl()" />
-
-                        @foreach ($tickets->getUrlRange(1, $tickets->lastPage()) as $page => $url)
-                            <x-mary-button :label="$page"
-                                class="btn-sm {{ $page == $tickets->currentPage() ? 'btn-primary' : 'btn-ghost' }}"
-                                wire:click="gotoPage({{ $page }})" />
-                        @endforeach
-
-                        <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click="nextPage"
-                            :disabled="!$tickets->nextPageUrl()" />
-                    </div>
-                </div>
+                <x-tickets.ticket-pagination :tickets="$tickets" />
             </x-mary-card>
 
             {{-- Quick Stats --}}
@@ -99,18 +80,38 @@
         </div>
     </div>
 
+    {{-- Details modal --}}
     <x-mary-modal wire:model="showDetailsModal" title="Ticket Details" class="backdrop-blur"
-        box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
+                  box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeDetailsModal()">
 
-        @if ($this->selectedTicket)
-            <x-tickets.ticket-preview :ticket="$this->selectedTicket" />
-        @else
-            <div class="text-center py-8">
-                <x-mary-loading class="loading-lg" />
+        <div x-data="{ isLoading: true }"
+             x-init="
+            $watch('$wire.showDetailsModal', value => {
+                if (value) {
+                    // Reset loading state when modal opens
+                    isLoading = true;
+                } else {
+                    // Reset when modal closes
+                    isLoading = true;
+                }
+            });
+         ">
+            <div x-show="isLoading" class="flex items-center justify-center py-16">
+                <div class="flex flex-col items-center gap-3">
+                    <x-mary-loading class="loading-lg text-primary" />
+                    <p class="text-sm text-base-content/70">Loading ticket details...</p>
+                </div>
             </div>
-        @endif
+
+            <div x-show="!isLoading" x-cloak x-transition>
+                @if ($this->selectedTicket)
+                    <x-tickets.ticket-preview :ticket="$this->selectedTicket" />
+                @endif
+            </div>
+        </div>
     </x-mary-modal>
 
+    {{-- Comments modal --}}
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
@@ -118,26 +119,9 @@
             @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'rejected']))
                 <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket" />
             @endif
-            @if ($this->selectedTicketComments)
-                <div wire:key="comments-list-{{ $this->selectedTicket->ticket_id }}">
-                    @foreach ($this->selectedTicketComments as $comment)
-                        <div wire:key="comment-{{ $comment->id }}">
-                            <x-comment-boxes.normal-comment :comment="$comment" />
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-            <div class="space-y-3 mt-6" x-data="{ isSubmitting: false }" @comment-added.window="isSubmitting = false">
-                <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
-                    x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
-                <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
-                    :disabled="isSubmitting" wire:loading.attr="disabled">
-                    <x-mary-icon name="o-chat-bubble-left-right" class="w-4 h-4" wire:loading.remove
-                        wire:target="addComment" />
-                    <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
-                    <span wire:loading.remove wire:target="addComment">Add Comment</span>
-                    <span wire:loading wire:target="addComment">Adding...</span>
-                </button>
+
+            <div class="mt-4">
+                <livewire:components.ticket-comments :ticket="$this->selectedTicket" :key="'ticket-comments-' . $this->selectedTicket->ticket_id" />
             </div>
         @else
             <div class="text-center py-8">
@@ -147,19 +131,57 @@
     </x-mary-modal>
 
     <x-mary-drawer wire:model="showEditDrawer"
-        title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
-        subtitle="Revise your event request" separator with-close-button close-on-escape right class="w-11/12 lg:w-2/3"
-        @close="$wire.closeEditDrawer()">
-        @if ($showEditDrawer && $selectedTicketId)
-            @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
-        @else
-            <div class="text-center py-8">
-                <x-mary-loading class="loading-lg" />
-            </div>
-        @endif
-    </x-mary-drawer>
+                   title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
+                   subtitle="Revise your event request"
+                   separator
+                   with-close-button
+                   close-on-escape
+                   right
+                   class="w-11/12 lg:w-2/3 overflow-hidden"
+                   @close="$wire.closeEditDrawer()">
 
-    {{-- Add JavaScript for handling attachment preview and download --}}
+        <div x-data="{ isLoading: true }"
+             x-init="
+        $watch('$wire.showEditDrawer', value => {
+            if (value) {
+                isLoading = true;
+                setTimeout(() => {
+                    const checkInterval = setInterval(() => {
+                        const form = document.querySelector('[wire\\:submit=\'updateTicket\']');
+                        if (form) {
+                            clearInterval(checkInterval);
+                            isLoading = false;
+                        }
+                    }, 50);
+
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        isLoading = false;
+                    }, 2000);
+                }, 100);
+            } else {
+                isLoading = true;
+            }
+        });
+     ">
+        <div x-show="isLoading" class="flex items-center justify-center py-16">
+            <div class="flex flex-col items-center gap-3">
+                <x-mary-loading class="loading-lg text-primary" />
+                <p class="text-sm text-base-content/70">Loading form...</p>
+            </div>
+        </div>
+
+        <div x-show="!isLoading" x-cloak x-transition>
+            @if ($showEditDrawer && $selectedTicketId)
+                @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
+            @endif
+        </div>
+</div>
+</x-mary-drawer>
+
+
+
+{{-- Add JavaScript for handling attachment preview and download --}}
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-attachment-preview', ({
@@ -187,5 +209,48 @@
             });
         });
     </script>
+    @script
+    <script>
+        // Handle modal opened event
+        Livewire.on('modal-opened', ({ticketId}) => {
+            // Wait for modal animation to complete
+            setTimeout(() => {
+                // Load ticket data
+                $wire.call('loadTicketData', ticketId).then(() => {
+                    // Wait for Livewire to render
+                    setTimeout(() => {
+                        // Check if ticket preview exists
+                        const checkInterval = setInterval(() => {
+                            const preview = document.querySelector('[data-ticket-loaded]');
+                            if (preview) {
+                                clearInterval(checkInterval);
+                                // Find the modal's Alpine component
+                                const modalContent = preview.closest('[x-data]');
+                                if (modalContent) {
+                                    Alpine.evaluate(modalContent, 'isLoading = false');
+                                }
+                            }
+                        }, 50);
 
+                        // Fallback - force hide loading after 2 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            const modal = document.querySelector('[x-data*="isLoading"]');
+                            if (modal) {
+                                Alpine.evaluate(modal, 'isLoading = false');
+                            }
+                        }, 2000);
+                    }, 100);
+                });
+            }, 100);
+        });
+
+        // Reset modal state when navigating away
+        document.addEventListener('livewire:navigating', () => {
+            if ($wire.showDetailsModal) {
+                $wire.closeDetailsModal();
+            }
+        });
+    </script>
+    @endscript
 </div>

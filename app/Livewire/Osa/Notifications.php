@@ -5,19 +5,26 @@ namespace App\Livewire\Osa;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class Notifications extends Component
 {
+    use Toast, WithPagination;
+
     #[Title('Notifications - OSA Admin')]
     #[Layout('components.layouts.app')]
+
+    #[Url(except: '')]
     public $search = '';
 
+    #[Url(except: '')]
     public $typeFilter = '';
 
+    #[Url(except: '')]
     public $statusFilter = '';
-
-    public $notifications = [];
 
     public $unreadCount = 0;
 
@@ -29,10 +36,7 @@ class Notifications extends Component
 
     public function mount()
     {
-        // Load counts first (lightweight)
         $this->loadCounts();
-        // Load only recent notifications (limit to 20 for faster initial load)
-        $this->loadNotifications(true);
     }
 
     public function loadCounts()
@@ -53,7 +57,7 @@ class Notifications extends Component
                 $weekEnd = now()->endOfWeek();
 
                 $allNotifications = $user->notifications();
-                
+
                 return [
                     'unread' => (clone $allNotifications)->whereNull('read_at')->count(),
                     'total' => $allNotifications->count(),
@@ -69,12 +73,12 @@ class Notifications extends Component
         $this->weekCount = $counts['week'] ?? 0;
     }
 
-    public function loadNotifications($limitOnly = false)
+    public function getNotificationsProperty()
     {
         $user = auth()->user();
 
         if (! $user) {
-            return;
+            return collect();
         }
 
         // Build query
@@ -110,18 +114,7 @@ class Notifications extends Component
             $query->whereNotNull('read_at');
         }
 
-        // Limit results for faster initial load
-        if ($limitOnly) {
-            $query->limit(20);
-        }
-
-        // Get notifications
-        $this->notifications = $query->get();
-        
-        // Reload counts if filters changed (but not on initial mount)
-        if (!$limitOnly) {
-            $this->loadCounts();
-        }
+        return $query->paginate(15);
     }
 
     public function markAsRead($notificationId)
@@ -133,7 +126,7 @@ class Notifications extends Component
             $notification->markAsRead();
             // Clear cache to refresh counts
             \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
-            $this->loadNotifications();
+            $this->loadCounts();
         }
     }
 
@@ -143,52 +136,84 @@ class Notifications extends Component
         $user->unreadNotifications->markAsRead();
         // Clear cache to refresh counts
         \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
-        $this->loadNotifications();
-        session()->flash('success', 'All notifications marked as read.');
+        $this->loadCounts();
+
+        $this->success('All notifications marked as read.', position: 'toast-top');
     }
 
-    public function openNotificationSettings()
+    public function deleteNotification($notificationId)
     {
-        // Implement settings modal logic
-        session()->flash('info', 'Notification settings coming soon.');
+        $user = auth()->user();
+        $notification = $user->notifications()->find($notificationId);
+
+        if ($notification) {
+            $notification->delete();
+
+            // Clear cache to refresh counts
+            \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
+            $this->loadCounts();
+            $this->resetPage();
+
+            $this->success('Notification deleted.', position: 'toast-top');
+        }
+    }
+
+    public function clearAllRead()
+    {
+        $user = auth()->user();
+
+        // Only delete notifications that have been read
+        $deletedCount = $user->notifications()
+            ->whereNotNull('read_at')
+            ->delete();
+
+        // Clear cache to refresh counts
+        \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
+        $this->loadCounts();
+        $this->resetPage();
+
+        if ($deletedCount > 0) {
+            $this->success("{$deletedCount} read notification(s) cleared.", position: 'toast-top');
+        } else {
+            $this->info('No read notifications to clear.', position: 'toast-top');
+        }
     }
 
     public function clearFilters()
     {
-        $this->search = '';
-        $this->typeFilter = '';
-        $this->statusFilter = '';
-        $this->loadNotifications();
+        $this->reset(['search', 'typeFilter', 'statusFilter']);
+        $this->resetPage();
     }
 
     public function updatedSearch()
     {
-        $this->loadNotifications(false); // Load all when filtering
+        $this->resetPage();
     }
 
     public function updatedTypeFilter()
     {
-        $this->loadNotifications(false); // Load all when filtering
+        $this->resetPage();
     }
 
     public function updatedStatusFilter()
     {
-        $this->loadNotifications(false); // Load all when filtering
-    }
-
-    public function loadMore()
-    {
-        // Implement pagination if needed
+        $this->resetPage();
     }
 
     #[On('notifications-updated')]
     public function refreshNotifications()
     {
-        $this->loadNotifications();
+        $user = auth()->user();
+        if ($user) {
+            \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
+        }
+        $this->loadCounts();
     }
 
     public function render()
     {
-        return view('livewire.osa.notifications');
+        return view('livewire.osa.notifications', [
+            'notifications' => $this->notifications,
+        ]);
     }
 }

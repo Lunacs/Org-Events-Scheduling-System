@@ -1,4 +1,4 @@
-@props(['ticket', 'allowedActions' => [], 'backRoute' => null])
+@props(['ticket', 'allowedActions' => [], 'backRoute' => null, 'statusOverview' => null])
 
 <div x-data="{
     showApproval: false,
@@ -50,14 +50,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
-                        @php
-                            $backUrl =
-                                $backRoute ??
-                                (auth()->user()->isGSO()
-                                    ? route('gso.ticket-review')
-                                    : route('osa.ticket-review.index'));
-                        @endphp
-                        <a href="{{ $backUrl }}" class="btn btn-ghost btn-sm" wire:navigate>
+                        <a href="{{ $backRoute }}" class="btn btn-ghost btn-sm" wire:navigate>
                             <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                             Back to Tickets
                         </a>
@@ -65,8 +58,12 @@
                     <h1 class="text-3xl font-bold text-base-content">Ticket Review</h1>
                     <p class="text-base-content/70 mt-1">Review event proposal and attached documents</p>
                 </div>
-                <div class="flex items-center gap-2">
+                @php
+                    $statusOverview = is_array($statusOverview) ? $statusOverview : null;
+                @endphp
+                <div class="flex flex-wrap items-center gap-2">
                     @php
+                        $currentViewer = auth()->user();
                         $statusClasses = [
                             'received' => 'badge-info',
                             'gso_review' => 'badge-secondary',
@@ -78,296 +75,67 @@
                             'approved' => 'badge-success',
                             'rejected' => 'badge-error',
                         ];
+                        $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
+                        $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
+                        $ticketTextClass =
+                            $ticketBadgeClass === 'badge-warning'
+                                ? 'text-neutral-900 dark:text-neutral-900'
+                                : 'text-white';
+                        $officeStatusLabel = $statusOverview['status_label'] ?? null;
+                        $officeBadgeClass = $statusOverview['status_badge'] ?? null;
+                        $officeName = $statusOverview['office_name'] ?? null;
+                        $officeLabel = $officeName
+                            ? \Illuminate\Support\Str::headline($officeName) . ' Decision: '
+                            : 'Office Decision: ';
+                        $showTicketStatusBadge = !($currentViewer && $currentViewer->isGSO());
                     @endphp
-                    <span
-                        class="badge {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span>
+                    @if ($showTicketStatusBadge)
+                        <span class="badge {{ $ticketBadgeClass }} {{ $ticketTextClass }}">Ticket:
+                            {{ $ticketStatusLabel }}</span>
+                    @endif
+                    @if ($officeStatusLabel)
+                        @php
+                            $resolvedOfficeBadge = $officeBadgeClass ?? 'badge-warning';
+                            $resolvedOfficeTextClass =
+                                $resolvedOfficeBadge === 'badge-warning'
+                                    ? 'text-neutral-900 dark:text-neutral-900'
+                                    : 'text-white';
+                        @endphp
+                        <span
+                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }}">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+                    @endif
                 </div>
             </div>
+            @if ($statusOverview && !empty($statusOverview['status_detail']))
+                <p class="text-sm text-base-content/70 mt-3">{{ $statusOverview['status_detail'] }}</p>
+            @endif
         </div>
     </div>
 
     {{-- Main Content --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Ticket Details --}}
+        {{-- Ticket Details - Now using modular components --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Organization Information --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Organization Information</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Name</label>
-                        <p class="text-base-content font-medium">
-                            {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Course</label>
-                        <p class="text-base-content">
-                            {{ $ticket->user->studentOrganization->course->course_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Name of Proponent</label>
-                        <p class="text-base-content">{{ $ticket->user->name }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Proponent Position</label>
-                        <p class="text-base-content">{{ $ticket->user->position->position_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Contact Email</label>
-                        <p class="text-base-content">{{ $ticket->user->email }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Proponent Contact</label>
-                        <p class="text-base-content">{{ $ticket->proponent_contact ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Organization Adviser</label>
-                        <p class="text-base-content">
-                            {{ $ticket->user->studentOrganization->adviser_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Adviser Contact</label>
-                        <p class="text-base-content">{{ $ticket->adviser_contact ?? 'N/A' }}</p>
-                    </div>
-                </div>
-            </div>
+            <x-tickets.sections.organization-info :ticket="$ticket" />
 
             {{-- Event Details --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Event Details</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Title</label>
-                        <p class="text-base-content font-medium text-lg">{{ $ticket->title }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Type</label>
-                        <p class="text-base-content">{{ $ticket->eventType->type_name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Description</label>
-                        <p class="text-base-content whitespace-pre-wrap">{{ $ticket->description }}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">PLV Participants</label>
-                            <p class="text-base-content font-semibold">{{ $ticket->plv_participants ?? 0 }}</p>
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">External Participants</label>
-                            <p class="text-base-content font-semibold">{{ $ticket->external_participants ?? 0 }}</p>
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-medium text-base-content/70">Total Expected Participants</label>
-                            <p class="text-primary font-semibold">
-                                {{ $ticket->total_participants ?? 0 }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-tickets.sections.event-details :ticket="$ticket" />
 
             {{-- Schedule & Venue --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Schedule & Venue</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Start Date</label>
-                        <p class="text-base-content">
-                            {{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('F d, Y') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event End Date</label>
-                        <p class="text-base-content">
-                            {{ $ticket->date_to ? \Carbon\Carbon::parse($ticket->date_to)->format('F d, Y') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event Start Time</label>
-                        <p class="text-base-content">
-                            {{ $ticket->time_from ? \Carbon\Carbon::parse($ticket->time_from)->format('g:i A') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Event End Time</label>
-                        <p class="text-base-content">
-                            {{ $ticket->time_to ? \Carbon\Carbon::parse($ticket->time_to)->format('g:i A') : 'TBD' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Preferred Venue</label>
-                        <p class="text-base-content">{{ $ticket->venue_requested ?? 'TBD' }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Alternative Venue</label>
-                        <p class="text-base-content">{{ $ticket->alternate_venue ?? 'None' }}</p>
-                    </div>
-                </div>
-
-                @if ($ticket->special_requirements)
-                    <div class="mt-4">
-                        <label class="text-sm font-medium text-base-content/70">Special Requirements</label>
-                        <p class="text-base-content whitespace-pre-wrap bg-base-200 p-3 rounded">
-                            {{ $ticket->special_requirements }}</p>
-                    </div>
-                @endif
-
-                {{-- Off-Campus Activity Details --}}
-                @if ($ticket->oc_accommodation || $ticket->oc_tsp)
-                    <div class="mt-4 p-4 bg-warning/10 border-l-4 border-warning rounded">
-                        <h3 class="font-semibold text-base-content mb-3">Off-Campus Activity Details</h3>
-
-                        @if ($ticket->oc_accommodation)
-                            <div class="mb-3">
-                                <label class="text-sm font-medium text-base-content/70">Accommodation
-                                    Provider</label>
-                                <p class="text-base-content">{{ $ticket->oc_accommodation }}</p>
-                            </div>
-                        @endif
-
-                        @if ($ticket->oc_tsp)
-                            <div class="mb-2">
-                                <label class="text-sm font-medium text-base-content/70">Transportation
-                                    Service
-                                    Provider</label>
-                                <p class="text-base-content">{{ ucfirst($ticket->oc_tsp) }}</p>
-                            </div>
-
-                            @if ($ticket->oc_tsp === 'outsourced')
-                                <div class="grid grid-cols-2 gap-3 mt-2">
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Driver
-                                            Name</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_driver_name ?? 'N/A' }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Contact
-                                            Number</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_driver_contact_number ?? 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Vehicle
-                                            Type</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_vehicle_type ?? 'N/A' }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-medium text-base-content/70">Plate
-                                            Number</label>
-                                        <p class="text-sm text-base-content">
-                                            {{ $ticket->oc_vehicle_plate_number ?? 'N/A' }}</p>
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-                    </div>
-                @endif
-            </div>
+            <x-tickets.sections.schedule-venue :ticket="$ticket" />
 
             {{-- Budget Information --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Budget Information</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Estimated Total
-                            Budget</label>
-                        <p class="text-base-content font-semibold text-lg">
-                            ₱{{ number_format($ticket->estimated_budget ?? 0, 2) }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-base-content/70">Funding Source</label>
-                        <p class="text-base-content">{{ $ticket->fundSource->source_name ?? 'N/A' }}</p>
-                    </div>
-                </div>
-
-                @if ($ticket->budget_breakdown)
-                    <div class="mt-4">
-                        <label class="text-sm font-medium text-base-content/70">Budget Breakdown</label>
-                        <p class="text-base-content whitespace-pre-wrap bg-base-200 p-3 rounded">
-                            {{ $ticket->budget_breakdown }}</p>
-                    </div>
-                @endif
-
-                {{-- IGP Request --}}
-                <div class="mt-4">
-                    <label class="text-sm font-medium text-base-content/70">IGP Request</label>
-                    <p class="text-base-content">
-                        @if ($ticket->igp_requested)
-                            <span class="badge badge-success text-white">Requested</span>
-                            @if ($ticket->igp_details)
-                                <span
-                                    class="block mt-2 bg-base-200 p-3 rounded whitespace-pre-wrap">{{ $ticket->igp_details }}</span>
-                            @endif
-                        @else
-                            <span class="badge badge-neutral">Not Requested</span>
-                        @endif
-                    </p>
-                </div>
-            </div>
+            <x-tickets.sections.budget-info :ticket="$ticket" />
 
             {{-- Additional Information --}}
-            @if ($ticket->additional_notes)
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-base-content mb-4">Additional Information</h2>
-                    <p class="text-base-content whitespace-pre-wrap bg-base-200 p-4 rounded">
-                        {{ $ticket->additional_notes }}</p>
-                </div>
-            @endif
+            <x-tickets.sections.additional-info :ticket="$ticket" />
 
             {{-- Attachments --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Attachments</h2>
-                @if ($ticket->attachments->count() > 0)
-                    <div class="space-y-3">
-                        @foreach ($ticket->attachments as $attachment)
-                            <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div>
-                                        <button type="button" class="link link-neutral font-medium"
-                                            wire:click="previewAttachment({{ $attachment->attachment_id }})">
-                                            {{ $attachment->file_name }}
-                                        </button>
-                                        <p class="text-sm text-base-content/70">
-                                            {{ $attachment->file_type ? strtoupper($attachment->file_type) : (strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) ?: 'FILE') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-primary btn-sm"
-                                    wire:click="downloadAttachment({{ $attachment->attachment_id }})">
-                                    Download
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-8">
-                        <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
-                        <p class="text-base-content/70">No attachments uploaded</p>
-                    </div>
-                @endif
-            </div>
+            <x-tickets.sections.attachments-list :ticket="$ticket" />
+
+            {{-- Comments --}}
+            <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
         </div>
 
         {{-- Sidebar --}}
@@ -447,51 +215,71 @@
                 </div>
             @endif
 
-            {{-- Approval History --}}
+            {{-- Approval History Timeline --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Approval History</h2>
+                <h2 class="text-xl font-bold text-base-content mb-4">Approval History Timeline</h2>
+                <p class="text-sm text-base-content/70 mb-6">Complete workflow progression from submission to final
+                    decision</p>
 
                 @php
-                    // Combine all approvals into one collection with timestamps
-                    $allApprovals = collect();
+                    // Use approval_history table for timeline (immutable audit trail)
+                    // Reverse order to show chronological timeline (oldest first)
+                    $allApprovals = $ticket->approvalHistory()->orderBy('created_at', 'asc')->get();
 
-                    // Add OSA approvals
-                    foreach ($ticket->osaApprovals as $approval) {
-                        $allApprovals->push([
-                            'type' => 'OSA',
-                            'office_name' => 'Office of Student Affairs',
-                            'user' => $approval->user,
-                            'decision' => $approval->decision,
-                            'remarks' => $approval->remarks,
-                            'created_at' => $approval->created_at,
-                        ]);
-                    }
-
-                    // Add Office approvals (GSO, etc.)
-                    foreach ($ticket->officeApprovals as $approval) {
-                        $allApprovals->push([
-                            'type' => 'Office',
-                            'office_name' => $approval->office->office_name ?? 'Unknown Office',
-                            'user' => $approval->user,
-                            'decision' => $approval->decision,
-                            'remarks' => $approval->remarks,
-                            'created_at' => $approval->created_at,
-                        ]);
-                    }
-
-                    // Sort by date (most recent first)
-                    $allApprovals = $allApprovals->sortByDesc('created_at');
-
-                    // Decision badge classes
-                    $decisionClasses = [
+                    // Action badge classes (approval_history uses 'action' not 'decision')
+                    $actionClasses = [
                         'approved' => 'badge-success',
                         'rejected' => 'badge-error',
                         'pending' => 'badge-warning',
                         'forwarded' => 'badge-info',
-                        'under_review' => 'badge-info',
                         'revision_requested' => 'badge-warning',
-                        'needs_revision' => 'badge-warning',
                     ];
+
+                    // Get workflow context for each approval based on the real workflow
+                    $getWorkflowContext = function ($approval) use ($ticket) {
+                        $action = $approval->action; // Use 'action' field from approval_history
+                        $type = strtolower($approval->approval_type); // Use 'approval_type' field
+
+                        if ($action === 'forwarded' && $type === 'osa') {
+                            return 'Ticket forwarded to GSO for venue and logistics review. OSA approval remains pending while waiting for GSO response. GSO will provide their decision before OSA makes the final approval.';
+                        }
+
+                        if ($action === 'revision_requested' && $type === 'osa') {
+                            return 'OSA requested changes. Student organization must revise and resubmit the ticket. Ticket status changed to "needs_revision".';
+                        }
+
+                        if ($action === 'approved' && $type === 'osa') {
+                            // Check if this is final approval after GSO review or direct approval
+                            $hasOfficeApproval = $ticket->officeApprovals()->whereNotNull('office_id')->exists();
+                            if ($hasOfficeApproval) {
+                                return 'Final approval granted by OSA after GSO review. Event and schedule have been created and will appear on the calendar. Ticket status changed to "approved".';
+                            } else {
+                                return 'Direct approval granted by OSA (no GSO review needed). Event and schedule have been created and will appear on the calendar. Ticket status changed to "approved".';
+                            }
+                        }
+
+                        if ($action === 'approved' && $type === 'office') {
+                            return 'Office approved the request. Ticket status changed to "pending_osa_approval". OSA will now make the final decision.';
+                        }
+
+                        if ($action === 'rejected' && $type === 'office') {
+                            return 'Office rejected the request. Ticket status changed to "pending_osa_approval". OSA will review and make the final decision (can override or agree with rejection).';
+                        }
+
+                        if ($action === 'rejected' && $type === 'osa') {
+                            return 'Final rejection by OSA. No event will be created. Ticket status changed to "rejected".';
+                        }
+
+                        if ($action === 'pending' && $type === 'osa') {
+                            return 'Initial submission received. OSA is reviewing the ticket. Ticket status set to "received".';
+                        }
+
+                        if ($action === 'pending' && $type === 'office') {
+                            return 'Ticket forwarded to office. Awaiting office review and decision.';
+                        }
+
+                        return null;
+                    };
                 @endphp
 
                 @if ($allApprovals->count() > 0)
@@ -501,48 +289,101 @@
 
                         <div class="space-y-6">
                             @foreach ($allApprovals as $index => $approval)
+                                @php
+                                    $action = $approval->action; // Use 'action' field from approval_history
+                                    $type = strtolower($approval->approval_type); // Use 'approval_type' field
+                                    $workflowContext = $getWorkflowContext($approval);
+
+                                    // Determine dot color based on action and type
+                                    $dotColor = match ($action) {
+                                        'approved' => 'bg-success',
+                                        'rejected' => 'bg-error',
+                                        'forwarded' => 'bg-info',
+                                        'revision_requested' => 'bg-warning',
+                                        default => 'bg-warning',
+                                    };
+
+                                    // Determine icon based on action
+                                    $icon = match ($action) {
+                                        'approved' => 'o-check-circle',
+                                        'rejected' => 'o-x-circle',
+                                        'forwarded' => 'o-arrow-right',
+                                        'revision_requested' => 'o-arrow-path',
+                                        default => 'o-clock',
+                                    };
+                                @endphp
+
                                 <div class="relative pl-10">
                                     {{-- Timeline Dot --}}
                                     <div
-                                        class="absolute left-2 top-1 w-4 h-4 rounded-full {{ $approval['decision'] === 'approved' ? 'bg-success' : ($approval['decision'] === 'rejected' ? 'bg-error' : ($approval['decision'] === 'pending' ? 'bg-warning' : ($approval['decision'] === 'forwarded' ? 'bg-info' : 'bg-info'))) }} ring-4 ring-base-100">
+                                        class="absolute left-2 top-1 w-4 h-4 rounded-full {{ $dotColor }} ring-4 ring-base-100 flex items-center justify-center">
+                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white" />
                                     </div>
 
-                                    {{-- Content --}}
-                                    <div class="bg-base-200 rounded-lg p-3">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <div>
-                                                <p class="font-semibold text-base-content text-sm">
-                                                    {{ $approval['office_name'] }}
-                                                </p>
+                                    {{-- Content Card --}}
+                                    <div class="bg-base-200 rounded-lg p-4 hover:bg-base-300 transition-colors">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <p class="font-semibold text-base-content text-sm">
+                                                        {{ $approval->office_name ?? 'Office of Student Affairs' }}
+                                                    </p>
+                                                    <span class="badge badge-xs badge-outline">
+                                                        {{ strtoupper($approval->approval_type) }}
+                                                    </span>
+                                                </div>
                                                 <p class="text-xs text-base-content/70">
-                                                    {{ $approval['user']->name ?? 'System' }}
+                                                    {{ $approval->user->name ?? 'System' }}
                                                 </p>
                                             </div>
                                             <span
-                                                class="badge badge-sm {{ $decisionClasses[$approval['decision']] ?? 'badge-neutral' }} text-white">{{ ucfirst(str_replace('_', ' ', $approval['decision'])) }}</span>
+                                                class="badge badge-sm {{ $actionClasses[$action] ?? 'badge-neutral' }} text-white">
+                                                {{ ucfirst(str_replace('_', ' ', $action)) }}
+                                            </span>
                                         </div>
 
-                                        @if ($approval['remarks'])
-                                            <div class="mt-2 pt-2 border-t border-base-300">
-                                                <p class="text-xs font-medium text-base-content/70 mb-1">
-                                                    Remarks:</p>
-                                                <p class="text-sm text-base-content/80">
-                                                    {{ $approval['remarks'] }}</p>
+                                        {{-- Workflow Context --}}
+                                        @if ($workflowContext)
+                                            <div
+                                                class="mt-3 p-2 bg-base-100 rounded border-l-4 {{ $action === 'approved' ? 'border-success' : ($action === 'rejected' ? 'border-error' : ($action === 'forwarded' ? 'border-info' : 'border-warning')) }}">
+                                                <p class="text-xs text-base-content/80 leading-relaxed">
+                                                    {{ $workflowContext }}
+                                                </p>
                                             </div>
                                         @endif
 
-                                        <p class="text-xs text-base-content/50 mt-2">
-                                            {{ $approval['created_at']->diffForHumans() }}
-                                        </p>
+                                        {{-- Remarks --}}
+                                        @if ($approval->remarks)
+                                            <div class="mt-3 pt-3 border-t border-base-300">
+                                                <p class="text-xs font-medium text-base-content/70 mb-1">
+                                                    Remarks:
+                                                </p>
+                                                <p class="text-sm text-base-content/80 whitespace-pre-line">
+                                                    {{ $approval->remarks }}
+                                                </p>
+                                            </div>
+                                        @endif
+
+                                        {{-- Timestamp --}}
+                                        <div
+                                            class="mt-3 pt-2 border-t border-base-300 flex items-center justify-between">
+                                            <p class="text-xs text-base-content/50">
+                                                {{ $approval->created_at->format('F d, Y g:i A') }}
+                                            </p>
+                                            <p class="text-xs text-base-content/50">
+                                                {{ $approval->created_at->diffForHumans() }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
                 @else
-                    <div class="text-center py-8">
-                        <p class="text-base-content/70">No approval actions yet</p>
-                        <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting review</p>
+                    <div class="text-center py-12">
+                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
+                        <p class="text-base-content/70 font-medium">No approval actions yet</p>
+                        <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting initial review by OSA</p>
                     </div>
                 @endif
             </div>
@@ -551,43 +392,139 @@
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4">Actions</h2>
 
-                @if ($ticket->status === 'pending_osa_approval')
-                    {{-- Final Decision After GSO Review --}}
-                    @php
-                        $gsoApproval = $ticket->officeApprovals->first();
-                    @endphp
+                @php
+                    $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
+                    $hasOfficeActions =
+                        in_array('approve', $allowedActions, true) || in_array('reject', $allowedActions, true);
+                    $currentUser = auth()->user();
 
-                    @if ($gsoApproval)
-                        <div
-                            class="alert mb-4 {{ $gsoApproval->decision === 'approved' ? 'alert-success' : 'alert-error' }}">
-                            <div>
-                                <p class="font-semibold">GSO has {{ $gsoApproval->decision }} this request
-                                </p>
-                                <p class="text-sm mt-1">{{ $gsoApproval->remarks }}</p>
+                    $targetOfficeId = $overviewData['office_id'] ?? null;
+                    $officeApprovalRecord = null;
+
+                    if ($targetOfficeId !== null) {
+                        $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
+                            'office_id',
+                            (int) $targetOfficeId,
+                        );
+                    }
+
+                    if (!$officeApprovalRecord && $currentUser && $currentUser->isGSO()) {
+                        $fallbackOfficeId = $currentUser->office_id;
+
+                        if ($fallbackOfficeId) {
+                            $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
+                                'office_id',
+                                (int) $fallbackOfficeId,
+                            );
+                        }
+                    }
+
+                    $officeDecisionStatus = $officeApprovalRecord
+                        ? \Illuminate\Support\Str::of($officeApprovalRecord->decision)->lower()->toString()
+                        : (isset($overviewData['status'])
+                            ? \Illuminate\Support\Str::of($overviewData['status'])->lower()->toString()
+                            : null);
+
+                    $officeDecisionPending = false;
+
+                    if ($hasOfficeActions) {
+                        if ($officeApprovalRecord) {
+                            $officeDecisionPending = strcasecmp($officeApprovalRecord->decision ?? '', 'pending') === 0;
+                        } elseif ($officeDecisionStatus === 'pending') {
+                            $officeDecisionPending = true;
+                        }
+                    }
+
+                    $canPerformOfficeDecision =
+                        $hasOfficeActions &&
+                        $currentUser &&
+                        $currentUser->isGSO() &&
+                        ($currentUser->can('approve', $ticket) || $currentUser->can('reject', $ticket));
+
+                    $shouldRenderOfficeActions = $officeDecisionPending && $canPerformOfficeDecision;
+
+                    $resolvedGsoApproval = $officeApprovalRecord;
+
+                    if (!$resolvedGsoApproval && $currentUser && $currentUser->isGSO() && $currentUser->office_id) {
+                        $resolvedGsoApproval = $ticket->officeApprovals->firstWhere(
+                            'office_id',
+                            (int) $currentUser->office_id,
+                        );
+                    }
+
+                    $resolvedDecision = $resolvedGsoApproval?->decision;
+
+                    $officeDecisionDetails = null;
+
+                    if ($resolvedGsoApproval && $resolvedDecision && strcasecmp($resolvedDecision, 'pending') !== 0) {
+                        $decisionKey = \Illuminate\Support\Str::of($resolvedDecision)->lower()->toString();
+
+                        $officeDecisionDetails = [
+                            'status' => $decisionKey,
+                            'message' =>
+                                $decisionKey === 'approved'
+                                    ? 'This ticket has been approved.'
+                                    : 'This ticket has been rejected.',
+                            'wrapper' =>
+                                $decisionKey === 'approved'
+                                    ? 'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info'
+                                    : 'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
+                            'icon' => $decisionKey === 'approved' ? 'o-check-circle' : 'o-x-circle',
+                        ];
+                    }
+                @endphp
+
+                @if ($ticket->status === 'pending_osa_approval')
+                    {{-- Pending OSA decision; GSO may still need to act --}}
+                    @if ($shouldRenderOfficeActions)
+                        <div class="space-y-3">
+                            @if (in_array('approve', $allowedActions))
+                                @can('approve', $ticket)
+                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                        @click="showApproval = true">
+                                        Approve Ticket
+                                    </button>
+                                @endcan
+                            @endif
+
+                            @if (in_array('reject', $allowedActions))
+                                @can('reject', $ticket)
+                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
+                                        @click="showRejection = true">
+                                        Reject Ticket
+                                    </button>
+                                @endcan
+                            @endif
+                        </div>
+                    @else
+                        @if ($officeDecisionDetails)
+                            <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                                <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                             </div>
+                        @endif
+
+                        <div class="space-y-3">
+                            @if (in_array('final_approve', $allowedActions))
+                                @can('finalApprove', $ticket)
+                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                        @click="showFinalApproval = true">
+                                        Final Approval
+                                    </button>
+                                @endcan
+                            @endif
+
+                            @if (in_array('final_reject', $allowedActions))
+                                @can('finalReject', $ticket)
+                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
+                                        @click="showFinalRejection = true">
+                                        Final Rejection
+                                    </button>
+                                @endcan
+                            @endif
                         </div>
                     @endif
-
-                    <div class="space-y-3">
-                        @if (in_array('final_approve', $allowedActions))
-                            @can('finalApprove', $ticket)
-                                <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                    @click="showFinalApproval = true">
-                                    Final Approval
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('final_reject', $allowedActions))
-                            @can('finalReject', $ticket)
-                                <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                    @click="showFinalRejection = true">
-                                    Final Rejection
-                                </button>
-                            @endcan
-                        @endif
-                    </div>
-                @elseif ($ticket->status === 'gso_review')
+                @elseif ($ticket->status === 'gso_review' || ($officeDecisionPending && $canPerformOfficeDecision))
                     {{-- GSO Review Actions --}}
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
@@ -648,64 +585,57 @@
                         @endif
                     </div>
                 @else
-                    <div class="alert alert-info">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5" />
-                        <span>
-                            @if ($ticket->status === 'approved')
-                                This ticket has been <u>approved</u>.
-                            @elseif($ticket->status === 'rejected')
-                                This ticket has been <u>rejected</u>.
-                            @elseif($ticket->status === 'needs_revision')
-                                Waiting for student organization to <u>revise and resubmit</u>.
-                            @elseif($ticket->status === 'gso_review')
-                                This ticket has been <u>forwarded to GSO for review</u>.
-                            @else
-                                No actions available for current ticket status.
-                            @endif
-                        </span>
-                    </div>
-                @endif
-            </div>
+                    @if ($officeDecisionDetails)
+                        <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                            <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
+                        </div>
+                    @else
+                        @php
+                            $resolvedStatus = \Illuminate\Support\Str::of($ticket->status)->lower()->toString();
+                            $statusConfig = [
+                                'approved' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info',
+                                    'icon' => 'o-check-circle',
+                                    'label' => 'This ticket has been approved.',
+                                ],
+                                'rejected' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
+                                    'icon' => 'o-x-circle',
+                                    'label' => 'This ticket has been rejected.',
+                                ],
+                                'needs_revision' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                                    'icon' => 'o-arrow-path',
+                                    'label' => 'Waiting for revision from the student organization.',
+                                ],
+                                'gso_review' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-2xl bg-secondary/10 border border-secondary/30 px-4 py-3 text-secondary',
+                                    'icon' => 'o-eye',
+                                    'label' => 'Ticket is currently under GSO review.',
+                                ],
+                            ];
 
-            {{-- Comments --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6" x-data="{ isSubmitting: false }" x-init="$nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })"
-                @comment-added.window="
-                    isSubmitting = false;
-                    $nextTick(() => { if (window.AvatarHelper) window.AvatarHelper.initAvatars(); })
-                ">
-                <h2 class="text-xl font-bold text-base-content mb-4">Comments</h2>
-                @if ($ticket->comments->count() > 0)
-                    <div class="mt-4 space-y-4" wire:key="comments-list">
-                        @foreach ($ticket->comments as $comment)
-                            <div class="chat chat-start" wire:key="comment-{{ $comment->id }}">
-                                <div class="chat-image avatar">
-                                    <div class="w-10 rounded-full bg-base-300">
-                                        <img data-avatar="{{ $comment->user->avatar_url }}"
-                                            alt="{{ $comment->user->name }}" draggable="false"
-                                            class="rounded-full w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                                <div class="chat-header">
-                                    {{ $comment->user->name }}
-                                    <x-mary-badge value="{{ $comment->user->role_display }}"
-                                        class="badge-primary text-xs ml-2" />
-                                    <time
-                                        class="text-xs opacity-50">{{ $comment->created_at->diffForHumans() }}</time>
-                                </div>
-                                <div class="chat-bubble">{{ $comment->content }}</div>
+                            $statusDisplay = $statusConfig[$resolvedStatus] ?? null;
+                        @endphp
+
+                        @if ($statusDisplay)
+                            <div class="{{ $statusDisplay['wrapper'] }}">
+                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
+                                <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
                             </div>
-                        @endforeach
-                    </div>
+                        @else
+                            <div class="alert alert-info">
+                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                                <span>No actions available for current ticket status.</span>
+                            </div>
+                        @endif
+                    @endif
                 @endif
-                <div class="space-y-3 mt-4">
-                    <textarea wire:model.defer="comment" class="textarea textarea-bordered w-full h-4" placeholder="Add a comment..."
-                        x-on:keydown.ctrl.enter="$wire.addComment(); isSubmitting = true" :disabled="isSubmitting"></textarea>
-                    <button class="btn btn-primary w-full" wire:click="addComment" x-on:click="isSubmitting = true"
-                        :disabled="isSubmitting" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="addComment">Add Comment</span>
-                        <span wire:loading wire:target="addComment" class="loading loading-spinner loading-sm"></span>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -733,8 +663,9 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showApproval=false" />
-                <x-mary-button label="Confirm Approval" class="btn-success" wire:click="approveTicket"
-                    spinner="approveTicket" x-bind:disabled="approvalRemarks.trim().length < 3"
+                <x-mary-button label="Confirm Approval" class="btn-success text-neutral-content"
+                    wire:click="approveTicket" spinner="approveTicket"
+                    x-bind:disabled="approvalRemarks.trim().length < 3"
                     @click="$wire.set('approvalRemarks', approvalRemarks)" />
             </div>
         </div>
@@ -764,8 +695,9 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showRejection=false" />
-                <x-mary-button label="Confirm Rejection" class="btn-error" wire:click="rejectTicket"
-                    spinner="rejectTicket" x-bind:disabled="rejectionRemarks.trim().length < 10"
+                <x-mary-button label="Confirm Rejection" class="btn-error text-neutral-content"
+                    wire:click="rejectTicket" spinner="rejectTicket"
+                    x-bind:disabled="rejectionRemarks.trim().length < 10"
                     @click="$wire.set('rejectionRemarks', rejectionRemarks)" />
             </div>
         </div>
@@ -857,8 +789,9 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false" />
-                <x-mary-button label="Confirm Final Approval" class="btn-success" wire:click="finalApproval"
-                    spinner="finalApproval" x-bind:disabled="finalApprovalRemarks.trim().length < 3"
+                <x-mary-button label="Confirm Final Approval" class="btn-success text-neutral-content"
+                    wire:click="finalApproval" spinner="finalApproval"
+                    x-bind:disabled="finalApprovalRemarks.trim().length < 3"
                     @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />
             </div>
         </div>
@@ -888,8 +821,9 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showFinalRejection=false" />
-                <x-mary-button label="Confirm Final Rejection" class="btn-error" wire:click="finalRejection"
-                    spinner="finalRejection" x-bind:disabled="finalRejectionRemarks.trim().length < 10"
+                <x-mary-button label="Confirm Final Rejection" class="btn-error text-neutral-content"
+                    wire:click="finalRejection" spinner="finalRejection"
+                    x-bind:disabled="finalRejectionRemarks.trim().length < 10"
                     @click="$wire.set('finalRejectionRemarks', finalRejectionRemarks)" />
             </div>
         </div>
@@ -938,6 +872,20 @@
             }) => {
                 if (url) {
                     window.open(url, '_blank');
+                }
+            });
+
+            // Add this download listener
+            Livewire.on('download-attachment', ({
+                url
+            }) => {
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = '';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 }
             });
 

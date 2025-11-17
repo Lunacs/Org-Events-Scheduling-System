@@ -1,0 +1,2 @@
+@include('components.layouts.app')
+

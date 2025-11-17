@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StudentOrg;
 
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
@@ -16,6 +17,33 @@ class History extends Component
     public $statusFilter = '';
     public $typeFilter = '';
     public $yearFilter = '';
+    public $showDetailsModal = false;
+    public $loadingDetails = false;
+    public $selectedTicket = null;
+
+    public function openDetailsModal($ticketId)
+    {
+        $this->showDetailsModal = true;
+        $this->loadingDetails = true;
+        $this->selectedTicket = null;
+
+        // Dispatch browser event to load ticket details after modal renders
+        $this->dispatch('modal-opened', ticketId: $ticketId);
+    }
+
+    #[On('modal-opened')]
+    public function loadTicketDetails($ticketId)
+    {
+        $this->selectedTicket = \App\Models\Ticket::with([
+            'user.studentOrganization.course',
+            'user.position',
+            'eventType',
+            'fundSource',
+            'attachments'
+        ])->findOrFail($ticketId);
+
+        $this->loadingDetails = false;
+    }
 
     public function exportReport()
     {

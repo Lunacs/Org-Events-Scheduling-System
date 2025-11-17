@@ -17,17 +17,17 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        
+
         // Log logout event before destroying session
         if ($user) {
             TransactionLogService::logAuthEvent('logout', $user);
         }
-        
-        $redirectRoute = match ($user->role ?? null) {
-            User::ROLE_SUPERADMIN => 'superadmin.login',
-            User::ROLE_OSA => 'admin.login',
-            User::ROLE_GSO => 'gso.login',
-            User::ROLE_STUDENT_ORG => 'student-org.login',
+
+        $redirectRoute = match ($user->role_id ?? null) {
+            User::getRoleId('superadmin') => 'superadmin.login',
+            User::getRoleId('osa') => 'admin.login',
+            User::getRoleId('gso') => 'gso.login',
+            User::getRoleId('student-org') => 'student-org.login',
             default => 'admin.login',
         };
 

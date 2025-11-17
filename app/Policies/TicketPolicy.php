@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Office;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
@@ -35,9 +36,9 @@ class TicketPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Ticket $ticket): bool
+    public function update(User $user, Ticket $ticket)
     {
-        return false;
+        return $user->user_id === $ticket->user_id;
     }
 
     /**
@@ -74,9 +75,15 @@ class TicketPolicy
             return true;
         }
 
-        // GSO can approve tickets in 'gso_review' status
-        if ($user->isGSO() && $ticket->status === 'gso_review') {
-            return true;
+        // GSO can approve when ticket is in review or when their office decision is pending
+        if ($user->isGSO()) {
+            if ($ticket->status === 'gso_review') {
+                return true;
+            }
+
+            if ($this->gsoHasPendingDecision($user, $ticket)) {
+                return true;
+            }
         }
 
         return false;
@@ -92,9 +99,15 @@ class TicketPolicy
             return true;
         }
 
-        // GSO can reject tickets in 'gso_review' status
-        if ($user->isGSO() && $ticket->status === 'gso_review') {
-            return true;
+        // GSO can reject when ticket is in review or when their office decision is pending
+        if ($user->isGSO()) {
+            if ($ticket->status === 'gso_review') {
+                return true;
+            }
+
+            if ($this->gsoHasPendingDecision($user, $ticket)) {
+                return true;
+            }
         }
 
         return false;
@@ -125,6 +138,35 @@ class TicketPolicy
     {
         // Only OSA can make final approval after GSO review
         return $user->isOSA() && $ticket->status === 'pending_osa_approval';
+    }
+
+    /**
+     * Determine if the GSO user's office still has a pending decision on the ticket.
+     */
+    protected function gsoHasPendingDecision(User $user, Ticket $ticket): bool
+    {
+        $officeId = $user->office_id;
+
+        if (! $officeId) {
+            $officeId = Office::query()
+                ->where('office_code', 'GSO')
+                ->value('office_id');
+        }
+
+        if (! $officeId) {
+            return false;
+        }
+
+        if ($ticket->relationLoaded('officeApprovals')) {
+            return $ticket->officeApprovals
+                ->contains(fn ($approval) => (int) $approval->office_id === (int) $officeId
+                    && strcasecmp($approval->decision, 'pending') === 0);
+        }
+
+        return $ticket->officeApprovals()
+            ->where('office_id', $officeId)
+            ->where('decision', 'pending')
+            ->exists();
     }
 
     /**

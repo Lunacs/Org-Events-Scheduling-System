@@ -25,7 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="h-full font-body antialiased bg-base-200">
+<body class="h-full font-sans antialiased bg-base-200">
     <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-4">
         <div class="max-w-2xl w-full">
             <!-- Error Card -->
@@ -61,7 +61,8 @@
                         <div>
                             <h3 class="font-semibold">Why am I seeing this?</h3>
                             <div class="text-sm opacity-90">
-                                Our system limits the number of requests to prevent abuse and ensure fair usage for all users.
+                                Our system limits the number of requests to prevent abuse and ensure fair usage for all
+                                users.
                             </div>
                         </div>
                     </div>
@@ -76,7 +77,8 @@
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ url()->current() }}" class="btn btn-outline hover:outline-primary bg-primary text-white">
+                        <a href="{{ url()->current() }}"
+                            class="btn btn-outline hover:outline-primary bg-primary text-white">
                             <i class="fas fa-refresh mr-2"></i>
                             Try Again
                         </a>
@@ -110,4 +112,3 @@
 </body>
 
 </html>
-

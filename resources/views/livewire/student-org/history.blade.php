@@ -230,8 +230,9 @@
                                 </div>
 
                                 <div class="flex flex-col space-y-2 ml-6">
-                                    <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details"/>
-                                    @if($isRejected)
+                                    <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details"
+                                                   wire:click="openDetailsModal({{ $ticket->ticket_id }})"/>
+                                @if($isRejected)
                                         <x-mary-button icon="s-document-text" class="btn-sm btn-ghost" tooltip="View Feedback"/>
                                         <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost" tooltip="Resubmit Modified"/>
                                     @elseif($isCancelled)
@@ -303,4 +304,17 @@
             </x-mary-card>
         </div>
     </div>
+
+    {{-- Ticket Details Modal --}}
+    <x-mary-modal wire:model="showDetailsModal" title="Event Details" class="backdrop-blur" box-class="max-w-7xl max-h-[85vh] overflow-y-auto">
+        @if($loadingDetails)
+            <div class="flex justify-center items-center py-12">
+                <span class="loading loading-spinner loading-lg"></span>
+            </div>
+        @elseif($selectedTicket)
+            <div class="grid grid-cols-1 gap-6">
+                <x-tickets.ticket-preview :ticket="$selectedTicket" />
+            </div>
+        @endif
+    </x-mary-modal>
 </div>

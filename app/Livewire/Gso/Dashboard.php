@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 class Dashboard extends Component
 {
-    use ResolvesOfficeContext;
+    use ResolvesOfficeContext, Toast;
     #[Title('Dashboard - GSO')]
     #[Layout('components.layouts.gso-layout')]
+
+    public int $refreshTicker = 0;
 
     public function render()
     {
@@ -54,6 +57,20 @@ class Dashboard extends Component
             ->map(fn(Office_Approval $approval) => $this->formatPendingApproval($approval))
             ->values();
 
+        $approvalSnapshot = (clone $baseApprovalQuery)
+            ->with([
+                'ticket.eventType',
+                'ticket.user.studentOrganization',
+            ])
+            ->orderByDesc('created_at')
+            ->limit(25)
+            ->get()
+            ->unique('ticket_id')
+            ->values()
+            ->take(5)
+            ->map(fn(Office_Approval $approval) => $this->formatPendingApproval($approval))
+            ->values();
+
         $recentActivities = Transaction_Logs::query()
             ->with('user')
             ->whereHas('user', fn($userQuery) => $userQuery->where('office_id', $officeId))
@@ -70,12 +87,22 @@ class Dashboard extends Component
             })
             ->values();
 
+        $ticketsInQueue = $this->countUniqueTicketsInQueue($officeId);
+
         return view('livewire.gso.dashboard', [
             'stats' => $stats,
             'pendingApprovals' => $pendingApprovals,
+            'approvalSnapshot' => $approvalSnapshot,
             'recentActivities' => $recentActivities,
             'user' => $user,
+            'ticketsInQueue' => $ticketsInQueue,
         ]);
+    }
+
+    public function refreshData(): void
+    {
+        $this->refreshTicker++;
+    $this->success('Dashboard data refreshed!', position: 'toast-top');
     }
 
     protected function formatPendingApproval(Office_Approval $approval): array
@@ -157,5 +184,13 @@ class Dashboard extends Component
         }
 
         return Carbon::now()->startOfDay()->diffInDays($eventDate->copy()->startOfDay(), false);
+    }
+
+    private function countUniqueTicketsInQueue(int $officeId): int
+    {
+        return (int) Office_Approval::query()
+            ->where('office_id', $officeId)
+            ->distinct('ticket_id')
+            ->count('ticket_id');
     }
 }

@@ -14,7 +14,7 @@ class TransactionLogService
     public static function log(string $action, string $details, ?int $userId = null): void
     {
         $userId = $userId ?? Auth::id() ?? 1; // Default to user ID 1 if no authenticated user
-        
+
         Transaction_Logs::create([
             'user_id' => $userId,
             'action' => strtoupper($action),
@@ -31,14 +31,14 @@ class TransactionLogService
     private static function autoCleanup(): void
     {
         $totalLogs = Transaction_Logs::count();
-        
+
         // Only cleanup if we have more than 1000 logs
         if ($totalLogs > 1000) {
             // Keep only the last 500 logs
             $logsToDelete = Transaction_Logs::orderBy('created_at', 'asc')
                 ->limit($totalLogs - 500)
                 ->pluck('log_id');
-                
+
             Transaction_Logs::whereIn('log_id', $logsToDelete)->delete();
         }
     }
@@ -48,17 +48,17 @@ class TransactionLogService
      */
     public static function logUserOperation(string $operation, User $user, array $changes = []): void
     {
-        $details = match($operation) {
+        $details = match ($operation) {
             'created' => "Created user account: {$user->name} ({$user->email})",
-            'updated' => "Updated user account: {$user->name} ({$user->email})" . 
-                        (empty($changes) ? '' : ' - Changes: ' . implode(', ', $changes)),
+            'updated' => "Updated user account: {$user->name} ({$user->email})".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
             'deleted' => "Deleted user account: {$user->name} ({$user->email})",
             'password_reset' => "Reset password for user: {$user->name} ({$user->email})",
             'role_changed' => "Changed role for user: {$user->name} ({$user->email})",
             default => "User operation: {$operation} on {$user->name} ({$user->email})"
         };
 
-        self::log('USER_' . strtoupper($operation), $details);
+        self::log('USER_'.strtoupper($operation), $details);
     }
 
     /**
@@ -67,16 +67,34 @@ class TransactionLogService
     public static function logEventTypeOperation(string $operation, $eventType, array $changes = []): void
     {
         $eventTypeName = is_object($eventType) ? $eventType->type_name : $eventType;
-        
-        $details = match($operation) {
+
+        $details = match ($operation) {
             'created' => "Created event type: {$eventTypeName}",
-            'updated' => "Updated event type: {$eventTypeName}" . 
-                        (empty($changes) ? '' : ' - Changes: ' . implode(', ', $changes)),
+            'updated' => "Updated event type: {$eventTypeName}".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
             'deleted' => "Deleted event type: {$eventTypeName}",
             default => "Event type operation: {$operation} on {$eventTypeName}"
         };
 
-        self::log('EVENT_TYPE_' . strtoupper($operation), $details);
+        self::log('EVENT_TYPE_'.strtoupper($operation), $details);
+    }
+
+    /**
+     * Log student orgs operations
+     */
+    public static function logOrgOperation(string $operation, $org, array $changes = []): void
+    {
+        $orgName = is_object($org) ? $org->org_name : $org;
+
+        $details = match ($operation) {
+            'created' => "Created student organization: {$orgName}",
+            'updated' => "Updated student organization: {$orgName}".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
+            'deleted' => "Deleted student organization: {$orgName}",
+            default => "Student organization operation: {$operation} on {$orgName}"
+        };
+
+        self::log('STUDENT_ORG_'.strtoupper($operation), $details);
     }
 
     /**
@@ -86,18 +104,33 @@ class TransactionLogService
     {
         $ticketTitle = is_object($ticket) ? $ticket->title : $ticket;
         $ticketNumber = is_object($ticket) ? $ticket->ticket_number : '';
-        
-        $details = match($operation) {
+
+        $details = match ($operation) {
             'created' => "Created ticket: {$ticketTitle} ({$ticketNumber})",
-            'updated' => "Updated ticket: {$ticketTitle} ({$ticketNumber})" . 
-                        (empty($changes) ? '' : ' - Changes: ' . implode(', ', $changes)),
-            'approved' => "Approved ticket: {$ticketTitle} ({$ticketNumber})",
-            'rejected' => "Rejected ticket: {$ticketTitle} ({$ticketNumber})",
+            'updated' => "Updated ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
+            'amended' => "Amended ticket: {$ticketTitle} ({$ticketNumber}) - Resubmitted after revision",
+            'approved' => "Approved ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'rejected' => "Rejected ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'forwarded' => "Forwarded ticket: {$ticketTitle} ({$ticketNumber}) to GSO".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'revision_requested' => "Requested revision for ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'final_approved' => "Final approval for ticket: {$ticketTitle} ({$ticketNumber}) after GSO review".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'final_rejected' => "Final rejection for ticket: {$ticketTitle} ({$ticketNumber}) after GSO review".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'rescheduled' => "Rescheduled ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'completed' => "Completed ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', array_map(fn ($k, $v) => "{$k}: {$v}", array_keys($changes), $changes))),
             'deleted' => "Deleted ticket: {$ticketTitle} ({$ticketNumber})",
             default => "Ticket operation: {$operation} on {$ticketTitle} ({$ticketNumber})"
         };
 
-        self::log('TICKET_' . strtoupper($operation), $details);
+        self::log('TICKET_'.strtoupper($operation), $details);
     }
 
     /**
@@ -106,8 +139,8 @@ class TransactionLogService
     public static function logAuthEvent(string $event, ?User $user = null, string $additionalInfo = ''): void
     {
         $userInfo = $user ? "{$user->name} ({$user->email})" : 'Unknown user';
-        
-        $details = match($event) {
+
+        $details = match ($event) {
             'login' => "User logged in: {$userInfo}",
             'logout' => "User logged out: {$userInfo}",
             'login_failed' => "Failed login attempt: {$additionalInfo}",
@@ -116,7 +149,7 @@ class TransactionLogService
             default => "Auth event: {$event} for {$userInfo}"
         };
 
-        self::log('AUTH_' . strtoupper($event), $details);
+        self::log('AUTH_'.strtoupper($event), $details);
     }
 
     /**
@@ -125,7 +158,7 @@ class TransactionLogService
     public static function logSystemOperation(string $operation, string $details = ''): void
     {
         $fullDetails = empty($details) ? "System operation: {$operation}" : $details;
-        self::log('SYSTEM_' . strtoupper($operation), $fullDetails);
+        self::log('SYSTEM_'.strtoupper($operation), $fullDetails);
     }
 
     /**
@@ -134,16 +167,50 @@ class TransactionLogService
     public static function logOfficeOperation(string $operation, $office, array $changes = []): void
     {
         $officeName = is_object($office) ? $office->office_name : $office;
-        
-        $details = match($operation) {
+
+        $details = match ($operation) {
             'created' => "Created office: {$officeName}",
-            'updated' => "Updated office: {$officeName}" . 
-                        (empty($changes) ? '' : ' - Changes: ' . implode(', ', $changes)),
+            'updated' => "Updated office: {$officeName}".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
             'deleted' => "Deleted office: {$officeName}",
             default => "Office operation: {$operation} on {$officeName}"
         };
 
-        self::log('OFFICE_' . strtoupper($operation), $details);
+        self::log('OFFICE_'.strtoupper($operation), $details);
+    }
+
+    /**
+     * Log office approval operations (GSO, other offices reviewing tickets)
+     */
+    public static function logOfficeApproval(string $officeName, string $action, $ticket, array $changes = []): void
+    {
+        $ticketTitle = is_object($ticket) ? $ticket->title : $ticket;
+        $ticketNumber = is_object($ticket) ? $ticket->ticket_number : '';
+
+        $details = match ($action) {
+            'approved' => "{$officeName} approved ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            'rejected' => "{$officeName} rejected ticket: {$ticketTitle} ({$ticketNumber})".
+                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
+            default => "{$officeName} {$action} on ticket: {$ticketTitle} ({$ticketNumber})"
+        };
+
+        self::log('OFFICE_'.strtoupper($action), $details);
+    }
+
+    public static function logCourseOperation(string $operation, $course, array $changes = []): void
+    {
+        $courseName = is_object($course) ? $course->course_name : $course;
+
+        $details = match ($operation) {
+            'created' => "Created course: {$courseName}",
+            'updated' => "Updated course: {$courseName}".
+                        (empty($changes) ? '' : ' - Changes: '.implode(', ', $changes)),
+            'deleted' => "Deleted course: {$courseName}",
+            default => "Course operation: {$operation} on {$courseName}"
+        };
+
+        self::log('COURSE_'.strtoupper($operation), $details);
     }
 
     /**
@@ -163,17 +230,17 @@ class TransactionLogService
     public static function manualCleanup(int $keepCount = 500): int
     {
         $totalLogs = Transaction_Logs::count();
-        
+
         if ($totalLogs <= $keepCount) {
             return 0; // No logs to delete
         }
-        
+
         $logsToDelete = Transaction_Logs::orderBy('created_at', 'asc')
             ->limit($totalLogs - $keepCount)
             ->pluck('log_id');
-            
+
         $deletedCount = Transaction_Logs::whereIn('log_id', $logsToDelete)->delete();
-        
+
         return $deletedCount;
     }
 

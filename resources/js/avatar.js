@@ -62,10 +62,21 @@ export function initAvatars() {
         }
 
         // Check if this specific avatar is already initialized with the same data
+        // AND the image is already loaded (has src or background-image)
+        const isImgTag = element.tagName === "IMG";
+        const hasLoadedContent = isImgTag
+            ? element.src &&
+              element.src !==
+                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+            : element.style.backgroundImage &&
+              element.style.backgroundImage !== "";
+
         if (
             element.dataset.initialized === "true" &&
-            element.dataset.currentAvatar === avatarData
+            element.dataset.currentAvatar === avatarData &&
+            hasLoadedContent
         ) {
+            console.log(`[Avatar Init] Skipping already loaded: ${avatarData}`);
             return;
         }
 
@@ -126,15 +137,21 @@ if (document.readyState === "loading") {
 }
 
 // Re-initialize when Livewire updates the DOM
-document.addEventListener("livewire:navigated", initAvatars);
-document.addEventListener("livewire:update", initAvatars);
+document.addEventListener("livewire:navigated", () => {
+    console.log("[Avatar] Page navigated, checking for new avatars...");
+    // Don't reinitialize all - only new ones
+    initAvatars();
+});
 
-// Listen for avatar changes
+document.addEventListener("livewire:update", () => {
+    console.log("[Avatar] Livewire updated, checking for new avatars...");
+    initAvatars();
+});
+
+// Only clear cache and full reinit when user explicitly changes avatar
 window.addEventListener("avatar-changed", () => {
-    console.log("[Avatar] User changed avatar, refreshing...");
-    // Clear cache and reinitialize
+    console.log("[Avatar] User changed avatar, full refresh...");
     clearAvatarCache();
-    // Remove initialized flags
     document.querySelectorAll("[data-avatar]").forEach((el) => {
         el.dataset.initialized = "false";
     });
@@ -144,12 +161,16 @@ window.addEventListener("avatar-changed", () => {
 // Listen for navigation refresh
 window.addEventListener("navigation-refresh", () => {
     console.log("[Avatar] Navigation refresh triggered");
-    // Clear cache and reinitialize
-    clearAvatarCache();
+    // Don't clear cache - only reinitialize new/changed avatars
     document.querySelectorAll("[data-avatar]").forEach((el) => {
-        el.dataset.initialized = "false";
+        const currentData = el.dataset.currentAvatar;
+        const newData = el.getAttribute("data-avatar");
+        // Only reset if avatar data changed
+        if (currentData !== newData) {
+            el.dataset.initialized = "false";
+        }
     });
-    setTimeout(() => initAvatars(), 150);
+    setTimeout(() => initAvatars(), 50);
 });
 
 // Export for global use

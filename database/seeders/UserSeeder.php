@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
             'email' => 'superadmin@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_SUPERADMIN,
+            'role_id' => User::getRoleId('superadmin'),
             'org_id' => null,
             'office_id' => null,
         ]);
@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
             'email' => 'osa@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'org_id' => null,
             'office_id' => null,
         ]);
@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
             'email' => 'maria.santos@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'org_id' => null,
             'office_id' => null,
         ]);
@@ -57,7 +57,7 @@ class UserSeeder extends Seeder
             'email' => 'gso@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_GSO,
+            'role_id' => User::getRoleId('gso'),
             'org_id' => null,
             'office_id' => $gsoOffice?->office_id,
         ]);
@@ -67,7 +67,7 @@ class UserSeeder extends Seeder
             'email' => 'carlos.rodriguez@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_GSO,
+            'role_id' => User::getRoleId('gso'),
             'org_id' => null,
             'office_id' => $gsoOffice?->office_id,
         ]);
@@ -82,7 +82,7 @@ class UserSeeder extends Seeder
                 'email' => 'student@plv.edu.ph',
                 'email_verified_at' => null,
                 'password' => Hash::make('password'),
-                'role_id' => User::ROLE_STUDENT_ORG,
+                'role_id' => User::getRoleId('student-org'),
                 'org_id' => $studentOrgs->first()->org_id,
                 'office_id' => null,
             ]);
@@ -92,7 +92,7 @@ class UserSeeder extends Seeder
                 'email' => 'ana.delacruz@plv.edu.ph',
                 'email_verified_at' => now(), // Verified
                 'password' => Hash::make('password'),
-                'role_id' => User::ROLE_STUDENT_ORG,
+                'role_id' => User::getRoleId('student-org'),
                 'org_id' => $studentOrgs->first()->org_id,
                 'office_id' => null,
             ]);
@@ -104,7 +104,7 @@ class UserSeeder extends Seeder
                     'email' => 'john.martinez@plv.edu.ph',
                     'email_verified_at' => null,
                     'password' => Hash::make('password'),
-                    'role_id' => User::ROLE_STUDENT_ORG,
+                    'role_id' => User::getRoleId('student-org'),
                     'org_id' => $studentOrgs->get(1)->org_id,
                     'office_id' => null,
                 ]);
@@ -116,7 +116,7 @@ class UserSeeder extends Seeder
                     'email' => 'lily.garcia@plv.edu.ph',
                     'email_verified_at' => now(),
                     'password' => Hash::make('password'),
-                    'role_id' => User::ROLE_STUDENT_ORG,
+                    'role_id' => User::getRoleId('student-org'),
                     'org_id' => $studentOrgs->get(2)->org_id,
                     'office_id' => null,
                 ]);
@@ -129,7 +129,7 @@ class UserSeeder extends Seeder
             'email' => 'mrrobot1946@gmail.com',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -139,7 +139,7 @@ class UserSeeder extends Seeder
             'email' => 'johnreygabon@plv.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -148,7 +148,7 @@ class UserSeeder extends Seeder
             'email' => 'gabon.245958@caloocan.sti.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -158,7 +158,7 @@ class UserSeeder extends Seeder
             'email' => 'maykellsilva070@gmail.com',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -168,7 +168,7 @@ class UserSeeder extends Seeder
             'email' => 'adrianacob@plv.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -178,7 +178,7 @@ class UserSeeder extends Seeder
             'email' => 'johnrelparente@plv.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('password'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
         ]);
@@ -188,7 +188,7 @@ class UserSeeder extends Seeder
             'email' => 'lexerichsontalavera@plv.edu.ph',
             'email_verified_at' => null,
             'password' => Hash::make('Lanoira1'),
-            'role_id' => User::ROLE_STUDENT_ORG,
+            'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
@@ -199,7 +199,7 @@ class UserSeeder extends Seeder
             'email' => 'plvlanoira07@gmail.com',
             'email_verified_at' => null,
             'password' => Hash::make('LanoiraCutie'),
-            'role_id' => User::ROLE_OSA,
+            'role_id' => User::getRoleId('osa'),
             'org_id' => null,
             'office_id' => null,
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
@@ -213,7 +213,7 @@ class UserSeeder extends Seeder
                 'email' => strtolower(str_replace(' ', '.', $office->office_name)) . '@plv.edu.ph',
                 'email_verified_at' => now(),
                 'password' => Hash::make('password'),
-                'role_id' => User::ROLE_GSO, // Assuming office staff are GSO role
+                'role_id' => User::getRoleId('gso'), // Assuming office staff are GSO role
                 'org_id' => null,
                 'office_id' => $office->office_id,
             ]);

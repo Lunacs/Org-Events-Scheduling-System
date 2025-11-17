@@ -53,7 +53,7 @@
                 @endscope
 
                 @scope('cell_details', $log)
-                    <div class="text-sm max-w-xs truncate" title="{{ $log->details }}">
+                    <div class="text-sm max-w-xs" title="{{ $log->details }}">
                         {{ $log->details ?: 'No details' }}
                     </div>
                 @endscope

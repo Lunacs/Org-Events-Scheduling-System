@@ -2,67 +2,113 @@
 
 namespace App\Livewire\StudentOrg;
 
-use Livewire\Component;
-use Livewire\Attributes\Title;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class Notifications extends Component
 {
+    use Toast, WithPagination;
+
     #[Title('Notifications - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
 
+    #[Url(except: '')]
     public $search = '';
+
+    #[Url(except: '')]
     public $typeFilter = '';
+
+    #[Url(except: '')]
     public $statusFilter = '';
-    public $notifications = [];
+
     public $unreadCount = 0;
+
     public $totalCount = 0;
+
     public $todayCount = 0;
+
     public $weekCount = 0;
 
     public function mount()
     {
-        $this->loadNotifications();
+        $this->loadCounts();
     }
 
-    public function loadNotifications()
+    public function loadCounts()
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 
+        // Optimize: Load all counts with caching
+        $counts = Cache::remember(
+            "student_org_notifications_counts_{$user->user_id}",
+            60, // 1 minute cache
+            function () use ($user) {
+                $today = today();
+                $weekStart = now()->startOfWeek();
+                $weekEnd = now()->endOfWeek();
+
+                $allNotifications = $user->notifications();
+
+                return [
+                    'unread' => (clone $allNotifications)->whereNull('read_at')->count(),
+                    'total' => $allNotifications->count(),
+                    'today' => (clone $allNotifications)->whereDate('created_at', $today)->count(),
+                    'week' => (clone $allNotifications)->whereBetween('created_at', [$weekStart, $weekEnd])->count(),
+                ];
+            }
+        );
+
+        $this->unreadCount = $counts['unread'] ?? 0;
+        $this->totalCount = $counts['total'] ?? 0;
+        $this->todayCount = $counts['today'] ?? 0;
+        $this->weekCount = $counts['week'] ?? 0;
+    }
+
+    public function getNotificationsProperty()
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return collect();
+        }
+
+        // Build query
         $query = $user->notifications()->latest();
 
+        // Apply search filter - search in JSON data fields
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('data->title', 'like', '%' . $this->search . '%')
-                  ->orWhere('data->message', 'like', '%' . $this->search . '%');
+            $searchTerm = $this->search;
+            $query->where(function ($q) use ($searchTerm) {
+                // Search in title, message, ticket_number from JSON data
+                $q->whereRaw('JSON_EXTRACT(data, "$.title") LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('JSON_EXTRACT(data, "$.message") LIKE ?', ["%{$searchTerm}%"])
+                    ->orWhereRaw('JSON_EXTRACT(data, "$.ticket_number") LIKE ?', ["%{$searchTerm}%"]);
             });
         }
 
+        // Apply type filter
         if ($this->typeFilter) {
-            $query->where('data->type', $this->typeFilter);
+            $query->whereRaw('JSON_EXTRACT(data, "$.type") = ?', [$this->typeFilter]);
         }
 
+        // Apply status filter
         if ($this->statusFilter === 'unread') {
             $query->whereNull('read_at');
         } elseif ($this->statusFilter === 'read') {
             $query->whereNotNull('read_at');
-        } elseif ($this->statusFilter === 'archived') {
-            $query->where('data->archived', true);
         }
 
-        $this->notifications = $query->get();
-
-        $this->unreadCount = $user->unreadNotifications()->count();
-        $this->totalCount = $user->notifications()->count();
-        $this->todayCount = $user->notifications()->whereDate('created_at', today())->count();
-        $this->weekCount = $user->notifications()
-            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->count();
+        return $query->paginate(15);
     }
 
     public function markAsRead($notificationId)
@@ -72,7 +118,9 @@ class Notifications extends Component
 
         if ($notification) {
             $notification->markAsRead();
-            $this->loadNotifications();
+            // Clear cache to refresh counts
+            Cache::forget("student_org_notifications_counts_{$user->user_id}");
+            $this->loadCounts();
         }
     }
 
@@ -80,56 +128,86 @@ class Notifications extends Component
     {
         $user = auth()->user();
         $user->unreadNotifications->markAsRead();
-        $this->loadNotifications();
-        session()->flash('success', 'All notifications marked as read.');
+        // Clear cache to refresh counts
+        Cache::forget("student_org_notifications_counts_{$user->user_id}");
+        $this->loadCounts();
+
+        $this->success('All notifications marked as read.', position: 'toast-top');
     }
 
-    public function openNotificationSettings()
+    public function deleteNotification($notificationId)
     {
-        session()->flash('info', 'Notification settings coming soon.');
+        $user = auth()->user();
+        $notification = $user->notifications()->find($notificationId);
+
+        if ($notification) {
+            $notification->delete();
+
+            // Clear cache to refresh counts
+            Cache::forget("student_org_notifications_counts_{$user->user_id}");
+            $this->loadCounts();
+            $this->resetPage();
+
+            $this->success('Notification deleted.', position: 'toast-top');
+        }
+    }
+
+    public function clearAllRead()
+    {
+        $user = auth()->user();
+
+        // Only delete notifications that have been read
+        $deletedCount = $user->notifications()
+            ->whereNotNull('read_at')
+            ->delete();
+
+        // Clear cache to refresh counts
+        Cache::forget("student_org_notifications_counts_{$user->user_id}");
+        $this->loadCounts();
+        $this->resetPage();
+
+        if ($deletedCount > 0) {
+            $this->success("{$deletedCount} read notification(s) cleared.", position: 'toast-top');
+        } else {
+            $this->info('No read notifications to clear.', position: 'toast-top');
+        }
     }
 
     public function clearFilters()
     {
-        $this->search = '';
-        $this->typeFilter = '';
-        $this->statusFilter = '';
-        $this->loadNotifications();
+        $this->reset(['search', 'typeFilter', 'statusFilter']);
+        $this->resetPage();
     }
 
     public function updatedSearch()
     {
-        $this->loadNotifications();
+        $this->resetPage();
     }
 
     public function updatedTypeFilter()
     {
-        $this->loadNotifications();
+        $this->resetPage();
     }
 
     public function updatedStatusFilter()
     {
-        $this->loadNotifications();
+        $this->resetPage();
     }
 
     #[On('notifications-updated')]
     public function refreshNotifications()
     {
-        $this->loadNotifications();
+        $user = auth()->user();
+        if ($user) {
+            Cache::forget("student_org_notifications_counts_{$user->user_id}");
+        }
+        $this->loadCounts();
     }
 
     public function render()
     {
         return view('livewire.student-org.notifications', [
-            'typeOptions' => [
-                ['id' => '', 'name' => 'All Types'],
-                ['id' => 'ticket_status_approved', 'name' => 'Approvals'],
-                ['id' => 'ticket_status_rejected', 'name' => 'Rejections'],
-                ['id' => 'ticket_status_needs_revision', 'name' => 'Revision Required'],
-                ['id' => 'reminders', 'name' => 'Reminders'],
-                ['id' => 'announcements', 'name' => 'Announcements'],
-                ['id' => 'ticket_status_reschedule_update', 'name' => 'Reschedule Updates'],
-            ]
+            'notifications' => $this->notifications,
         ]);
     }
 }

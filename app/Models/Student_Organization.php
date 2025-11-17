@@ -40,6 +40,7 @@ class Student_Organization extends Model
         'adviser_name',
         'user_id',
         'status',
+        'logo',
     ];
 
     /**
@@ -72,5 +73,19 @@ class Student_Organization extends Model
     public function tickets() : HasManyThrough
     {
         return $this->hasManyThrough(Ticket::class, User::class, 'org_id', 'user_id', 'org_id', 'user_id');
+    }
+
+    /**
+     * Get the URL for the organization logo
+     *
+     * @return string
+     */
+    public function getLogoUrlAttribute(): string
+    {
+        if ($this->logo && \Storage::disk('public')->exists($this->logo)) {
+            return asset('storage/' . $this->logo);
+        }
+
+        return asset('images/default-org-logo.svg');
     }
 }

@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id('org_id');
             $table->string('org_code');
             $table->string('org_name');
-            $table->foreignId('course_id')->references('course_id')->on('courses')->onDelete('cascade');
+            $table->foreignId('course_id')->nullable()->references('course_id')->on('courses')->onDelete('cascade');
             $table->string('adviser_name');
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
-
+            $table->string('logo')->nullable();
             $table->timestamps();
         });
     }

@@ -80,7 +80,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
                 <input wire:model="form.password" id="password" :type="showPassword ? 'text' : 'password'"
                     name="password" placeholder="Password" required autocomplete="current-password"
                     class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                <button type="button" @click="showPassword = !showPassword"
+                <button type="button" x-cloak @click="showPassword = !showPassword"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <i class="fas fa-eye text-gray-400 hover:text-gray-600" x-show="!showPassword"></i>
                     <i class="fas fa-eye-slash text-gray-400 hover:text-gray-600" x-show="showPassword"></i>

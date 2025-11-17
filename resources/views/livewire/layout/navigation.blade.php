@@ -2,14 +2,18 @@
 
 use App\Livewire\Actions\Logout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    public $user;
-
-    public function mount()
+    /**
+     * Get the authenticated user.
+     * Using computed property to avoid reactivity issues with nested relationships.
+     */
+    #[Computed]
+    public function user()
     {
-        $this->user = auth()->user();
+        return auth()->user();
     }
 
     /**
@@ -28,8 +32,8 @@ new class extends Component {
     #[On('avatar-updated')]
     public function refreshAvatars(): void
     {
-        // Refresh the user model from database
-        $this->user = auth()->user()->fresh();
+        // Force refresh by dispatching to self
+        $this->dispatch('$refresh');
 
         // Trigger JavaScript to reinitialize avatars
         $this->js('window.dispatchEvent(new CustomEvent("navigation-refresh"))');
@@ -52,8 +56,8 @@ new class extends Component {
             this.scrolled = window.scrollY > 10;
         });
     }
-}" :class="{ 'shadow-lg': scrolled, 'shadow-sm': !scrolled }"
-    class="bg-base-100 border-b border-base-300 sticky top-0 z-40 transition-shadow duration-300">
+}" class="bg-base-100 border-b border-base-300 transition-shadow duration-300"
+    :class="{ 'shadow-lg': scrolled, 'shadow-sm': !scrolled }">
     <!-- Primary Navigation Menu -->
     <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -75,83 +79,87 @@ new class extends Component {
             <!-- Right Side -->
             <div class="flex items-center gap-1 sm:gap-3">
                 <!-- Theme Toggle -->
-                <div class="tooltip tooltip-bottom" data-tip="Toggle Theme">
+                <div>
                     <x-mary-theme-toggle lightTheme="emerald" darkTheme="emeraldDark"
-                        class="btn btn-ghost btn-sm btn-circle" />
+                        class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom" data-tip="Toggle Theme" />
                 </div>
 
                 <!-- Notifications Dropdown -->
                 <livewire:notification-dropdown />
 
                 <!-- Profile Dropdown -->
-                <div class="dropdown dropdown-end" data-tip="Profile" wire:key="nav-profile-dropdown">
-                    <div tabindex="0" role="button"
-                        class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
-                        <div wire:key="nav-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
-                            <x-ui.avatar :user="$user" size="sm" nav="true" />
+                <x-mary-dropdown right wire:key="nav-profile-dropdown">
+                    {{-- Trigger Button --}}
+                    <x-slot:trigger>
+                        <div class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors tooltip tooltip-bottom"
+                            data-tip="Profile">
+                            <div wire:key="nav-avatar-{{ $this->user->avatar_style }}-{{ $this->user->avatar_seed }}" wire:ignore>
+                                <x-ui.avatar :user="$this->user" size="sm" nav="true" />
+                            </div>
+                            <span class="hidden md:inline-block max-w-[150px] truncate">{{ $this->user->name }}</span>
+                            <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7">
+                                </path>
+                            </svg>
                         </div>
-                        <span class="hidden md:inline-block max-w-[150px] truncate">{{ $user->name }}</span>
-                        <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
-                        </svg>
-                    </div>
-                    <ul tabindex="0"
-                        class="dropdown-content z-1 menu p-2 shadow-lg bg-base-100 rounded-box w-72 border border-base-300 mt-2">
+                    </x-slot:trigger>
+
+                    {{-- Dropdown Content --}}
+                    <div class="w-72 bg-base-100 rounded-box border border-base-300">
                         {{-- User Info Header --}}
-                        @if ($user)
-                            <li
-                                class="menu-title px-4 py-3 bg-base-200 rounded-t-box -mx-2 -mt-2 mb-2 focus:bg-base-200 pointer-events-none">
+                        @if ($this->user)
+                            <div class="px-4 py-3 bg-base-200 rounded-t-box border-b border-base-300">
                                 <div class="flex items-center gap-3">
-                                    <div wire:key="dropdown-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
-                                        <x-ui.avatar :user="$user" size="lg" />
+                                    <div wire:key="dropdown-avatar-{{ $this->user->avatar_style }}-{{ $this->user->avatar_seed }}"
+                                        wire:ignore>
+                                        <x-ui.avatar :user="$this->user" size="lg" />
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <h4 class="font-bold text-base text-base-content truncate">{{ $user->name }}
+                                        <h4 class="font-bold text-base text-base-content truncate">{{ $this->user->name }}
                                         </h4>
-                                        <p class="text-xs text-base-content/70 truncate">{{ $user->email }}</p>
+                                        <p class="text-xs text-base-content/70 truncate">{{ $this->user->email }}</p>
                                         <div class="flex gap-2">
-                                            @if ($user->role)
+                                            @if ($this->user->role)
                                                 <div class="mt-1">
                                                     <span
-                                                        class="badge badge-primary badge-xs">{{ $user->role_display }}</span>
+                                                        class="badge badge-primary badge-xs text-neutral-content dark:text-base-200">{{ $this->user->role_display }}</span>
                                                 </div>
                                             @endif
-                                            @if ($user->position)
+                                            @if ($this->user->position)
                                                 <div class="mt-1">
                                                     <span
-                                                        class="badge badge-info badge-xs">{{ $user->position->position_name }}</span>
+                                                        class="badge badge-info badge-xs text-neutral-content dark:text-base-200">{{ $this->user->position->position_name }}</span>
                                                 </div>
                                             @endif
                                         </div>
-
                                     </div>
                                 </div>
-                            </li>
-                            <div class="divider my-0"></div>
+                            </div>
                         @endif
 
                         {{-- Menu Items --}}
-                        <li>
-                            <a href="{{ route('profile') }}" wire:navigate
-                                class="py-3 px-4 hover:bg-base-200 transition-colors">
+                        <div class="p-2">
+                            <a href="{{ route('profile') }}" wire:navigate.hover
+                                class="py-3 px-4 hover:bg-base-200 transition-colors flex items-center gap-3 rounded-lg">
                                 <i class="fa-solid fa-user-circle w-5"></i>
                                 <span class="font-medium">Profile</span>
                             </a>
-                        </li>
+                        </div>
 
                         <div class="divider my-0"></div>
 
                         {{-- Logout --}}
-                        <li>
+                        <div class="p-2">
                             <button wire:click="logout"
-                                class="py-3 px-4 text-error hover:bg-error/10 transition-colors">
+                                class="w-full py-3 px-4 text-error hover:bg-error/10 hover:cursor-pointer transition-colors flex items-center gap-3 rounded-lg">
                                 <i class="fa-solid fa-right-from-bracket w-5"></i>
                                 <span class="font-medium">Log Out</span>
                             </button>
-                        </li>
-                    </ul>
-                </div>
+                        </div>
+                    </div>
+                </x-mary-dropdown>
             </div>
         </div>
     </div>

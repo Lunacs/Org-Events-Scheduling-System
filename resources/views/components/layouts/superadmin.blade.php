@@ -12,9 +12,16 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
+    <!-- Resource Hints for Performance -->
+    <link rel="dns-prefetch" href="https://fonts.bunny.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Fonts with optimized loading -->
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900&display=swap"
+        rel="stylesheet" />
 
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -25,65 +32,87 @@
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen">
 
         {{-- MAIN --}}
         <x-mary-main full-width>
-            {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer"
-                class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl lg:pl-10">
+            @persist('superadmin-sidebar')
+                {{-- SIDEBAR --}}
+                <x-slot:sidebar drawer="main-drawer"
+                    class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl lg:pl-10">
 
-                {{-- BRAND --}}
-                <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <img src="{{ asset('images/plv-logo.png') }}" alt="My Logo" class="h-10 w-10">
-                        <h2 class="p-3 text-xl font-bold ml-2">SuperAdmin</h2>
+                    {{-- BRAND --}}
+                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
+                                fetchpriority="high">
+                            <h2 class="p-3 text-xl font-bold ml-2">SuperAdmin</h2>
+                        </div>
+
                     </div>
 
-                </div>
+                    {{-- MENU --}}
+                    <x-mary-menu separator activate-by-route active-bg-color="bg-accent" class="font-heading">
+                        <x-mary-menu-item title="Dashboard" icon="o-squares-2x2" link="{{ route('superadmin.dashboard') }}"
+                            class="tooltip tooltip-right" data-tip="Dashboard" wire:navigate.hover />
 
-                {{-- MENU --}}
-                <x-mary-menu separator activate-by-route active-bg-color="bg-accent" class="font-heading">
-                    <x-mary-menu-item title="Dashboard" icon="o-squares-2x2" link="{{ route('superadmin.dashboard') }}"
-                        class="tooltip tooltip-right" data-tip="Dashboard" wire:navigate />
-                    <x-mary-menu-item title="User Management" icon="o-users" link="{{ route('superadmin.users') }}"
-                        class="tooltip tooltip-right" data-tip="User Management" wire:navigate />
-                    <x-mary-menu-item title="Roles & Permissions" icon="o-key" link="{{ route('superadmin.roles') }}"
-                        wire:navigate />
-                    <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth"
-                        link="{{ route('superadmin.system-settings') }}" wire:navigate />
-                    <x-mary-menu-item title="Transaction Logs" icon="o-clipboard-document-list"
-                        link="{{ route('superadmin.logs') }}" wire:navigate />
-                    <x-mary-menu-item title="Archive Management" icon="o-archive-box" link="/superadmin/archive"
-                        wire:navigate />
-                    <x-mary-menu-item title="Reports & Analytics" icon="o-chart-bar" link="/superadmin/reports"
-                        wire:navigate />
+                        <x-mary-menu-separator />
 
-                    <x-mary-menu-separator />
-                    <x-mary-menu-sub title="Account" icon="o-user-circle">
-                        <x-mary-menu-item title="Profile" icon="o-user" link="/profile" wire:navigate />
-                        <x-mary-menu-item title="Go to OSA" icon="o-arrow-uturn-left" link="/admin" wire:navigate />
-                    </x-mary-menu-sub>
+                        <x-mary-menu-item title="User Management" icon="o-users" link="{{ route('superadmin.users') }}"
+                            class="tooltip tooltip-right" data-tip="User Management" wire:navigate.hover />
+                        <x-mary-menu-item title="Roles & Permissions" icon="o-key" link="{{ route('superadmin.roles') }}"
+                            wire:navigate.hover />
 
-                    {{-- LOG OUT --}}
-                    <x-mary-menu-separator />
-                    <form method="POST" action="{{ route('logout') }}" class="w-full overflow-hidden">
-                        @csrf
-                        <button type="submit"
-                            class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
-                            onclick="return confirm('Are you sure you want to logout?')">
-                            <i class="fas fa-sign-out-alt mr-4"></i>
-                            Logout
-                        </button>
-                    </form>
-                </x-mary-menu>
+                        <x-mary-menu-separator />
 
-            </x-slot:sidebar>
+                        <x-mary-menu-item title="Event Calendar" icon="o-calendar" link="{{ route('superadmin.calendar') }}"
+                            wire:navigate.hover />
+                        <x-mary-menu-item title="Ticket Management" icon="o-ticket"
+                            link="{{ route('superadmin.tickets') }}" wire:navigate.hover />
+                        <x-mary-menu-item title="Archive Management" icon="o-archive-box"
+                            link="{{ route('superadmin.archive') }}" wire:navigate.hover />
+
+                        <x-mary-menu-separator />
+
+                        <x-mary-menu-item title="System Notifications" icon="o-bell"
+                            link="{{ route('superadmin.notifications') }}" wire:navigate.hover />
+
+                        <x-mary-menu-separator />
+
+                        <x-mary-menu-item title="Reports & Analytics" icon="o-chart-bar"
+                            link="{{ route('superadmin.reports') }}" wire:navigate.hover />
+                        <x-mary-menu-item title="Transaction Logs" icon="o-clipboard-document-list"
+                            link="{{ route('superadmin.logs') }}" wire:navigate.hover />
+
+                        <x-mary-menu-separator />
+
+                        <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth"
+                            link="{{ route('superadmin.system-settings') }}" wire:navigate.hover />
+                        <x-mary-menu-item title="Admin Tools" icon="o-wrench-screwdriver"
+                            link="{{ route('superadmin.admin-tools') }}" wire:navigate.hover />
+
+                        <x-mary-menu-separator />
+                    </x-mary-menu>
+
+                </x-slot:sidebar>
+            @endpersist
+
+            @persist('superadmin-footer')
+                <x-slot:footer>
+                    <div class="bg-accent text-center py-2">
+                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - SuperAdmin</p>
+                    </div>
+                </x-slot:footer>
+            @endpersist
 
             {{-- Content --}}
             <x-slot:content>
-                {{-- Top Navigation Bar --}}
-                <livewire:layout.navigation />
+                <div class="sticky top-0 z-15">
+                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+                    @persist('superadmin-navigation')
+                        <livewire:layout.navigation />
+                    @endpersist
+                </div>
 
                 {{-- Page Content --}}
                 {{ $slot }}
@@ -91,10 +120,17 @@
         </x-mary-main>
 
         <x-mary-toast />
+
+        {{-- Session Timeout Warning --}}
+        <livewire:session-timeout />
     </div>
 
     {{-- Scripts Stack --}}
     @stack('scripts')
+
+    {{-- Performance Monitoring Scripts --}}
+    <script src="{{ asset('js/network-aware.js') }}" defer></script>
+    <script src="{{ asset('js/lazy-livewire.js') }}" defer></script>
 </body>
 
 </html>

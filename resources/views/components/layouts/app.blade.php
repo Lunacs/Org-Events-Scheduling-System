@@ -12,10 +12,16 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
+    <!-- Resource Hints for Performance -->
+    <link rel="dns-prefetch" href="https://fonts.bunny.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Fonts with optimized loading -->
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900&display=swap"
+        rel="stylesheet" />
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -36,42 +42,55 @@
 
         {{-- MAIN --}}
         <x-mary-main full-width>
-            {{-- SIDEBAR --}}
-            <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+            {{-- SIDEBAR - Persisted for SPA-like experience --}}
+            @persist('osa-sidebar')
+                <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
 
-                {{-- BRAND --}}
-                <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <img src="{{ asset('images/plv-logo.png') }}" alt="My Logo" class="h-10 w-10">
-                        <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
+                    {{-- BRAND --}}
+                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
+                                fetchpriority="high">
+                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
+                        </div>
+
                     </div>
 
-                </div>
-
-                {{-- MENU --}}
-                <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
                     {{-- MENU --}}
-                    <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard" wire:navigate />
-                    <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets" wire:navigate />
-                    <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
-                        link="/admin/ticket-review" wire:navigate />
-                    <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
-                        wire:navigate />
-                    <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications" wire:navigate />
-                    <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate />
-                    <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate />
-                </x-mary-menu>
-            </x-slot:sidebar>
-            <x-slot:footer>
-                <div class="bg-accent text-center py-2">
-                    <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
-                </div>
-            </x-slot:footer>
+                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
+                        {{-- MENU --}}
+                        <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard"
+                            wire:navigate.hover />
+                        <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets"
+                            wire:navigate.hover />
+                        <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
+                            link="/admin/ticket-review" wire:navigate.hover />
+                        <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
+                            wire:navigate.hover />
+                        <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications"
+                            wire:navigate.hover />
+                        <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate.hover />
+                        <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate.hover />
+                    </x-mary-menu>
+                </x-slot:sidebar>
+            @endpersist
+
+            @persist('osa-footer')
+                <x-slot:footer>
+                    <div class="bg-accent text-center py-2">
+                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
+                    </div>
+                </x-slot:footer>
+            @endpersist
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
-                {{-- Top Navigation Bar --}}
-                <livewire:layout.navigation />
+                <div class="sticky top-0 z-15">
+                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+                    @persist('osa-navigation')
+                        <livewire:layout.navigation />
+                    @endpersist
+                </div>
 
                 {{-- Page Content --}}
                 {{ $slot }}
@@ -80,10 +99,17 @@
 
         {{-- Toast --}}
         <x-mary-toast />
+
+        {{-- Session Timeout Warning --}}
+        <livewire:session-timeout />
     </div>
 
     {{-- Scripts Stack --}}
     @stack('scripts')
+
+    {{-- Performance Monitoring Scripts --}}
+    <script src="{{ asset('js/network-aware.js') }}" defer></script>
+    <script src="{{ asset('js/lazy-livewire.js') }}" defer></script>
 </body>
 
 </html>

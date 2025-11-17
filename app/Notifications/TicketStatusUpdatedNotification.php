@@ -22,7 +22,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     /**
      * Create a new notification instance.
      */
-    public function __construct(Ticket $ticket, string $oldStatus, string $newStatus, string $remarks = null)
+    public function __construct(Ticket $ticket, string $oldStatus, string $newStatus, ?string $remarks = null)
     {
         $this->ticket = $ticket;
         $this->oldStatus = $oldStatus;
@@ -45,14 +45,14 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     public function toMail(object $notifiable): MailMessage
     {
-		$message = $this->getStatusMessage();
+		$statusMessage = $this->getStatusMessage();
 		$actionUrl = $this->getActionUrl();
 
 		return (new MailMessage)
 			->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
 			->view('emails.tickets.ticket-status-updated', [
 				'ticket' => $this->ticket,
-				'message' => $message,
+				'statusMessage' => $statusMessage,
 				'oldStatus' => $this->oldStatus,
 				'newStatus' => $this->newStatus,
 				'remarks' => $this->remarks,
@@ -127,7 +127,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     private function getStatusMessage(): string
     {
         $ticketTitle = $this->ticket->title;
-        
+
         return match($this->newStatus) {
             'received' => "Your ticket \"{$ticketTitle}\" has been received and is under review.",
             'gso_review' => "Your ticket \"{$ticketTitle}\" is now being reviewed by GSO.",
