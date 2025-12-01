@@ -52,13 +52,20 @@
             <x-mary-card>
                 <div class="space-y-4">
                     {{-- Ticket Item 1 --}}
-                    @foreach ($tickets as $ticket)
+                    @forelse ($tickets as $ticket)
                         <x-tickets.ticketinfo :tickets="$ticket" />
-                    @endforeach
+                    @empty
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="text-base-content/70">No tickets found</span>
+                            <span class="text-sm text-base-content/50">Try adjusting your filters</span>
+                        </div>
+                    @endforelse
                 </div>
 
                 {{-- Pagination --}}
-                <x-tickets.ticket-pagination :tickets="$tickets" />
+                @if ($tickets->hasPages())
+                    <x-tickets.ticket-pagination :tickets="$tickets" />
+                @endif
             </x-mary-card>
 
             {{-- Quick Stats --}}

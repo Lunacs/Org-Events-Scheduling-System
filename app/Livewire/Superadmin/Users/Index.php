@@ -82,8 +82,8 @@ class Index extends Component
             ->select(['user_id', 'name', 'email', 'role_id', 'email_verified_at', 'org_id', 'office_id'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%'.$this->search.'%')
-                        ->orWhere('email', 'like', '%'.$this->search.'%');
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->roleFilter !== 'all', function ($query) {
@@ -129,7 +129,7 @@ class Index extends Component
     protected function rules()
     {
         return [
-            'createForm.name' => 'required|string|min:3|max:100',
+            'createForm.name' => ['required', 'string', 'min:3', 'max:100', 'regex:/^[a-zA-Z\s]+$/'],
             'createForm.email' => 'required|email|unique:users,email|ends_with:plv.edu.ph',
             'createForm.password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'createForm.password_confirmation' => 'required',
@@ -144,6 +144,8 @@ class Index extends Component
     {
         return [
             'createForm.name.required' => 'Name is required.',
+            'createForm.name.string' => 'Name must be a string.',
+            'createForm.name.regex' => 'Name must only contain letters and spaces.',
             'createForm.name.min' => 'Name must be at least 3 characters.',
             'createForm.name.max' => 'Name cannot exceed 100 characters.',
             'createForm.email.required' => 'Email is required.',
@@ -263,7 +265,7 @@ class Index extends Component
 
         // Dynamic validation rules
         $rules = [
-            'editForm.name' => 'required|string|min:3|max:100',
+            'editForm.name' => ['required', 'string', 'min:3', 'max:100', 'regex:/^[a-zA-Z\s]+$/'],
             'editForm.email' => [
                 'required',
                 'email',
@@ -288,8 +290,11 @@ class Index extends Component
 
         $this->validate($rules, [
             'editForm.name.required' => 'Name is required.',
+            'editForm.name.regex' => 'Name must only contain letters and spaces.',
             'editForm.name.min' => 'Name must be at least 3 characters.',
             'editForm.name.max' => 'Name cannot exceed 100 characters.',
+            'editForm.email.required' => 'Email is required.',
+            'editForm.email.email' => 'Please provide a valid email address.',
             'editForm.email.ends_with' => 'Email must end with @plv.edu.ph',
             'editForm.password_confirmation.same' => 'Password confirmation does not match.',
             'editForm.role.exists' => 'Selected role is invalid.',

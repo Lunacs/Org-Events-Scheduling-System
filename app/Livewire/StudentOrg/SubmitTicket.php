@@ -28,6 +28,7 @@ class SubmitTicket extends Component
 
     public $totalSteps = 6;
 
+    #[Validate('required|accepted')]
     public $agreeToTerms = false;
 
     // Step 1: Organization
@@ -45,64 +46,119 @@ class SubmitTicket extends Component
 
     public $proponent_contact = '';
 
-    public $adviser_contact = '';
+    #[Validate('required|numeric|digits:11|regex:/^[0-9\s\-\+\(\)]+$/')]
+    public $adviser_contact = '09';
 
-    // Step 2: Event Details
+    #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
     public $eventTitle = '';
 
+    #[Validate('required|max:2000|min:20')]
     public $eventDescription = '';
 
+    #[Validate('required|integer|exists:event__types,event_type_id')]
     public $eventType = 1;
 
+    #[Validate('required', message: 'The number of PLV participants is required.')]
+    #[Validate('integer', message: 'The number of PLV participants must be an integer.')]
+    #[Validate('min:1', message: 'The number of PLV participants must be at least 1.')]
+    #[Validate('max:100000', message: 'The number of PLV participants must be less than 100000.')]
     public $expectedPLVParticipants = 0;
 
+    #[Validate('nullable')]
+    #[Validate('integer', message: 'The number of non-PLV participants must be an integer.')]
+    #[Validate('min:0', message: 'The number of non-PLV participants must be at least 0.')]
+    #[Validate('max:100000', message: 'The number of non-PLV participants must be less than 100000.')]
     public $expectedNonPLVParticipants = 0;
 
     // Step 3: Schedule & Venue
+    #[Validate('required|date|after_or_equal:today')]
     public $eventStartDate = '';
 
+    #[Validate('required|date|after_or_equal:eventStartDate')]
     public $eventEndDate = '';
 
+    #[Validate('required|date_format:H:i')]
     public $eventStartTime = '';
 
+    #[Validate('required|date_format:H:i|after:eventStartTime')]
     public $eventEndTime = '';
 
+    #[Validate('required|string|max:255|min:3')]
     public $preferredVenue = '';
 
+    #[Validate('nullable|string|max:255|min:3')]
     public $alternativeVenue = '';
 
+    #[Validate('nullable|string|max:2000')]
     public $specialRequirements = '';
 
+    #[Validate('required|boolean')]
     public $is_oc = false;
 
+    #[Validate('nullable|string|max:2000')]
     public $oc_accommodation = '';
 
+    #[Validate('required_if:is_oc,true')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('in:in-house,outsourced')]
     public $oc_tsp = null;
 
+    #[Validate('required_if:oc_tsp,outsourced')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('max:255')]
+    #[Validate('min:2')]
     public $oc_driver_name = '';
 
+    #[Validate('required_if:oc_tsp,outsourced')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('max:255')]
+    #[Validate('regex:/^[0-9\s\-\+\(\)]+$/')]
     public $oc_driver_contact_number = '';
 
+    #[Validate('required_if:oc_tsp,outsourced')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('max:255')]
+    #[Validate('min:2')]
     public $oc_vehicle_type = '';
 
+    #[Validate('required_if:oc_tsp,outsourced')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('max:255')]
+    #[Validate('regex:/^[A-Z0-9\-\s]+$/i')]
     public $oc_vehicle_plate_number = '';
 
     // Step 4: Budget
+    #[Validate('required|numeric|min:0|max:999999999.99')]
     public $totalBudget = 0.00;
 
+    #[Validate('required|integer|exists:fund__sources,source_id')]
     public $fundingSource = '';
 
+    #[Validate('nullable|string|max:2000')]
     public $budgetBreakdown = '';
 
+    #[Validate('required|string|in:true,false')]
     public $igp_requested = '';
 
+    #[Validate('required_if:igp_requested,true')]
+    #[Validate('nullable')]
+    #[Validate('string')]
+    #[Validate('max:2000')]
+    #[Validate('min:10')]
     public $igp_details = '';
 
     // Step 5: Attachments
     public $attachments = [];
 
+    #[Validate('nullable|array|max:25')]
     public $newAttachments = [];
 
+    #[Validate('nullable|string|max:2000')]
     public $additionalNotes = '';
 
     // UI
@@ -156,8 +212,8 @@ class SubmitTicket extends Component
                 'adviser_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
             ],
             2 => [
-                'eventTitle' => 'required|string|max:255|min:5',
-                'eventDescription' => 'required|string|max:2000|min:20',
+                'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
+                'eventDescription' => 'required|string|max:2000|min:20|regex:/^[^0-9][a-z0-9\\s]*$/i',
                 'eventType' => 'required|integer|exists:event__types,event_type_id',
                 'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
                 'expectedNonPLVParticipants' => 'nullable|integer|min:0|max:100000',
@@ -223,6 +279,7 @@ class SubmitTicket extends Component
 
         if (! empty($rules)) {
             $this->validate($rules, [
+                'adviser_contact.size'=> 'The adviser contact number must be 11 digits.',
                 'expectedPLVParticipants.required' => 'The number of PLV participants is required.',
                 'expectedNonPLVParticipants.required' => 'The number of non-PLV participants is required.',
                 'expectedPLVParticipants.integer' => 'The number of PLV participants must be an integer.',

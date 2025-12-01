@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->foreignId('event_type_id')->references('event_type_id')->on('event__types')->onDelete('cascade');
             $table->string('title');
-            $table->string('description');
+            $table->text('description');
             $table->string('proponent_contact');
             $table->string('adviser_contact');
             $table->integer('plv_participants');
@@ -39,8 +39,8 @@ return new class extends Migration
             $table->string('time_from');
             $table->string('time_to');
             $table->float('estimated_budget')->nullable();
-            $table->string('budget_breakdown')->nullable();
-            $table->string('additional_notes')->nullable();
+            $table->text('budget_breakdown')->nullable();
+            $table->text('additional_notes')->nullable();
             $table->foreignId('fund_source_id')->references('source_id')->on('fund__sources')->onDelete('cascade');
             $table->enum('status', ['received', 'gso_review', 'pending_osa_approval', 'rejected', 'approved', 'for_rescheduling', 'rescheduled', 'needs_revision', 'amended', 'completed'])->default('received');
             $table->timestamps();

@@ -37,7 +37,7 @@ class OrganizationCreatedNotification extends Notification
             'org_code' => $this->organization->org_code,
             'created_by' => $this->createdBy->name,
             'created_by_id' => $this->createdBy->user_id,
-            'action_url' => route('superadmin.system-settings'),
+            'action_url' => $notifiable->isSuperAdmin() ? route('superadmin.system-settings') : null,
             'timestamp' => now()->toDateTimeString(),
         ];
     }

@@ -49,8 +49,7 @@
         </x-mary-card>
 
         <x-mary-card shadow>
-            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination :per-page-values="[10, 25, 50]"
-                class="rounded-lg">
+            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" :per-page-values="[10, 25, 50]" class="rounded-lg">
                 @scope('cell_role_id', $user)
                     @php
                         $roleString = $user->role?->role_name ?? 'unknown';
@@ -96,11 +95,16 @@
                     </div>
                 @endscope
             </x-mary-table>
+
+            {{-- Custom Pagination --}}
+            @if ($users->hasPages())
+                <x-tickets.ticket-pagination :tickets="$users" />
+            @endif
         </x-mary-card>
     </div>
 
     {{-- Create User Drawer --}}
-    <div class="drawer drawer-end z-50">
+    <div class="drawer drawer-end z-50 rounded-l-2xl">
         <input id="create-user-drawer-toggle" type="checkbox" class="drawer-toggle" />
         <div class="drawer-side">
             <label for="create-user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
@@ -194,7 +198,7 @@
     </div>
 
     {{-- Edit User Drawer --}}
-    <div class="drawer drawer-end z-50">
+    <div class="drawer drawer-end z-50 rounded-l-2xl">
         <input id="edit-user-drawer-toggle" type="checkbox" class="drawer-toggle" />
         <div class="drawer-side">
             <label for="edit-user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>

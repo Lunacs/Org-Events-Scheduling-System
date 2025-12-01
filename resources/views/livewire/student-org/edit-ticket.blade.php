@@ -31,9 +31,9 @@
                     <x-mary-input label="Contact Email" wire:model="contactEmail" readonly/>
                     <x-mary-input label="Proponent Position" wire:model="proponentPosition" readonly/>
                     <x-mary-input label="Organization Adviser" wire:model="adviser" readonly/>
-                    <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
+                    <x-mary-input label="Contact of Proponent" wire:model="form.proponent_contact"
                                   :readonly="!$this->isFieldEditable('proponent_contact')"/>
-                    <x-mary-input label="Contact of Adviser" wire:model="adviser_contact"
+                    <x-mary-input label="Contact of Adviser" wire:model="form.adviser_contact"
                                   :readonly="!$this->isFieldEditable('adviser_contact')"/>
                 </div>
             </x-mary-card>
@@ -41,16 +41,16 @@
             {{-- Event Details --}}
             <x-mary-card title="Event Details" subtitle="Information about your proposed event">
                 <div class="space-y-4">
-                    <x-mary-input label="Event Title" wire:model="eventTitle" placeholder="Enter your event title"
+                    <x-mary-input label="Event Title" wire:model="form.eventTitle" placeholder="Enter your event title"
                                   :readonly="!$this->isFieldEditable('eventTitle')"
                     />
 
-                    <x-mary-textarea label="Event Description" wire:model="eventDescription"
+                    <x-mary-textarea label="Event Description" wire:model="form.eventDescription"
                                      placeholder="Provide a detailed description of your event, including objectives and activities, or your rationale."
                                      rows="4" :readonly="!$this->isFieldEditable('eventDescription')"/>
 
                     <div class="grid grid-cols-1 gap-4">
-                        <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
+                        <x-mary-select label="Event Type" wire:model.live="form.eventType" :options="$eventTypes"
                                        option-value="event_type_id" option-label="type_name"
                                        placeholder="Select event type" :readonly="!$this->isFieldEditable('eventType')"
                         />
@@ -59,11 +59,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                         <x-mary-input label="Number of PLV Participants" type="number"
-                                      wire:model.live="expectedPLVParticipants" placeholder="Number of attendees"
+                                      wire:model.live="form.expectedPLVParticipants" placeholder="Number of attendees"
                                       :readonly="!$this->isFieldEditable('expectedPLVParticipants')"/>
 
                         <x-mary-input label="Number of non PLV Participants" type="number"
-                                      wire:model.live="expectedNonPLVParticipants" placeholder="Number of attendees"
+                                      wire:model.live="form.expectedNonPLVParticipants" placeholder="Number of attendees"
                                       :readonly="!$this->isFieldEditable('expectedNonPLVParticipants')"
                         />
 
@@ -77,17 +77,17 @@
             {{-- Schedule & Venue --}}
             <x-mary-card title="Schedule & Venue">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-mary-datetime label="Event Start Date" wire:model.live="eventStartDate"
+                    <x-mary-datetime label="Event Start Date" wire:model.live="form.eventStartDate"
                                      :readonly="!$this->isFieldEditable('eventStartDate')"/>
-                    <x-mary-datetime label="Event End Date" wire:model.live="eventEndDate"
+                    <x-mary-datetime label="Event End Date" wire:model.live="form.eventEndDate"
                                      :readonly="!$this->isFieldEditable('eventEndDate')"/>
-                    <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
+                    <x-mary-datetime label="Event Start Time" wire:model.live="form.eventStartTime" type="time"
                                      :readonly="!$this->isFieldEditable('eventStartTime')"/>
-                    <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
+                    <x-mary-datetime label="Event End Time" wire:model.live="form.eventEndTime" type="time"
                                      :readonly="!$this->isFieldEditable('eventEndTime')"/>
-                    <x-mary-input label="Preferred Venue" wire:model="preferredVenue"
+                    <x-mary-input label="Preferred Venue" wire:model="form.preferredVenue"
                                   :readonly="!$this->isFieldEditable('preferredVenue')"/>
-                    <x-mary-input label="Alternative Venue" wire:model="alternativeVenue"
+                    <x-mary-input label="Alternative Venue" wire:model="form.alternativeVenue"
                                   :readonly="!$this->isFieldEditable('alternativeVenue')"/>
                 </div>
             </x-mary-card>
@@ -96,11 +96,11 @@
             <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                  wire:model.live="totalBudget" placeholder="0.00" prefix="₱"
+                                  wire:model.live="form.totalBudget" placeholder="0.00" prefix="₱"
                                   :readonly="!$this->isFieldEditable('totalBudget')"
                     />
 
-                    <x-mary-select label="Funding Source" wire:model="fundingSource" :options="$fundSources"
+                    <x-mary-select label="Funding Source" wire:model="form.fundingSource" :options="$fundSources"
                                    option-value="source_id" option-label="source_name"
                                    placeholder="Select funding source"
                                    :readonly="!$this->isFieldEditable('fundingSource')"
@@ -108,22 +108,22 @@
                 </div>
 
                 <div class="mt-4">
-                    <x-mary-textarea label="Budget Breakdown" wire:model="budgetBreakdown"
+                    <x-mary-textarea label="Budget Breakdown" wire:model="form.budgetBreakdown"
                                      placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
                                      rows="4" :readonly="!$this->isFieldEditable('budgetBreakdown')"
                     />
                 </div>
 
                 <div class="mt-4">
-                    <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
+                    <x-mary-radio label="IGP Request" wire:model.live="form.igp_requested" :options="[
                             ['id' => 'true', 'name' => 'Requested'],
                             ['id' => 'false', 'name' => 'Not Requested'],
                         ]" inline/>
                 </div>
 
-                @if ($igp_requested === 'true')
+                @if ($form->igp_requested === 'true')
                     <div class="mt-4">
-                        <x-mary-textarea label="IGP Brief Description" wire:model="igp_details"
+                        <x-mary-textarea label="IGP Brief Description" wire:model="form.igp_details"
                                          placeholder="List all descriptions for IGP requested items" rows="4"
                                          :readonly="!$this->isFieldEditable('igp_details')"
                         />
@@ -160,7 +160,7 @@
 
                     <div class="space-y-2">
                         <x-mary-file
-                            wire:model="newAttachments"
+                            wire:model="form.newAttachments"
                             multiple
                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
                             hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file."/>
@@ -207,7 +207,7 @@
             {{-- Additional Information --}}
             <x-mary-card title="Additional Information" subtitle="Any other relevant details">
                 <div class="space-y-4">
-                    <x-mary-textarea label="Additional Notes" wire:model="additionalNotes"
+                    <x-mary-textarea label="Additional Notes" wire:model="form.additionalNotes"
                                      placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
                                      rows="3" :readonly="!$this->isFieldEditable('additionalNotes')"
                     />

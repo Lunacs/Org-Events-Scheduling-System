@@ -173,10 +173,12 @@
                                     </td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <div class="avatar flex justify-center items-center">
-                                                <img src="{{ $ticket->user->studentOrganization->logo_url }}"
-                                                    alt="{{ $ticket->user->studentOrganization->org_name }} logo"
-                                                    class="w-8 h-8 object-cover rounded-full bg-base-200">
+                                            <div class="avatar shrink-0">
+                                                <div class="w-8 h-8 rounded-full bg-base-200">
+                                                    <img src="{{ $ticket->user->studentOrganization->logo_url }}"
+                                                        alt="{{ $ticket->user->studentOrganization->org_name }} logo"
+                                                        class="object-cover" />
+                                                </div>
                                             </div>
                                             <div>
                                                 <div class="font-medium">

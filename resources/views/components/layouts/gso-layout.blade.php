@@ -49,7 +49,7 @@
             {{-- SIDEBAR - Persisted for SPA-like experience --}}
             @persist('osa-sidebar')
                 {{-- SIDEBAR --}}
-                <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
 
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -72,8 +72,8 @@
                             wire:navigate.hover />
                         <x-mary-menu-item title="Notification" icon="s-bell" link="{{ route('gso.notifications') }}"
                             wire:navigate.hover />
-                        <x-mary-menu-item title="Communication" icon="s-building-office"
-                            link="{{ route('gso.communication') }}" wire:navigate.hover />
+                        {{-- <x-mary-menu-item title="Communication" icon="s-building-office"
+                            link="{{ route('gso.communication') }}" wire:navigate.hover /> --}}
                         <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate.hover />
                     </x-mary-menu>
                 </x-slot:sidebar>

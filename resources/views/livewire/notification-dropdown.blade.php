@@ -53,9 +53,9 @@
                         // Determine notification URL based on type and user role
                         $type = $data['type'] ?? '';
                         $ticketNumber = $data['ticket_number'] ?? null;
-                        $url = null;
+                        $url = $data['action_url'] ?? null;
 
-                        if (str_starts_with($type, 'ticket_') && $ticketNumber) {
+                        if (!$url && str_starts_with($type, 'ticket_') && $ticketNumber) {
                             if (Auth::user()->isStudentOrg()) {
                                 $url = route('student-org.my-tickets');
                             } elseif (Auth::user()->isOSA() || Auth::user()->isSuperAdmin()) {

@@ -15,7 +15,15 @@
                         @for ($i = 1; $i <= $totalSteps; $i++)
                             <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0">
                                 <button type="button" wire:click="goToStep({{ $i }})"
-                                    aria-label="Step {{ $i }}: @switch($i) @case(1) Organization @break @endswitch"
+                                    aria-label="Step {{ $i }}:
+                                        @switch($i)
+                                            @case(1) Organization
+                                            @case(2) Event Details
+                                            @case(3) Schedule
+                                            @case(4) Budget
+                                            @case(5) Attachments
+                                            @case(6) Review
+                                        @endswitch"
                                     aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
                                     class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0
                             {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
@@ -93,8 +101,7 @@
                             <x-mary-input label="Organization Adviser" wire:model="adviser" readonly />
                             <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
                                 placeholder="0999 999 9999" readonly />
-                            <x-mary-input label="Contact of Adviser" wire:model="adviser_contact"
-                                placeholder="0999 999 9999" required />
+                            <x-mary-input label="Contact of Adviser" wire:model.blur="adviser_contact" required />
                         </div>
                     </x-mary-card>
                 @endif
@@ -103,9 +110,9 @@
                 @if ($currentStep === 2)
                     <x-mary-card title="Event Details" subtitle="Information about your proposed event">
                         <div class="space-y-4">
-                            <x-mary-input label="Event Title" wire:model="eventTitle"
+                            <x-mary-input label="Event Title" wire:model.blur="eventTitle"
                                 placeholder="Enter your event title" required />
-                            <x-mary-textarea label="Event Description" wire:model="eventDescription" rows="4"
+                            <x-mary-textarea label="Event Description" wire:model.blur="eventDescription" rows="4"
                                 required />
                             <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
                                 option-value="event_type_id" option-label="type_name" required />
@@ -125,63 +132,67 @@
                 @if ($currentStep === 3)
                     <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-datetime label="Event Start Date" wire:model="eventStartDate" required />
+                            <x-mary-datetime label="Event Start Date" wire:model.blur="eventStartDate" required />
 
-                            <x-mary-datetime label="Event End Date" wire:model="eventEndDate" required />
+                            <x-mary-datetime label="Event End Date" wire:model.blur="eventEndDate" required />
 
-                            <x-mary-datetime label="Event Start Time" wire:model="eventStartTime" type="time"
+                            <x-mary-datetime label="Event Start Time" wire:model.blur="eventStartTime" type="time"
                                 required />
 
-                            <x-mary-datetime label="Event End Time" wire:model="eventEndTime" type="time" required />
+                            <x-mary-datetime label="Event End Time" wire:model.blur="eventEndTime" type="time" required />
 
-                            <x-mary-input label="Preferred Venue" wire:model="preferredVenue"
+                            <x-mary-input label="Preferred Venue" wire:model.blur="preferredVenue"
                                 placeholder="e.g., Student Center Auditorium" required />
 
-                            <x-mary-input label="Alternative Venue" wire:model="alternativeVenue"
+                            <x-mary-input label="Alternative Venue" wire:model.blur="alternativeVenue"
                                 placeholder="Backup venue option" />
                         </div>
 
                         <div class="mt-4">
-                            <x-mary-textarea label="Special Requirements" wire:model="specialRequirements"
+                            <x-mary-textarea label="Special Requirements" wire:model.blur="specialRequirements"
                                 placeholder="Audio/visual equipment, seating arrangement, catering, etc."
                                 rows="3" />
                         </div>
 
-                        <div class="mt-4">
-                            <x-mary-checkbox label="Check this box if the activity is off-campus"
-                                wire:model.live="is_oc" />
-                        </div>
-
-                        @if ($is_oc)
+                        <div x-data="{ open: @entangle('is_oc') }">
                             <div class="mt-4">
-                                <x-mary-textarea label="Accommodation Provider (if any)" wire:model="oc_accommodation"
-                                    placeholder="Accommodation Provider Details" rows="2" />
+                                <x-mary-checkbox label="Check this box if the activity is off-campus"
+                                    wire:model.live="is_oc" />
                             </div>
 
-                            <div class="mb-4">
-                                <x-mary-radio label="Transportation Service Provider" wire:model.live="oc_tsp"
-                                    :options="[
-                                        ['id' => 'in-house', 'name' => 'In-house'],
-                                        ['id' => 'outsourced', 'name' => 'Outsourced'],
-                                    ]" inline />
-                            </div>
-
-                            @if ($oc_tsp === 'outsourced')
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-mary-input label="Name of Driver" wire:model="oc_driver_name"
-                                        placeholder="Enter the driver name" />
-
-                                    <x-mary-input label="Contact Details" wire:model="oc_driver_contact_number"
-                                        placeholder="Enter the driver's contact" />
-
-                                    <x-mary-input label="Type of Car" wire:model="oc_vehicle_type"
-                                        placeholder="Enter the type of car" />
-
-                                    <x-mary-input label="Plate Number" wire:model="oc_vehicle_plate_number"
-                                        placeholder="Enter the plate number" />
+                            <div x-show="open" x-collapse x-cloak>
+                                <div class="mt-4">
+                                    <x-mary-textarea label="Accommodation Provider (if any)" wire:model.blur="oc_accommodation"
+                                        placeholder="Accommodation Provider Details" rows="2" />
                                 </div>
-                            @endif
-                        @endif
+
+                                <div x-data="{ tsp: @entangle('oc_tsp') }">
+                                    <div class="mb-4">
+                                        <x-mary-radio label="Transportation Service Provider" wire:model.live="oc_tsp"
+                                            :options="[
+                                                ['id' => 'in-house', 'name' => 'In-house'],
+                                                ['id' => 'outsourced', 'name' => 'Outsourced'],
+                                            ]" inline />
+                                    </div>
+
+                                    <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <x-mary-input label="Name of Driver" wire:model.blur="oc_driver_name"
+                                                placeholder="Enter the driver name" />
+
+                                            <x-mary-input label="Contact Details" wire:model.blur="oc_driver_contact_number"
+                                                placeholder="Enter the driver's contact" />
+
+                                            <x-mary-input label="Type of Car" wire:model.blur="oc_vehicle_type"
+                                                placeholder="Enter the type of car" />
+
+                                            <x-mary-input label="Plate Number" wire:model.blur="oc_vehicle_plate_number"
+                                                placeholder="Enter the plate number" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </x-mary-card>
                 @endif
 
@@ -190,33 +201,35 @@
                     <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                wire:model.live="totalBudget" placeholder="0.00" prefix="₱" required />
+                                wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
 
-                            <x-mary-select label="Funding Source" wire:model="fundingSource" :options="$fundSources"
+                            <x-mary-select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
                                 option-value="source_id" option-label="source_name"
                                 placeholder="Select funding source" required />
                         </div>
 
                         <div class="mt-4">
-                            <x-mary-textarea label="Budget Breakdown" wire:model="budgetBreakdown"
+                            <x-mary-textarea label="Budget Breakdown" wire:model.blur="budgetBreakdown"
                                 placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
                                 rows="4" />
                         </div>
 
-                        <div class="mt-4">
-                            <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
-                                ['id' => 'true', 'name' => 'Requested'],
-                                ['id' => 'false', 'name' => 'Not Requested'],
-                            ]" inline
-                                required />
-                        </div>
-
-                        @if ($igp_requested === 'true')
+                        <div x-data="{ igp: @entangle('igp_requested') }">
                             <div class="mt-4">
-                                <x-mary-textarea label="IGP Brief Description" wire:model="igp_details"
-                                    placeholder="List all descriptions for IGP requested items" rows="4" />
+                                <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
+                                    ['id' => 'true', 'name' => 'Requested'],
+                                    ['id' => 'false', 'name' => 'Not Requested'],
+                                ]" inline
+                                    required />
                             </div>
-                        @endif
+
+                            <div x-show="igp === 'true'" x-collapse x-cloak>
+                                <div class="mt-4">
+                                    <x-mary-textarea label="IGP Brief Description" wire:model.blur="igp_details"
+                                        placeholder="List all descriptions for IGP requested items" rows="4" />
+                                </div>
+                            </div>
+                        </div>
                     </x-mary-card>
                 @endif
 
@@ -286,7 +299,7 @@
                     {{-- Additional Information --}}
                     <x-mary-card title="Additional Information" subtitle="Any other relevant details">
                         <div class="space-y-4">
-                            <x-mary-textarea label="Additional Notes" wire:model="additionalNotes"
+                            <x-mary-textarea label="Additional Notes" wire:model.blur="additionalNotes"
                                 placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
                                 rows="3" />
                         </div>
@@ -312,7 +325,7 @@
                                     {{-- Agreement Checkbox with Enhanced Styling --}}
                                     <div class="mt-6 pt-4 border-t-2 border-base-content/10">
                                         <div class="bg-success/5 border-l-4 border-success p-4 rounded-r-lg">
-                                            <x-mary-checkbox wire:model="agreeToTerms" required>
+                                            <x-mary-checkbox wire:model.live="agreeToTerms" required>
                                                 <x-slot:label>
                                                     <span class="text-sm md:text-base font-semibold text-base-content">
                                                         I have read, understood, and agree to all the terms and
@@ -339,13 +352,13 @@
                         wire:loading.class="opacity-50 cursor-not-allowed" wire:target="previousStep" spinner
                         :disabled="$currentStep === 1 || $isProcessing" />
                     @if ($currentStep < $totalSteps)
-                        <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep" class="btn-primary"
-                            wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-not-allowed"
-                            wire:target="nextStep" spinner :disabled="$isProcessing" />
+                        <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
+                            x-on:click="isSubmitting = true" {{-- Set flag on click --}}
+                            class="btn-primary {{ $errors->any() ? '<opacity-75></opacity-75> cursor-not-allowed' : '' }}"
+                            :disabled="$errors->any()" />
                     @else
                         <x-mary-button label="Submit Ticket" icon="s-paper-airplane" type="submit"
-                            class="btn-primary" wire:loading.attr="disabled"
-                            wire:loading.class="opacity-50 cursor-not-allowed" spinner :disabled="$isProcessing" />
+                            x-on:click="isSubmitting = true" {{-- Set flag on click --}} class="btn-primary" />
                     @endif
                 </div>
                 <x-mary-toast />
@@ -424,6 +437,9 @@
 
                 // Remove the draft
                 localStorage.removeItem(DRAFT_KEY);
+
+                // NEW: Set a persistent "just submitted" flag with timestamp
+                localStorage.setItem(`ticket_just_submitted_${draftId}`, Date.now());
                 console.log('Draft removed from storage');
 
                 // Store submission record with the draft ID
@@ -483,6 +499,19 @@
 
             // Function to check if draft is stale (submitted recently)
             function isDraftStale(draftId) {
+                // NEW: Check for "just submitted" flag first
+                const justSubmittedTimestamp = localStorage.getItem(`ticket_just_submitted_${draftId}`);
+                if (justSubmittedTimestamp) {
+                    const elapsed = Date.now() - parseInt(justSubmittedTimestamp);
+                    if (elapsed < 5 * 60 * 1000) { // 5 minutes
+                        console.log('Draft is stale (submission flag exists)');
+                        return true;
+                    } else {
+                        // Clean up old flag
+                        localStorage.removeItem(`ticket_just_submitted_${draftId}`);
+                    }
+                }
+
                 let submissions = [];
 
                 try {
@@ -620,35 +649,74 @@
                     const savedDate = new Date(draftData.savedAt);
                     const formattedDate = savedDate.toLocaleString();
 
-                    const modalHtml = `
-            <div class="modal modal-open" id="draftModal" style="display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.3s;">
-                <div class="modal-box relative">
-                    <h3 class="font-bold text-lg mb-4">Resume Previous Draft?</h3>
-                    <p class="mb-2">You have an unsaved draft from:</p>
-                    <p class="text-sm text-gray-600 mb-4">${formattedDate}</p>
-                    <p class="mb-4">Would you like to continue where you left off?</p>
+                    const modal = document.createElement('div');
+                    modal.id = 'draftModal';
+                    modal.className = 'modal modal-open';
 
-                    <!-- Loading spinner (hidden by default) -->
-                    <div id="draftLoadingSpinner" class="hidden absolute inset-0 bg-base-100 bg-opacity-90 flex items-center justify-center rounded-lg">
-                        <div class="flex flex-col items-center gap-3">
-                            <span class="loading loading-spinner loading-lg text-primary"></span>
-                            <p class="text-sm font-medium">Loading draft...</p>
-                        </div>
-                    </div>
+                    const modalBox = document.createElement('div');
+                    modalBox.className = 'modal-box relative max-w-md mx-auto';
 
-                    <div class="modal-action">
-                        <button class="btn btn-ghost" id="discardDraftBtn">
-                            Start Fresh
-                        </button>
-                        <button class="btn btn-primary" id="loadDraftBtn">
-                            Resume Draft
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+                    const title = document.createElement('h3');
+                    title.className = 'font-bold text-lg mb-4';
+                    title.textContent = 'Resume Previous Draft?';
 
-                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    const text1 = document.createElement('p');
+                    text1.className = 'mb-2';
+                    text1.textContent = 'You have an unsaved draft from:';
+
+                    const dateText = document.createElement('p');
+                    dateText.className = 'text-sm text-gray-600 mb-4';
+                    dateText.textContent = formattedDate;
+
+                    const text2 = document.createElement('p');
+                    text2.className = 'mb-4';
+                    text2.textContent = 'Would you like to continue where you left off?';
+
+                    // Loading spinner (hidden by default)
+                    const spinnerWrapper = document.createElement('div');
+                    spinnerWrapper.id = 'draftLoadingSpinner';
+                    spinnerWrapper.className =
+                        'hidden absolute inset-0 bg-base-100 bg-opacity-90 flex items-center justify-center rounded-lg';
+
+                    const spinnerContent = document.createElement('div');
+                    spinnerContent.className = 'flex flex-col items-center gap-3';
+
+                    const spinner = document.createElement('span');
+                    spinner.className = 'loading loading-spinner loading-lg text-primary';
+
+                    const spinnerText = document.createElement('p');
+                    spinnerText.className = 'text-sm font-medium';
+                    spinnerText.textContent = 'Loading draft...';
+
+                    spinnerContent.appendChild(spinner);
+                    spinnerContent.appendChild(spinnerText);
+                    spinnerWrapper.appendChild(spinnerContent);
+
+                    const actionDiv = document.createElement('div');
+                    actionDiv.className = 'modal-action';
+
+                    const discardBtn = document.createElement('button');
+                    discardBtn.className = 'btn btn-ghost';
+                    discardBtn.id = 'discardDraftBtn';
+                    discardBtn.textContent = 'Start Fresh';
+
+                    const loadBtn = document.createElement('button');
+                    loadBtn.className = 'btn btn-primary';
+                    loadBtn.id = 'loadDraftBtn';
+                    loadBtn.textContent = 'Resume Draft';
+
+                    actionDiv.appendChild(discardBtn);
+                    actionDiv.appendChild(loadBtn);
+
+                    modalBox.appendChild(title);
+                    modalBox.appendChild(text1);
+                    modalBox.appendChild(dateText);
+                    modalBox.appendChild(text2);
+                    modalBox.appendChild(spinnerWrapper);
+                    modalBox.appendChild(actionDiv);
+                    modal.appendChild(modalBox);
+
+                    document.body.appendChild(modal);
                     console.log('Modal HTML inserted into DOM');
 
                     requestAnimationFrame(() => {
@@ -704,3 +772,26 @@
         </span>
     </div>
 </div>
+
+<?php if (($this->currentStep === 3 || $this->currentStep === $this->totalSteps) && $this->eventStartTime && $this->eventEndTime) {
+    try {
+        $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
+        $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
+        $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
+        $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
+
+        if ($startTime->lt($minTime)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'eventStartTime' => 'Event start time must be at or after 8:00 AM.',
+            ]);
+        }
+
+        if ($endTime->gt($maxTime)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'eventEndTime' => 'Event end time must be at or before 9:00 PM.',
+            ]);
+        }
+    } catch (\Carbon\Exceptions\InvalidFormatException $e) {
+        // Invalid time format - let the regular validation handle it
+    }
+}

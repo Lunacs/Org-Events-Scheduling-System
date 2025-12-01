@@ -73,7 +73,7 @@ class SystemSettingsUpdatedNotification extends Notification
             'action' => $this->action,
             'updated_by' => $this->updatedBy->name,
             'updated_by_id' => $this->updatedBy->user_id,
-            'action_url' => route('superadmin.system-settings'),
+            'action_url' => $notifiable->isSuperAdmin() ? route('superadmin.system-settings') : null,
             'timestamp' => now()->toDateTimeString(),
         ];
     }

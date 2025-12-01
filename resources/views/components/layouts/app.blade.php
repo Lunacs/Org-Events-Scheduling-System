@@ -44,7 +44,7 @@
         <x-mary-main full-width>
             {{-- SIDEBAR - Persisted for SPA-like experience --}}
             @persist('osa-sidebar')
-                <x-slot:sidebar drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl lg:pl-10">
+                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
 
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">

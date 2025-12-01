@@ -167,7 +167,7 @@
 
                     <div class="pt-2">
                         @if ($detailUrl)
-                            <a href="{{ $detailUrl }}" class="btn btn-outline btn-sm w-full group" wire:navigate
+                            <a href="{{ $detailUrl }}" class="btn btn-primary btn-sm w-full group" wire:navigate
                                 title="Review ticket details">
                                 <span>Review Details</span>
                                 <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none"

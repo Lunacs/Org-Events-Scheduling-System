@@ -38,8 +38,8 @@
         <x-mary-main full-width>
             @persist('superadmin-sidebar')
                 {{-- SIDEBAR --}}
-                <x-slot:sidebar drawer="main-drawer"
-                    class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl lg:pl-10">
+                <x-slot:sidebar collapsible withNav drawer="main-drawer"
+                    class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl">
 
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -67,10 +67,10 @@
 
                         <x-mary-menu-item title="Event Calendar" icon="o-calendar" link="{{ route('superadmin.calendar') }}"
                             wire:navigate.hover />
-                        <x-mary-menu-item title="Ticket Management" icon="o-ticket"
+                        {{-- <x-mary-menu-item title="Ticket Management" icon="o-ticket"
                             link="{{ route('superadmin.tickets') }}" wire:navigate.hover />
                         <x-mary-menu-item title="Archive Management" icon="o-archive-box"
-                            link="{{ route('superadmin.archive') }}" wire:navigate.hover />
+                            link="{{ route('superadmin.archive') }}" wire:navigate.hover /> --}}
 
                         <x-mary-menu-separator />
 
@@ -88,8 +88,8 @@
 
                         <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth"
                             link="{{ route('superadmin.system-settings') }}" wire:navigate.hover />
-                        <x-mary-menu-item title="Admin Tools" icon="o-wrench-screwdriver"
-                            link="{{ route('superadmin.admin-tools') }}" wire:navigate.hover />
+                        {{-- <x-mary-menu-item title="Admin Tools" icon="o-wrench-screwdriver"
+                            link="{{ route('superadmin.admin-tools') }}" wire:navigate.hover /> --}}
 
                         <x-mary-menu-separator />
                     </x-mary-menu>

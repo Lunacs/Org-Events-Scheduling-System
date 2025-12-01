@@ -3,13 +3,13 @@
 {{-- Ticket Item --}}
 <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
     <div class="flex items-start justify-between">
-        <div class="flex-1">
+        <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-3 mb-2">
                 <h4 class="text-lg font-semibold">{{ $tickets->title }}</h4>
                 <x-tickets.progress-badge :status="$tickets->status"/>
                 <span class="text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
             </div>
-            <p class="text-gray-600 mb-3">{{ $tickets->description }}</p>
+            <p class="text-gray-600 mb-3 break-words">{{ $tickets->description }}</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="flex items-center space-x-2">

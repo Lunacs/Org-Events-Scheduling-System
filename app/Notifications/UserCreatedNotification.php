@@ -48,7 +48,7 @@ class UserCreatedNotification extends Notification
             'user_role' => $roleDisplay,
             'created_by' => $this->createdBy->name,
             'created_by_id' => $this->createdBy->user_id,
-            'action_url' => route('superadmin.users'),
+            'action_url' => $notifiable->isSuperAdmin() ? route('superadmin.users') : null,
             'timestamp' => now()->toDateTimeString(),
         ];
     }

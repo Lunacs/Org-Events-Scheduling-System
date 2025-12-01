@@ -267,8 +267,8 @@ class EventCalendar extends Component
             ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
             // Apply event type filter if set
             ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
-            // Hide past events by default unless toggle is on
-            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::today()))
+            // Hide past events (older than current year) by default unless toggle is on
+            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
             ->get();
 
         $allEvents = [];

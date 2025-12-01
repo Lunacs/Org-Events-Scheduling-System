@@ -1,4 +1,13 @@
-<div>
+<div x-data="{ firstLoad: true }" x-init="$nextTick(() => firstLoad = false)">
+
+    {{-- Skeleton Loading State (First Load Only) --}}
+    <div x-show="firstLoad" x-cloak>
+        @include('livewire.osa.placeholders.event-calendar')
+    </div>
+
+    {{-- Actual Content --}}
+    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
     {{-- Header --}}
     <div class="mb-8">
         <div class="bg-base-100 rounded-box shadow-lg p-6">
@@ -69,7 +78,7 @@
                 <div class="flex justify-center md:justify-end order-1 md:order-2 shrink-0 gap-2">
                     {{-- Toggle Past Events Button --}}
                     <x-mary-button wire:click="togglePastEvents" class="btn-ghost btn-sm shrink-0" :icon="$showPastEvents ? 'o-eye' : 'o-eye-slash'"
-                        tooltip="{{ $showPastEvents ? 'Hide Past Events' : 'Show Past Events' }}">
+                        tooltip="{{ $showPastEvents ? 'Hide Past Events' : 'Show Past Events (Last Year/ Older)' }}">
                         <span class="hidden sm:inline">{{ $showPastEvents ? 'Hide Past' : 'Show Past' }}</span>
                     </x-mary-button>
 
@@ -320,8 +329,8 @@
                             default => 'badge-info',
                         };
                     @endphp
-                    <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }} 
-                                hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20 
+                    <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
+                                hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20
                                 hover:scale-[1.01] hover:-translate-y-0.5
                                 transition-all duration-300 ease-out cursor-pointer
                                 border border-base-300 dark:border-base-700"
@@ -395,9 +404,9 @@
                         </div>
                         <span class="badge"
                             :class="{
-                                'badge-success': (data?.status || '') === 'approved',
-                                'badge-warning': (data?.status || '') === 'rescheduled',
-                                'badge-primary': ['approved', 'rescheduled'].indexOf(data?.status || '') === -1
+                                'badge-success text-white': (data?.status || '') === 'approved',
+                                'badge-warning text-white': (data?.status || '') === 'rescheduled',
+                                'badge-primary text-white': ['approved', 'rescheduled'].indexOf(data?.status || '') === -1
                             }"
                             x-text="(data?.status||'').replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())"></span>
                     </div>
@@ -841,6 +850,28 @@
                                 info.el.setAttribute('aria-label', `Event: ${e.title}`);
                                 info.el.setAttribute('tabindex', '0');
 
+                                // --- CUSTOM STYLING FOR PILL LOOK ---
+                                const color = e.backgroundColor || e.borderColor || '#3b82f6';
+                                
+                                // 1. Set light background (pastel version of the event color)
+                                info.el.style.backgroundColor = `color-mix(in srgb, ${color}, white 85%)`;
+                                
+                                // 2. Remove default border or make it transparent/matching
+                                info.el.style.border = 'none';
+                                
+                                // 3. Set dark text color (darker version of the event color for contrast)
+                                info.el.style.color = `color-mix(in srgb, ${color}, black 20%)`;
+                                
+                                // 4. Add the colored dot
+                                // Check if dot already exists to avoid duplication (if re-rendering)
+                                
+                                
+                                // 5. Refine padding and rounding
+                                info.el.style.borderRadius = '4px';
+                                info.el.style.padding = '2px 6px';
+                                info.el.style.fontWeight = '500';
+                                info.el.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+
                                 // Keyboard accessibility
                                 info.el.addEventListener('keydown', (ev) => {
                                     if (ev.key === 'Enter' || ev.key === ' ') {
@@ -1178,4 +1209,5 @@
             }
         </script>
     @endpush
+    </div>
 </div>
