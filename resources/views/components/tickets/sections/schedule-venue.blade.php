@@ -93,8 +93,7 @@
                                 {{ $ticket->oc_driver_contact_number ?? 'N/A' }}</p>
                         </div>
                         <div class="min-w-0">
-                            <label class="text-xs font-medium text-base-content/70">Vehicle
-                                Type</label>
+                            <label class="text-xs font-medium text-base-content/70">Transportation Type</label>
                             <p class="text-sm text-base-content break-words">
                                 {{ $ticket->oc_vehicle_type ?? 'N/A' }}
                             </p>
