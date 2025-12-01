@@ -183,8 +183,8 @@
                                             <x-mary-input label="Contact Details" wire:model.blur="oc_driver_contact_number"
                                                 placeholder="Enter the driver's contact" />
 
-                                            <x-mary-input label="Type of Car" wire:model.blur="oc_vehicle_type"
-                                                placeholder="Enter the type of car" />
+                                            <x-mary-input label="Type of Transportation" wire:model.blur="oc_transportation_type"
+                                                placeholder="Enter the type of transportation" />
 
                                             <x-mary-input label="Plate Number" wire:model.blur="oc_vehicle_plate_number"
                                                 placeholder="Enter the plate number" />
@@ -777,12 +777,12 @@
     try {
         $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
         $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
-        $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
+        $minTime = \Carbon\Carbon::createFromFormat('H:i', '00:01');
         $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
 
         if ($startTime->lt($minTime)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'eventStartTime' => 'Event start time must be at or after 8:00 AM.',
+                'eventStartTime' => 'Event start time must be at or after 12:01 AM.',
             ]);
         }
 
