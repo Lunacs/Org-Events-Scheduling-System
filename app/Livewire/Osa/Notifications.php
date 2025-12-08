@@ -96,7 +96,7 @@ class Notifications extends Component
         }
 
         // Apply type filter - search in JSON type field
-        // Notification types are like 'ticket_status_approved', 'ticket_status_rejected', etc.
+        // Notification types are like 'ticket_status_approved', 'ticket_status_for_revision', etc.
         if ($this->typeFilter) {
             if ($this->typeFilter === 'ticket_status') {
                 // Filter for all ticket status notifications

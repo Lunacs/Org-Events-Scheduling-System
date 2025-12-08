@@ -29,7 +29,7 @@ class ReportsExportController extends Controller
         // Build the approvals query similar to the Livewire component
         $query = Office_Approval::query()
             ->with(['ticket.eventType', 'ticket.user.studentOrganization'])
-            ->whereIn('decision', ['approved', 'Approved', 'rejected', 'Rejected'])
+            ->whereIn('decision', ['approved', 'Approved', 'for_revision', 'For Revision'])
             ->where('office_id', $officeId);
 
         // Apply range
@@ -104,8 +104,8 @@ class ReportsExportController extends Controller
     protected function computeStats($approvals): array
     {
         $approved = $approvals->filter(fn($a) => strcasecmp($a->decision, 'approved') === 0)->count();
-        $rejected = $approvals->filter(fn($a) => strcasecmp($a->decision, 'rejected') === 0)->count();
-        $total = max($approved + $rejected, 1);
+        $for_revision = $approvals->filter(fn($a) => strcasecmp($a->decision, 'for_revision') === 0)->count();
+        $total = max($approved + $for_revision, 1);
 
         $avgResponse = $approvals
             ->map(function ($approval) {
@@ -118,7 +118,7 @@ class ReportsExportController extends Controller
 
         return [
             'totalApproved' => $approved,
-            'totalRejected' => $rejected,
+            'totalForRevision' => $for_revision,
             'approvalRate' => (int) round(($approved / $total) * 100),
             'avgResponseTime' => round($avgResponse ?? 0, 1),
         ];
@@ -221,7 +221,7 @@ class ReportsExportController extends Controller
             fputcsv($handle, []);
             fputcsv($handle, ['Totals']);
             fputcsv($handle, ['Approved', $stats['totalApproved']]);
-            fputcsv($handle, ['Rejected', $stats['totalRejected']]);
+            fputcsv($handle, ['For Revision', $stats['totalForRevision']]);
             fputcsv($handle, ['Approval Rate (%)', $stats['approvalRate']]);
             fputcsv($handle, ['Average Response Time (hrs)', $stats['avgResponseTime']]);
             fputcsv($handle, []);

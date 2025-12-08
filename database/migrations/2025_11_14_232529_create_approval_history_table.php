@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->references('user_id')->on('users')->onDelete('set null');
             $table->foreignId('office_id')->nullable()->references('office_id')->on('offices')->onDelete('set null');
             $table->enum('approval_type', ['osa', 'office'])->comment('Type of approval: OSA or Office (GSO, etc.)');
-            $table->enum('action', ['pending', 'approved', 'rejected', 'forwarded', 'revision_requested'])->comment('The action taken');
+            $table->enum('action', ['pending', 'approved', 'for_revision', 'forwarded'])->comment('The action taken');
             $table->text('remarks')->nullable()->comment('Remarks or notes for this action');
             $table->string('office_name', 255)->nullable()->comment('Cached office name for display (in case office is deleted)');
             $table->timestamps();

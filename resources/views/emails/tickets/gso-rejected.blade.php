@@ -1,7 +1,7 @@
 <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, 'Apple Color Emoji', 'Segoe UI Emoji'; max-width: 560px; margin: 0 auto; padding: 24px;">
-	<h1 style="font-size: 18px; margin: 0 0 12px; color: #dc2626;">GSO Rejected Ticket</h1>
+	<h1 style="font-size: 18px; margin: 0 0 12px; color: #dc2626;">GSO For Revision Ticket</h1>
 	<p style="margin: 0 0 8px; color: #374151;">
-		The General Services Office (GSO) has rejected the ticket: <strong>{{ $ticket->title }}</strong>
+		The General Services Office (GSO) has put the ticket for revision: <strong>{{ $ticket->title }}</strong>
 	</p>
 	<p style="margin: 0 0 8px; color: #6b7280;">
 		This ticket requires your final decision. You may agree with GSO's rejection or override it if appropriate.

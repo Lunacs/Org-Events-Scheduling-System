@@ -247,8 +247,8 @@
                             @php
                                 $statusClass = match (strtolower($event['Status'])) {
                                     'approved' => 'badge-success',
-                                    'pending' => 'badge-warning',
-                                    'rejected', 'cancelled' => 'badge-error',
+                                    'pending', 'for_revision' => 'badge-warning',
+                                    'cancelled' => 'badge-error',
                                     'rescheduled' => 'badge-info',
                                     default => 'badge-info',
                                 };

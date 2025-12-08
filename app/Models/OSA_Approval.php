@@ -43,7 +43,7 @@ class OSA_Approval extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Optionally prevent updates (uncomment if you want strict enforcement)
         // static::updating(function ($model) {
         //     throw new \Exception('OSA Approval records cannot be updated. Create a new record instead to maintain audit trail.');
@@ -101,14 +101,6 @@ class OSA_Approval extends Model
     }
 
     /**
-     * Scope to get rejected
-     */
-    public function scopeRejected($query)
-    {
-        return $query->where('decision', 'rejected');
-    }
-
-    /**
      * Scope to get forwarded
      */
     public function scopeForwarded($query)
@@ -121,7 +113,7 @@ class OSA_Approval extends Model
      */
     public function scopeRevisionRequested($query)
     {
-        return $query->where('decision', 'revision_requested');
+        return $query->where('decision', 'for_revision');
     }
 
     /**

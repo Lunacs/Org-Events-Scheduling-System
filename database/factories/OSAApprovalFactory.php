@@ -18,7 +18,7 @@ class OSAApprovalFactory extends Factory
     {
         $decisions = [
             'approved',
-            'rejected',
+            'for_revision',
             'pending',
             'need_revision',
         ];
@@ -30,7 +30,7 @@ class OSAApprovalFactory extends Factory
             'The proposed date conflicts with another major event.',
             'Additional safety measures are required.',
             'Need more details about the target participants.',
-            'Rejected due to incomplete documentation.',
+            'Needs revision due to incomplete documentation.',
             'Pending review by the committee.',
             'Event objectives are well-defined and achievable.',
             'Please coordinate with the General Services Office for venue setup.',
@@ -56,13 +56,13 @@ class OSAApprovalFactory extends Factory
     }
 
     /**
-     * Indicate that the approval decision is rejected.
+     * Indicate that the approval decision is for revision.
      */
-    public function rejected(): static
+    public function for_revision(): static
     {
         return $this->state(fn(array $attributes) => [
-            'decision' => 'rejected',
-            'remarks' => 'Rejected due to incomplete documentation.',
+            'decision' => 'for_revision',
+            'remarks' => 'Needs revision due to incomplete documentation.',
         ]);
     }
 

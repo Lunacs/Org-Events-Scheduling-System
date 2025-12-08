@@ -64,7 +64,7 @@
         <div class="muted">Generated: {{ $generatedAt->format('Y-m-d H:i') }}</div>
     </div>
 
-    @if ($reportType === 'approved_events' || $reportType === 'rejected_events')
+    @if ($reportType === 'approved_events' || $reportType === 'for_revision_events')
         <h2>Events</h2>
         <table>
             <thead>
@@ -137,8 +137,8 @@
                     <td>{{ $data['approved_tickets'] }}</td>
                 </tr>
                 <tr>
-                    <td>Rejected</td>
-                    <td>{{ $data['rejected_tickets'] }}</td>
+                    <td>For Revision</td>
+                    <td>{{ $data['for_revision_tickets'] }}</td>
                 </tr>
                 <tr>
                     <td>Pending</td>

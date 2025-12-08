@@ -95,7 +95,7 @@
                         <div class="min-w-0">
                             <label class="text-xs font-medium text-base-content/70">Transportation Type</label>
                             <p class="text-sm text-base-content break-words">
-                                {{ $ticket->oc_vehicle_type ?? 'N/A' }}
+                                {{ $ticket->oc_transportation_type ?? 'N/A' }}
                             </p>
                         </div>
                         <div class="min-w-0">

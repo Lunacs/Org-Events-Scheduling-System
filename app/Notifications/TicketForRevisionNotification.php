@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketRejectedNotification extends Notification implements ShouldBroadcast
+class TicketForRevisionNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -44,8 +44,8 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
         $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Ticket Rejected - '.$this->ticket->ticket_number)
-            ->view('emails.tickets.ticket-rejected', [
+            ->subject('Ticket For Revision - '.$this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-for_revision', [
                 'ticket' => $this->ticket,
                 'remarks' => $this->remarks,
                 'actionUrl' => $actionUrl,
@@ -61,11 +61,11 @@ class TicketRejectedNotification extends Notification implements ShouldBroadcast
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Ticket Rejected',
-            'message' => 'Your ticket "'.$this->ticket->title.'" has been rejected',
+            'title' => 'Ticket For Revision',
+            'message' => 'Your ticket "'.$this->ticket->title.'" has been put for revision',
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
-            'type' => 'ticket_rejected',
+            'type' => 'ticket_for_revision',
             'icon' => 's-x-circle',
             'color' => 'error',
             'remarks' => $this->remarks,

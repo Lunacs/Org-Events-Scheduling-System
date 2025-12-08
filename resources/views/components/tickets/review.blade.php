@@ -2,44 +2,43 @@
 
 <div x-data="{
     showApproval: false,
-    showRejection: false,
     showRevision: false,
     showForward: false,
     showFinalApproval: false,
-    showFinalRejection: false,
     approvalRemarks: '',
-    rejectionRemarks: '',
     revisionRemarks: '',
     forwardRemarks: '',
-    finalApprovalRemarks: '',
-    finalRejectionRemarks: ''
+    finalApprovalRemarks: ''
 }" x-on:ticket-approved.window="showApproval = false; approvalRemarks = ''"
-    x-on:ticket-forwarded.window="showForward = false; forwardRemarks = ''"
-    x-on:ticket-revision-requested.window="showRevision = false; revisionRemarks = ''"
-    x-on:ticket-rejected.window="showRejection = false; rejectionRemarks = ''"
-    x-on:ticket-final-approved.window="showFinalApproval = false; finalApprovalRemarks = ''"
-    x-on:ticket-final-rejected.window="showFinalRejection = false; finalRejectionRemarks = ''" x-cloak>
+     x-on:ticket-forwarded.window="showForward = false; forwardRemarks = ''"
+     x-on:ticket-for-revision.window="showRevision = false; revisionRemarks = ''"
+     x-on:ticket-final-approved.window="showFinalApproval = false; finalApprovalRemarks = ''" x-cloak>
+
     {{-- Flash Messages --}}
     @if (session()->has('success'))
-        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if (session()->has('info'))
-        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('info') }}</span>
         </div>
     @endif
 
     @if (session()->has('warning'))
-        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('warning') }}</span>
         </div>
     @endif
@@ -51,7 +50,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ $backRoute }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                            <x-mary-icon name="o-arrow-left" class="w-4 h-4"/>
                             Back to Tickets
                         </a>
                     </div>
@@ -68,12 +67,9 @@
                             'received' => 'badge-info',
                             'gso_review' => 'badge-secondary',
                             'pending_osa_approval' => 'badge-warning',
-                            'for_rescheduling' => 'badge-warning',
-                            'rescheduled' => 'badge-success',
-                            'needs_revision' => 'badge-warning',
                             'amended' => 'badge-info',
                             'approved' => 'badge-success',
-                            'rejected' => 'badge-error',
+                            'for_revision' => 'badge-warning',
                         ];
                         $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
                         $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
@@ -117,25 +113,25 @@
         {{-- Ticket Details - Now using modular components --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Organization Information --}}
-            <x-tickets.sections.organization-info :ticket="$ticket" />
+            <x-tickets.sections.organization-info :ticket="$ticket"/>
 
             {{-- Event Details --}}
-            <x-tickets.sections.event-details :ticket="$ticket" />
+            <x-tickets.sections.event-details :ticket="$ticket"/>
 
             {{-- Schedule & Venue --}}
-            <x-tickets.sections.schedule-venue :ticket="$ticket" />
+            <x-tickets.sections.schedule-venue :ticket="$ticket"/>
 
             {{-- Budget Information --}}
-            <x-tickets.sections.budget-info :ticket="$ticket" />
+            <x-tickets.sections.budget-info :ticket="$ticket"/>
 
             {{-- Additional Information --}}
-            <x-tickets.sections.additional-info :ticket="$ticket" />
+            <x-tickets.sections.additional-info :ticket="$ticket"/>
 
             {{-- Attachments --}}
-            <x-tickets.sections.attachments-list :ticket="$ticket" />
+            <x-tickets.sections.attachments-list :ticket="$ticket"/>
 
             {{-- Comments --}}
-            <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
+            <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id"/>
         </div>
 
         {{-- Sidebar --}}
@@ -229,7 +225,7 @@
                     // Action badge classes (approval_history uses 'action' not 'decision')
                     $actionClasses = [
                         'approved' => 'badge-success',
-                        'rejected' => 'badge-error',
+                        'for_revision' => 'badge-warning',
                         'pending' => 'badge-warning',
                         'forwarded' => 'badge-info',
                         'revision_requested' => 'badge-warning',
@@ -245,7 +241,7 @@
                         }
 
                         if ($action === 'revision_requested' && $type === 'osa') {
-                            return 'OSA requested changes. Student organization must revise and resubmit the ticket. Ticket status changed to "needs_revision".';
+                            return 'OSA requested changes. Student organization must revise and resubmit the ticket. Ticket status changed to "for_revision".';
                         }
 
                         if ($action === 'approved' && $type === 'osa') {
@@ -262,12 +258,8 @@
                             return 'Office approved the request. Ticket status changed to "pending_osa_approval". OSA will now make the final decision.';
                         }
 
-                        if ($action === 'rejected' && $type === 'office') {
-                            return 'Office rejected the request. Ticket status changed to "pending_osa_approval". OSA will review and make the final decision (can override or agree with rejection).';
-                        }
-
-                        if ($action === 'rejected' && $type === 'osa') {
-                            return 'Final rejection by OSA. No event will be created. Ticket status changed to "rejected".';
+                        if ($action === 'revision_requested' && $type === 'office') {
+                            return 'Office requested revision. Ticket status changed to "pending_osa_approval". OSA will review and make the final decision (can override or agree with the request).';
                         }
 
                         if ($action === 'pending' && $type === 'osa') {
@@ -297,7 +289,7 @@
                                     // Determine dot color based on action and type
                                     $dotColor = match ($action) {
                                         'approved' => 'bg-success',
-                                        'rejected' => 'bg-error',
+                                        'for_revision' => 'bg-warning',
                                         'forwarded' => 'bg-info',
                                         'revision_requested' => 'bg-warning',
                                         default => 'bg-warning',
@@ -306,7 +298,7 @@
                                     // Determine icon based on action
                                     $icon = match ($action) {
                                         'approved' => 'o-check-circle',
-                                        'rejected' => 'o-x-circle',
+                                        '' => 'o-x-circle',
                                         'forwarded' => 'o-arrow-right',
                                         'revision_requested' => 'o-arrow-path',
                                         default => 'o-clock',
@@ -317,7 +309,7 @@
                                     {{-- Timeline Dot --}}
                                     <div
                                         class="absolute left-2 top-1 w-4 h-4 rounded-full {{ $dotColor }} ring-4 ring-base-100 flex items-center justify-center">
-                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white" />
+                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white"/>
                                     </div>
 
                                     {{-- Content Card --}}
@@ -345,7 +337,7 @@
                                         {{-- Workflow Context --}}
                                         @if ($workflowContext)
                                             <div
-                                                class="mt-3 p-2 bg-base-100 rounded border-l-4 {{ $action === 'approved' ? 'border-success' : ($action === 'rejected' ? 'border-error' : ($action === 'forwarded' ? 'border-info' : 'border-warning')) }}">
+                                                class="mt-3 p-2 bg-base-100 rounded border-l-4 {{ $action === 'approved' ? 'border-success' : ($action === '' ? 'border-warning' : ($action === 'forwarded' ? 'border-info' : 'border-warning')) }}">
                                                 <p class="text-xs text-base-content/80 leading-relaxed">
                                                     {{ $workflowContext }}
                                                 </p>
@@ -381,7 +373,7 @@
                     </div>
                 @else
                     <div class="text-center py-12">
-                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
+                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3"/>
                         <p class="text-base-content/70 font-medium">No approval actions yet</p>
                         <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting initial review by OSA</p>
                     </div>
@@ -464,11 +456,11 @@
                             'message' =>
                                 $decisionKey === 'approved'
                                     ? 'This ticket has been approved.'
-                                    : 'This ticket has been rejected.',
+                                    : 'This ticket has been put for revision.',
                             'wrapper' =>
                                 $decisionKey === 'approved'
                                     ? 'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info'
-                                    : 'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
+                                    : 'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
                             'icon' => $decisionKey === 'approved' ? 'o-check-circle' : 'o-x-circle',
                         ];
                     }
@@ -481,17 +473,8 @@
                             @if (in_array('approve', $allowedActions))
                                 @can('approve', $ticket)
                                     <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                        @click="showApproval = true">
+                                            @click="showApproval = true">
                                         Approve Ticket
-                                    </button>
-                                @endcan
-                            @endif
-
-                            @if (in_array('reject', $allowedActions))
-                                @can('reject', $ticket)
-                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                        @click="showRejection = true">
-                                        Reject Ticket
                                     </button>
                                 @endcan
                             @endif
@@ -499,7 +482,7 @@
                     @else
                         @if ($officeDecisionDetails)
                             <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0"/>
                                 <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                             </div>
                         @endif
@@ -508,17 +491,17 @@
                             @if (in_array('final_approve', $allowedActions))
                                 @can('finalApprove', $ticket)
                                     <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                        @click="showFinalApproval = true">
+                                            @click="showFinalApproval = true">
                                         Final Approval
                                     </button>
                                 @endcan
                             @endif
 
-                            @if (in_array('final_reject', $allowedActions))
-                                @can('finalReject', $ticket)
-                                    <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                        @click="showFinalRejection = true">
-                                        Final Rejection
+                            @if (in_array('for_revision', $allowedActions))
+                                @can('requestRevision', $ticket)
+                                    <button class="btn btn-warning w-full text-base-200 flex justify-between"
+                                            @click="showRevision = true">
+                                        Request Revision
                                     </button>
                                 @endcan
                             @endif
@@ -530,37 +513,38 @@
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
                                 <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                    @click="showApproval = true">
+                                        @click="showApproval = true">
                                     Approve Ticket
                                 </button>
                             @endcan
                         @endif
 
-                        @if (in_array('reject', $allowedActions))
-                            @can('reject', $ticket)
-                                <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                    @click="showRejection = true">
-                                    Reject Ticket
+                        @if (in_array('for_revision', $allowedActions))
+                            @can('requestRevision', $ticket)
+                                <button class="btn btn-warning w-full text-base-200 flex justify-between"
+                                        @click="showRevision = true">
+                                    Request Revision
                                 </button>
                             @endcan
                         @endif
                     </div>
+
                 @elseif (in_array($ticket->status, ['received', 'amended']))
                     {{-- Initial Review Actions --}}
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
                                 <button class="btn btn-success w-full text-base-200 flex justify-between"
-                                    @click="showApproval = true">
+                                        @click="showApproval = true">
                                     Approve Ticket
                                 </button>
                             @endcan
                         @endif
 
-                        @if (in_array('revision', $allowedActions))
+                        @if (in_array('for_revision', $allowedActions))
                             @can('requestRevision', $ticket)
                                 <button class="btn btn-warning w-full text-base-200 flex justify-between"
-                                    @click="showRevision = true">
+                                        @click="showRevision = true">
                                     Request Revision
                                 </button>
                             @endcan
@@ -569,17 +553,8 @@
                         @if (in_array('forward', $allowedActions))
                             @can('forwardToGso', $ticket)
                                 <button class="btn btn-info w-full text-base-200 flex justify-between"
-                                    @click="showForward = true">
+                                        @click="showForward = true">
                                     Forward to GSO
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('reject', $allowedActions))
-                            @can('reject', $ticket)
-                                <button class="btn btn-error w-full text-base-200 flex justify-between"
-                                    @click="showRejection = true">
-                                    Reject Ticket
                                 </button>
                             @endcan
                         @endif
@@ -587,7 +562,7 @@
                 @else
                     @if ($officeDecisionDetails)
                         <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0"/>
                             <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                         </div>
                     @else
@@ -600,17 +575,10 @@
                                     'icon' => 'o-check-circle',
                                     'label' => 'This ticket has been approved.',
                                 ],
-                                'rejected' => [
-                                    'wrapper' =>
-                                        'flex items-start gap-3 rounded-2xl bg-error/10 border border-error/30 px-4 py-3 text-error',
-                                    'icon' => 'o-x-circle',
-                                    'label' => 'This ticket has been rejected.',
-                                ],
-                                'needs_revision' => [
-                                    'wrapper' =>
-                                        'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
-                                    'icon' => 'o-arrow-path',
-                                    'label' => 'Waiting for revision from the student organization.',
+                                'for_revision' => [
+                                     'wrapper' => 'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                                     'icon' => 'o-arrow-path',
+                                     'label' => 'This ticket has been put for revision.',
                                 ],
                                 'gso_review' => [
                                     'wrapper' =>
@@ -625,12 +593,12 @@
 
                         @if ($statusDisplay)
                             <div class="{{ $statusDisplay['wrapper'] }}">
-                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
+                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0"/>
                                 <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
                             </div>
                         @else
                             <div class="alert alert-info">
-                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                                <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
                                 <span>No actions available for current ticket status.</span>
                             </div>
                         @endif
@@ -647,7 +615,7 @@
             <h3 class="text-lg font-bold mb-4">Confirm Ticket Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-circle" class="w-6 h-6" />
+                    <x-mary-icon name="o-check-circle" class="w-6 h-6"/>
                     <div>
                         <h3 class="font-bold">You are about to approve this ticket</h3>
                         <p class="text-sm">This action will create an event and schedule it on the calendar.</p>
@@ -655,62 +623,30 @@
                 </div>
                 <label class="text-sm font-medium">Approval Remarks</label>
                 <textarea x-model="approvalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter your remarks for approving this ticket..."></textarea>
+                          placeholder="Enter your remarks for approving this ticket..."></textarea>
                 <p class="text-xs text-base-content/60">Provide a brief explanation for this approval</p>
                 @error('approvalRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
+                <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showApproval=false" />
+                <x-mary-button label="Cancel" class="btn" @click="showApproval=false"/>
                 <x-mary-button label="Confirm Approval" class="btn-success text-neutral-content"
-                    wire:click="approveTicket" spinner="approveTicket"
-                    x-bind:disabled="approvalRemarks.trim().length < 3"
-                    @click="$wire.set('approvalRemarks', approvalRemarks)" />
+                               wire:click="approveTicket" spinner="approveTicket"
+                               x-bind:disabled="approvalRemarks.trim().length < 3"
+                               @click="$wire.set('approvalRemarks', approvalRemarks)"/>
             </div>
         </div>
     </div>
 
-    {{-- Rejection Modal (Alpine) --}}
-    <div x-show="showRejection" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showRejection=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
-            <h3 class="text-lg font-bold mb-4">Confirm Ticket Rejection</h3>
-            <div class="space-y-4">
-                <div class="alert alert-error">
-                    <x-mary-icon name="o-x-circle" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">You are about to reject this ticket</h3>
-                        <p class="text-sm">This action cannot be undone. No event will be created.</p>
-                    </div>
-                </div>
-                <label class="text-sm font-medium">Rejection Remarks</label>
-                <textarea x-model="rejectionRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Explain the reason for rejecting this ticket..."></textarea>
-                <p class="text-xs text-base-content/60">Provide detailed explanation for the rejection (minimum 10
-                    characters)</p>
-                @error('rejectionRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showRejection=false" />
-                <x-mary-button label="Confirm Rejection" class="btn-error text-neutral-content"
-                    wire:click="rejectTicket" spinner="rejectTicket"
-                    x-bind:disabled="rejectionRemarks.trim().length < 10"
-                    @click="$wire.set('rejectionRemarks', rejectionRemarks)" />
-            </div>
-        </div>
-    </div>
-
-    {{-- Revision Request Modal (Alpine) --}}
+    {{-- For Revision Modal (unified) --}}
     <div x-show="showRevision" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showRevision=false"></div>
         <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
             <h3 class="text-lg font-bold mb-4">Request Ticket Revision</h3>
             <div class="space-y-4">
                 <div class="alert alert-warning">
-                    <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
+                    <x-mary-icon name="o-arrow-path" class="w-6 h-6"/>
                     <div>
                         <h3 class="font-bold">Request changes to this ticket</h3>
                         <p class="text-sm">The student organization will need to revise and resubmit.</p>
@@ -718,21 +654,23 @@
                 </div>
                 <label class="text-sm font-medium">Revision Instructions</label>
                 <textarea x-model="revisionRemarks" class="textarea textarea-bordered w-full" rows="5"
-                    placeholder="Clearly explain what needs to be changed or added..."></textarea>
+                          placeholder="Clearly explain what needs to be changed or added..."></textarea>
                 <p class="text-xs text-base-content/60">Be specific about what needs to be revised (minimum 10
                     characters)</p>
                 @error('revisionRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
+                <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showRevision=false" />
-                <x-mary-button label="Request Revision" class="btn-warning" wire:click="requestRevision"
-                    spinner="requestRevision" x-bind:disabled="revisionRemarks.trim().length < 10"
-                    @click="$wire.set('revisionRemarks', revisionRemarks)" />
+                <x-mary-button label="Cancel" class="btn" @click="showRevision=false"/>
+                <x-mary-button label="Request Revision" class="btn-warning"
+                               wire:click="forRevision" spinner="forRevision"
+                               x-bind:disabled="revisionRemarks.trim().length < 10"
+                               @click="$wire.set('revisionRemarks', revisionRemarks)"/>
             </div>
         </div>
     </div>
+
 
     {{-- Forward to GSO Modal (Alpine) --}}
     <div x-show="showForward" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
@@ -741,7 +679,7 @@
             <h3 class="text-lg font-bold mb-4">Forward to GSO</h3>
             <div class="space-y-4">
                 <div class="alert alert-info">
-                    <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
+                    <x-mary-icon name="o-arrow-right" class="w-6 h-6"/>
                     <div>
                         <h3 class="font-bold">Forward this ticket to GSO</h3>
                         <p class="text-sm">GSO will review and provide their decision. You'll make the final approval.
@@ -750,18 +688,18 @@
                 </div>
                 <label class="text-sm font-medium">Forwarding Remarks</label>
                 <textarea x-model="forwardRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter remarks for GSO..."></textarea>
+                          placeholder="Enter remarks for GSO..."></textarea>
                 <p class="text-xs text-base-content/60">Explain why this needs GSO review or what specific approval is
                     needed</p>
                 @error('forwardRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
+                <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showForward=false" />
+                <x-mary-button label="Cancel" class="btn" @click="showForward=false"/>
                 <x-mary-button label="Forward to GSO" class="btn-info" wire:click="forwardToGso"
-                    spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
-                    @click="$wire.set('forwardRemarks', forwardRemarks)" />
+                               spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
+                               @click="$wire.set('forwardRemarks', forwardRemarks)"/>
             </div>
         </div>
     </div>
@@ -773,7 +711,7 @@
             <h3 class="text-lg font-bold mb-4">Final Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-badge" class="w-6 h-6" />
+                    <x-mary-icon name="o-check-badge" class="w-6 h-6"/>
                     <div>
                         <h3 class="font-bold">Final approval after GSO review</h3>
                         <p class="text-sm">This will create the event and schedule it on the calendar.</p>
@@ -781,50 +719,18 @@
                 </div>
                 <label class="text-sm font-medium">Final Approval Remarks</label>
                 <textarea x-model="finalApprovalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter your final approval remarks..."></textarea>
+                          placeholder="Enter your final approval remarks..."></textarea>
                 <p class="text-xs text-base-content/60">Document your final decision after considering GSO's input</p>
                 @error('finalApprovalRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
+                <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false" />
+                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false"/>
                 <x-mary-button label="Confirm Final Approval" class="btn-success text-neutral-content"
-                    wire:click="finalApproval" spinner="finalApproval"
-                    x-bind:disabled="finalApprovalRemarks.trim().length < 3"
-                    @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />
-            </div>
-        </div>
-    </div>
-
-    {{-- Final Rejection Modal (Alpine) --}}
-    <div x-show="showFinalRejection" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showFinalRejection=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
-            <h3 class="text-lg font-bold mb-4">Final Rejection</h3>
-            <div class="space-y-4">
-                <div class="alert alert-error">
-                    <x-mary-icon name="o-x-circle" class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">Final rejection after GSO review</h3>
-                        <p class="text-sm">This action cannot be undone. No event will be created.</p>
-                    </div>
-                </div>
-                <label class="text-sm font-medium">Final Rejection Remarks</label>
-                <textarea x-model="finalRejectionRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Explain the reason for final rejection..."></textarea>
-                <p class="text-xs text-base-content/60">Provide detailed explanation considering GSO's input (minimum
-                    10 characters)</p>
-                @error('finalRejectionRemarks')
-                    <span class="text-error text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-            <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showFinalRejection=false" />
-                <x-mary-button label="Confirm Final Rejection" class="btn-error text-neutral-content"
-                    wire:click="finalRejection" spinner="finalRejection"
-                    x-bind:disabled="finalRejectionRemarks.trim().length < 10"
-                    @click="$wire.set('finalRejectionRemarks', finalRejectionRemarks)" />
+                               wire:click="finalApproval" spinner="finalApproval"
+                               x-bind:disabled="finalApprovalRemarks.trim().length < 3"
+                               @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)"/>
             </div>
         </div>
     </div>
@@ -842,24 +748,13 @@
                 window.dispatchEvent(new CustomEvent('ticket-forwarded'));
             });
 
-            Livewire.on('ticket-revision-requested', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-revision-requested'));
-            });
-
-            Livewire.on('ticket-rejected', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-rejected'));
+            Livewire.on('ticket-for-revision', () => {
+                window.dispatchEvent(new CustomEvent('ticket-for-revision'));
             });
 
             Livewire.on('ticket-final-approved', () => {
                 // Dispatch Alpine event to close modal
                 window.dispatchEvent(new CustomEvent('ticket-final-approved'));
-            });
-
-            Livewire.on('ticket-final-rejected', () => {
-                // Dispatch Alpine event to close modal
-                window.dispatchEvent(new CustomEvent('ticket-final-rejected'));
             });
 
             Livewire.on('comment-added', () => {
@@ -868,8 +763,8 @@
             });
 
             Livewire.on('open-attachment-preview', ({
-                url
-            }) => {
+                                                        url
+                                                    }) => {
                 if (url) {
                     window.open(url, '_blank');
                 }
@@ -877,8 +772,8 @@
 
             // Add this download listener
             Livewire.on('download-attachment', ({
-                url
-            }) => {
+                                                    url
+                                                }) => {
                 if (url) {
                     const link = document.createElement('a');
                     link.href = url;

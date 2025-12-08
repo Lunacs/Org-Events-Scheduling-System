@@ -32,7 +32,7 @@ class TicketSeeder extends Seeder
                 'title' => 'Annual Tech Summit 2024',
                 'description' => 'A comprehensive technology summit featuring keynote speakers, workshops, and networking sessions for IT and Computer Science students.',
                 'venue_requested' => 'University Auditorium',
-                'status' => 'approved',
+                'status' => 'amended',
             ],
             [
                 'title' => 'Cultural Festival Celebration',
@@ -74,13 +74,13 @@ class TicketSeeder extends Seeder
                 'title' => 'Music and Arts Festival',
                 'description' => 'Showcasing student talents in music, dance, painting, and performing arts.',
                 'venue_requested' => 'Student Center',
-                'status' => 'rejected',
+                'status' => 'for_revision',
             ],
             [
                 'title' => 'Innovation Challenge Competition',
                 'description' => 'Hackathon and innovation competition for students to present technology-based solutions to real-world problems.',
                 'venue_requested' => 'IT Building - Computer Lab',
-                'status' => 'needs_revision',
+                'status' => 'for_revision',
             ],
             [
                 'title' => 'Charity Fundraising Event',
@@ -126,7 +126,7 @@ class TicketSeeder extends Seeder
                 'oc_accommodation' => null,
                 'oc_tsp' => rand(0, 1) ? 'in-house' : 'outsourced',
                 'oc_driver_name' => null,
-                'oc_vehicle_type' => null,
+                'oc_transportation_type' => null,
                 'oc_vehicle_plate_number' => null,
                 'oc_driver_contact_number' => null,
                 'date_from' => $dateFrom->format('Y-m-d'),

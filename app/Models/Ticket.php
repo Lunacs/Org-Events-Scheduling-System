@@ -41,7 +41,7 @@ class Ticket extends Model
         'oc_accommodation',
         'oc_tsp',
         'oc_driver_name',
-        'oc_vehicle_type',
+        'oc_transportation_type',
         'oc_vehicle_plate_number',
         'oc_driver_contact_number',
         'date_from',
@@ -212,7 +212,7 @@ class Ticket extends Model
      * Helper method to log approval history
      *
      * @param  string  $approvalType  'osa' or 'office'
-     * @param  string  $action  'pending', 'approved', 'rejected', 'forwarded', 'revision_requested'
+     * @param  string  $action  'pending', 'approved', 'for_revision', 'forwarded', 'revision_requested'
      */
     public function logApprovalHistory(
         string $approvalType,

@@ -109,7 +109,7 @@ class Archive extends Component
                 'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                 'eventType:event_type_id,type_name',
             ])
-            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'rejected', 'completed']))
+            ->whereHas('ticket', fn ($query) => $query->whereIn('status', ['approved', 'for_revision', 'completed']))
             ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
             ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
             ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))

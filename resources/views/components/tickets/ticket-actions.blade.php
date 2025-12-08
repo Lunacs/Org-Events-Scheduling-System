@@ -5,7 +5,7 @@
                    tooltip="View Details"/>
     @if(strtolower($status) == 'approved')
         <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost"
-                       tooltip="Download Approval"/>
+                       tooltip="Download Approval" disabled/>
     @elseif(strtolower($status) == 'needs_revision')
         <x-mary-button icon="s-pencil" class="btn-sm btn-primary" @click="$dispatch('open-ticket-edit', { ticketId: {{ $ticket->ticket_id }} })" tooltip="Revise"/>
     @elseif(strtolower($status) == 'for_rescheduling')

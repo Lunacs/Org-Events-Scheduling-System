@@ -2,7 +2,7 @@
     $statusDefinitions = $statusDefinitions ?? [
         'pending' => ['key' => 'pending', 'label' => 'Pending'],
         'approved' => ['key' => 'approved', 'label' => 'Approved'],
-        'rejected' => ['key' => 'rejected', 'label' => 'Rejected'],
+        'for_revision' => ['key' => 'for_revision', 'label' => 'For Revision'],
     ];
 
     $statusOptions = collect($statusDefinitions)
@@ -27,9 +27,9 @@
     ];
 
     $statusBadges = [
-        'pending' => 'badge-outline border-warning/60 text-warning',
+        'pending' => 'badge-outline border-info/60 text-info',
         'approved' => 'badge-outline border-success/60 text-success',
-        'rejected' => 'badge-outline border-error/60 text-error',
+        'for_revision' => 'badge-outline border-warning/60 text-warning',
         'completed' => 'badge-outline border-neutral/60 text-neutral',
     ];
 

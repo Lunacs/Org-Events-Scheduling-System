@@ -36,7 +36,7 @@ class EventSchedulesFactory extends Factory
         $statuses = [
             'pending',
             'approved',
-            'rejected',
+            'for_revision',
         ];
 
         $remarks = [
@@ -93,12 +93,12 @@ class EventSchedulesFactory extends Factory
     }
 
     /**
-     * Indicate that the schedule is rejected.
+     * Indicate that the schedule is for revision.
      */
-    public function rejected(): static
+    public function for_revision(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'rejected',
+            'status' => 'for_revision',
         ]);
     }
 }

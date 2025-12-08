@@ -49,6 +49,10 @@ class SubmitTicket extends Component
     #[Validate('required|numeric|digits:11|regex:/^[0-9\s\-\+\(\)]+$/')]
     public $adviser_contact = '09';
 
+    #[Validate('required|boolean')]
+    public $is_amended = false;
+
+    // Step 2: Event Details
     #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
     public $eventTitle = '';
 
@@ -210,6 +214,7 @@ class SubmitTicket extends Component
         return match ($this->currentStep) {
             1 => [
                 'adviser_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+                'is_amended' => 'required|boolean',
             ],
             2 => [
                 'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
@@ -456,7 +461,7 @@ class SubmitTicket extends Component
                 'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
                 'oc_tsp' => $nullIfEmpty($this->oc_tsp),
                 'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
-                'oc_vehicle_type' => $nullIfEmpty($this->oc_transportation_type),
+                'oc_transportation_type' => $nullIfEmpty($this->oc_transportation_type),
                 'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
                 'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
@@ -471,7 +476,7 @@ class SubmitTicket extends Component
                 'time_from' => $this->eventStartTime,
                 'time_to' => $this->eventEndTime,
                 'additional_notes' => $nullIfEmpty($this->additionalNotes),
-                'status' => 'received',
+                'status' => $this->is_amended ? 'amended' : 'received',
             ]);
 
             // Handle file attachments
@@ -523,7 +528,28 @@ class SubmitTicket extends Component
         } catch (ValidationException $e) {
             \DB::rollBack();
             $this->isProcessing = false;
+            \Log::error('Ticket submission failed', [
+                'user_id' => $currentUser->user_id ?? null,
+                'step' => $this->currentStep,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            // Show user-friendly error message
+            $errorMessage = config('app.debug')
+                ? $e->getMessage()
+                : 'Your data has been preserved. Please try again.';
+
+            $this->toast(
+                type: 'error',
+                title: 'Submission Failed',
+                description: $errorMessage,
+                position: 'toast-top toast-end',
+                icon: 'o-x-circle',
+                css: 'alert-error',
+                timeout: 5000,
+                redirectTo: null
+            );
             // Re-throw validation exceptions to show field-specific errors
             throw $e;
         } catch (Exception $e) {

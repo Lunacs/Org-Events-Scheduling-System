@@ -120,8 +120,7 @@
                                 <option value="">All Types</option>
                                 <option value="ticket_forwarded_to_gso">Forwarded to GSO</option>
                                 <option value="gso_approved">GSO Approved (by us)</option>
-                                <option value="gso_rejected">GSO Rejected (by us)</option>
-                                <option value="ticket_status_rescheduled">Rescheduled</option>
+                                <option value="gso_for_revision">GSO For Revision (by us)</option>
                                 <option value="ticket_comment">Comments</option>
                             </select>
                             <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">

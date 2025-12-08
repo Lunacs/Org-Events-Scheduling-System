@@ -33,7 +33,7 @@ class EventSchedulesSeeder extends Seeder
             'Covered Court',
         ];
 
-        $statuses = ['approved', 'approved', 'approved', 'pending', 'rejected'];
+        $statuses = ['approved', 'approved', 'approved', 'pending', 'for_revision'];
 
         $remarks = [
             'All preparations are complete.',

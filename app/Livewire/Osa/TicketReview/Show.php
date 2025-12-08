@@ -29,15 +29,11 @@ class Show extends Component
     // Remarks for each action
     public $approvalRemarks = '';
 
-    public $rejectionRemarks = '';
-
     public $revisionRemarks = '';
 
     public $forwardRemarks = '';
 
     public $finalApprovalRemarks = '';
-
-    public $finalRejectionRemarks = '';
 
     public function mount($ticketNumber)
     {
@@ -66,7 +62,7 @@ class Show extends Component
             'oc_tsp',
             'oc_driver_name',
             'oc_driver_contact_number',
-            'oc_vehicle_type',
+            'oc_transportation_type',
             'oc_vehicle_plate_number',
             'additional_notes',
             'proponent_contact',
@@ -215,7 +211,7 @@ class Show extends Component
         Office_Approval::updateOrCreate(
             [
                 'ticket_id' => $this->ticket->ticket_id,
-                'office_id' => 1, // GSO office ID
+                'office_id' => 2, // GSO office ID
             ],
             [
                 'user_id' => auth()->id(),
@@ -261,114 +257,6 @@ class Show extends Component
 
         $this->success('Ticket has been forwarded to GSO for approval.');
         $this->dispatch('ticket-forwarded');
-    }
-
-    public function requestRevision()
-    {
-        // Validate remarks
-        $this->validate([
-            'revisionRemarks' => 'required|string|min:10',
-        ], [
-            'revisionRemarks.required' => 'Please provide detailed remarks explaining what needs to be revised.',
-            'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
-        ]);
-
-        $oldStatus = $this->ticket->status;
-
-        $this->ticket->update(['status' => 'needs_revision']);
-
-        // Notify ticket owner about status change
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'needs_revision',
-            $this->revisionRemarks
-        ));
-
-        // Update or create current OSA approval state
-        OSA_Approval::updateOrCreate(
-            ['ticket_id' => $this->ticket->ticket_id],
-            [
-                'user_id' => auth()->id(),
-                'decision' => 'revision_requested',
-                'remarks' => $this->revisionRemarks,
-            ]
-        );
-
-        // Log to approval history (immutable audit trail)
-        $this->ticket->logApprovalHistory('osa', 'revision_requested', $this->revisionRemarks);
-
-        // Log transaction
-        TransactionLogService::logTicketOperation('revision_requested', $this->ticket, ['Remarks' => $this->revisionRemarks]);
-
-        // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
-
-        // Dispatch events for instant notifications
-        $this->dispatch('refresh-notifications');
-        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'needs_revision');
-        $this->dispatch('notification-received', [
-            'title' => 'Revision Requested',
-            'message' => "Your ticket {$this->ticket->ticket_number} needs revision. Please check the remarks.",
-            'type' => 'warning',
-        ]);
-
-        $this->warning('Ticket has been sent back for revision.');
-        $this->dispatch('ticket-revision-requested');
-    }
-
-    public function rejectTicket()
-    {
-        // Validate remarks
-        $this->validate([
-            'rejectionRemarks' => 'required|string|min:10',
-        ], [
-            'rejectionRemarks.required' => 'Please provide detailed remarks explaining the reason for rejection.',
-            'rejectionRemarks.min' => 'Remarks must be at least 10 characters to provide clear reasoning.',
-        ]);
-
-        $oldStatus = $this->ticket->status;
-
-        $this->ticket->update(['status' => 'rejected']);
-
-        // Update or create current OSA approval state
-        OSA_Approval::updateOrCreate(
-            ['ticket_id' => $this->ticket->ticket_id],
-            [
-                'user_id' => auth()->id(),
-                'decision' => 'rejected',
-                'remarks' => $this->rejectionRemarks,
-            ]
-        );
-
-        // Log to approval history (immutable audit trail)
-        $this->ticket->logApprovalHistory('osa', 'rejected', $this->rejectionRemarks);
-
-        // Log transaction
-        TransactionLogService::logTicketOperation('rejected', $this->ticket, ['Remarks' => $this->rejectionRemarks]);
-
-        // Notify the ticket owner about status change
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'rejected',
-            $this->rejectionRemarks
-        ));
-
-        // Reload the ticket with fresh approval data
-        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
-
-        // Dispatch events for instant notifications
-        $this->dispatch('refresh-notifications');
-        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'rejected');
-        $this->dispatch('notification-received', [
-            'title' => 'Ticket Rejected',
-            'message' => "Your ticket {$this->ticket->ticket_number} has been rejected. Please check the remarks.",
-            'type' => 'error',
-        ]);
-
-        $this->error('Ticket has been rejected.');
-        $this->dispatch('ticket-rejected');
     }
 
     public function finalApproval()
@@ -446,61 +334,58 @@ class Show extends Component
         $this->dispatch('ticket-final-approved');
     }
 
-    public function finalRejection()
+    public function forRevision()
     {
         // Validate remarks
         $this->validate([
-            'finalRejectionRemarks' => 'required|string|min:10',
+            'revisionRemarks' => 'required|string|min:10',
         ], [
-            'finalRejectionRemarks.required' => 'Please provide detailed remarks explaining the reason for final rejection.',
-            'finalRejectionRemarks.min' => 'Remarks must be at least 10 characters to provide clear reasoning.',
+            'revisionRemarks.required' => 'Please provide detailed remarks explaining what needs to be revised.',
+            'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
         ]);
 
-        // This is called when OSA makes final decision to reject after GSO review
         $oldStatus = $this->ticket->status;
 
-        $this->ticket->update(['status' => 'rejected']);
+        $this->ticket->update(['status' => 'for_revision']);
 
         // Update or create current OSA approval state
         OSA_Approval::updateOrCreate(
             ['ticket_id' => $this->ticket->ticket_id],
             [
                 'user_id' => auth()->id(),
-                'decision' => 'rejected',
-                'remarks' => $this->finalRejectionRemarks,
+                'decision' => 'for_revision',
+                'remarks' => $this->revisionRemarks,
             ]
         );
 
-        // Log to approval history (immutable audit trail)
-        $this->ticket->logApprovalHistory('osa', 'rejected', $this->finalRejectionRemarks);
+        // Log to approval history
+        $this->ticket->logApprovalHistory('osa', 'for_revision', $this->revisionRemarks);
 
         // Log transaction
-        TransactionLogService::logTicketOperation('final_rejected', $this->ticket, ['Remarks' => $this->finalRejectionRemarks]);
+        TransactionLogService::logTicketOperation('for_revision', $this->ticket, ['Remarks' => $this->revisionRemarks]);
 
-        // Notify ticket owner about status change
+        // Notify ticket owner
         $this->ticket->user->notify(new TicketStatusUpdatedNotification(
             $this->ticket,
             $oldStatus,
-            'rejected',
-            $this->finalRejectionRemarks
+            'for_revision',
+            $this->revisionRemarks
         ));
 
-        // Client-side modal closing handled via Alpine.js
-
-        // Reload the ticket with fresh approval data
+        // Reload the ticket
         $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
 
-        // Dispatch events for instant notifications
+        // Dispatch events
         $this->dispatch('refresh-notifications');
-        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'rejected');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'for_revision');
         $this->dispatch('notification-received', [
-            'title' => 'Ticket Finally Rejected',
-            'message' => "Your ticket {$this->ticket->ticket_number} has been finally rejected after GSO review.",
-            'type' => 'error',
+            'title' => 'Ticket Needs Revision',
+            'message' => "Your ticket {$this->ticket->ticket_number} has been sent back for revision.",
+            'type' => 'warning',
         ]);
 
-        $this->error('Ticket has been rejected after GSO review.');
-        $this->dispatch('ticket-final-rejected');
+        $this->warning('Ticket has been sent back for revision.');
+        $this->dispatch('ticket-for-revision');
     }
 
     /**

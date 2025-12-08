@@ -48,7 +48,7 @@ class TicketFactory extends Factory
             'received',
             'gso_review',
             'approved',
-            'rejected',
+            'for_revision',
             'needs_revision',
         ];
 
@@ -77,7 +77,7 @@ class TicketFactory extends Factory
             'oc_accommodation' => fake()->optional()->sentence(),
             'oc_tsp' => fake()->optional()->randomElement(['in-house', 'outsourced']),
             'oc_driver_name' => fake()->optional()->name(),
-            'oc_vehicle_type' => fake()->optional()->word(),
+            'oc_transportation_type' => fake()->optional()->word(),
             'oc_vehicle_plate_number' => fake()->optional()->bothify('???-####'),
             'oc_driver_contact_number' => fake()->optional()->phoneNumber(),
             'date_from' => fake()->dateTimeBetween('+1 week', '+2 months')->format('Y-m-d'),
@@ -113,12 +113,12 @@ class TicketFactory extends Factory
     }
 
     /**
-     * Indicate that the ticket is rejected.
+     * Indicate that the ticket is for revision.
      */
-    public function rejected(): static
+    public function for_revision(): static
     {
         return $this->state(fn(array $attributes) => [
-            'status' => 'rejected',
+            'status' => 'for_revision',
         ]);
     }
 

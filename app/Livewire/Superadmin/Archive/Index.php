@@ -49,7 +49,7 @@ class Index extends Component
         if ($this->typeFilter === 'all' || $this->typeFilter === 'events') {
             $events = Event::with(['ticket', 'studentOrganization', 'eventType'])
                 ->whereHas('ticket', function ($q) {
-                    $q->whereIn('status', ['cancelled', 'rejected']);
+                    $q->whereIn('status', ['cancelled', '']);
                 })
                 ->when($this->search, function ($q) {
                     $q->whereHas('ticket', function ($q2) {
@@ -75,10 +75,10 @@ class Index extends Component
             $items = $items->merge($events);
         }
 
-        // Get cancelled/rejected tickets (without events)
+        // Get cancelled/ tickets (without events)
         if ($this->typeFilter === 'all' || $this->typeFilter === 'tickets') {
             $tickets = Ticket::with(['user.studentOrganization'])
-                ->whereIn('status', ['cancelled', 'rejected'])
+                ->whereIn('status', ['cancelled', ''])
                 ->whereDoesntHave('events')
                 ->when($this->search, function ($q) {
                     $q->where('title', 'like', "%{$this->search}%")

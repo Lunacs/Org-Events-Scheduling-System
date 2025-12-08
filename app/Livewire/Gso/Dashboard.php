@@ -35,8 +35,8 @@ class Dashboard extends Component
                 ->where('decision', 'approved')
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
-            'rejectedToday' => (clone $baseApprovalQuery)
-                ->where('decision', 'rejected')
+            'for_revisionToday' => (clone $baseApprovalQuery)
+                ->where('decision', 'for_revision')
                 ->whereDate('updated_at', Carbon::today())
                 ->count(),
             'upcomingEvents' => Event_Schedule::query()

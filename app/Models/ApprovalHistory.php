@@ -46,7 +46,7 @@ class ApprovalHistory extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::updating(function ($model) {
             throw new \Exception('ApprovalHistory records cannot be updated. This is an immutable audit trail.');
         });
@@ -116,16 +116,16 @@ class ApprovalHistory extends Model
         if ($this->approval_type === 'osa') {
             return 'Office of Student Affairs';
         }
-        
+
         return $this->office_name ?? ($this->office->office_name ?? 'Unknown Office');
     }
 
     /**
      * Static helper to log an approval action
-     * 
+     *
      * @param int $ticketId
      * @param string $approvalType 'osa' or 'office'
-     * @param string $action 'pending', 'approved', 'rejected', 'forwarded', 'revision_requested'
+     * @param string $action 'pending', 'approved', '', 'forwarded', 'revision_requested'
      * @param string|null $remarks
      * @param int|null $officeId
      * @param int|null $userId
@@ -140,7 +140,7 @@ class ApprovalHistory extends Model
         ?int $userId = null
     ): self {
         $userId = $userId ?? auth()->id();
-        
+
         // Get office name if office_id is provided
         $officeName = null;
         if ($officeId) {

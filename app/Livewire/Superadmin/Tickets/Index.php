@@ -208,8 +208,8 @@ class Index extends Component
 
                 case 'reject':
                     Ticket::whereIn('ticket_id', $this->selectedTickets)
-                        ->update(['status' => 'rejected']);
-                    $message = "Bulk rejected {$count} tickets";
+                        ->update(['status' => '']);
+                    $message = "Bulk  {$count} tickets";
                     break;
 
                 case 'cancel':

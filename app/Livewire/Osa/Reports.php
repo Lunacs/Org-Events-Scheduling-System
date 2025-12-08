@@ -60,7 +60,7 @@ class Reports extends Component
     public function generateReport()
     {
         $this->validate([
-            'reportType' => 'required|in:approved_events,rejected_events,org_participation,monthly_summary',
+            'reportType' => 'required|in:approved_events,for_revision_events,org_participation,monthly_summary',
             'dateFrom' => 'required|date',
             'dateTo' => 'required|date|after_or_equal:dateFrom',
             'exportFormat' => 'required|in:pdf,excel,csv',
@@ -121,7 +121,7 @@ class Reports extends Component
                         ->limit(1000) // Add limit for performance
                         ->get();
 
-                case 'rejected_events':
+                case 'for_revision_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                         ->with([
                             'user' => fn ($q) => $q->select(['user_id', 'org_id'])
@@ -129,7 +129,7 @@ class Reports extends Component
                             'events:event_id,ticket_id',
                             'eventType:event_type_id,type_name',
                         ])
-                        ->where('status', 'rejected')
+                        ->where('status', 'for_revision')
                         ->whereBetween('created_at', [$dateFrom, $dateTo])
                         ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
                         ->orderBy('created_at', 'desc')
@@ -151,7 +151,7 @@ class Reports extends Component
                     return [
                         'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
                         'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                        'rejected_tickets' => Ticket::where('status', 'rejected')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        'for_revision_tickets' => Ticket::where('status', 'for_revision')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
                         'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
                     ];
 
@@ -199,7 +199,7 @@ class Reports extends Component
 
             switch ($this->reportType) {
                 case 'approved_events':
-                case 'rejected_events':
+                case 'for_revision_events':
                     fputcsv($handle, ['Ticket #', 'Title', 'Organization', 'Event Type', 'Status', 'Created At', 'Updated At']);
                     foreach ($data as $ticket) {
                         fputcsv($handle, [
@@ -228,7 +228,7 @@ class Reports extends Component
                     fputcsv($handle, ['Metric', 'Value']);
                     fputcsv($handle, ['Total Tickets', $data['total_tickets']]);
                     fputcsv($handle, ['Approved', $data['approved_tickets']]);
-                    fputcsv($handle, ['Rejected', $data['rejected_tickets']]);
+                    fputcsv($handle, ['For Revision', $data['for_revision_tickets']]);
                     fputcsv($handle, ['Pending', $data['pending_tickets']]);
                     break;
             }

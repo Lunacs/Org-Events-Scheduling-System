@@ -37,7 +37,7 @@ class Office_Approval extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Optionally prevent updates (uncomment if you want strict enforcement)
         // static::updating(function ($model) {
         //     throw new \Exception('Office Approval records cannot be updated. Create a new record instead to maintain audit trail.');
@@ -111,11 +111,11 @@ class Office_Approval extends Model
     }
 
     /**
-     * Scope to get rejected
+     * Scope to get for_revision
      */
-    public function scopeRejected($query)
+    public function scopeForRevision($query)
     {
-        return $query->where('decision', 'rejected');
+        return $query->where('decision', 'for_revision');
     }
 
     /**

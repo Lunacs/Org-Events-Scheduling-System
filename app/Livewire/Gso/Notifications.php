@@ -96,7 +96,7 @@ class Notifications extends Component
         }
 
         // Apply type filter - search in JSON type field
-        // Notification types are like 'ticket_status_approved', 'ticket_status_rejected', etc.
+        // Notification types are like 'ticket_status_approved', 'ticket_status_', etc.
         if ($this->typeFilter) {
             if ($this->typeFilter === 'ticket_status') {
                 // Filter for all ticket status notifications
@@ -137,7 +137,7 @@ class Notifications extends Component
         // Clear cache to refresh counts
         \Illuminate\Support\Facades\Cache::forget("osa_notifications_counts_{$user->user_id}");
         $this->loadCounts();
-        
+
         $this->success('All notifications marked as read.', position: 'toast-top');
     }
 

@@ -32,9 +32,9 @@
                                 'description' => 'List of all approved event requests',
                             ],
                             [
-                                'id' => 'rejected_events',
-                                'name' => 'Rejected Events Report',
-                                'description' => 'List of all rejected event requests',
+                                'id' => 'for_revision_events',
+                                'name' => 'For Revision Events Report',
+                                'description' => 'List of all for revision event requests',
                             ],
                             [
                                 'id' => 'org_participation',
@@ -107,12 +107,12 @@
                     <div class="bg-error/10 p-2 rounded-full">
                         <x-mary-icon name="o-x-circle" class="w-5 h-5 text-error" />
                     </div>
-                    <h3 class="font-semibold">Rejected Events</h3>
+                    <h3 class="font-semibold">For Revision Events</h3>
                 </div>
                 <div class="text-2xl font-bold text-error">
                     @if (is_array($reportData) && $reportType === 'monthly_summary')
-                        {{ $reportData['rejected_tickets'] ?? 0 }}
-                    @elseif($reportType === 'rejected_events')
+                        {{ $reportData['for_revision_tickets'] ?? 0 }}
+                    @elseif($reportType === 'for_revision_events')
                         {{ $reportData->count() }}
                     @else
                         --
@@ -197,8 +197,8 @@
                         </div>
                     @endif
                 </div>
-            @elseif($reportType === 'rejected_events' && $reportData->count() > 0)
-                {{-- Rejected Events Table --}}
+            @elseif($reportType === 'for_revision_events' && $reportData->count() > 0)
+                {{-- For Revision Events Table --}}
                 <div class="overflow-x-auto">
                     <table class="table table-zebra w-full">
                         <thead>
@@ -206,7 +206,7 @@
                                 <th>Event Title</th>
                                 <th>Organization</th>
                                 <th>Submitted Date</th>
-                                <th>Rejected Date</th>
+                                <th>For Revision Date</th>
                                 <th>Reason</th>
                             </tr>
                         </thead>
@@ -219,7 +219,7 @@
                                     <td>{{ $ticket->created_at->format('M d, Y') }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
-                                        <x-mary-badge value="Rejected" class="badge-error text-white" />
+                                        <x-mary-badge value="For Revision" class="badge-error text-white" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -267,8 +267,8 @@
                         <div class="text-sm text-base-content/70 mt-1">Approved</div>
                     </div>
                     <div class="bg-base-200 rounded-lg p-6 text-center">
-                        <div class="text-3xl font-bold text-error">{{ $reportData['rejected_tickets'] }}</div>
-                        <div class="text-sm text-base-content/70 mt-1">Rejected</div>
+                        <div class="text-3xl font-bold text-error">{{ $reportData['for_revision_tickets'] }}</div>
+                        <div class="text-sm text-base-content/70 mt-1">For Revision</div>
                     </div>
                     <div class="bg-base-200 rounded-lg p-6 text-center">
                         <div class="text-3xl font-bold text-warning">{{ $reportData['pending_tickets'] }}</div>

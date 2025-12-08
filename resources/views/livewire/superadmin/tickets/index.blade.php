@@ -36,11 +36,8 @@
                     ['id' => 'received', 'name' => 'Received'],
                     ['id' => 'gso_review', 'name' => 'GSO Review'],
                     ['id' => 'pending_osa_approval', 'name' => 'Pending OSA Approval'],
-                    ['id' => 'rejected', 'name' => 'Rejected'],
+                    ['id' => 'for_revision', 'name' => 'For Revision'],
                     ['id' => 'approved', 'name' => 'Approved'],
-                    ['id' => 'for_rescheduling', 'name' => 'For Rescheduling'],
-                    ['id' => 'rescheduled', 'name' => 'Rescheduled'],
-                    ['id' => 'needs_revision', 'name' => 'Needs Revision'],
                     ['id' => 'amended', 'name' => 'Amended'],
                 ]" option-value="id"
                     option-label="name" />
@@ -77,11 +74,8 @@
                         'received' => 'badge-info text-white',
                         'gso_review' => 'badge-info text-white',
                         'pending_osa_approval' => 'badge-error text-white',
-                        'rejected' => 'badge-error text-white',
+                        'for_revision' => 'badge-warning text-white',
                         'approved' => 'badge-success text-white',
-                        'for_rescheduling' => 'badge-info text-white',
-                        'rescheduled' => 'badge-info text-white',
-                        'needs_revision' => 'badge-warning text-white',
                         'amended' => 'badge-info text-white',
                         default => 'badge-ghost',
                     }" />
@@ -142,9 +136,8 @@
                             <x-mary-badge :value="ucfirst($selectedTicket->status)" :class="match ($selectedTicket->status) {
                                 'pending' => 'badge-warning',
                                 'approved' => 'badge-success',
-                                'rejected' => 'badge-error',
+                                'for_revision' => 'badge-warning',
                                 'cancelled' => 'badge-ghost',
-                                'rescheduled' => 'badge-info',
                                 default => 'badge-ghost',
                             }" />
                         </div>

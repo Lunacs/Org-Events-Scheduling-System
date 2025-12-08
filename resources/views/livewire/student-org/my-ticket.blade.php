@@ -29,8 +29,7 @@
                         ['id' => '', 'name' => 'All Status'],
                         ['id' => 'under_review', 'name' => 'Under Review'],
                         ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'rejected', 'name' => 'Rejected'],
-                        ['id' => 'needs_revision', 'name' => 'Requires Revision'],
+                        ['id' => 'for_revision', 'name' => 'For Revision'],
                         ['id' => 'rescheduled', 'name' => 'Requires Rescheduling'],
                     ]"
                         placeholder="Filter by status" />
@@ -74,14 +73,14 @@
                     color="text-primary" />
 
                 <x-mary-stat title="Under Review"
-                    value="{{ $allTickets->whereNotIn('status', ['approved', 'rejected', 'needs_revision', 'for_rescheduling'])->count() }}"
+                    value="{{ $allTickets->whereNotIn('status', ['approved', 'for_revision'])->count() }}"
                     icon="s-clock" color="text-warning" />
 
                 <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}"
                     icon="s-check-circle" color="text-success" />
 
                 <x-mary-stat title="Need Action"
-                    value="{{ $allTickets->whereIn('status', ['needs_revision', 'for_rescheduling'])->count() }}"
+                    value="{{ $allTickets->whereIn('status', ['for_revision'])->count() }}"
                     icon="s-exclamation-triangle" color="text-error" />
             </div>
         </div>
@@ -123,7 +122,7 @@
         box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
         @if ($this->selectedTicket)
-            @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'rejected']))
+            @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'for_revision']))
                 <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket" />
             @endif
 
