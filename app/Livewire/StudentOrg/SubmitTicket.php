@@ -49,6 +49,10 @@ class SubmitTicket extends Component
     #[Validate('required|numeric|digits:11|regex:/^[0-9\s\-\+\(\)]+$/')]
     public $adviser_contact = '09';
 
+    #[Validate('required|boolean')]
+    public $is_amended = false;
+
+    // Step 2: Event Details
     #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
     public $eventTitle = '';
 
@@ -123,7 +127,7 @@ class SubmitTicket extends Component
     #[Validate('string')]
     #[Validate('max:255')]
     #[Validate('min:2')]
-    public $oc_vehicle_type = '';
+    public $oc_transportation_type = '';
 
     #[Validate('required_if:oc_tsp,outsourced')]
     #[Validate('nullable')]
@@ -210,6 +214,7 @@ class SubmitTicket extends Component
         return match ($this->currentStep) {
             1 => [
                 'adviser_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+                'is_amended' => 'required|boolean',
             ],
             2 => [
                 'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
@@ -231,7 +236,7 @@ class SubmitTicket extends Component
                 'oc_tsp' => $this->is_oc ? 'required|string|in:in-house,outsourced' : 'nullable',
                 'oc_driver_name' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
                 'oc_driver_contact_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
-                'oc_vehicle_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
+                'oc_transportation_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
                 'oc_vehicle_plate_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
             ],
             4 => [
@@ -296,12 +301,12 @@ class SubmitTicket extends Component
             try {
                 $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
                 $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
-                $minTime = \Carbon\Carbon::createFromFormat('H:i', '08:00');
+                $minTime = \Carbon\Carbon::createFromFormat('H:i', '00:01');
                 $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
 
                 if ($startTime->lt($minTime)) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
-                        'eventStartTime' => 'Event start time must be at or after 8:00 AM.',
+                        'eventStartTime' => 'Event start time must be at or after 12:01 AM.',
                     ]);
                 }
 
@@ -365,7 +370,7 @@ class SubmitTicket extends Component
         $ticket->oc_accommodation = $this->oc_accommodation;
         $ticket->oc_tsp = $this->oc_tsp;
         $ticket->oc_driver_name = $this->oc_driver_name;
-        $ticket->oc_vehicle_type = $this->oc_vehicle_type;
+        $ticket->oc_transportation_type = $this->oc_transportation_type;
         $ticket->oc_vehicle_plate_number = $this->oc_vehicle_plate_number;
         $ticket->oc_driver_contact_number = $this->oc_driver_contact_number;
         $ticket->additional_notes = $this->additionalNotes;
@@ -456,7 +461,7 @@ class SubmitTicket extends Component
                 'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
                 'oc_tsp' => $nullIfEmpty($this->oc_tsp),
                 'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
-                'oc_vehicle_type' => $nullIfEmpty($this->oc_vehicle_type),
+                'oc_transportation_type' => $nullIfEmpty($this->oc_transportation_type),
                 'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
                 'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
@@ -471,7 +476,7 @@ class SubmitTicket extends Component
                 'time_from' => $this->eventStartTime,
                 'time_to' => $this->eventEndTime,
                 'additional_notes' => $nullIfEmpty($this->additionalNotes),
-                'status' => 'received',
+                'status' => $this->is_amended ? 'amended' : 'received',
             ]);
 
             // Handle file attachments
@@ -523,7 +528,28 @@ class SubmitTicket extends Component
         } catch (ValidationException $e) {
             \DB::rollBack();
             $this->isProcessing = false;
+            \Log::error('Ticket submission failed', [
+                'user_id' => $currentUser->user_id ?? null,
+                'step' => $this->currentStep,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
+            // Show user-friendly error message
+            $errorMessage = config('app.debug')
+                ? $e->getMessage()
+                : 'Your data has been preserved. Please try again.';
+
+            $this->toast(
+                type: 'error',
+                title: 'Submission Failed',
+                description: $errorMessage,
+                position: 'toast-top toast-end',
+                icon: 'o-x-circle',
+                css: 'alert-error',
+                timeout: 5000,
+                redirectTo: null
+            );
             // Re-throw validation exceptions to show field-specific errors
             throw $e;
         } catch (Exception $e) {

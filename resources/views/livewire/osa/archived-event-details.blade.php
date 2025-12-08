@@ -18,7 +18,7 @@
                     @php
                         $statusClasses = [
                             'approved' => 'badge-success',
-                            'rejected' => 'badge-error',
+                            'for_revision' => 'badge-error',
                             'completed' => 'badge-primary',
                         ];
                     @endphp
@@ -66,7 +66,7 @@
                                             $dClass =
                                                 [
                                                     'approved' => 'badge-success',
-                                                    'rejected' => 'badge-error',
+                                                    'for_revision' => 'badge-error',
                                                     'forwarded' => 'badge-info',
                                                     'revision_requested' => 'badge-warning',
                                                 ][$decision] ?? 'badge-neutral';

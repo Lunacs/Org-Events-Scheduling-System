@@ -22,7 +22,7 @@
                             <x-mary-badge :value="$row['status']" :class="match ($row['status']) {
                                 'Pending' => 'badge-warning',
                                 'Approved' => 'badge-success',
-                                'Rejected' => 'badge-error',
+                                'For Revision' => 'badge-error',
                                 default => 'badge-ghost',
                             }" />
                         @endscope

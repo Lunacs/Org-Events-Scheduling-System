@@ -81,7 +81,7 @@ class Reports extends Component
                 'ticket.eventType',
                 'ticket.user.studentOrganization',
             ])
-            ->whereIn('decision', ['approved', 'Approved', 'rejected', 'Rejected'])
+            ->whereIn('decision', ['approved', 'Approved', 'for_revision', 'For Revision'])
             ->where('office_id', $officeId);
     }
 
@@ -146,8 +146,8 @@ class Reports extends Component
     protected function computeStats(Collection $approvals): array
     {
         $approved = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'approved') === 0)->count();
-        $rejected = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'rejected') === 0)->count();
-        $total = max($approved + $rejected, 1);
+        $for_revision = $approvals->filter(fn(Office_Approval $approval) => strcasecmp($approval->decision, 'for_revision') === 0)->count();
+        $total = max($approved + $for_revision, 1);
 
         $avgResponse = $approvals
             ->map(function (Office_Approval $approval) {
@@ -160,7 +160,7 @@ class Reports extends Component
 
         return [
             'totalApproved' => $approved,
-            'totalRejected' => $rejected,
+            'totalFor_Revision' => $for_revision,
             'approvalRate' => (int) round(($approved / $total) * 100),
             'avgResponseTime' => round($avgResponse ?? 0, 1),
         ];
@@ -266,7 +266,7 @@ class Reports extends Component
             fputcsv($handle, []);
             fputcsv($handle, ['Totals']);
             fputcsv($handle, ['Approved', $stats['totalApproved']]);
-            fputcsv($handle, ['Rejected', $stats['totalRejected']]);
+            fputcsv($handle, ['for_revision', $stats['totalFor_Revision']]);
             fputcsv($handle, ['Approval Rate (%)', $stats['approvalRate']]);
             fputcsv($handle, ['Average Response Time (hrs)', $stats['avgResponseTime']]);
             fputcsv($handle, []);

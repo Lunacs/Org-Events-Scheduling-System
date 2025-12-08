@@ -119,12 +119,9 @@
                             <select wire:model.live="typeFilter" class="select select-bordered w-full">
                                 <option value="">All Types</option>
                                 <option value="ticket_status_approved">Ticket Approved</option>
-                                <option value="ticket_status_rejected">Ticket Rejected</option>
-                                <option value="ticket_status_needs_revision">Revision Required</option>
+                                <option value="ticket_status_for_revision">Ticket For Revision</option>
                                 <option value="ticket_status_gso_review">Under GSO Review</option>
                                 <option value="ticket_status_pending_osa_approval">Pending OSA Approval</option>
-                                <option value="ticket_status_for_rescheduling">Rescheduling Requested</option>
-                                <option value="ticket_status_rescheduled">Rescheduled</option>
                                 <option value="ticket_status_amended">Ticket Amended</option>
                                 <option value="ticket_comment">Comments</option>
                             </select>

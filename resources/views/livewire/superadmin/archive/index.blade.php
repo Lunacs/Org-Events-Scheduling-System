@@ -56,7 +56,7 @@
                                     <td>
                                         <x-mary-badge :value="ucfirst($item['status'])" :class="match ($item['status']) {
                                             'cancelled' => 'badge-warning',
-                                            'rejected' => 'badge-error',
+                                            'for_revision' => 'badge-error',
                                             default => 'badge-ghost',
                                         }" />
                                     </td>

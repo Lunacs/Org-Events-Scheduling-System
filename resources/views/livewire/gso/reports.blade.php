@@ -89,8 +89,8 @@
                                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <div class="stat-title text-red-700 dark:text-red-300">Total Rejected</div>
-                    <div class="stat-value text-red-600" x-text="stats.totalRejected"></div>
+                    <div class="stat-title text-red-700 dark:text-red-300">Total For Revision</div>
+                    <div class="stat-value text-red-600" x-text="stats.totalForRevision"></div>
                     <div class="stat-desc text-red-600" x-text="timePeriodLabel"></div>
                 </div>
             </div>
@@ -330,7 +330,7 @@
 
             stats: {
                 totalApproved: 0,
-                totalRejected: 0,
+                totalForRevision: 0,
                 approvalRate: 0,
                 avgResponseTime: 0
             },
@@ -339,12 +339,12 @@
 
             statusSummary: {
                 approved: 0,
-                rejected: 0
+                for_revision: 0
             },
             statusChart: null,
             chartColors: {
                 approved: '#10b981',
-                rejected: '#ef4444'
+                for_revision: '#ef4444'
             },
             chartWaitHandle: null,
             chartReadyQueue: [],
@@ -446,7 +446,7 @@
                 if (this.selectedChart === 'approvals') {
                     return [
                         Number(this.statusSummary.approved || 0),
-                        Number(this.statusSummary.rejected || 0)
+                        Number(this.statusSummary.for_revision || 0)
                     ];
                 }
 
@@ -459,7 +459,7 @@
 
             get statusLabels() {
                 if (this.selectedChart === 'approvals') {
-                    return ['Approved', 'Rejected'];
+                    return ['Approved', 'For Revision'];
                 }
 
                 if (this.selectedChart === 'request_types') {
@@ -473,7 +473,7 @@
                 if (this.selectedChart === 'approvals') {
                     return [
                         this.chartColors.approved,
-                        this.chartColors.rejected
+                        this.chartColors.for_revision
                     ];
                 }
 
@@ -548,8 +548,8 @@
 
             updateStats(dataset) {
                 const approved = dataset.filter(record => record.decision === 'Approved').length;
-                const rejected = dataset.filter(record => record.decision === 'Rejected').length;
-                const total = Math.max(approved + rejected, 1);
+                const for_revision = dataset.filter(record => record.decision === 'For Revision').length;
+                const total = Math.max(approved + for_revision, 1);
 
                 const avgResponse = dataset.length ?
                     dataset.reduce((sum, record) => sum + Number(record.responseTime ?? 0), 0) / dataset.length :
@@ -557,14 +557,14 @@
 
                 this.stats = {
                     totalApproved: approved,
-                    totalRejected: rejected,
+                    totalForRevision: for_revision,
                     approvalRate: Math.round((approved / total) * 100),
                     avgResponseTime: Number(avgResponse.toFixed(1))
                 };
 
                 this.statusSummary = {
                     approved,
-                    rejected
+                    for_revision
                 };
             },
 
@@ -963,7 +963,7 @@
             getDecisionClass(decision) {
                 const classes = {
                     'Approved': 'badge-success',
-                    'Rejected': 'badge-error',
+                    'For Revision': 'badge-error',
                     'Pending': 'badge-warning'
                 };
                 return classes[decision] || 'badge-ghost';

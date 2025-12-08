@@ -37,7 +37,7 @@
         tbody tr:nth-child(even) { background: #fbfdfe; }
 
         .decision.approved { color: #065f46; background: #ecfdf5; padding: 4px 6px; border-radius: 4px; display: inline-block; }
-        .decision.rejected { color: #7f1d1d; background: #fff1f2; padding: 4px 6px; border-radius: 4px; display: inline-block; }
+        .decision.for_revision { color: #7f1d1d; background: #fff1f2; padding: 4px 6px; border-radius: 4px; display: inline-block; }
 
         /* Small footer */
         footer { margin-top: 18px; font-size: 10px; color: #6b7280; text-align: right; }
@@ -76,8 +76,8 @@
             <div class="value">{{ $stats['totalApproved'] }}</div>
         </div>
         <div class="card">
-            <div class="label">Total Rejected</div>
-            <div class="value">{{ $stats['totalRejected'] }}</div>
+            <div class="label">Total For Revision</div>
+            <div class="value">{{ $stats['totalForRevision'] }}</div>
         </div>
         <div class="card">
             <div class="label">Approval Rate</div>
@@ -140,7 +140,7 @@
                             @if(strtolower($record['decision']) === 'approved')
                                 <span class="decision approved">{{ $record['decision'] }}</span>
                             @else
-                                <span class="decision rejected">{{ $record['decision'] }}</span>
+                                <span class="decision for_revision">{{ $record['decision'] }}</span>
                             @endif
                         </td>
                         <td style="text-align:center">{{ $record['responseTime'] }}</td>

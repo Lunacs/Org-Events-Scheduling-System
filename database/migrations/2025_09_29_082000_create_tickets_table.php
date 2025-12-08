@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('oc_accommodation')->nullable();
             $table->enum('oc_tsp', ['in-house', 'outsourced'])->nullable();
             $table->string('oc_driver_name')->nullable();
-            $table->string('oc_vehicle_type')->nullable();
+            $table->string('oc_transportation_type')->nullable();
             $table->string('oc_vehicle_plate_number')->nullable();
             $table->string('oc_driver_contact_number')->nullable();
             $table->string('date_from');
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->text('budget_breakdown')->nullable();
             $table->text('additional_notes')->nullable();
             $table->foreignId('fund_source_id')->references('source_id')->on('fund__sources')->onDelete('cascade');
-            $table->enum('status', ['received', 'gso_review', 'pending_osa_approval', 'rejected', 'approved', 'for_rescheduling', 'rescheduled', 'needs_revision', 'amended', 'completed'])->default('received');
+            $table->enum('status', ['received', 'gso_review', 'pending_osa_approval', 'for_revision', 'approved', 'amended', 'completed'])->default('received');
             $table->timestamps();
         });
     }

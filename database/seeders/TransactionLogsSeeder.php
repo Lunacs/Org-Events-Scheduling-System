@@ -25,7 +25,7 @@ class TransactionLogsSeeder extends Seeder
                 'created_at' => Carbon::now()->subHours(2),
             ],
             [
-                'action' => 'Rejected equipment request for Workshop Series',
+                'action' => 'For Revision equipment request for Workshop Series',
                 'details' => 'Equipment limitations noted during review.',
                 'created_at' => Carbon::now()->subHours(4),
             ],

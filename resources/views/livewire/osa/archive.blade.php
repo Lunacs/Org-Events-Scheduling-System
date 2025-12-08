@@ -33,7 +33,7 @@
                 <select wire:model.defer="statusFilter" class="select select-bordered w-full">
                     <option value="">All Statuses</option>
                     <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="for_revision">For Revision</option>
                     <option value="completed">Completed</option>
                 </select>
 
@@ -76,9 +76,9 @@
                     <div class="bg-error/10 p-2 rounded-full"></div>
                     <div>
                         <div class="text-lg font-bold">
-                            {{ $archivedEvents->where('ticket.status', 'rejected')->count() }}
+                            {{ $archivedEvents->where('ticket.status', 'for_revision')->count() }}
                         </div>
-                        <div class="text-sm text-base-content/70">Rejected</div>
+                        <div class="text-sm text-base-content/70">For Revision</div>
                     </div>
                 </div>
             </div>
@@ -215,7 +215,7 @@
                                         @php
                                             $statusClasses = [
                                                 'approved' => 'badge-success',
-                                                'rejected' => 'badge-error',
+                                                'for_revision' => 'badge-error',
                                                 'completed' => 'badge-primary',
                                             ];
                                         @endphp

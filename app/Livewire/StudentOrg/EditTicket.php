@@ -58,7 +58,7 @@ class EditTicket extends Component
     public $oc_accommodation = '';
     public $oc_tsp = '';
     public $oc_driver_name = '';
-    public $oc_vehicle_type = '';
+    public $oc_transportation_type = '';
     public $oc_vehicle_plate_number = '';
     public $oc_driver_contact_number = '';
     public $additionalNotes = '';
@@ -93,7 +93,7 @@ class EditTicket extends Component
             'oc_accommodation' => 'nullable|string|max:2000',
             'oc_tsp' => 'nullable|in:in-house,outsourced',
             'oc_driver_name' => 'nullable|required_with:oc_tsp|string|max:255',
-            'oc_vehicle_type' => 'nullable|required_with:oc_tsp|string|max:255',
+            'oc_transportation_type' => 'nullable|required_with:oc_tsp|string|max:255',
             'oc_vehicle_plate_number' => 'nullable|required_with:oc_tsp|string|max:50',
             'oc_driver_contact_number' => 'nullable|required_with:oc_tsp|string|max:255',
             'additionalNotes' => 'nullable|string|max:2000',
@@ -199,7 +199,7 @@ class EditTicket extends Component
         $this->oc_accommodation = $this->ticket->oc_accommodation ?? '';
         $this->oc_tsp = $this->ticket->oc_tsp ?? '';
         $this->oc_driver_name = $this->ticket->oc_driver_name ?? '';
-        $this->oc_vehicle_type = $this->ticket->oc_vehicle_type ?? '';
+        $this->oc_transportation_type = $this->ticket->oc_transportation_type ?? '';
         $this->oc_vehicle_plate_number = $this->ticket->oc_vehicle_plate_number ?? '';
         $this->oc_driver_contact_number = $this->ticket->oc_driver_contact_number ?? '';
         $this->additionalNotes = $this->ticket->additional_notes ?? '';
@@ -271,7 +271,7 @@ class EditTicket extends Component
             'oc_accommodation' => $this->oc_accommodation,
             'oc_tsp' => $this->oc_tsp ?: null,
             'oc_driver_name' => $this->oc_driver_name,
-            'oc_vehicle_type' => $this->oc_vehicle_type,
+            'oc_transportation_type' => $this->oc_transportation_type,
             'oc_vehicle_plate_number' => $this->oc_vehicle_plate_number,
             'oc_driver_contact_number' => $this->oc_driver_contact_number,
             'additional_notes' => $this->additionalNotes,
@@ -368,7 +368,7 @@ class EditTicket extends Component
                 'oc_accommodation' => $this->oc_accommodation,
                 'oc_tsp' => $this->oc_tsp ?: null,
                 'oc_driver_name' => $this->oc_driver_name,
-                'oc_vehicle_type' => $this->oc_vehicle_type,
+                'oc_transportation_type' => $this->oc_transportation_type,
                 'oc_vehicle_plate_number' => $this->oc_vehicle_plate_number,
                 'oc_driver_contact_number' => $this->oc_driver_contact_number,
                 'additional_notes' => $this->additionalNotes,

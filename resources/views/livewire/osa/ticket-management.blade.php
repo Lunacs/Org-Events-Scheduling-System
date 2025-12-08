@@ -70,12 +70,9 @@
                     ['id' => '', 'name' => 'All Statuses'],
                     ['id' => 'received', 'name' => 'Received'],
                     ['id' => 'gso_review', 'name' => 'GSO Review'],
-                    ['id' => 'for_rescheduling', 'name' => 'For Rescheduling'],
-                    ['id' => 'rescheduled', 'name' => 'Rescheduled'],
-                    ['id' => 'needs_revision', 'name' => 'Needs Revision'],
                     ['id' => 'amended', 'name' => 'Amended'],
                     ['id' => 'approved', 'name' => 'Approved'],
-                    ['id' => 'rejected', 'name' => 'Rejected'],
+                    ['id' => 'for_revision', 'name' => 'For Revision'],
                 ]"
                     option-value="id" option-label="name" />
 
@@ -192,12 +189,9 @@
                                             $statusClasses = [
                                                 'received' => 'badge-info',
                                                 'gso_review' => 'badge-info',
-                                                'for_rescheduling' => 'badge-warning',
-                                                'rescheduled' => 'badge-success',
-                                                'needs_revision' => 'badge-warning',
                                                 'amended' => 'badge-info',
                                                 'approved' => 'badge-success',
-                                                'rejected' => 'badge-error',
+                                                'for_revision' => 'badge-warning',
                                             ];
                                         @endphp
                                         <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"

@@ -21,7 +21,7 @@
                     'needs_revision' => 'border-warning text-warning',
                     'amended' => 'border-info text-info',
                     'approved' => 'border-success text-success',
-                    'rejected' => 'border-error text-error',
+                    '' => 'border-error text-error',
                     'completed' => 'border-neutral text-neutral',
                 ];
             @endphp

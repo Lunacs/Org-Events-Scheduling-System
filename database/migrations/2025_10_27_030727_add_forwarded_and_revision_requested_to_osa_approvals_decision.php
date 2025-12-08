@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Alter the enum to include 'forwarded' and 'revision_requested'
-        DB::statement("ALTER TABLE `o_s_a__approvals` MODIFY COLUMN `decision` ENUM('pending', 'approved', 'rejected', 'forwarded', 'revision_requested') NOT NULL");
+        DB::statement("ALTER TABLE `o_s_a__approvals` MODIFY COLUMN `decision` ENUM('pending', 'approved', 'for_revision', 'forwarded', 'revision_requested') NOT NULL");
     }
 
     /**
@@ -22,6 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         // Revert back to original enum values
-        DB::statement("ALTER TABLE `o_s_a__approvals` MODIFY COLUMN `decision` ENUM('pending', 'approved', 'rejected') NOT NULL");
+        DB::statement("ALTER TABLE `o_s_a__approvals` MODIFY COLUMN `decision` ENUM('pending', 'approved', 'for_revision') NOT NULL");
     }
 };

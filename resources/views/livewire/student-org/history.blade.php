@@ -27,7 +27,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <x-mary-stat
                     title="Total Events"
-                    description="Approved & Rejected"
+                    description="Approved & Needs Revision"
                     :value="$this->stats['total']"
                     icon="s-calendar-days"
                     color="text-primary"/>
@@ -40,9 +40,9 @@
                     color="text-success"/>
 
                 <x-mary-stat
-                    title="Rejected"
-                    :description="$this->stats['rejected']['percentage'] . '% of submissions'"
-                    :value="$this->stats['rejected']['count']"
+                    title="Needs Revision"
+                    :description="$this->stats['for_revision']['percentage'] . '% of submissions'"
+                    :value="$this->stats['for_revision']['count']"
                     icon="s-x-circle"
                     color="text-error"/>
 
@@ -119,7 +119,7 @@
                     <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
                         ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'rejected', 'name' => 'Rejected'],
+                        ['id' => 'for_revision', 'name' => 'Needs Revision'],
                         ['id' => 'cancelled', 'name' => 'Cancelled'],
                     ]" class="w-32"/>
 
@@ -148,7 +148,7 @@
                     @forelse($this->tickets as $ticket)
                         @php
                             $isApproved = $ticket->status === 'approved';
-                            $isRejected = $ticket->status === 'rejected';
+                            $isForRevision = $ticket->status === 'for_revision';
                             $isCancelled = $ticket->status === 'cancelled';
 
                             // Check if event is completed based on event_schedule end_date or ticket date_to
@@ -171,8 +171,8 @@
                                             @if($isComplete)
                                                 <x-mary-badge value="Completed" class="badge-info"/>
                                             @endif
-                                        @elseif($isRejected)
-                                            <x-mary-badge value="Rejected" class="badge-error"/>
+                                        @elseif($isForRevision)
+                                            <x-mary-badge value="For Revision" class="badge-warning"/>
                                         @elseif($isCancelled)
                                             <x-mary-badge value="Cancelled" class="badge-warning"/>
                                         @endif
@@ -182,7 +182,7 @@
                                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                                         <div>
                                             <p class="text-xs text-gray-500 uppercase tracking-wide">
-                                                {{ $isRejected ? 'Proposed Date' : 'Event Date' }}
+                                                {{ $isForRevision ? 'Proposed Date' : 'Event Date' }}
                                             </p>
                                             <p class="text-sm font-medium">
                                                 @if($ticket->start_date)
@@ -219,7 +219,7 @@
                                             <p class="font-medium">{{ \Carbon\Carbon::parse($ticket->created_at)->format('M d, Y') }}</p>
                                         </div>
                                         <div>
-                                            <p class="text-gray-500">{{ $isRejected ? 'Rejected' : ($isCancelled ? 'Cancelled' : 'Approved') }}:</p>
+                                            <p class="text-gray-500">{{ $isForRevision ? 'For Revision' : ($isCancelled ? 'Cancelled' : 'Approved') }}:</p>
                                             <p class="font-medium">{{ \Carbon\Carbon::parse($ticket->updated_at)->format('M d, Y') }}</p>
                                         </div>
                                         <div>
@@ -232,7 +232,7 @@
                                 <div class="flex flex-col space-y-2 ml-6">
                                     <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details"
                                                    wire:click="openDetailsModal({{ $ticket->ticket_id }})"/>
-                                @if($isRejected)
+                                @if($isForRevision)
                                         <x-mary-button icon="s-document-text" class="btn-sm btn-ghost" tooltip="View Feedback"/>
                                         <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost" tooltip="Resubmit Modified"/>
                                     @elseif($isCancelled)
@@ -245,8 +245,8 @@
 
                             {{-- Status-specific feedback sections --}}
                             @php
-                                // Only show rejection remarks if ticket is rejected AND has remarks
-                                $rejectionRemarks = ($isRejected && $ticket->osa_decision === 'rejected')
+                                // Only show revision remarks if ticket is needing revision AND has remarks
+                                $for_revisionRemarks = ($isForRevision && $ticket->osa_decision === 'for_revision')
                                     ? $ticket->osa_remarks
                                     : null;
 
@@ -254,13 +254,13 @@
                                 $cancellationRemarks = $isCancelled ? ($ticket->schedule_remarks ?? $ticket->content) : null;
                             @endphp
 
-                            @if($isRejected && $rejectionRemarks)
-                                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                            @if($isForRevision && $for_revisionRemarks)
+                                <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-x-circle" class="w-5 h-5 text-red-600 mt-0.5"/>
+                                        <x-mary-icon name="s-x-circle" class="w-5 h-5 text-orange-600 mt-0.5"/>
                                         <div class="flex-1">
-                                            <h5 class="font-medium text-red-900">Rejection Reasons</h5>
-                                            <p class="text-sm text-red-700 mt-1">{{ $rejectionRemarks }}</p>
+                                            <h5 class="font-medium text-orange-900">Rejection Reasons</h5>
+                                            <p class="text-sm text-orange-700 mt-1">{{ $for_revisionRemarks }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -290,7 +290,7 @@
                         <div class="text-center py-12 text-gray-500">
                             <x-mary-icon name="o-inbox" class="w-16 h-16 mx-auto mb-3 opacity-50"/>
                             <p class="text-lg font-medium mb-1">No event history yet</p>
-                            <p class="text-sm">Your approved, rejected, and cancelled events will appear here</p>
+                            <p class="text-sm">Your approved, needing revision, and cancelled events will appear here</p>
                         </div>
                     @endforelse
                 </div>

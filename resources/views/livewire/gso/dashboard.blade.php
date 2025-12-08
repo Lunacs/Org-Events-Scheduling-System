@@ -87,9 +87,9 @@
                 class="bg-linear-to-br from-success/10 to-success/5 border border-success/20"
                 tooltip="Tickets approved by GSO today" />
 
-            <x-mary-stat title="Rejected Today" :value="number_format(data_get($stats, 'rejectedToday', 0))" icon="o-x-circle"
+            <x-mary-stat title="For Revision Today" :value="number_format(data_get($stats, 'for_revisionToday', 0))" icon="o-x-circle"
                 class="bg-linear-to-br from-error/10 to-error/5 border border-error/20"
-                tooltip="Tickets rejected today" />
+                tooltip="Tickets for_revision today" />
 
             <x-mary-stat title="Upcoming Events" :value="number_format(data_get($stats, 'upcomingEvents', 0))" icon="o-calendar-days"
                 class="bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20"

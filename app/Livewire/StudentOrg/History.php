@@ -62,10 +62,10 @@ class History extends Component
     {
         $userId = auth()->id();
 
-        // Total events (approved + rejected)
+        // Total events (approved + for_revision)
         $totalEvents = DB::table('tickets')
             ->where('user_id', $userId)
-            ->whereIn('status', ['approved', 'rejected'])
+            ->whereIn('status', ['approved', 'for_revision'])
             ->count();
 
         // Approved count
@@ -74,15 +74,15 @@ class History extends Component
             ->where('status', 'approved')
             ->count();
 
-        // Rejected count
-        $rejectedCount = DB::table('tickets')
+        // For Revision count
+        $for_revisionCount = DB::table('tickets')
             ->where('user_id', $userId)
-            ->where('status', 'rejected')
+            ->where('status', 'for_revision')
             ->count();
 
         // Calculate percentages
         $approvedPercentage = $totalEvents > 0 ? round(($approvedCount / $totalEvents) * 100) : 0;
-        $rejectedPercentage = $totalEvents > 0 ? round(($rejectedCount / $totalEvents) * 100) : 0;
+        $for_revisionPercentage = $totalEvents > 0 ? round(($for_revisionCount / $totalEvents) * 100) : 0;
 
         // Average processing days (from created_at to when status changed to approved)
         $avgProcessingDays = DB::table('tickets')
@@ -99,9 +99,9 @@ class History extends Component
                 'count' => $approvedCount,
                 'percentage' => $approvedPercentage,
             ],
-            'rejected' => [
-                'count' => $rejectedCount,
-                'percentage' => $rejectedPercentage,
+            'for_revision' => [
+                'count' => $for_revisionCount,
+                'percentage' => $for_revisionPercentage,
             ],
             'avgProcessingDays' => $avgProcessingDays,
         ];
@@ -209,7 +209,7 @@ class History extends Component
                 )');
             })
             ->where('tickets.user_id', $userId)
-            ->whereIn('tickets.status', ['approved', 'rejected', 'cancelled']);
+            ->whereIn('tickets.status', ['approved', 'for_revision', 'cancelled']);
 
         // Search filter
         if ($this->search) {
@@ -281,7 +281,7 @@ class History extends Component
             ->leftJoin('events', 'tickets.ticket_id', '=', 'events.ticket_id')
             ->leftJoin('event_schedules', 'events.event_id', '=', 'event_schedules.event_id')
             ->where('tickets.user_id', $userId)
-            ->whereIn('tickets.status', ['approved', 'rejected', 'cancelled'])
+            ->whereIn('tickets.status', ['approved', 'for_revision', 'cancelled'])
             ->selectRaw('DISTINCT YEAR(COALESCE(event_schedules.start_date, tickets.date_from)) as year')
             ->whereNotNull(DB::raw('YEAR(COALESCE(event_schedules.start_date, tickets.date_from))'))
             ->orderByDesc('year')

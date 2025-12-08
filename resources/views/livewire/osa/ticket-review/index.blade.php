@@ -57,12 +57,9 @@
                         <option value="received">Received</option>
                         <option value="gso_review">GSO Review</option>
                         <option value="pending_osa_approval">Pending Final Approval</option>
-                        <option value="for_rescheduling">For Rescheduling</option>
-                        <option value="rescheduled">Rescheduled</option>
-                        <option value="needs_revision">Needs Revision</option>
                         <option value="amended">Amended</option>
                         <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+                        <option value="for_revision">For Revision</option>
                         <option value="completed">Completed</option>
                     </select>
                     <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">
@@ -114,12 +111,9 @@
                                     'received' => 'badge-info',
                                     'gso_review' => 'badge-secondary',
                                     'pending_osa_approval' => 'badge-warning',
-                                    'for_rescheduling' => 'badge-warning',
-                                    'rescheduled' => 'badge-success',
-                                    'needs_revision' => 'badge-warning',
                                     'amended' => 'badge-info',
                                     'approved' => 'badge-success',
-                                    'rejected' => 'badge-error',
+                                    'for_revision' => 'badge-warning',
                                     'completed' => 'badge-neutral',
                                 ];
                             @endphp

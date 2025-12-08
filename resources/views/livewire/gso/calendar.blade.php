@@ -89,7 +89,7 @@
                     </div>
                     <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-red-500 rounded"></div>
-                        <span class="text-sm text-base-content/70">Rejected</span>
+                        <span class="text-sm text-base-content/70">For Revision</span>
                     </div>
         <div class="bg-base-100 rounded-box shadow-lg p-6">
             <!-- Month View -->
@@ -773,7 +773,7 @@
                 const classes = {
                     'approved': 'badge-success text-white',
                     'pending': 'badge-warning text-white',
-                    'rejected': 'badge-error text-white'
+                    'for_revision': 'badge-error text-white'
                 };
                 return classes[status] || 'badge-ghost';
             }

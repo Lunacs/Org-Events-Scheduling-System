@@ -147,12 +147,12 @@
                     <x-mary-card class="hover:shadow-lg transition-all duration-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600 mb-1">Rejected Requests</p>
-                                <p class="text-2xl font-bold text-error">{{ number_format($stats['rejected']) }}
+                                <p class="text-sm text-gray-600 mb-1">For Revision Requests</p>
+                                <p class="text-2xl font-bold text-error">{{ number_format($stats['for_revision']) }}
                                 </p>
                                 <progress class="progress progress-error w-full h-1 mt-2"
-                                    value="{{ $stats['rejected'] }}"
-                                    max="{{ max(1, $stats['rejected'] + $stats['approved']) }}"></progress>
+                                    value="{{ $stats['for_revision'] }}"
+                                    max="{{ max(1, $stats['for_revision'] + $stats['approved']) }}"></progress>
                             </div>
                             <div class="avatar placeholder">
                                 <div class="bg-error/10 text-error rounded-lg w-12 h-12">

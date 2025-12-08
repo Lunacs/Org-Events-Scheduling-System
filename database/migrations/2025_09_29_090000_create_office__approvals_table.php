@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('ticket_id')->references('ticket_id')->on('tickets')->onDelete('cascade');
             $table->foreignId('office_id')->references('office_id')->on('offices')->onDelete('cascade');
             $table->foreignId('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->enum('decision', ['pending', 'approved', 'rejected']);
+            $table->enum('decision', ['pending', 'approved', 'for_revision']);
             $table->string('remarks', 255)->nullable();
             $table->timestamps();
         });

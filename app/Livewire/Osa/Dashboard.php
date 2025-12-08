@@ -48,7 +48,7 @@ class Dashboard extends Component
                     $query->where('decision', 'pending');
                 })->count(),
                 'approved' => Ticket::where('status', 'approved')->count(),
-                'rejected' => Ticket::where('status', 'rejected')->count(),
+                'for_revision' => Ticket::where('status', 'for_revision')->count(),
                 'totalOrganizations' => Student_Organization::count(),
                 'thisMonthTickets' => Ticket::whereMonth('created_at', $currentMonth)
                     ->whereYear('created_at', $currentYear)

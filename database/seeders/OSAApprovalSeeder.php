@@ -25,16 +25,15 @@ class OSAApprovalSeeder extends Seeder
 
         $approvalData = [
             'approved' => 'Approved. All requirements are met.',
-            'rejected' => 'Rejected due to incomplete documentation.',
             'pending' => 'Pending review by the committee.',
-            'need_revision' => 'Please revise the proposal and resubmit.',
+            'for_revision' => 'Please revise the proposal and resubmit.',
         ];
 
         foreach ($tickets as $ticket) {
             // Create OSA approval based on ticket status
             $decision = match ($ticket->status) {
                 'approved' => 'approved',
-                'rejected' => 'rejected',
+                'for_revision' => 'for_revision',
                 'pending' => 'pending',
                 default => 'pending',
             };

@@ -287,8 +287,8 @@ class TicketReview extends Component
             return ['approved', 'Approved'];
         }
 
-        if ($decision === 'rejected') {
-            return ['rejected', 'Rejected'];
+        if ($decision === 'for_revision') {
+            return ['for_revision', 'For Revision'];
         }
 
         $definitions = $this->statusDefinitions();
@@ -303,7 +303,7 @@ class TicketReview extends Component
         return [
             'pending' => ['key' => 'pending', 'label' => 'Pending'],
             'approved' => ['key' => 'approved', 'label' => 'Approved'],
-            'rejected' => ['key' => 'rejected', 'label' => 'Rejected'],
+            'for_revision' => ['key' => 'for_revision', 'label' => 'For Revision'],
             'completed' => ['key' => 'completed', 'label' => 'Completed'],
         ];
     }

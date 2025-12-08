@@ -18,7 +18,7 @@ class OfficeApprovalFactory extends Factory
     {
         $decisions = [
             'approved',
-            'rejected',
+            'for_revision',
             'pending',
             'conditional',
         ];
@@ -29,7 +29,7 @@ class OfficeApprovalFactory extends Factory
             'Budget allocation approved by Finance Office.',
             'Please submit a detailed floor plan for the event setup.',
             'Conditional approval pending submission of safety plan.',
-            'Rejected due to venue unavailability on the requested date.',
+            'Needs Revision due to venue unavailability on the requested date.',
             'Approved with the condition of proper waste management.',
             'Electrical and technical requirements noted and approved.',
             'Catering services must comply with health and safety standards.',
@@ -57,13 +57,13 @@ class OfficeApprovalFactory extends Factory
     }
 
     /**
-     * Indicate that the approval decision is rejected.
+     * Indicate that the approval decision is for revision.
      */
-    public function rejected(): static
+    public function for_revision(): static
     {
         return $this->state(fn(array $attributes) => [
-            'decision' => 'rejected',
-            'remarks' => 'Rejected due to resource constraints.',
+            'decision' => 'for_revision',
+            'remarks' => 'Needs revision due to resource constraints.',
         ]);
     }
 

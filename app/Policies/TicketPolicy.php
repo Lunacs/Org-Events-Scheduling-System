@@ -118,8 +118,28 @@ class TicketPolicy
      */
     public function requestRevision(User $user, Ticket $ticket): bool
     {
-        // Only OSA can request revisions
-        return $user->isOSA() && in_array($ticket->status, ['received', 'amended']);
+        // OSA can request revisions in received/amended status
+        if ($user->isOSA() && in_array($ticket->status, ['received', 'amended'])) {
+            return true;
+        }
+
+        // OSA can also request revisions after GSO review
+        if ($user->isOSA() && $ticket->status === 'pending_osa_approval') {
+            return true;
+        }
+
+        // GSO can request revisions when ticket is in gso_review
+        if ($user->isGSO() && $ticket->status === 'gso_review') {
+            $officeApproval = $ticket->officeApprovals()
+                ->where('office_id', $user->office_id)
+                ->first();
+
+            $decision = $officeApproval ? strtolower($officeApproval->decision ?? 'pending') : 'pending';
+
+            return $decision === 'pending';
+        }
+
+        return false;
     }
 
     /**

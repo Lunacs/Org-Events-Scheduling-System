@@ -110,7 +110,7 @@
                                 <option value="ticket_submitted">New Submissions</option>
                                 <option value="ticket_amended">Amended Tickets</option>
                                 <option value="gso_approved">GSO Approved</option>
-                                <option value="gso_rejected">GSO Rejected</option>
+                                <option value="gso_for_revision">GSO For Revision</option>
                                 <option value="ticket_status_rescheduled">Rescheduled</option>
                                 <option value="ticket_status_for_rescheduling">Rescheduling Requested</option>
                                 <option value="ticket_comment">Comments</option>

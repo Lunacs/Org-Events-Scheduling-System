@@ -112,17 +112,13 @@ class TransactionLogService
             'amended' => "Amended ticket: {$ticketTitle} ({$ticketNumber}) - Resubmitted after revision",
             'approved' => "Approved ticket: {$ticketTitle} ({$ticketNumber})".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
-            'rejected' => "Rejected ticket: {$ticketTitle} ({$ticketNumber})".
-                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
             'forwarded' => "Forwarded ticket: {$ticketTitle} ({$ticketNumber}) to GSO".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
-            'revision_requested' => "Requested revision for ticket: {$ticketTitle} ({$ticketNumber})".
+            'for_revision' => "Requested revision for ticket: {$ticketTitle} ({$ticketNumber})".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
             'final_approved' => "Final approval for ticket: {$ticketTitle} ({$ticketNumber}) after GSO review".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
-            'final_rejected' => "Final rejection for ticket: {$ticketTitle} ({$ticketNumber}) after GSO review".
-                        (empty($changes) ? '' : ' - '.implode(', ', $changes)),
-            'rescheduled' => "Rescheduled ticket: {$ticketTitle} ({$ticketNumber})".
+            'final_for_revision' => "Final rejection for ticket: {$ticketTitle} ({$ticketNumber}) after GSO review".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
             'completed' => "Completed ticket: {$ticketTitle} ({$ticketNumber})".
                         (empty($changes) ? '' : ' - '.implode(', ', array_map(fn ($k, $v) => "{$k}: {$v}", array_keys($changes), $changes))),
@@ -190,7 +186,7 @@ class TransactionLogService
         $details = match ($action) {
             'approved' => "{$officeName} approved ticket: {$ticketTitle} ({$ticketNumber})".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
-            'rejected' => "{$officeName} rejected ticket: {$ticketTitle} ({$ticketNumber})".
+            'for_revision' => "{$officeName} for revision ticket: {$ticketTitle} ({$ticketNumber})".
                         (empty($changes) ? '' : ' - '.implode(', ', $changes)),
             default => "{$officeName} {$action} on ticket: {$ticketTitle} ({$ticketNumber})"
         };

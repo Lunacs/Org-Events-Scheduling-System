@@ -110,7 +110,7 @@ class NotificationDropdown extends Component
         }
 
         // GSO-specific notifications
-        if (in_array($type, ['ticket_forwarded_to_gso', 'gso_approved', 'gso_rejected'])) {
+        if (in_array($type, ['ticket_forwarded_to_gso', 'gso_approved', 'gso_for_revision'])) {
             if ($user->isGso()) {
                 return route('gso.ticket-review');
             }

@@ -334,7 +334,7 @@ class Reschedule extends Component
             }
 
             // Update ticket status
-            $ticket->status = 'rescheduled';
+            $ticket->status = 'amended';
             $ticket->save();
 
             // Notify OSA admins
@@ -455,7 +455,7 @@ class Reschedule extends Component
 
     private function notifyOSAAdmins(Ticket $ticket): void
     {
-        $osaUsers = User::where('role_id', User::ROLE_OSA)
+        $osaUsers = User::where('role_id', User::getRoleId('osa'))
             ->get();
 
         foreach ($osaUsers as $osaUser) {

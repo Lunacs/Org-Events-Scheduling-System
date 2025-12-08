@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class GsoRejectedTicketNotification extends Notification implements ShouldBroadcast
+class GsoForRevisionTicketNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -33,8 +33,8 @@ class GsoRejectedTicketNotification extends Notification implements ShouldBroadc
         $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('GSO Rejected Ticket - ' . $this->ticket->ticket_number)
-            ->view('emails.tickets.gso-rejected', [
+            ->subject('GSO For Revision Ticket - ' . $this->ticket->ticket_number)
+            ->view('emails.tickets.gso-', [
                 'ticket' => $this->ticket,
                 'remarks' => $this->remarks,
                 'actionUrl' => $actionUrl,
@@ -45,15 +45,15 @@ class GsoRejectedTicketNotification extends Notification implements ShouldBroadc
     public function toArray(object $notifiable): array
     {
         $message = $notifiable->isOsa() || $notifiable->isSuperadmin()
-            ? 'GSO has rejected ticket "' . $this->ticket->title . '". Please review for final decision.'
-            : 'GSO has rejected your ticket "' . $this->ticket->title . '". Pending OSA final decision.';
+            ? 'GSO has put the ticket for revision: "' . $this->ticket->title . '". Please review for final decision.'
+            : 'GSO has put your ticket for revision: "' . $this->ticket->title . '". Pending OSA final decision.';
 
         return [
-            'title' => 'GSO Rejected Ticket',
+            'title' => 'GSO put Ticket For revision',
             'message' => $message,
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
-            'type' => 'gso_rejected',
+            'type' => 'gso_',
             'icon' => 's-x-circle',
             'color' => 'error',
             'remarks' => $this->remarks,
