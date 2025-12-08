@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY resources ./resources
-COPY vite.config.js tailwind.config.js postcss.config.js ./
+COPY vite.config.js ./
 RUN npm run build
 
 # Stage 2: PHP dependencies
