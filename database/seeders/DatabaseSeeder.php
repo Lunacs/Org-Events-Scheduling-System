@@ -31,12 +31,12 @@ class DatabaseSeeder extends Seeder
             EventTypeSeeder::class,
             FundSourcesSeeder::class, // Must run before TicketSeeder
             TicketSeeder::class,
-            EventSeeder::class,
-            EventSchedulesSeeder::class,
-            OSAApprovalSeeder::class,
-            OfficeApprovalSeeder::class,
-            AttachmentSeeder::class,
-            TransactionLogsSeeder::class,
+            // EventSeeder::class,
+            // EventSchedulesSeeder::class,
+            // OSAApprovalSeeder::class,
+            // OfficeApprovalSeeder::class,
+            // AttachmentSeeder::class,
+            // TransactionLogsSeeder::class,
         ]);
     }
 }
