@@ -166,7 +166,7 @@ class Index extends Component
             ->where('date_to', '>=', $this->dateFrom);
 
         if (!empty($this->selectedEventTypes)) {
-            $query->whereIn('event_type_id', $this->selectedEventTypes);
+            $query->whereIn('tickets.event_type_id', $this->selectedEventTypes);
         }
 
         // Filter by organization if offices are selected (treating them as orgs)

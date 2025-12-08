@@ -68,12 +68,12 @@
                 {{-- Organizations Dropdown with Checkboxes --}}
                 <x-mary-choices label="Organizations" wire:model.live="selectedOffices" :options="$offices"
                     option-value="org_id" option-label="org_name" searchable placeholder="Select organizations..."
-                    height="max-h-60" />
+                    height="max-h-60" icon="o-building-office" search-function />
 
                 {{-- Event Types Dropdown with Checkboxes --}}
                 <x-mary-choices label="Event Types" wire:model.live="selectedEventTypes" :options="$eventTypes"
                     option-value="event_type_id" option-label="type_name" searchable placeholder="Select event types..."
-                    height="max-h-60" />
+                    height="max-h-60" icon="o-calendar" search-function />
             </div>
         </x-mary-card>
 
