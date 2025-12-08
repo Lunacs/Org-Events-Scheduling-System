@@ -17,25 +17,6 @@ export default defineConfig({
         cssCodeSplit: true,
         // Inline small assets as base64 (< 4kb)
         assetsInlineLimit: 4096,
-        // Optimize chunk sizes
-        rollupOptions: {
-            external: [
-                "@fullcalendar/core",
-                "@fullcalendar/daygrid",
-                "@fullcalendar/timegrid",
-                "@fullcalendar/interaction",
-                "@fullcalendar/list",
-            ],
-            output: {
-                globals: {
-                    "@fullcalendar/core": "FullCalendar",
-                    "@fullcalendar/daygrid": "FullCalendarDayGrid",
-                    "@fullcalendar/timegrid": "FullCalendarTimeGrid",
-                    "@fullcalendar/interaction": "FullCalendarInteraction",
-                    "@fullcalendar/list": "FullCalendarList",
-                },
-            },
-        },
         // Increase chunk size warning limit
         chunkSizeWarningLimit: 1000,
         // Target modern browsers for smaller bundles
