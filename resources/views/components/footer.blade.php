@@ -21,7 +21,7 @@
             {{-- Brand Section --}}
             <div class="flex flex-col items-start">
                 <div class="flex items-center gap-3 mb-4">
-                    <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-12 w-12" loading="lazy">
+                    <img src="{{ asset('images/osa-logo.jpg') }}" alt="PLV Logo" class="h-12 w-12" loading="lazy">
                     <div>
                         <h3 class="font-heading font-bold text-lg text-base-content">PLV Event Scheduling</h3>
                         @if ($portalName)
@@ -113,7 +113,7 @@
         <div class="border-t border-base-300 py-4">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <p class="text-sm text-base-content/60">
-                    © {{ date('Y') }} PLV Event Scheduling System{{ $portalName ? ' - ' . $portalName : '' }}. All
+                    © {{ date('Y') }} PLV Event Scheduling System. All
                     rights reserved.
                 </p>
                 <div class="flex items-center gap-4 text-sm text-base-content/60">

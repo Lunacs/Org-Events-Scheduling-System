@@ -23,32 +23,68 @@
 
                 <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
 
-                <div class="form-control w-full">
+                {{-- Organizations Dropdown with Checkboxes --}}
+                <div class="form-control w-full" x-data="{ open: false }" @click.away="open = false">
                     <label class="label">
                         <span class="label-text">Organizations</span>
                     </label>
-                    <select class="select select-bordered w-full h-32" wire:model.live="selectedOffices" multiple>
-                        @foreach ($offices as $office)
-                            <option value="{{ $office->org_id }}">{{ $office->org_name }}</option>
-                        @endforeach
-                    </select>
-                    <label class="label">
-                        <span class="label-text-alt">Hold Ctrl/Cmd to select multiple</span>
-                    </label>
+                    <div class="dropdown w-full" :class="{ 'dropdown-open': open }">
+                        <div tabindex="0" role="button"
+                            class="select select-bordered w-full flex items-center justify-between"
+                            @click="open = !open">
+                            <span class="truncate">
+                                @if (count($selectedOffices) > 0)
+                                    {{ count($selectedOffices) }} selected
+                                @else
+                                    Select organizations...
+                                @endif
+                            </span>
+                            <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
+                        </div>
+                        <div x-show="open" x-transition
+                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-y-auto border border-base-300">
+                            @foreach ($offices as $office)
+                                <label
+                                    class="label cursor-pointer justify-start gap-3 hover:bg-base-200 rounded-lg px-2">
+                                    <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
+                                        value="{{ $office->org_id }}" wire:model.live="selectedOffices" />
+                                    <span class="label-text">{{ $office->org_name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-control w-full">
+                {{-- Event Types Dropdown with Checkboxes --}}
+                <div class="form-control w-full" x-data="{ open: false }" @click.away="open = false">
                     <label class="label">
                         <span class="label-text">Event Types</span>
                     </label>
-                    <select class="select select-bordered w-full h-32" wire:model.live="selectedEventTypes" multiple>
-                        @foreach ($eventTypes as $type)
-                            <option value="{{ $type->event_type_id }}">{{ $type->type_name }}</option>
-                        @endforeach
-                    </select>
-                    <label class="label">
-                        <span class="label-text-alt">Hold Ctrl/Cmd to select multiple</span>
-                    </label>
+                    <div class="dropdown w-full" :class="{ 'dropdown-open': open }">
+                        <div tabindex="0" role="button"
+                            class="select select-bordered w-full flex items-center justify-between"
+                            @click="open = !open">
+                            <span class="truncate">
+                                @if (count($selectedEventTypes) > 0)
+                                    {{ count($selectedEventTypes) }} selected
+                                @else
+                                    Select event types...
+                                @endif
+                            </span>
+                            <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
+                        </div>
+                        <div x-show="open" x-transition
+                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-y-auto border border-base-300">
+                            @foreach ($eventTypes as $type)
+                                <label
+                                    class="label cursor-pointer justify-start gap-3 hover:bg-base-200 rounded-lg px-2">
+                                    <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
+                                        value="{{ $type->event_type_id }}" wire:model.live="selectedEventTypes" />
+                                    <span class="label-text">{{ $type->type_name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </x-mary-card>

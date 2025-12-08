@@ -1,43 +1,46 @@
 <?php
 
+//About us
+use App\Livewire\AboutUs;
+
 // OSA/admin Imports
-use App\Http\Controllers\Gso\ReportsExportController;
-use App\Livewire\Gso\Calendar as GsoCalendar;
-use App\Livewire\Gso\Dashboard as GsoDashboard;
-use App\Livewire\Gso\Details as GsoDetails;
-use App\Livewire\Gso\Notifications as GsoNotifications;
-use App\Livewire\Gso\Profile as GsoProfile;
-use App\Livewire\Gso\Reports as GsoReports;
-use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\Osa\Archive;
-// Superadmin Imports
-use App\Livewire\Osa\Dashboard as OsaDashboard;
-use App\Livewire\Osa\EventCalendar;
-use App\Livewire\Osa\Notifications as OsaNotifications;
-use App\Livewire\Osa\Profile as OsaProfile;
 use App\Livewire\Osa\Reports;
-use App\Livewire\Osa\TicketManagement;
-// Gso/Offices Imports
-use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
-use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
-use App\Livewire\StudentOrg\Calendar;
-use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\Superadmin\Logs;
+use App\Livewire\Osa\EventCalendar;
 use App\Livewire\StudentOrg\History;
+use Illuminate\Support\Facades\Auth;
+use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\MyTicket;
-use App\Livewire\StudentOrg\Notifications;
-use App\Livewire\StudentOrg\Profile as StudentOrgProfile;
-// Student Org Imports
+// Superadmin Imports
+use Illuminate\Support\Facades\Route;
+use App\Livewire\Osa\TicketManagement;
+use App\Livewire\Superadmin\Dashboard;
 use App\Livewire\StudentOrg\Reschedule;
 use App\Livewire\StudentOrg\SubmitTicket;
-use App\Livewire\Superadmin\Dashboard;
-use App\Livewire\Superadmin\Logs;
-use App\Livewire\Superadmin\Profile as SuperadminProfile;
+use App\Livewire\StudentOrg\Notifications;
+// Gso/Offices Imports
+use App\Livewire\Gso\Details as GsoDetails;
+use App\Livewire\Gso\Profile as GsoProfile;
+use App\Livewire\Gso\Reports as GsoReports;
+use App\Livewire\Osa\Profile as OsaProfile;
+use App\Livewire\Gso\Calendar as GsoCalendar;
+use App\Livewire\Gso\Dashboard as GsoDashboard;
+use App\Livewire\Osa\Dashboard as OsaDashboard;
+use App\Http\Controllers\Gso\ReportsExportController;
+// Student Org Imports
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
 use App\Livewire\Superadmin\Roles\Index as RolesIndex;
-use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use App\Livewire\Gso\Notifications as GsoNotifications;
+use App\Livewire\Osa\Notifications as OsaNotifications;
+use App\Livewire\StudentOrg\Profile as StudentOrgProfile;
+use App\Livewire\Superadmin\Profile as SuperadminProfile;
+use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
 // Other Imports
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
+use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
+use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 
 // If user is logged in, redirect to their role-specific dashboard
 Route::get('/', function () {
@@ -50,6 +53,10 @@ Route::get('/', function () {
     // Otherwise, show the welcome page
     return view('osa.welcome');
 });
+
+
+// About Us
+Route::get('/about-us', AboutUs::class)->name('about-us');
 
 // Profile route (accessible by all authenticated users)
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -156,4 +163,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
