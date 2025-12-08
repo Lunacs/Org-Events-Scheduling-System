@@ -18,6 +18,12 @@ elif [ -n "${AIVEN_CA_B64:-}" ]; then
   echo "Wrote AIVEN CA (from base64) to $CERT_PATH"
 fi
 
+# Check if build files exist
+if [ ! -f /var/www/html/public/build/manifest.json ]; then
+    echo "Warning: Vite manifest not found. Running npm build..."
+    npm run build || true
+fi
+
 echo "Caching config..."
 php artisan config:cache
 

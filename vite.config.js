@@ -32,4 +32,6 @@ export default defineConfig({
             overlay: false, // Disable error overlay for faster dev
         },
     },
+    // Add base URL for production
+    base: "/build/",
 });
