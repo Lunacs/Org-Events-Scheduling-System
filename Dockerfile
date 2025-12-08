@@ -21,7 +21,7 @@ FROM php:8.2-fpm
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx supervisor libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    default-mysql-client ca-certificates \
+    libonig-dev default-mysql-client ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd \
     && rm -rf /var/lib/apt/lists/*
