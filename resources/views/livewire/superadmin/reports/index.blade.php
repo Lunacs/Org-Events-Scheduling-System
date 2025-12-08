@@ -18,74 +18,62 @@
 
         {{-- Filters --}}
         <x-mary-card title="Filters">
+            {{-- Active Filters Display --}}
+            @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
+                <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-base-300">
+                    @foreach ($selectedOffices as $orgId)
+                        @php
+                            $org = $offices->firstWhere('org_id', $orgId);
+                        @endphp
+                        @if ($org)
+                            <div class="badge badge-primary gap-2">
+                                {{ $org->org_name }}
+                                <button
+                                    wire:click="$set('selectedOffices', {{ json_encode(array_values(array_diff($selectedOffices, [$orgId]))) }})"
+                                    class="btn btn-ghost btn-xs btn-circle">
+                                    <x-mary-icon name="o-x-mark" class="w-3 h-3" />
+                                </button>
+                            </div>
+                        @endif
+                    @endforeach
+
+                    @foreach ($selectedEventTypes as $typeId)
+                        @php
+                            $type = $eventTypes->firstWhere('event_type_id', $typeId);
+                        @endphp
+                        @if ($type)
+                            <div class="badge badge-secondary gap-2">
+                                {{ $type->type_name }}
+                                <button
+                                    wire:click="$set('selectedEventTypes', {{ json_encode(array_values(array_diff($selectedEventTypes, [$typeId]))) }})"
+                                    class="btn btn-ghost btn-xs btn-circle">
+                                    <x-mary-icon name="o-x-mark" class="w-3 h-3" />
+                                </button>
+                            </div>
+                        @endif
+                    @endforeach
+
+                    <button wire:click="clearFilters" class="badge badge-ghost gap-2 hover:badge-error">
+                        Clear all
+                        <x-mary-icon name="o-x-mark" class="w-3 h-3" />
+                    </button>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <x-mary-input label="From Date" wire:model.live="dateFrom" type="date" />
 
                 <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
 
                 {{-- Organizations Dropdown with Checkboxes --}}
-                <div class="form-control w-full" x-data="{ open: false }" @click.away="open = false">
-                    <label class="label">
-                        <span class="label-text">Organizations</span>
-                    </label>
-                    <div class="dropdown w-full" :class="{ 'dropdown-open': open }">
-                        <div tabindex="0" role="button"
-                            class="select select-bordered w-full flex items-center justify-between"
-                            @click="open = !open">
-                            <span class="truncate">
-                                @if (count($selectedOffices) > 0)
-                                    {{ count($selectedOffices) }} selected
-                                @else
-                                    Select organizations...
-                                @endif
-                            </span>
-                            <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
-                        </div>
-                        <div x-show="open" x-transition
-                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-y-auto border border-base-300">
-                            @foreach ($offices as $office)
-                                <label
-                                    class="label cursor-pointer justify-start gap-3 hover:bg-base-200 rounded-lg px-2">
-                                    <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
-                                        value="{{ $office->org_id }}" wire:model.live="selectedOffices" />
-                                    <span class="label-text">{{ $office->org_name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
+                <x-mary-choices label="Organizations" wire:model.live="selectedOffices" :options="$offices"
+                    option-value="org_id" option-label="org_name" searchable placeholder="Select organizations..."
+                    height="max-h-60" />
 
                 {{-- Event Types Dropdown with Checkboxes --}}
-                <div class="form-control w-full" x-data="{ open: false }" @click.away="open = false">
-                    <label class="label">
-                        <span class="label-text">Event Types</span>
-                    </label>
-                    <div class="dropdown w-full" :class="{ 'dropdown-open': open }">
-                        <div tabindex="0" role="button"
-                            class="select select-bordered w-full flex items-center justify-between"
-                            @click="open = !open">
-                            <span class="truncate">
-                                @if (count($selectedEventTypes) > 0)
-                                    {{ count($selectedEventTypes) }} selected
-                                @else
-                                    Select event types...
-                                @endif
-                            </span>
-                            <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
-                        </div>
-                        <div x-show="open" x-transition
-                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-y-auto border border-base-300">
-                            @foreach ($eventTypes as $type)
-                                <label
-                                    class="label cursor-pointer justify-start gap-3 hover:bg-base-200 rounded-lg px-2">
-                                    <input type="checkbox" class="checkbox checkbox-sm checkbox-primary"
-                                        value="{{ $type->event_type_id }}" wire:model.live="selectedEventTypes" />
-                                    <span class="label-text">{{ $type->type_name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
+                <x-mary-choices label="Event Types" wire:model.live="selectedEventTypes" :options="$eventTypes"
+                    option-value="event_type_id" option-label="type_name" searchable placeholder="Select event types..."
+                    height="max-h-60" />
             </div>
         </x-mary-card>
 

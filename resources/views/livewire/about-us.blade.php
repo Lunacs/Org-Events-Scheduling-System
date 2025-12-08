@@ -22,14 +22,14 @@
                 <div
                     class="group flex flex-col items-center text-center p-6 rounded-xl hover:bg-base-200/50 transition-all duration-300">
                     <div class="relative w-64 h-64 mb-6">
-                        {{-- Background decorative circle --}}
+                        {{-- Background decorative element --}}
                         <div
-                            class="absolute inset-0 rounded-full border-2 border-dashed border-base-300 animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            class="absolute inset-0 rounded-2xl border-2 border-dashed border-base-300 animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                         </div>
 
                         {{-- Image container --}}
                         <div
-                            class="w-full h-full rounded-full overflow-hidden shadow-xl ring-4 ring-base-200 group-hover:ring-primary transition-all duration-500 transform group-hover:scale-105">
+                            class="w-full h-full rounded-2xl overflow-hidden shadow-xl ring-4 ring-base-200 group-hover:ring-primary transition-all duration-500 transform group-hover:scale-105">
                             <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 src="{{ asset($dev['image']) }}" alt="{{ $dev['name'] }}">
                         </div>
@@ -42,8 +42,9 @@
                         Passionate about building great software and solving complex problems.
                     </p>
 
-                    <div class="flex space-x-4 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <a href="{{ $dev['facebook'] }}"
+                    <div
+                        class="flex justify-center items-center space-x-4 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <a href="{{ $dev['facebook'] }}" target="_blank"
                             class="btn btn-circle btn-outline btn-primary hover:btn-active transform hover:-translate-y-1 transition-transform duration-200">
                             <i class="fab fa-facebook-f text-xl"></i>
                         </a>

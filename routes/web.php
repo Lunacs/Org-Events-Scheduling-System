@@ -54,8 +54,7 @@ Route::get('/', function () {
     return view('osa.welcome');
 });
 
-
-// About Us
+// About Us - Public route
 Route::get('/about-us', AboutUs::class)->name('about-us');
 
 // Profile route (accessible by all authenticated users)

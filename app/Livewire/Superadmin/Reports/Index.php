@@ -50,6 +50,13 @@ class Index extends Component
         $this->loadChartData();
     }
 
+    public function clearFilters()
+    {
+        $this->reset(['selectedOffices', 'selectedEventTypes']);
+        $this->loadChartData();
+        $this->success('Filters cleared!', position: 'toast-top');
+    }
+
     public function loadChartData()
     {
         $this->chartData = [
