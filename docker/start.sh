@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-echo "Running composer"
+echo "Starting application..."
 set -e
 
 # --- write Aiven CA if present ---
@@ -18,8 +18,6 @@ elif [ -n "${AIVEN_CA_B64:-}" ]; then
   echo "Wrote AIVEN CA (from base64) to $CERT_PATH"
 fi
 
-composer install --no-dev --working-dir=/var/www/html
-
 echo "Caching config..."
 php artisan config:cache
 
@@ -28,11 +26,6 @@ php artisan route:cache
 
 echo "Caching all"
 php artisan optimize
-
-# Ensure composer autoload is up-to-date (optional for deploy)
-if [ -f /var/www/html/composer.json ]; then
-  composer dump-autoload --optimize || true
-fi
 
 # Ensure storage link exists
 if [ ! -L /var/www/html/public/storage ]; then
