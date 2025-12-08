@@ -77,9 +77,7 @@
 
             @persist('osa-footer')
                 <x-slot:footer>
-                    <div class="bg-accent text-center py-2">
-                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - OSA Admin</p>
-                    </div>
+                    <x-footer variant="osa" />
                 </x-slot:footer>
             @endpersist
 

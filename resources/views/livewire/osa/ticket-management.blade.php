@@ -40,7 +40,7 @@
                 <div class="bg-base-100 rounded-box shadow-lg p-6">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-base-content">Ticket Management</h1>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Ticket Management</h1>
                             <p class="text-base-content/70 mt-1">View and manage all submitted tickets from Student
                                 Organizations
                             </p>
@@ -225,13 +225,18 @@
                     </table>
                 </div>
 
-                {{-- Pagination --}}
+                {{-- Pagination
                 @if ($tickets->hasPages())
                     <div class="p-4 border-t border-base-300">
                         {{ $tickets->links() }}
                     </div>
-                @endif
+                @endif --}}
             </div>
         </div>
+
+        {{-- Pagination --}}
+        @if ($tickets->hasPages())
+            <x-tickets.ticket-pagination :tickets="$tickets" />
+        @endif
     </div>
 </div>

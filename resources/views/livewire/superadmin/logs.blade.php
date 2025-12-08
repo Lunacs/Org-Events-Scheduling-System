@@ -22,7 +22,7 @@
                 <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
             </div>
 
-            <x-mary-table :headers="$headers" :rows="$logs" with-pagination>
+            <x-mary-table :headers="$headers" :rows="$logs">
                 @scope('cell_when', $log)
                     <div class="text-sm">
                         <div class="font-medium">{{ $log->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
@@ -58,6 +58,10 @@
                     </div>
                 @endscope
             </x-mary-table>
+
+            @if ($logs->hasPages())
+                <x-tickets.ticket-pagination :tickets="$logs" />
+            @endif
         </x-mary-card>
     </div>
 </div>

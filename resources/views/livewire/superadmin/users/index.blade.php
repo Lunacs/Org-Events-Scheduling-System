@@ -161,7 +161,7 @@
                             option-value="role_name" option-label="role_name" placeholder="Select user role"
                             icon="o-shield-check" required />
 
-                        @if ($createForm['role'] === 'student-org')
+                        @if ($createForm->role === 'student-org')
                             <x-mary-select label="Organization Name" wire:model.blur="createForm.org_name"
                                 :options="$organizations" option-value="org_id" option-label="org_name"
                                 placeholder="Select organization" required />
@@ -171,7 +171,7 @@
                                 placeholder="Select organization position" required />
                         @endif
 
-                        @if (in_array($createForm['role'], ['osa', 'gso']))
+                        @if (in_array($createForm->role, ['osa', 'gso']))
                             <div class="alert alert-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     class="stroke-current shrink-0 w-6 h-6">
@@ -182,7 +182,7 @@
                             </div>
                         @endif
 
-                        <x-mary-input label="Contact Number" type="number" wire:model.blur="createForm.phone"
+                        <x-mary-input label="Contact Number" type="text" wire:model.blur="createForm.phone"
                             placeholder="09123456789" icon="o-phone" required />
                     </form>
                 </div>
@@ -255,7 +255,7 @@
                             </button>
                         </div>
 
-                        @if ($editForm['is_superadmin'] ?? false)
+                        @if ($editForm->is_superadmin ?? false)
                             <x-mary-input label="Role" value="Super Admin" readonly icon="o-shield-check"
                                 hint="Superadmin role cannot be changed" />
                         @else
@@ -263,7 +263,7 @@
                                 option-value="role_name" option-label="role_name" placeholder="Select user role"
                                 icon="o-shield-check" required />
 
-                            @if ($editForm['role'] === 'student-org')
+                            @if ($editForm->role === 'student-org')
                                 <x-mary-select label="Organization Name" wire:model.blur="editForm.org_name"
                                     :options="$organizations" option-value="org_id" option-label="org_name"
                                     placeholder="Select organization" required />
@@ -273,7 +273,7 @@
                                     placeholder="Select organization position" required />
                             @endif
 
-                            @if (in_array($editForm['role'], ['osa', 'gso']))
+                            @if (in_array($editForm->role, ['osa', 'gso']))
                                 <div class="alert alert-info">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         class="stroke-current shrink-0 w-6 h-6">
@@ -285,7 +285,7 @@
                             @endif
                         @endif
 
-                        <x-mary-input label="Contact Number" type="number" wire:model.blur="editForm.phone"
+                        <x-mary-input label="Contact Number" type="text" wire:model.blur="editForm.phone"
                             placeholder="09123456789" icon="o-phone" required />
                     </form>
                 </div>

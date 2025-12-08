@@ -294,9 +294,7 @@
 
                 {{-- Pagination --}}
                 @if ($notifications->hasPages())
-                    <div class="mt-6" wire:key="pagination-{{ $notifications->currentPage() }}">
-                        {{ $notifications->links() }}
-                    </div>
+                    <x-tickets.ticket-pagination :notifications="$notifications" />
                 @endif
 
             </div>

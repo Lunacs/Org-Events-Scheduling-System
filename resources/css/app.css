@@ -223,15 +223,17 @@ input[type="number"] {
     padding: 0 !important;
 }
 /* Target the sidebar content wrapper */
-.drawer-side .w-\[270px\],
-.drawer-side .w-\[62px\] {
-    margin-left: 40px;
+@media (min-width: 1024px) {
+    .drawer-side .w-\[270px\],
+    .drawer-side .w-\[62px\] {
+        margin-left: 40px;
+    }
 }
 
 /* Or use a more reliable approach targeting the flex container */
-.drawer-side > label + div {
+/* .drawer-side > label + div {
     margin-left: 40px;
-}
+} */
 /* FullCalendar Custom Styles - Matching DaisyUI Emerald Theme */
 .fc {
     /* Base colors matching DaisyUI */

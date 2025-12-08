@@ -31,14 +31,10 @@ class AppServiceProvider extends ServiceProvider
         // Enable HTTPS in production
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
+            $this->app['request']->server->set('HTTPS', 'on');
         }
 
         // Optimize queries
         DB::enableQueryLog();
-
-        // Add security headers
-        if ($this->app->environment('production')) {
-            $this->app['request']->server->set('HTTPS', 'on');
-        }
     }
 }

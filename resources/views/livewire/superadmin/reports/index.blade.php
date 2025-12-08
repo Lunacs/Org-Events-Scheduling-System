@@ -33,17 +33,51 @@
 
         {{-- Overview Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <x-mary-stat title="Total Events" description="In selected period" :value="$chartData['overview']['total_events'] ?? 0" icon="o-calendar"
-                class="bg-primary text-primary-content shadow-lg" />
+            <div class="stats shadow-lg border-primary border-2 bg-primary/20 text-primary-content">
+                <div class="stat">
+                    <div class="stat-figure text-primary">
+                        <x-mary-icon name="o-calendar" class="w-8 h-8" />
+                    </div>
+                    <div class="stat-title text-primary-content opacity-90">Total Events</div>
+                    <div class="stat-value text-primary-content">{{ $chartData['overview']['total_events'] ?? 0 }}
+                    </div>
+                    <div class="stat-desc text-primary-content opacity-50">In selected period</div>
+                </div>
+            </div>
 
-            <x-mary-stat title="Approved Events" description="Successfully approved" :value="$chartData['overview']['approved_events'] ?? 0"
-                icon="o-check-circle" class="bg-success text-success-content shadow-lg" />
+            <div class="stats shadow-lg border-primary border-2 bg-success/20">
+                <div class="stat">
+                    <div class="stat-figure text-success">
+                        <x-mary-icon name="o-check-circle" class="w-8 h-8" />
+                    </div>
+                    <div class="stat-title text-success-content opacity-90">Approved Events</div>
+                    <div class="stat-value text-success-content">{{ $chartData['overview']['approved_events'] ?? 0 }}
+                    </div>
+                    <div class="stat-desc text-success-content opacity-50">Successfully approved</div>
+                </div>
+            </div>
 
-            <x-mary-stat title="Total Tickets" description="All submissions" :value="$chartData['overview']['total_tickets'] ?? 0" icon="o-ticket"
-                class="bg-info text-info-content shadow-lg" />
+            <div class="stats shadow-lg border-info border-2 bg-info/20 text-info-content">
+                <div class="stat">
+                    <div class="stat-figure text-info">
+                        <x-mary-icon name="o-ticket" class="w-8 h-8" />
+                    </div>
+                    <div class="stat-title text-info-content opacity-90">Total Tickets</div>
+                    <div class="stat-value text-info-content">{{ $chartData['overview']['total_tickets'] ?? 0 }}</div>
+                    <div class="stat-desc text-info-content opacity-50">All submissions</div>
+                </div>
+            </div>
 
-            <x-mary-stat title="Active Organizations" description="With events" :value="$chartData['overview']['active_orgs'] ?? 0" icon="o-user-group"
-                class="bg-accent text-accent-content shadow-lg" />
+            <div class="stats shadow-lg border-accent border-2 bg-accent/40 text-accent-content">
+                <div class="stat">
+                    <div class="stat-figure text-accent">
+                        <x-mary-icon name="o-user-group" class="w-8 h-8" />
+                    </div>
+                    <div class="stat-title text-accent-content opacity-90">Active Organizations</div>
+                    <div class="stat-value text-accent-content">{{ $chartData['overview']['active_orgs'] ?? 0 }}</div>
+                    <div class="stat-desc text-accent-content opacity-50">With events</div>
+                </div>
+            </div>
         </div>
 
         {{-- Charts Grid --}}

@@ -19,7 +19,7 @@
                 <div class="bg-base-100 rounded-box shadow-lg p-6">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-base-content">Notifications Center</h1>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Notifications Center</h1>
                             <p class="text-base-content/70 mt-1">Stay updated on ticket submissions, approvals, and
                                 system
                                 updates</p>
@@ -283,7 +283,8 @@
                             @endif
                         @empty
                             <div class="text-center py-12">
-                                <x-mary-icon name="s-bell" class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
+                                <x-mary-icon name="s-bell-slash"
+                                    class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                                 <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
                                 <p class="text-base-content/50 text-sm mt-2">
                                     <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting

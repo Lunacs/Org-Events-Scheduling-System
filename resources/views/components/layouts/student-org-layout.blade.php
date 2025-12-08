@@ -61,9 +61,7 @@
 
             @persist('student-footer')
                 <x-slot:footer>
-                    <div class="bg-accent text-center py-2">
-                        <p class="text-sm">© 2025 PLV Event Scheduling System - Student Organization Portal</p>
-                    </div>
+                    <x-footer variant="student-org" />
                 </x-slot:footer>
             @endpersist
 

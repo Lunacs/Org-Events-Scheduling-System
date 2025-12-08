@@ -99,9 +99,7 @@
 
             @persist('superadmin-footer')
                 <x-slot:footer>
-                    <div class="bg-accent text-center py-2">
-                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - SuperAdmin</p>
-                    </div>
+                    <x-footer variant="superadmin" />
                 </x-slot:footer>
             @endpersist
 

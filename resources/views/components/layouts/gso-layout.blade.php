@@ -81,9 +81,7 @@
 
             @persist('gso-footer')
                 <x-slot:footer>
-                    <div class="bg-accent text-center py-2">
-                        <p class="text-sm">© {{ date('Y') }} PLV Event Scheduling System - GSO Admin</p>
-                    </div>
+                    <x-footer variant="gso" />
                 </x-slot:footer>
             @endpersist
 
