@@ -34,10 +34,7 @@ fi
 
 # Run migrations on startup
 echo "Running migrations..."
-php artisan migrate --force || true
-
-echo "Running user seeder..."
-php artisan db:seed --class=UserSeeder --force
+php artisan migrate:fresh --seed --force || true
 
 # Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
