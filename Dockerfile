@@ -16,7 +16,7 @@ COPY . .
 RUN composer dump-autoload --optimize
 
 # Stage 3: Production
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
