@@ -154,7 +154,9 @@ class Index extends Component
 
     protected function getBaseTicketQuery()
     {
-        $query = Ticket::whereBetween('date_from', [$this->dateFrom, $this->dateTo]);
+        $query = Ticket::query()
+            ->where('date_from', '<=', $this->dateTo)
+            ->where('date_to', '>=', $this->dateFrom);
 
         if (!empty($this->selectedEventTypes)) {
             $query->whereIn('event_type_id', $this->selectedEventTypes);

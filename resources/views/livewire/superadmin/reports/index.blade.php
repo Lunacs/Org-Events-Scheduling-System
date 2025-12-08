@@ -23,11 +23,33 @@
 
                 <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
 
-                <x-mary-select label="Organizations" wire:model.live="selectedOffices" :options="$offices"
-                    option-value="org_id" option-label="org_name" multiple />
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">Organizations</span>
+                    </label>
+                    <select class="select select-bordered w-full h-32" wire:model.live="selectedOffices" multiple>
+                        @foreach ($offices as $office)
+                            <option value="{{ $office->org_id }}">{{ $office->org_name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="label">
+                        <span class="label-text-alt">Hold Ctrl/Cmd to select multiple</span>
+                    </label>
+                </div>
 
-                <x-mary-select label="Event Types" wire:model.live="selectedEventTypes" :options="$eventTypes"
-                    option-value="event_type_id" option-label="type_name" multiple />
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text">Event Types</span>
+                    </label>
+                    <select class="select select-bordered w-full h-32" wire:model.live="selectedEventTypes" multiple>
+                        @foreach ($eventTypes as $type)
+                            <option value="{{ $type->event_type_id }}">{{ $type->type_name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="label">
+                        <span class="label-text-alt">Hold Ctrl/Cmd to select multiple</span>
+                    </label>
+                </div>
             </div>
         </x-mary-card>
 
