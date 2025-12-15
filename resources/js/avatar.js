@@ -80,7 +80,30 @@ export function initAvatars() {
             return;
         }
 
-        // Parse format: "dicebear:style:seed" or "style:seed"
+        // Parse format: "dicebear:style:seed" or "style:seed" or direct URL
+        // If it's a direct URL (uploaded photo), use it directly
+        const isDirectUrl = avatarData.startsWith('https') || avatarData.startsWith('http') || avatarData.startsWith('/storage');
+        
+        if (isDirectUrl) {
+            // Direct URL - use it as-is
+            console.log(`[Avatar Init] Using uploaded photo:`, avatarData);
+            
+            if (element.tagName === "IMG") {
+                element.src = avatarData;
+                element.style.opacity = "1";
+            } else {
+                element.style.backgroundImage = `url(${avatarData})`;
+                element.style.backgroundSize = "cover";
+                element.style.backgroundPosition = "center";
+            }
+            
+            // Mark as initialized
+            element.dataset.initialized = "true";
+            element.dataset.currentAvatar = avatarData;
+            return;
+        }
+        
+        // DiceBear format - parse and generate
         const parts = avatarData.replace("dicebear:", "").split(":");
         const style = parts[0] || "big-ears";
         const seed = parts[1] || "default";

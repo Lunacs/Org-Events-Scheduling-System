@@ -40,20 +40,22 @@
                 <select wire:model.defer="organizationFilter" class="select select-bordered w-full">
                     <option value="">Organization</option>
                     @foreach ($organizations as $org)
-                        <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
+                    <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
                     @endforeach
                 </select>
 
                 <select wire:model.defer="yearFilter" class="select select-bordered w-full">
                     <option value="">Year</option>
                     @foreach ($availableYears as $year)
-                        <option value="{{ $year }}">{{ $year }}</option>
+                    <option value="{{ $year }}">{{ $year }}</option>
                     @endforeach
                 </select>
 
                 <button wire:click="applyFilters" type="button" class="btn btn-primary">Apply</button>
 
+                @if($search !== '' || $statusFilter !== '' || $organizationFilter !== '' || $yearFilter != \Carbon\Carbon::now()->year)
                 <button wire:click="clearFilters" type="button" class="btn btn-ghost">Clear Filters</button>
+                @endif
             </div>
         </div>
 
@@ -100,7 +102,8 @@
                     <div class="bg-info/10 p-2 rounded-full"></div>
                     <div>
                         <div class="text-lg font-bold">
-                            {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}</div>
+                            {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}
+                        </div>
                         <div class="text-sm text-base-content/70">Organizations</div>
                     </div>
                 </div>
@@ -127,29 +130,29 @@
                         <tbody class="animate-pulse">
                             @for ($i = 0; $i < 5; $i++)
                                 <tr>
-                                    <td>
-                                        <div class="space-y-2">
-                                            <div class="h-4 bg-base-200 rounded w-3/4"></div>
-                                            <div class="h-3 bg-base-200 rounded w-full"></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="h-4 bg-base-200 rounded w-32"></div>
-                                    </td>
-                                    <td>
-                                        <div class="h-4 bg-base-200 rounded w-24"></div>
-                                    </td>
-                                    <td>
-                                        <div class="h-6 bg-base-200 rounded w-20"></div>
-                                    </td>
-                                    <td>
-                                        <div class="h-4 bg-base-200 rounded w-28"></div>
-                                    </td>
-                                    <td>
-                                        <div class="h-8 bg-base-200 rounded w-16"></div>
-                                    </td>
+                                <td>
+                                    <div class="space-y-2">
+                                        <div class="h-4 bg-base-200 rounded w-3/4"></div>
+                                        <div class="h-3 bg-base-200 rounded w-full"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="h-4 bg-base-200 rounded w-32"></div>
+                                </td>
+                                <td>
+                                    <div class="h-4 bg-base-200 rounded w-24"></div>
+                                </td>
+                                <td>
+                                    <div class="h-6 bg-base-200 rounded w-20"></div>
+                                </td>
+                                <td>
+                                    <div class="h-4 bg-base-200 rounded w-28"></div>
+                                </td>
+                                <td>
+                                    <div class="h-8 bg-base-200 rounded w-16"></div>
+                                </td>
                                 </tr>
-                            @endfor
+                                @endfor
                         </tbody>
                     </table>
                 </div>
@@ -172,84 +175,86 @@
                         </thead>
                         <tbody>
                             @forelse($archivedEvents as $event)
-                                <tr class="hover">
-                                    <td>
-                                        <div>
-                                            <div class="font-semibold">{{ $event->ticket->title }}</div>
-                                            <div class="text-sm text-base-content/70">
-                                                {{ Str::limit($event->ticket->description, 60) }}
-                                            </div>
-                                            @if ($event->ticket->venue_requested || $event->eventSchedules?->first()?->venue)
-                                                <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
-                                                    {{ $event->ticket->venue_requested ?? $event->eventSchedules?->first()?->venue }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="flex items-center gap-2">
-                                            <div class="avatar flex justify-center items-center">
-                                                <img src="{{ $event->ticket->user->studentOrganization->logo_url }}"
-                                                    alt="{{ $event->ticket->user->studentOrganization->org_name }} logo"
-                                                    class="w-8 h-8 object-cover rounded-full bg-base-200">
-                                            </div>
-                                            <div>
-                                                <div class="font-medium">
-                                                    {{ $event->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if ($event->eventSchedules?->first())
-                                            <div>
-                                                {{ \Carbon\Carbon::parse($event->eventSchedules->first()->start_date)->format('M d, Y') }}
-                                            </div>
-                                            <div class="text-sm text-base-content/70">
-                                                {{ $event->eventSchedules->first()->start_time }}</div>
-                                        @else
-                                            <span class="text-base-content/50">TBD</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @php
-                                            $statusClasses = [
-                                                'approved' => 'badge-success',
-                                                'for_revision' => 'badge-error',
-                                                'completed' => 'badge-primary',
-                                            ];
-                                        @endphp
-                                        <span
-                                            class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
-                                    </td>
-                                    <td>
-                                        <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>
+                            <tr class="hover">
+                                <td>
+                                    <div>
+                                        <div class="font-semibold">{{ $event->ticket->title }}</div>
                                         <div class="text-sm text-base-content/70">
-                                            {{ $event->ticket->updated_at->format('h:i A') }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="flex gap-1">
-                                            <button
-                                                @click="isOpen = true; $wire.viewArchivedEvent({{ $event->event_id }});"
-                                                type="button" class="btn btn-sm btn-ghost"
-                                                title="View Details">View</button>
-                                            @if ($event->ticket_attachments_count > 0)
-                                                <span class="badge badge-ghost">{{ $event->ticket_attachments_count }}
-                                                    attachments</span>
-                                            @endif
+                                            {{ Str::limit($event->ticket->description, 60) }}
                                         </div>
-                                    </td>
-                                </tr>
+                                        @if ($event->ticket->venue_requested || $event->eventSchedules?->first()?->venue)
+                                        <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
+                                            {{ $event->ticket->venue_requested ?? $event->eventSchedules?->first()?->venue }}
+                                        </div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar flex justify-center items-center">
+                                            <img src="{{ $event->ticket->user->studentOrganization->logo_url }}"
+                                                alt="{{ $event->ticket->user->studentOrganization->org_name }} logo"
+                                                class="w-8 h-8 object-cover rounded-full bg-base-200">
+                                        </div>
+                                        <div>
+                                            <div class="font-medium">
+                                                {{ $event->ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if ($event->eventSchedules?->first())
+                                    <div>
+                                        {{ \Carbon\Carbon::parse($event->eventSchedules->first()->start_date)->format('M d, Y') }}
+                                    </div>
+                                    <div class="text-sm text-base-content/70">
+                                        {{ $event->eventSchedules->first()->start_time }}
+                                    </div>
+                                    @else
+                                    <span class="text-base-content/50">TBD</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @php
+                                    $statusClasses = [
+                                    'approved' => 'badge-success',
+                                    'for_revision' => 'badge-error',
+                                    'completed' => 'badge-primary',
+                                    ];
+                                    @endphp
+                                    <span
+                                        class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
+                                </td>
+                                <td>
+                                    <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>
+                                    <div class="text-sm text-base-content/70">
+                                        {{ $event->ticket->updated_at->format('h:i A') }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex gap-1">
+                                        <button
+                                            @click="isOpen = true; $wire.viewArchivedEvent({{ $event->event_id }});"
+                                            type="button" class="btn btn-sm btn-ghost"
+                                            title="View Details">View</button>
+                                        @if ($event->ticket_attachments_count > 0)
+                                        <span class="badge badge-ghost">{{ $event->ticket_attachments_count }}
+                                            attachments</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-8">
-                                        <div class="flex flex-col items-center gap-2">
-                                            <span class="text-base-content/70">No archived events found</span>
-                                            <span class="text-sm text-base-content/50">Try adjusting your
-                                                filters</span>
-                                        </div>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="6" class="text-center py-8">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <span class="text-base-content/70">No archived events found</span>
+                                        <span class="text-sm text-base-content/50">Try adjusting your
+                                            filters</span>
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -257,9 +262,9 @@
 
                 {{-- Pagination --}}
                 @if ($archivedEvents->hasPages())
-                    <div class="p-4 border-t border-base-300">
-                        {{ $archivedEvents->links() }}
-                    </div>
+                <div class="p-4 border-t border-base-300">
+                    {{ $archivedEvents->links() }}
+                </div>
                 @endif
             </div>
         </div>
@@ -271,14 +276,14 @@
                 <h3 class="font-bold text-lg">Archived Event Details</h3>
                 <div class="py-4">
                     @if ($selectedEventId)
-                        <livewire:osa.archived-event-details :event-id="$selectedEventId"
-                            wire:key="archived-event-{{ $selectedEventId }}" />
+                    <livewire:osa.archived-event-details :event-id="$selectedEventId"
+                        wire:key="archived-event-{{ $selectedEventId }}" />
                     @else
-                        <div class="space-y-3">
-                            <div class="h-6 bg-base-200 rounded animate-pulse"></div>
-                            <div class="h-4 bg-base-200 rounded animate-pulse"></div>
-                            <div class="h-4 bg-base-200 rounded animate-pulse w-3/4"></div>
-                        </div>
+                    <div class="space-y-3">
+                        <div class="h-6 bg-base-200 rounded animate-pulse"></div>
+                        <div class="h-4 bg-base-200 rounded animate-pulse"></div>
+                        <div class="h-4 bg-base-200 rounded animate-pulse w-3/4"></div>
+                    </div>
                     @endif
                 </div>
                 <div class="modal-action">

@@ -24093,6 +24093,127 @@ namespace Barryvdh\DomPDF\Facade {
             }
     }
 
+namespace Intervention\Image\Laravel\Facades {
+    /**
+     */
+    class Image {
+        /**
+         * Create image manager with given driver
+         *
+         * @link https://image.intervention.io/v3/basics/configuration-drivers#static-constructor
+         * @throws DriverException
+         * @throws InputException
+         * @static
+         */
+        public static function withDriver($driver, ...$options)
+        {
+            return \Intervention\Image\ImageManager::withDriver($driver, ...$options);
+        }
+
+        /**
+         * Create image manager with GD driver
+         *
+         * @link https://image.intervention.io/v3/basics/configuration-drivers#static-gd-driver-constructor
+         * @throws DriverException
+         * @throws InputException
+         * @static
+         */
+        public static function gd(...$options)
+        {
+            return \Intervention\Image\ImageManager::gd(...$options);
+        }
+
+        /**
+         * Create image manager with Imagick driver
+         *
+         * @link https://image.intervention.io/v3/basics/configuration-drivers#static-imagick-driver-constructor
+         * @throws DriverException
+         * @throws InputException
+         * @static
+         */
+        public static function imagick(...$options)
+        {
+            return \Intervention\Image\ImageManager::imagick(...$options);
+        }
+
+        /**
+         * Create new image instance with given width & height
+         *
+         * @see ImageManagerInterface::create()
+         * @link https://image.intervention.io/v3/basics/instantiation#create-new-images
+         * @throws RuntimeException
+         * @static
+         */
+        public static function create($width, $height)
+        {
+            /** @var \Intervention\Image\ImageManager $instance */
+            return $instance->create($width, $height);
+        }
+
+        /**
+         * Create new image instance from given input which can be one of the following
+         * 
+         * - Path in filesystem
+         * - File Pointer resource
+         * - SplFileInfo object
+         * - Raw binary image data
+         * - Base64 encoded image data
+         * - Data Uri
+         * - Intervention\Image\Image Instance
+         * 
+         * To decode the raw input data, you can optionally specify a decoding strategy
+         * with the second parameter. This can be an array of class names or objects
+         * of decoders to be processed in sequence. In this case, the input must be
+         * decodedable with one of the decoders passed. It is also possible to pass
+         * a single object or class name of a decoder.
+         * 
+         * All decoders that implement the `DecoderInterface::class` can be passed. Usually
+         * a selection of classes of the namespace `Intervention\Image\Decoders`
+         * 
+         * If the second parameter is not set, an attempt to decode the input is made
+         * with all available decoders of the driver.
+         *
+         * @see ImageManagerInterface::read()
+         * @link https://image.intervention.io/v3/basics/instantiation#read-image-sources
+         * @param string|array<string|DecoderInterface>|\Intervention\Image\Interfaces\DecoderInterface $decoders
+         * @throws RuntimeException
+         * @static
+         */
+        public static function read($input, $decoders = [])
+        {
+            /** @var \Intervention\Image\ImageManager $instance */
+            return $instance->read($input, $decoders);
+        }
+
+        /**
+         * Create new animated image by given callback
+         *
+         * @see ImageManagerInterface::animate()
+         * @link https://image.intervention.io/v3/basics/instantiation#create-animations
+         * @throws RuntimeException
+         * @static
+         */
+        public static function animate($init)
+        {
+            /** @var \Intervention\Image\ImageManager $instance */
+            return $instance->animate($init);
+        }
+
+        /**
+         * Return currently used driver
+         *
+         * @see ImageManagerInterface::driver()
+         * @static
+         */
+        public static function driver()
+        {
+            /** @var \Intervention\Image\ImageManager $instance */
+            return $instance->driver();
+        }
+
+            }
+    }
+
 namespace Livewire {
     /**
      * @see \Livewire\LivewireManager
@@ -29644,11 +29765,17 @@ namespace  {
     class Debugbar extends \Barryvdh\Debugbar\Facades\Debugbar {}
     class PDF extends \Barryvdh\DomPDF\Facade\Pdf {}
     class Pdf extends \Barryvdh\DomPDF\Facade\Pdf {}
+    class Image extends \Intervention\Image\Laravel\Facades\Image {}
     class Livewire extends \Livewire\Livewire {}
     class Mary extends \Mary\Facades\Mary {}
 }
 
 
+namespace Facades\Livewire\Features\SupportFileUploads {
+    /**
+     * @mixin \Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl     */
+    class GenerateSignedUploadUrl extends \Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl {}
+}
 
 
 

@@ -15,9 +15,9 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success text-white">
-                                <i class="fa-solid fa-check-circle mr-1"></i> Verified
-                            </span>
+                        <span class="badge badge-lg badge-success text-white">
+                            <i class="fa-solid fa-check-circle mr-1"></i> Verified
+                        </span>
                         @endif
                     </div>
                 </div>
@@ -27,23 +27,38 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Main Content --}}
             <div class="lg:col-span-2 space-y-6">
-                {{-- Avatar Selector --}}
+                {{-- Avatar Selector (includes photo upload) --}}
                 <livewire:avatar-selector />
 
                 {{-- Profile Information --}}
-                <x-mary-card title="Profile Information" subtitle="Update your account details">
+                <x-mary-card title="Profile Information" subtitle="Update your account details"
+                    x-data="{
+                        initialName: @js($name),
+                        initialEmail: @js($email),
+                        initialPhone: @js($phone ?? ''),
+                        get hasChanges() {
+                            return $wire.name !== this.initialName || 
+                                   $wire.email !== this.initialEmail || 
+                                   $wire.phone !== this.initialPhone;
+                        }
+                    }"
+                    @profile-updated.window="
+                        initialName = $wire.name;
+                        initialEmail = $wire.email;
+                        initialPhone = $wire.phone;
+                    ">
                     <x-slot:menu>
                         <x-mary-icon name="o-user-circle" class="w-6 h-6 text-primary" />
                     </x-slot:menu>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <x-mary-input wire:model="name" label="Full Name" placeholder="Your name" icon="o-user"
+                        <x-mary-input wire:model.live="name" label="Full Name" placeholder="Your name" icon="o-user"
                             required />
 
-                        <x-mary-input wire:model="email" label="Email Address" type="email"
+                        <x-mary-input wire:model.live="email" label="Email Address" type="email"
                             placeholder="you@example.com" icon="o-envelope" required />
 
-                        <x-mary-input wire:model="phone" label="Phone Number" placeholder="(+63) 900 000 0000"
+                        <x-mary-input wire:model.live="phone" label="Phone Number" placeholder="(+63) 900 000 0000"
                             icon="o-phone" />
 
                         <x-mary-input wire:model="department" label="Department" placeholder="e.g. Student Affairs"
@@ -51,7 +66,8 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updateProfile" icon="o-check" class="btn-primary">
+                        <x-mary-button wire:click="updateProfile" icon="o-check" class="btn-primary"
+                            x-show="hasChanges">
                             <span wire:loading.remove wire:target="updateProfile">Save Changes</span>
                             <span wire:loading wire:target="updateProfile">Saving...</span>
                         </x-mary-button>
@@ -59,7 +75,14 @@
                 </x-mary-card>
 
                 {{-- Password Change --}}
-                <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure">
+                <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure"
+                    x-data="{
+                        get hasPasswordInput() {
+                            return ($wire.current_password && $wire.current_password.length > 0) ||
+                                   ($wire.new_password && $wire.new_password.length > 0) ||
+                                   ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
+                        }
+                    ">
                     <x-slot:menu>
                         <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
                     </x-slot:menu>
@@ -119,7 +142,8 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePassword" icon="o-shield-check" class="btn-warning">
+                        <x-mary-button wire:click="updatePassword" icon="o-shield-check" class="btn-warning"
+                            x-show="hasPasswordInput">
                             <span wire:loading.remove wire:target="updatePassword">Update Password</span>
                             <span wire:loading wire:target="updatePassword">Updating...</span>
                         </x-mary-button>
@@ -127,7 +151,22 @@
                 </x-mary-card>
 
                 {{-- Notification Preferences --}}
-                <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates">
+                <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates"
+                    x-data="{
+                        initialEmailNotifications: @js($email_notifications),
+                        initialTicketUpdates: @js($ticket_updates),
+                        initialWeeklyReports: @js($weekly_reports),
+                        get hasChanges() {
+                            return $wire.email_notifications !== this.initialEmailNotifications ||
+                                   $wire.ticket_updates !== this.initialTicketUpdates ||
+                                   $wire.weekly_reports !== this.initialWeeklyReports;
+                        }
+                    }"
+                    @preferences-updated.window="
+                        initialEmailNotifications = $wire.email_notifications;
+                        initialTicketUpdates = $wire.ticket_updates;
+                        initialWeeklyReports = $wire.weekly_reports;
+                    ">
                     <x-slot:menu>
                         <x-mary-icon name="o-bell" class="w-6 h-6 text-info" />
                     </x-slot:menu>
@@ -143,7 +182,7 @@
                                     <p class="text-sm text-base-content/70">Receive email for all activities</p>
                                 </div>
                             </div>
-                            <x-mary-toggle wire:model="email_notifications" class="toggle-success" />
+                            <x-mary-toggle wire:model.live="email_notifications" class="toggle-success" />
                         </div>
 
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
@@ -156,7 +195,7 @@
                                     <p class="text-sm text-base-content/70">Get notified on ticket changes</p>
                                 </div>
                             </div>
-                            <x-mary-toggle wire:model="ticket_updates" class="toggle-primary" />
+                            <x-mary-toggle wire:model.live="ticket_updates" class="toggle-primary" />
                         </div>
 
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
@@ -169,12 +208,13 @@
                                     <p class="text-sm text-base-content/70">Receive weekly activity summary</p>
                                 </div>
                             </div>
-                            <x-mary-toggle wire:model="weekly_reports" class="toggle-secondary" />
+                            <x-mary-toggle wire:model.live="weekly_reports" class="toggle-secondary" />
                         </div>
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePreferences" icon="o-check" class="btn-info">
+                        <x-mary-button wire:click="updatePreferences" icon="o-check" class="btn-info"
+                            x-show="hasChanges">
                             <span wire:loading.remove wire:target="updatePreferences">Save Preferences</span>
                             <span wire:loading wire:target="updatePreferences">Saving...</span>
                         </x-mary-button>
@@ -202,8 +242,8 @@
                             </div>
                             <div class="stat-title">Last Login</div>
                             @if ($user->last_login)
-                                <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
-                                <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
+                            <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
+                            <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
                             @endif
                         </div>
 

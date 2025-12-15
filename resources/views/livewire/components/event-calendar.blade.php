@@ -355,15 +355,15 @@
                                 @endif
                                 <div
                                     class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
-                                    <span class="flex items-center gap-1.5 font-medium">
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-calendar" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['datetime'] }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5 font-medium">
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-map-pin" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5 font-medium">
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </span>
@@ -398,7 +398,7 @@
                             <div class="flex items-center gap-4 flex-1">
                                 <img :src="data?.organizationLogo || '{{ asset('images/default-org-logo.svg') }}'"
                                     :alt="(data?.organization || 'Organization') + ' logo'"
-                                    class="w-16 h-16 object-cover rounded-lg border border-base-300 bg-base-200">
+                                    class="w-16 h-16 object-cover rounded-lg">
                                 <div>
                                     <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
                                     <p class="text-base-content/70" x-text="data?.organization || ''"></p>
@@ -498,40 +498,7 @@
         @push('styles')
             <style>
                 /* Component-specific calendar enhancements */
-                #osa-calendar .fc {
-                    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-                }
-
-                /* Ensure proper height calculation */
-                #osa-calendar .fc-view-harness {
-                    background-color: var(--fc-neutral-bg-color);
-                }
-
-                /* Enhanced event colors for better visibility */
-                #osa-calendar .fc-event.event-approved {
-                    background-color: oklch(64.8% 0.15 160) !important;
-                    /* success */
-                    border-color: oklch(64.8% 0.15 160) !important;
-                }
-
-                #osa-calendar .fc-event.event-rescheduled {
-                    background-color: oklch(84.71% 0.199 83.87) !important;
-                    /* warning */
-                    border-color: oklch(84.71% 0.199 83.87) !important;
-                    color: oklch(0% 0 0) !important;
-                }
-
-                #osa-calendar .fc-event.event-pending {
-                    background-color: oklch(72.06% 0.191 231.6) !important;
-                    /* info */
-                    border-color: oklch(72.06% 0.191 231.6) !important;
-                }
-
-                #osa-calendar .fc-event.event-cancelled {
-                    background-color: oklch(71.76% 0.221 22.18) !important;
-                    /* error */
-                    border-color: oklch(71.76% 0.221 22.18) !important;
-                }
+                
 
                 /* Loading skeleton animation */
                 @keyframes shimmer {
@@ -874,16 +841,7 @@
                                     info.el.setAttribute('tabindex', '0');
 
                                     // --- CUSTOM STYLING FOR PILL LOOK ---
-                                    const color = e.backgroundColor || e.borderColor || '#3b82f6';
-
-                                    // 1. Set light background (pastel version of the event color)
-                                    info.el.style.backgroundColor = `color-mix(in srgb, ${color}, white 85%)`;
-
-                                    // 2. Remove default border or make it transparent/matching
-                                    info.el.style.border = 'none';
-
-                                    // 3. Set dark text color (darker version of the event color for contrast)
-                                    info.el.style.color = `color-mix(in srgb, ${color}, black 20%)`;
+                                    
 
                                     // 4. Add the colored dot
                                     // Check if dot already exists to avoid duplication (if re-rendering)

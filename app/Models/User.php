@@ -45,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'avatar_style',
         'avatar_seed',
+        'avatar_preference',
     ];
 
     /**
@@ -240,10 +241,21 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the user's avatar URL using DiceBear
+     * Get the user's avatar URL based on their preference.
+     * Returns uploaded photo URL if preference is 'uploaded' and avatar exists,
+     * otherwise returns DiceBear avatar format.
      */
     public function getAvatarUrlAttribute(): string
     {
+        // Check if user prefers uploaded photo and has one
+        if ($this->avatar_preference === 'uploaded' && $this->avatar) {
+            // Check if the file exists in storage
+            if (\Storage::disk('public')->exists($this->avatar)) {
+                return asset('storage/' . $this->avatar);
+            }
+        }
+
+        // Default to DiceBear avatar
         $style = $this->avatar_style ?? 'big-ears';
         $seed = $this->avatar_seed ?? $this->email;
 

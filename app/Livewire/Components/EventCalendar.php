@@ -325,7 +325,7 @@ class EventCalendar extends Component
                     'start' => $startISO,
                     'end' => $endISO,
                     'allDay' => false,
-                    'backgroundColor' => $this->getEventColor($event),
+                    'backgroundColor' => $this->getEventColor($event) . '80', // 50% opacity
                     'borderColor' => $this->getEventColor($event),
                     'textColor' => '#ffffff',
                     'extendedProps' => [
@@ -379,7 +379,7 @@ class EventCalendar extends Component
 
                 $commonProps = [
                     'title' => $event->ticket->title,
-                    'backgroundColor' => $this->getEventColor($event),
+                    'backgroundColor' => $this->getEventColor($event) . '80', // 50% opacity
                     'borderColor' => $this->getEventColor($event),
                     'textColor' => '#ffffff',
                     'extendedProps' => [

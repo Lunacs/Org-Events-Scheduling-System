@@ -29,7 +29,7 @@ class TicketComments extends Component
         if (! $this->ticket->relationLoaded('comments')) {
             $this->ticket->load([
                 'comments:id,ticket_id,user_id,content,created_at',
-                'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+                'comments.user:user_id,name,role_id,avatar,avatar_preference,avatar_style,avatar_seed',
                 'comments.user.role:role_id,role_name',
             ]);
         }
@@ -88,7 +88,7 @@ class TicketComments extends Component
         // Reload only the comment relationship with minimal data
         $this->ticket->load([
             'comments:id,ticket_id,user_id,content,created_at',
-            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user:user_id,name,role_id,avatar,avatar_preference,avatar_style,avatar_seed',
             'comments.user.role:role_id,role_name',
         ]);
 
@@ -225,7 +225,7 @@ class TicketComments extends Component
         }
 
         return $this->ticket->officeApprovals
-            ->contains(fn ($approval) => (int) $approval->office_id === (int) $gsoOfficeId);
+            ->contains(fn($approval) => (int) $approval->office_id === (int) $gsoOfficeId);
     }
 
     public function render()
