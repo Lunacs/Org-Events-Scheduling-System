@@ -28,7 +28,9 @@
             </div>
 
             {{-- Progress Steps --}}
-            <x-tickets.progress-section :status="$tickets->status"/>
+            <div class="hidden md:block">
+                <x-tickets.progress-section :status="$tickets->status"/>
+            </div>
         </div>
 
         <x-tickets.ticket-actions :status="$tickets->status" :ticket="$tickets"/>

@@ -10,10 +10,10 @@
 
             <x-mary-form wire:submit="save">
                 {{-- Progress Indicator --}}
-                <div class="mb-6 md:mb-8 overflow-x-auto">
+                <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
                     <div class="flex justify-between items-center min-w-max md:min-w-0">
                         @for ($i = 1; $i <= $totalSteps; $i++)
-                            <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0">
+                            <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0 snap-center" id="step-{{ $i }}">
                                 <button type="button" wire:click="goToStep({{ $i }})"
                                         aria-label="Step {{ $i }}:
                                         @switch($i)
@@ -26,13 +26,15 @@
                                         @endswitch"
                                         aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
                                         class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0
-                            {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
-                            {{ $currentStep > $i ? 'bg-success text-white' : '' }}
-                            {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}">
-                                    {{ $currentStep > $i ? '✓' : $i }}
+                                        {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
+                                        {{ $currentStep > $i ? 'bg-success text-white' : '' }}
+                                        {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}"
+                                        @if($i > $currentStep + 1) disabled @endif>
+                                        {{ $currentStep > $i ? '✓' : $i }}
                                 </button>
+
                                 <span class="text-xs text-center whitespace-nowrap px-1">
-                                    @switch($i)
+                    @switch($i)
                                         @case(1)
                                             Organization
                                             @break
@@ -57,7 +59,7 @@
                                             Review
                                             @break
                                     @endswitch
-                                </span>
+                </span>
                             </div>
                             @if ($i < $totalSteps)
                                 <div
@@ -67,6 +69,7 @@
                         @endfor
                     </div>
                 </div>
+
 
                 {{-- Step 1: Organization Information --}}
                 @if ($currentStep === 1)
@@ -363,13 +366,15 @@
                                    :disabled="$currentStep === 1 || $isProcessing"/>
                     @if ($currentStep < $totalSteps)
                         <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                                       x-on:click="isSubmitting = true" {{-- Set flag on click --}}
+                                       x-on:click="isSubmitting = true" wire:loading.attr="disabled"
+                                       wire:loading.class="opacity-50 cursor-not-allowed"
                                        class="btn-primary {{ $errors->any() ? '<opacity-75></opacity-75> cursor-not-allowed' : '' }}"
                                        :disabled="$errors->any()"/>
                     @else
                         <x-mary-button label="Submit Ticket" icon="s-paper-airplane" type="submit"
-                                       x-on:click="isSubmitting = true"
-                                       {{-- Set flag on click --}} class="btn-primary"/>
+                                       x-on:click="isSubmitting = true" wire:loading.attr="disabled"
+                                       wire:loading.class="opacity-50 cursor-not-allowed"
+                                       class="btn-primary"/>
                     @endif
                 </div>
                 <x-mary-toast/>
@@ -381,10 +386,23 @@
     <script>
         $wire.on('step-changed', () => {
             setTimeout(() => {
+                // Scroll page to top
                 window.scrollTo({
                     top: 0,
                     behavior: 'smooth'
                 });
+
+                // Scroll progress container to show current step
+                const container = document.getElementById('progress-container');
+                const currentStepElement = document.getElementById(`step-${$wire.currentStep}`);
+
+                if (container && currentStepElement && window.innerWidth < 768) {
+                    currentStepElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+                }
             }, 100);
         });
 

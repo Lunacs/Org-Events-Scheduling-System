@@ -22,7 +22,8 @@
                                     class="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors
                                     {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
                                     {{ $currentStep > $i ? 'bg-success text-white' : '' }}
-                                    {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}">
+                                    {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}"
+                                    @if($i > $currentStep + 1) disabled @endif>
                                     {{ $currentStep > $i ? '✓' : $i }}
                                 </button>
                                 <span class="text-xs text-center">
@@ -34,7 +35,8 @@
                                     @endswitch
                                 </span>
                             </div>
-                            @if($i < $totalSteps)
+
+                        @if($i < $totalSteps)
                                 <div class="flex-1 h-1 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-2"></div>
                             @endif
                         @endfor

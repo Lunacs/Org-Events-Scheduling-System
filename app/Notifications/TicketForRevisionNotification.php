@@ -66,8 +66,8 @@ class TicketForRevisionNotification extends Notification implements ShouldBroadc
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_for_revision',
-            'icon' => 's-x-circle',
-            'color' => 'error',
+            'icon' => 's-pencil-square',
+            'color' => 'warning',
             'remarks' => $this->remarks,
             'action_url' => $this->getActionUrl($notifiable),
         ];

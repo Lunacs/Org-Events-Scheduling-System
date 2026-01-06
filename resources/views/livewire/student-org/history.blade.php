@@ -15,10 +15,10 @@
                     <p class="text-sm text-gray-600">View your organization's complete event history and performance
                         metrics</p>
                 </div>
-                <div class="flex space-x-3">
-                    <x-mary-button label="Export Report" icon="s-document-arrow-down" class="btn-secondary btn-sm"
+                <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                    <x-mary-button label="Export Report" icon="s-document-arrow-down" class="btn-secondary btn-sm text-white whitespace-normal h-auto"
                                    wire:click="exportReport" disabled/>
-                    <x-mary-button label="Submit New Event" icon="s-document-plus" class="btn-primary btn-sm"
+                    <x-mary-button label="Submit New Event" icon="s-document-plus" class="btn-primary btn-sm text-white whitespace-normal h-auto"
                                    link="/student-org/submit-ticket" wire:navigate/>
                 </div>
             </div>
@@ -166,16 +166,18 @@
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-3 mb-2">
                                         <h4 class="text-lg font-semibold">{{ $ticket->title }}</h4>
-                                        @if($isApproved)
-                                            <x-mary-badge value="Approved" class="badge-success"/>
-                                            @if($isComplete)
-                                                <x-mary-badge value="Completed" class="badge-info"/>
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                            @if($isApproved)
+                                                <x-mary-badge value="Approved" class="badge-success text-white whitespace-normal h-auto"/>
+                                                @if($isComplete)
+                                                    <x-mary-badge value="Completed" class="badge-info text-white whitespace-normal h-auto"/>
+                                                @endif
+                                            @elseif($isForRevision)
+                                                <x-mary-badge value="For Revision" class="badge-warning text-white whitespace-normal h-auto"/>
+                                            @elseif($isCancelled)
+                                                <x-mary-badge value="Cancelled" class="badge-error text-white whitespace-normal h-auto"/>
                                             @endif
-                                        @elseif($isForRevision)
-                                            <x-mary-badge value="For Revision" class="badge-warning"/>
-                                        @elseif($isCancelled)
-                                            <x-mary-badge value="Cancelled" class="badge-warning"/>
-                                        @endif
+                                        </div>
                                     </div>
                                     <p class="text-gray-600 mb-3">{{ $ticket->description }}</p>
 
