@@ -35,7 +35,7 @@
                             <p class="text-base-content/70 mt-1">Stay updated on your event requests and university
                                 announcements</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-col">
                             <x-mary-button label="Mark All as Read" icon="s-check" class="btn-ghost btn-sm"
                                 wire:click="markAllAsRead" />
                             <x-mary-button label="Clear All Read" icon="s-trash" class="btn-ghost btn-sm text-error"

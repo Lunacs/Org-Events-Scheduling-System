@@ -5,9 +5,19 @@
     <div class="flex items-start justify-between">
         <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-3 mb-2">
+                <span class="md:hidden text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
+            </div>
+            <div class="flex items-center space-x-3 mb-2">
+                <div class="md:hidden">
+                    <x-tickets.progress-badge :status="$tickets->status"/>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 mb-2">
                 <h4 class="text-lg font-semibold">{{ $tickets->title }}</h4>
-                <x-tickets.progress-badge :status="$tickets->status"/>
-                <span class="text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
+                <div class="hidden md:block">
+                    <x-tickets.progress-badge :status="$tickets->status"/>
+                </div>
+                <span class="hidden md:block text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
             </div>
             <p class="text-gray-600 mb-3 break-words">{{ $tickets->description }}</p>
 
