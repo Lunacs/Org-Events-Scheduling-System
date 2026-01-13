@@ -112,8 +112,8 @@
             initialOrg: '{{ $organizationFilter }}',
             initialType: '{{ $eventTypeFilter }}'
         })" x-init="init()" x-on:open-filters.window="open = true" x-cloak
-            x-on:clear-filters.window="clearAll()">
-            <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
+            x-on:clear-filters.window="clearAll()" wire:transition>
+            <div x-show="open" x-transition.opacity  class="fixed inset-0 z-50 ">
                 <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
                 <div
                     class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
@@ -355,16 +355,18 @@
                                 @endif
                                 <div
                                     class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
-                                    <span class="flex items-center gap-1.5 font-medium">
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-calendar" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['datetime'] }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5 font-medium">
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-map-pin" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5 font-medium">
-                                        <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                        {{-- <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" /> --}}
+                                        <img src="{{ $event['organizationLogo'] }}" alt=""
+                                            class="w-4 h-4 rounded-full object-cover">
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </span>
                                 </div>
@@ -398,7 +400,7 @@
                             <div class="flex items-center gap-4 flex-1">
                                 <img :src="data?.organizationLogo || '{{ asset('images/default-org-logo.svg') }}'"
                                     :alt="(data?.organization || 'Organization') + ' logo'"
-                                    class="w-16 h-16 object-cover rounded-lg border border-base-300 bg-base-200">
+                                    class="w-16 h-16 object-cover rounded-lg">
                                 <div>
                                     <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
                                     <p class="text-base-content/70" x-text="data?.organization || ''"></p>
@@ -486,6 +488,19 @@
                             </template>
                         </div>
 
+                        <div class="flex justify-center items-center mt-6">
+                            {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
+                            @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
+                                <template x-if="data?.ticketNumber">
+                                    <x-mary-button label="View Full Info" icon-right="o-arrow-right"
+                                        class="btn-sm btn-block btn-outline" link="#"
+                                        x-bind:href="'{{ Auth::user()->isGSO() ? url('/gso/tickets') : url('/admin/ticket-review') }}/' +
+                                        data.ticketNumber"
+                                        wire:navigate />
+                                </template>
+                            @endif
+                        </div>
+
                         <div class="mt-6 flex justify-end">
                             <button type="button" class="btn btn-ghost" @click="close()">Close</button>
                         </div>
@@ -498,40 +513,7 @@
         @push('styles')
             <style>
                 /* Component-specific calendar enhancements */
-                #osa-calendar .fc {
-                    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-                }
 
-                /* Ensure proper height calculation */
-                #osa-calendar .fc-view-harness {
-                    background-color: var(--fc-neutral-bg-color);
-                }
-
-                /* Enhanced event colors for better visibility */
-                #osa-calendar .fc-event.event-approved {
-                    background-color: oklch(64.8% 0.15 160) !important;
-                    /* success */
-                    border-color: oklch(64.8% 0.15 160) !important;
-                }
-
-                #osa-calendar .fc-event.event-rescheduled {
-                    background-color: oklch(84.71% 0.199 83.87) !important;
-                    /* warning */
-                    border-color: oklch(84.71% 0.199 83.87) !important;
-                    color: oklch(0% 0 0) !important;
-                }
-
-                #osa-calendar .fc-event.event-pending {
-                    background-color: oklch(72.06% 0.191 231.6) !important;
-                    /* info */
-                    border-color: oklch(72.06% 0.191 231.6) !important;
-                }
-
-                #osa-calendar .fc-event.event-cancelled {
-                    background-color: oklch(71.76% 0.221 22.18) !important;
-                    /* error */
-                    border-color: oklch(71.76% 0.221 22.18) !important;
-                }
 
                 /* Loading skeleton animation */
                 @keyframes shimmer {
@@ -874,16 +856,7 @@
                                     info.el.setAttribute('tabindex', '0');
 
                                     // --- CUSTOM STYLING FOR PILL LOOK ---
-                                    const color = e.backgroundColor || e.borderColor || '#3b82f6';
 
-                                    // 1. Set light background (pastel version of the event color)
-                                    info.el.style.backgroundColor = `color-mix(in srgb, ${color}, white 85%)`;
-
-                                    // 2. Remove default border or make it transparent/matching
-                                    info.el.style.border = 'none';
-
-                                    // 3. Set dark text color (darker version of the event color for contrast)
-                                    info.el.style.color = `color-mix(in srgb, ${color}, black 20%)`;
 
                                     // 4. Add the colored dot
                                     // Check if dot already exists to avoid duplication (if re-rendering)

@@ -4,8 +4,9 @@
     <div>
         <x-forms.input-label :value="$label" />
         <div x-data="{ show: false }" class="relative mt-1">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas {{ $iconClass }} text-gray-400"></i>
+            <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-secondary">
+                <i class="fas {{ $iconClass }} text-gray-400 group-focus-within:text-secondary transition-colors"></i>
             </div>
 
             <input :type="show ? 'text' : 'password'" @disabled($disabled)
@@ -14,15 +15,18 @@
             <button type="button" @click="show = !show"
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
                 tabindex="-1">
-                <i class="fas fa-eye" x-show="!show"></i>
-                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+                {{-- <i class="fas fa-eye" x-show="!show"></i>
+                <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}
+                <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
+                <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
             </button>
         </div>
     </div>
 @else
     <div x-data="{ show: false }" class="relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <i class="fas {{ $iconClass }} text-gray-400"></i>
+        <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-secondary">
+            <i class="fas {{ $iconClass }} text-gray-400 group-focus-within:text-secondary transition-colors"></i>
         </div>
 
         <input :type="show ? 'text' : 'password'" @disabled($disabled)
@@ -31,8 +35,10 @@
         <button type="button" @click="show = !show"
             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
             tabindex="-1">
-            <i class="fas fa-eye" x-show="!show"></i>
-            <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i>
+            {{-- <i class="fas fa-eye" x-show="!show"></i>
+            <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}
+            <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
+            <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
         </button>
     </div>
 @endif

@@ -1,8 +1,8 @@
 @props(['tickets' => null, 'notifications' => null])
 
 {{-- Pagination --}}
-@if ($tickets !== null)
-    <div class="mt-6 flex justify-between items-center">
+@if ($tickets !== null && $tickets->hasPages())
+    <div class="mt-6 flex justify-between items-center w-full">
         <div class="text-sm text-gray-600">
             Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }}
             of {{ $tickets->total() }} tickets
@@ -20,7 +20,7 @@
             <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click="nextPage" :disabled="!$tickets->nextPageUrl()" />
         </div>
     </div>
-@elseif ($notifications !== null)
+@elseif ($notifications !== null && $notifications->hasPages())
     <div class="mt-6 flex justify-between items-center">
         <div class="text-sm text-gray-600">
             Showing {{ $notifications->lastItem() ?? 0 }}

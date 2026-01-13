@@ -2,8 +2,7 @@
     <x-mary-card>
         <div class="flex justify-between mb-5">
             <h2 class="font-bold text-xl">Student Organizations</h2>
-            <x-mary-button icon="o-plus" class="btn-accent"
-                wire:click="$set('addOrgModalOpen', true)">Add</x-mary-button>
+            <x-mary-button icon="o-plus" class="btn-accent" wire:click="$set('addOrgModalOpen', true)">Add</x-mary-button>
         </div>
 
         @if (count($organizations) > 0)
@@ -13,12 +12,12 @@
                         <div>
                             <p class="font-medium">{{ $organization->org_name }}</p>
                             <p class="text-xs text-gray-500">{{ $organization->org_code }} •
-                                {{ $organization->course->course_name ?? 'N/A' }}</p>
+                                {{ $organization->course->course_name ?? 'N/A' }}
+                            </p>
                         </div>
                         <div class="flex gap-1">
                             <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                                wire:click="openEditOrgModal({{ $organization->org_id }})"
-                                wire:loading.attr="disabled">
+                                wire:click="openEditOrgModal({{ $organization->org_id }})" wire:loading.attr="disabled">
                             </x-mary-button>
                             <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
                                 wire:click="openDeleteOrgModal({{ $organization->org_id }})"
@@ -40,8 +39,7 @@
     <x-mary-modal wire:model="addOrgModalOpen" title="Add Student Organization"
         subtitle="Create a new student organization" separator with-close-button close-on-escape>
         <form wire:submit.prevent="addOrganization" class="space-y-4">
-            <x-mary-input wire:model="newOrgCode" label="Organization Code" placeholder="e.g., VITS"
-                icon="o-hashtag" />
+            <x-mary-input wire:model="newOrgCode" label="Organization Code" placeholder="e.g., VITS" icon="o-hashtag" />
             <x-mary-input wire:model="newOrgName" label="Organization Name" placeholder="Enter organization name"
                 icon="o-user-group" />
             <x-mary-select wire:model="newCourseId" :options="$allCourses
@@ -58,8 +56,31 @@
                 ['id' => 'suspended', 'name' => 'Suspended'],
             ]" option-value="id" option-label="name"
                 label="Status" placeholder="Select status" icon="o-shield-check" />
-            <x-mary-file wire:model="newOrgLogo" label="Organization Logo (Optional)"
-                hint="Max 2MB. Accepted: JPG, PNG, GIF, SVG, WebP" accept="image/*" />
+
+            {{-- Logo Upload with Preview --}}
+            <div class="space-y-2">
+                <x-mary-file wire:model="newOrgLogo" label="Organization Logo (Optional)"
+                    hint="Max 10MB. Images auto-compressed to WebP format." accept="image/*" />
+
+                {{-- Loading indicator --}}
+                <div wire:loading wire:target="newOrgLogo" class="flex items-center gap-2 text-sm text-base-content/70">
+                    <span class="loading loading-spinner loading-sm"></span>
+                    <span>Processing image...</span>
+                </div>
+
+                {{-- Preview --}}
+                @if ($newOrgLogo)
+                    <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <img src="{{ $newOrgLogo->temporaryUrl() }}" alt="Logo preview"
+                            class="w-16 h-16 object-cover rounded-lg border border-base-300" />
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-success">Logo ready to upload</p>
+                            <p class="text-xs text-base-content/60">Will be compressed to WebP format</p>
+                        </div>
+                        <x-mary-button icon="o-x-mark" class="btn-ghost btn-sm" wire:click="$set('newOrgLogo', null)" />
+                    </div>
+                @endif
+            </div>
         </form>
 
         <x-slot:actions>
@@ -92,20 +113,51 @@
                     ['id' => 'suspended', 'name' => 'Suspended'],
                 ]" option-value="id" option-label="name"
                     label="Status" placeholder="Select status" icon="o-shield-check" />
+
+                {{-- Current Logo Section --}}
                 @if ($currentOrgLogo)
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-base-content/70">Current Logo</label>
-                        <div class="flex items-center">
+                        <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
                             <img src="{{ asset('storage/' . $currentOrgLogo) }}" alt="Current Logo"
-                                class="w-20 h-20 object-cover rounded-lg border border-base-300">
-                            <x-mary-button icon="o-trash" class="btn-ghost text-red-600 ml-2"
-                                wire:click="deleteCurrentOrgLogo" spinner />
+                                class="w-16 h-16 object-cover rounded-lg border border-base-300" />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Organization Logo</p>
+                                <p class="text-xs text-base-content/60">Click delete to remove</p>
+                            </div>
+                            <x-mary-button icon="o-trash" class="btn-ghost btn-error btn-sm hover:"
+                                wire:click="deleteCurrentOrgLogo" spinner="deleteCurrentOrgLogo" />
                         </div>
                     </div>
                 @endif
-                <x-mary-file wire:model="orgLogo"
-                    label="{{ $currentOrgLogo ? 'Replace Logo' : 'Upload Logo (Optional)' }}"
-                    hint="Max 2MB. Accepted: JPG, PNG, GIF, SVG, WebP" accept="image/*" />
+
+                {{-- Logo Upload with Preview --}}
+                <div class="space-y-2">
+                    <x-mary-file wire:model="orgLogo"
+                        label="{{ $currentOrgLogo ? 'Replace Logo' : 'Upload Logo (Optional)' }}"
+                        hint="Max 10MB. Images auto-compressed to WebP format." accept="image/*" />
+
+                    {{-- Loading indicator --}}
+                    <div wire:loading wire:target="orgLogo"
+                        class="flex items-center gap-2 text-sm text-base-content/70">
+                        <span class="loading loading-spinner loading-sm"></span>
+                        <span>Processing image...</span>
+                    </div>
+
+                    {{-- New Logo Preview --}}
+                    @if ($orgLogo)
+                        <div class="flex items-center gap-3 p-3 bg-success/10 border border-success/30 rounded-lg">
+                            <img src="{{ $orgLogo->temporaryUrl() }}" alt="New logo preview"
+                                class="w-16 h-16 object-cover rounded-lg border border-success/50" />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-success">New logo ready</p>
+                                <p class="text-xs text-base-content/60">Will replace current logo when saved</p>
+                            </div>
+                            <x-mary-button icon="o-x-mark" class="btn-ghost btn-sm"
+                                wire:click="$set('orgLogo', null)" />
+                        </div>
+                    @endif
+                </div>
             </form>
 
             <x-slot:actions>
@@ -123,7 +175,8 @@
             <div class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
@@ -133,7 +186,8 @@
                 </div>
 
                 <p class="text-gray-700">
-                    You are about to delete <strong>{{ $deletingOrgName }}</strong>. This will permanently remove all data
+                    You are about to delete <strong>{{ $deletingOrgName }}</strong>. This will permanently remove all
+                    data
                     related to this organization.
                 </p>
 
@@ -148,11 +202,11 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.deleteOrgModalOpen = false; $wire.resetDeleteOrgModal()" />
+                <x-mary-button label="Cancel"
+                    @click="$wire.deleteOrgModalOpen = false; $wire.resetDeleteOrgModal()" />
                 <x-mary-button label="Delete Organization" wire:click="confirmDeleteOrg" class="btn-error"
                     :disabled="$hasAssociatedUsers" spinner="confirmDeleteOrg" />
             </x-slot:actions>
         </x-mary-modal>
     @endif
 </div>
-

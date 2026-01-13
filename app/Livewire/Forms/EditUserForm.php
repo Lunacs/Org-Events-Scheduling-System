@@ -26,7 +26,6 @@ class EditUserForm extends Form
 
     public $position = '';
 
-    #[Validate('required|regex:/^09\d{9}$/', as: 'contact number')]
     public $phone = '';
 
     public $is_superadmin = false;
@@ -39,6 +38,7 @@ class EditUserForm extends Form
                 'email',
                 Rule::unique('users', 'email')->ignore($this->user_id, 'user_id'),
             ],
+            'phone' => 'required|regex:/^09\d{9}$/',
         ];
 
         if ($this->role === 'student-org') {
@@ -47,7 +47,7 @@ class EditUserForm extends Form
 
         // Only validate password if it's provided
         if (! empty($this->password)) {
-            $rules['password'] = ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()];
+            $rules['password'] = ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()];
             $rules['password_confirmation'] = 'required';
         }
 
@@ -76,6 +76,7 @@ class EditUserForm extends Form
             'email.email' => 'Please provide a valid email address.',
             'email.unique' => 'This email is already registered.',
             'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
             'password_confirmation.required' => 'Password confirmation is required.',
             'password_confirmation.same' => 'Password confirmation does not match.',
             'role.required' => 'Role is required.',

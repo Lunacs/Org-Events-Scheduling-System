@@ -15,7 +15,193 @@
         </div>
     </div>
 
-    {{-- Report Configuration --}}
+    {{-- Analytics Charts Section (Now at top) --}}
+    <div class="mb-8" x-data="{
+        chartData: {{ Js::from($chartData) }},
+        charts: {},
+        init() {
+            this.$nextTick(() => this.initCharts());
+        },
+        initCharts() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                return;
+            }
+            Object.values(this.charts).forEach(c => c && c.destroy());
+            this.charts = {};
+            this.$nextTick(() => {
+                this.createEventsByMonthChart();
+                this.createStatusDistributionChart();
+                this.createEventsByTypeChart();
+                this.createTopOrganizationsChart();
+            });
+        },
+        createEventsByMonthChart() {
+            const canvas = this.$refs.eventsByMonthChart;
+            if (!canvas || !this.chartData?.eventsByMonth) return;
+            this.charts.eventsByMonth = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: this.chartData.eventsByMonth.labels || [],
+                    datasets: [{
+                        label: 'Events',
+                        data: this.chartData.eventsByMonth.data || [],
+                        borderColor: 'rgb(79, 209, 197)',
+                        backgroundColor: 'rgba(79, 209, 197, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: 'rgb(79, 209, 197)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        },
+        createStatusDistributionChart() {
+            const canvas = this.$refs.statusDistributionChart;
+            if (!canvas || !this.chartData?.statusDistribution) return;
+            this.charts.statusDistribution = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: this.chartData.statusDistribution.labels || [],
+                    datasets: [{
+                        data: this.chartData.statusDistribution.data || [],
+                        backgroundColor: this.chartData.statusDistribution.colors || ['rgb(34, 197, 94)', 'rgb(251, 191, 36)', 'rgb(59, 130, 246)', 'rgb(239, 68, 68)', 'rgb(156, 163, 175)'],
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 12 } } }
+                    }
+                }
+            });
+        },
+        createEventsByTypeChart() {
+            const canvas = this.$refs.eventsByTypeChart;
+            if (!canvas || !this.chartData?.eventsByType) return;
+            this.charts.eventsByType = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: this.chartData.eventsByType.labels || [],
+                    datasets: [{
+                        label: 'Events',
+                        data: this.chartData.eventsByType.data || [],
+                        backgroundColor: ['rgba(79, 209, 197, 0.8)', 'rgba(99, 102, 241, 0.8)', 'rgba(251, 191, 36, 0.8)', 'rgba(248, 113, 113, 0.8)', 'rgba(168, 85, 247, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(20, 184, 166, 0.8)'],
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                        x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } }
+                    }
+                }
+            });
+        },
+        createTopOrganizationsChart() {
+            const canvas = this.$refs.topOrganizationsChart;
+            if (!canvas || !this.chartData?.topOrganizations) return;
+            this.charts.topOrganizations = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: this.chartData.topOrganizations.labels || [],
+                    datasets: [{
+                        label: 'Events',
+                        data: this.chartData.topOrganizations.data || [],
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    }">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-heading font-semibold text-base-content">Analytics Overview</h2>
+            <x-mary-button wire:click="loadChartData" class="btn-ghost btn-sm" icon="o-arrow-path"
+                @click="setTimeout(() => initCharts(), 500)">
+                Refresh Charts
+            </x-mary-button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- Events by Month Chart --}}
+            <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
+                    <x-mary-icon name="o-chart-bar" class="w-5 h-5 text-primary" />
+                    Events by Month
+                </h3>
+                <div class="h-64" wire:ignore>
+                    <canvas x-ref="eventsByMonthChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Status Distribution Chart --}}
+            <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
+                    <x-mary-icon name="o-chart-pie" class="w-5 h-5 text-secondary" />
+                    Status Distribution
+                </h3>
+                <div class="h-64" wire:ignore>
+                    <canvas x-ref="statusDistributionChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Events by Type Chart --}}
+            <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
+                    <x-mary-icon name="o-squares-2x2" class="w-5 h-5 text-accent" />
+                    Events by Type
+                </h3>
+                <div class="h-64" wire:ignore>
+                    <canvas x-ref="eventsByTypeChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Top Organizations Chart --}}
+            <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
+                    <x-mary-icon name="o-building-office" class="w-5 h-5 text-info" />
+                    Top Organizations
+                </h3>
+                <div class="h-64" wire:ignore>
+                    <canvas x-ref="topOrganizationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Report Configuration + Quick Stats --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {{-- Report Type Selection --}}
         <div class="lg:col-span-2">
@@ -69,7 +255,7 @@
                     ]" option-value="id"
                         option-label="name" />
 
-                    <div class="flex gap-2">
+                    <div class="flex-row gap-2 sm:flex-col">
                         <x-mary-button wire:click="generateReport" class="btn-primary" icon="o-document-arrow-down">
                             Generate & Download
                         </x-mary-button>
@@ -139,6 +325,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- Report Preview --}}
     <div class="bg-base-100 rounded-box shadow-lg">

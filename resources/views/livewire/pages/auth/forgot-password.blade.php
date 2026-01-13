@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
@@ -29,52 +30,83 @@ new #[Layout('components.layouts.guest')] class extends Component {
             return;
         }
 
+        // SECURITY: Invalidate all previous reset tokens for this email
+        // This ensures only the latest link is valid (prevents token backlog attacks)
+        DB::table('password_reset_tokens')->where('email', strtolower($this->email))->delete();
+
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.
         $status = Password::sendResetLink($this->only('email'));
-
-        if ($status != Password::RESET_LINK_SENT) {
-            $this->addError('email', __($status));
-            return;
-        }
 
         // Hit the rate limiter (1 attempt allowed per 60 seconds)
         RateLimiter::hit($key, 60);
 
         $this->reset('email');
 
-        session()->flash('status', __($status));
+        // SECURITY: Always show a generic success message to prevent email enumeration
+        // This prevents attackers from discovering which emails are registered
+        session()->flash('status', __('If an account exists for this email address, you will receive a password reset link shortly.'));
     }
 }; ?>
 
 <div>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    <div class="mb-8 text-center">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Reset Password</h1>
+        <p class="text-base text-gray-500 dark:text-gray-400">
+            {{ __('Enter your email address and we\'ll send you a link to reset your password.') }}
+        </p>
     </div>
 
     <!-- Session Status -->
-    <x-ui.auth-session-status class="mb-4" :status="session('status')" />
+    <x-ui.auth-session-status class="mb-6" :status="session('status')" />
 
     @if (session('error'))
-        <div class="mb-4 font-medium text-sm text-red-600 dark:text-red-400">
-            {{ session('error') }}
-        </div>
+    <div
+        class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400">
+        {{ session('error') }}
+    </div>
     @endif
 
-    <form wire:submit="sendPasswordResetLink">
+    <form wire:submit="sendPasswordResetLink" class="space-y-6">
         <!-- Email Address -->
-        <div>
-            <x-ui.input-label for="email" :value="__('Email')" />
-            <x-forms.text-input wire:model="email" id="email" class="block mt-1 w-full sm-w-auto" type="email"
-                name="email" required autofocus />
-            <x-ui.input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="space-y-1">
+            <label for="email" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Email
+                Address</label>
+            <div class="relative group">
+                <div
+                    class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-secondary">
+                    <i class="fas fa-envelope text-gray-400 group-focus-within:text-secondary transition-colors"></i>
+                </div>
+                <input wire:model="email" id="email" type="email" name="email" placeholder="name@plv.edu.ph"
+                    required autofocus
+                    class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-secondary/20 focus:border-secondary focus:bg-white dark:focus:bg-gray-900 transition-all duration-200 sm:text-sm" />
+            </div>
+            <x-ui.input-error :messages="$errors->get('email')" class="mt-1.5 ml-1" />
         </div>
 
-        <div class="flex items-center justify-end mt-4 w-full sm:w-auto"">
-            <x-ui.primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-ui.primary-button>
+        <div class="pt-2">
+            <button type="submit" wire:loading.attr="disabled"
+                class="relative w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-xl shadow-lg shadow-secondary/20 text-base font-bold hover:!bg-[oklch(50%_0.202_261.294)] hover:!border-[oklch(50%_0.202_261.294)] active:!bg-[oklch(40%_0.202_261.294)] active:!border-[oklch(40%_0.202_261.294)] text-white bg-secondary hover:bg-secondary-focus focus:outline-none focus:ring-4 focus:ring-secondary/30 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
+                <span wire:loading.remove wire:target="sendPasswordResetLink" class="flex items-center">
+                    {{ __('Email Password Reset Link') }}
+                    <i
+                        class="fas fa-paper-plane ml-2 text-sm group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                </span>
+                <span wire:loading wire:target="sendPasswordResetLink" class="flex items-center">
+                    <span class="loading loading-spinner loading-sm"></span>
+                    Sending...
+                </span>
+            </button>
         </div>
     </form>
+
+    <div class="mt-8 text-center">
+        <a href="{{ route('login') }}"
+            class="inline-flex justify-center items-center border border-gray-600 hover:bg-gray-300 hover:border-gray-400 transition-colors duration-300 ease-in-out rounded-xl w-full py-3 px-6"
+            wire:navigate>
+            <!-- <i class="fas fa-arrow-left mr-2"></i> -->
+            Back to Login
+        </a>
+    </div>
 </div>

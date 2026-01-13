@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
 use Exception;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -227,7 +228,7 @@ class SubmitTicket extends Component
     {
         return match ($this->currentStep) {
             1 => [
-                'adviser_contact' => 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/',
+                'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
                 'is_amended' => 'required|boolean',
             ],
             2 => [
@@ -280,6 +281,20 @@ class SubmitTicket extends Component
             return;
         }
 
+        // Real-time validation for adviser_contact
+        if ($property === 'adviser_contact') {
+            try {
+                $this->validateOnly('adviser_contact', [
+                    'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
+                ], [
+                    'adviser_contact.digits' => 'The adviser contact number must be 11 digits.',
+                    'adviser_contact.regex' => 'The adviser contact number must contain only numbers.',
+                ]);
+            } catch (ValidationException $e) {
+                // Validation error handled by Livewire
+            }
+        }
+
         // Exclude certain properties from auto-save
         if (in_array($property, ['newAttachments', 'isProcessing'])) {
             return;
@@ -298,7 +313,7 @@ class SubmitTicket extends Component
 
         if (! empty($rules)) {
             $this->validate($rules, [
-                'adviser_contact.size'=> 'The adviser contact number must be 11 digits.',
+                'adviser_contact.size' => 'The adviser contact number must be 11 digits.',
                 'expectedPLVParticipants.required' => 'The number of PLV participants is required.',
                 'expectedNonPLVParticipants.required' => 'The number of non-PLV participants is required.',
                 'expectedPLVParticipants.integer' => 'The number of PLV participants must be an integer.',
@@ -420,6 +435,18 @@ class SubmitTicket extends Component
         $this->organizationCourse = $currentUserinfo->course->course_name ?? '';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
         $this->proponent_contact = $currentUser->phone ?? '';
+
+        // Trigger validation for adviser_contact since it has a default value
+        try {
+            $this->validateOnly('adviser_contact', [
+                'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
+            ], [
+                'adviser_contact.digits' => 'The adviser contact number must be 11 digits.',
+                'adviser_contact.regex' => 'The adviser contact number must contain only numbers.',
+            ]);
+        } catch (ValidationException $e) {
+            // Validation error will be displayed
+        }
     }
 
     public function save()
@@ -432,6 +459,25 @@ class SubmitTicket extends Component
         $currentUser = auth()->user();
         $currentUserinfo = $currentUser->studentOrganization;
         $ticketCode = null;
+
+        // Rate limiting: max 3 ticket submissions per minute per user
+        $rateLimitKey = 'ticket-submit:' . $currentUser->user_id;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $this->isProcessing = false;
+            $this->toast(
+                type: 'warning',
+                title: 'Too Many Attempts',
+                description: "Please wait {$seconds} seconds before submitting again.",
+                position: 'toast-top toast-end',
+                icon: 'o-clock',
+                css: 'alert-warning',
+                timeout: 5000,
+                noProgress: true,
+            );
+            return;
+        }
+        RateLimiter::hit($rateLimitKey, 60); // 60 second decay
 
         try {
             // Validate all steps before submission
@@ -454,11 +500,11 @@ class SubmitTicket extends Component
                 : 1;
 
             // Generate unique ticket number with locking
-            $ticketCode = "TKT-{$orgCode}-".str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $ticketCode = "TKT-{$orgCode}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
             // Helper function to convert empty strings to null for nullable fields
-            $nullIfEmpty = fn ($value) => ($value === '' || $value === null) ? null : $value;
-            $nullIfEmptyInt = fn ($value) => ($value === '' || $value === null) ? null : (int) $value;
+            $nullIfEmpty = fn($value) => ($value === '' || $value === null) ? null : $value;
+            $nullIfEmptyInt = fn($value) => ($value === '' || $value === null) ? null : (int) $value;
 
             $ticket = Ticket::create([
                 'user_id' => $currentUser->user_id,
@@ -497,7 +543,7 @@ class SubmitTicket extends Component
             if (! empty($this->attachments)) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
-                    $filename = time().'_'.uniqid().'_'.$originalName;
+                    $filename = time() . '_' . uniqid() . '_' . $originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
                         $filename
@@ -654,7 +700,7 @@ class SubmitTicket extends Component
         ]);
 
         // Check available disk space
-        $totalSize = collect($this->newAttachments)->sum(fn ($file) => $file->getSize());
+        $totalSize = collect($this->newAttachments)->sum(fn($file) => $file->getSize());
         if (disk_free_space(storage_path()) < ($totalSize * 2)) {
             throw ValidationException::withMessages([
                 'newAttachments' => 'Insufficient storage space.',
@@ -675,6 +721,41 @@ class SubmitTicket extends Component
     public function handleDiscardDraft()
     {
         $this->discardDraft();
+    }
+
+    /**
+     * Check if the current step's required fields are filled
+     * This is used to enable/disable the Next button
+     */
+    public function getIsCurrentStepCompleteProperty(): bool
+    {
+        return match ($this->currentStep) {
+            1 => !empty($this->adviser_contact) && strlen($this->adviser_contact) === 11,
+            2 => !empty($this->eventTitle)
+                && !empty($this->eventDescription)
+                && !empty($this->eventType)
+                && !empty($this->expectedPLVParticipants)
+                && $this->expectedPLVParticipants > 0,
+            3 => !empty($this->eventStartDate)
+                && !empty($this->eventEndDate)
+                && !empty($this->eventStartTime)
+                && !empty($this->eventEndTime)
+                && !empty($this->preferredVenue)
+                && (!$this->is_oc || !empty($this->oc_tsp))
+                && (!($this->is_oc && $this->oc_tsp === 'outsourced') || (
+                    !empty($this->oc_driver_name)
+                    && !empty($this->oc_driver_contact_number)
+                    && !empty($this->oc_transportation_type)
+                    && !empty($this->oc_vehicle_plate_number)
+                )),
+            4 => !empty($this->totalBudget)
+                && !empty($this->fundingSource)
+                && !empty($this->igp_requested)
+                && ($this->igp_requested !== 'true' || !empty($this->igp_details)),
+            5 => true, // No strictly required fields in step 5
+            6 => $this->agreeToTerms === true,
+            default => false,
+        };
     }
 
     public function getRequiredDocuments()

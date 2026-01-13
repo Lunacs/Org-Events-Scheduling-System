@@ -14,7 +14,7 @@
     $portalName = $portalNames[$variant] ?? $portalNames['default'];
 @endphp
 
-<footer class="bg-base-200 border-t border-base-300">
+<footer class="bg-base-200 border-t border-base-300 mt-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Main Footer Content --}}
         <div class="py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -103,7 +103,7 @@
                     </li>
                     <li class="flex items-center gap-2">
                         <x-mary-icon name="o-envelope" class="w-4 h-4" />
-                        <span>osa@plv.edu.ph</span>
+                        <span>plv.osa.official@gmail.com</span>
                     </li>
                 </ul>
             </div>

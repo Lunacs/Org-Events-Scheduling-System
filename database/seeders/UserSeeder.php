@@ -39,16 +39,6 @@ class UserSeeder extends Seeder
             'office_id' => null,
         ]);
 
-        User::create([
-            'name' => 'Maria Santos',
-            'email' => 'maria.santos@plv.edu.ph',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            'role_id' => User::getRoleId('osa'),
-            'org_id' => null,
-            'office_id' => null,
-        ]);
-
         // Create GSO Admin users (assuming you have offices)
         $gsoOffice = Office::where('office_name', 'like', '%GSO%')->first();
 
@@ -85,6 +75,7 @@ class UserSeeder extends Seeder
                 'role_id' => User::getRoleId('student-org'),
                 'org_id' => $studentOrgs->first()->org_id,
                 'office_id' => null,
+                'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
             ]);
 
             User::create([
@@ -95,6 +86,7 @@ class UserSeeder extends Seeder
                 'role_id' => User::getRoleId('student-org'),
                 'org_id' => $studentOrgs->first()->org_id,
                 'office_id' => null,
+                'position_id' => $positions->where('position_name', 'Chairperson')->first()?->position_id,
             ]);
 
             // Create users for other student organizations if available
@@ -107,6 +99,7 @@ class UserSeeder extends Seeder
                     'role_id' => User::getRoleId('student-org'),
                     'org_id' => $studentOrgs->get(1)->org_id,
                     'office_id' => null,
+                    'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
                 ]);
             }
 
@@ -119,21 +112,12 @@ class UserSeeder extends Seeder
                     'role_id' => User::getRoleId('student-org'),
                     'org_id' => $studentOrgs->get(2)->org_id,
                     'office_id' => null,
+                    'position_id' => $positions->where('position_name', 'Adviser')->first()?->position_id,
                 ]);
             }
         }
 
         // Create additional test users
-        User::create([
-            'name' => 'Test User',
-            'email' => 'mrrobot1946@gmail.com',
-            'email_verified_at' => null,
-            'password' => Hash::make('password'),
-            'role_id' => User::getRoleId('student-org'),
-            'org_id' => $studentOrgs->first()?->org_id,
-            'office_id' => null,
-        ]);
-
         User::create([
             'name' => 'Elliot Anderson',
             'email' => 'johnreygabon@plv.edu.ph',
@@ -142,25 +126,8 @@ class UserSeeder extends Seeder
             'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
-        ]);
-        User::create([
-            'name' => 'Hackerman Anderson',
-            'email' => 'gabon.245958@caloocan.sti.edu.ph',
-            'email_verified_at' => null,
-            'password' => Hash::make('password'),
-            'role_id' => User::getRoleId('student-org'),
-            'org_id' => $studentOrgs->first()?->org_id,
-            'office_id' => null,
-        ]);
+            'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
 
-        User::create([
-            'name' => 'Michael Silva',
-            'email' => 'maykellsilva070@gmail.com',
-            'email_verified_at' => null,
-            'password' => Hash::make('password'),
-            'role_id' => User::getRoleId('student-org'),
-            'org_id' => $studentOrgs->first()?->org_id,
-            'office_id' => null,
         ]);
 
         User::create([
@@ -171,6 +138,8 @@ class UserSeeder extends Seeder
             'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
+            'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
+
         ]);
 
         User::create([
@@ -181,6 +150,8 @@ class UserSeeder extends Seeder
             'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
             'office_id' => null,
+            'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
+
         ]);
 
         User::create([
@@ -190,17 +161,6 @@ class UserSeeder extends Seeder
             'password' => Hash::make('Lanoira1'),
             'role_id' => User::getRoleId('student-org'),
             'org_id' => $studentOrgs->first()?->org_id,
-            'office_id' => null,
-            'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
-        ]);
-
-        User::create([
-            'name' => 'Miss Lanoira',
-            'email' => 'plvlanoira07@gmail.com',
-            'email_verified_at' => null,
-            'password' => Hash::make('LanoiraCutie'),
-            'role_id' => User::getRoleId('osa'),
-            'org_id' => null,
             'office_id' => null,
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
         ]);

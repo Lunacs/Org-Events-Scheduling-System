@@ -150,7 +150,7 @@ class Dashboard extends Component
         // Unset computed properties to force re-render
         unset($this->stats, $this->recentTickets, $this->pendingApprovals, $this->upcomingEvents);
 
-        $this->success('Dashboard data refreshed!', position: 'toast-top');
+        $this->success('Dashboard data refreshed!', position: 'toast-top', noProgress: true);
     }
 
     /**

@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketApprovedNotification extends Notification implements ShouldBroadcast
+class TicketApprovedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -39,15 +39,15 @@ class TicketApprovedNotification extends Notification implements ShouldBroadcast
      */
     public function toMail(object $notifiable): MailMessage
     {
-		$actionUrl = $this->getActionUrl($notifiable);
+        $actionUrl = $this->getActionUrl($notifiable);
 
-		return (new MailMessage)
-			->subject('Ticket Approved - ' . $this->ticket->ticket_number)
-			->view('emails.tickets.ticket-approved', [
-				'ticket' => $this->ticket,
-				'actionUrl' => $actionUrl,
-				'actionText' => 'View Ticket',
-			]);
+        return (new MailMessage)
+            ->subject('Ticket Approved - ' . $this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-approved', [
+                'ticket' => $this->ticket,
+                'actionUrl' => $actionUrl,
+                'actionText' => 'View Ticket',
+            ]);
     }
 
     /**

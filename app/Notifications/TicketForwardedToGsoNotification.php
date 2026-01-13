@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketForwardedToGsoNotification extends Notification implements ShouldBroadcast
+class TicketForwardedToGsoNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -30,16 +31,16 @@ class TicketForwardedToGsoNotification extends Notification implements ShouldBro
 
     public function toMail(object $notifiable): MailMessage
     {
-		$actionUrl = $this->getActionUrl($notifiable);
+        $actionUrl = $this->getActionUrl($notifiable);
 
-		return (new MailMessage)
-			->subject('New Ticket Forwarded for GSO Review - ' . $this->ticket->ticket_number)
-			->view('emails.tickets.ticket-forwarded-gso', [
-				'ticket' => $this->ticket,
-				'remarks' => $this->remarks,
-				'actionUrl' => $actionUrl,
-				'actionText' => 'Review Tickets',
-			]);
+        return (new MailMessage)
+            ->subject('New Ticket Forwarded for GSO Review - ' . $this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-forwarded-gso', [
+                'ticket' => $this->ticket,
+                'remarks' => $this->remarks,
+                'actionUrl' => $actionUrl,
+                'actionText' => 'Review Tickets',
+            ]);
     }
 
     public function toArray(object $notifiable): array
@@ -86,4 +87,3 @@ class TicketForwardedToGsoNotification extends Notification implements ShouldBro
         return route('gso.ticket-review');
     }
 }
-
