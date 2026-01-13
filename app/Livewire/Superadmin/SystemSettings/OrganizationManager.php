@@ -7,6 +7,7 @@ use App\Models\Student_Organization;
 use App\Models\User;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Livewire\Attributes\On;
@@ -308,15 +309,27 @@ class OrganizationManager extends Component
             return;
         }
 
-        // Log the organization deletion before deleting
-        TransactionLogService::logOrgOperation('deleted', $organization);
+        DB::beginTransaction();
+        try {
+            // Log the organization deletion before deleting
+            TransactionLogService::logOrgOperation('deleted', $organization);
 
-        $organization->delete();
+            $organization->delete();
 
-        $this->reset(['deletingOrgId', 'deletingOrgName', 'hasAssociatedUsers']);
-        $this->deleteOrgModalOpen = false;
-        $this->clearOrganizationsCache();
-        $this->success('Student organization deleted successfully!', position: 'toast-top');
+            DB::commit();
+
+            $this->reset(['deletingOrgId', 'deletingOrgName', 'hasAssociatedUsers']);
+            $this->deleteOrgModalOpen = false;
+            $this->clearOrganizationsCache();
+            $this->success('Student organization deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Organization deletion failed', [
+                'org_id' => $this->deletingOrgId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to delete organization: ' . $e->getMessage(), position: 'toast-top');
+        }
     }
 
     protected function clearOrganizationsCache()

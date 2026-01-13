@@ -472,7 +472,7 @@
                         <div class="space-y-3">
                             @if (in_array('approve', $allowedActions))
                                 @can('approve', $ticket)
-                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                    <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
                                             @click="showApproval = true">
                                         Approve Ticket
                                     </button>
@@ -490,7 +490,7 @@
                         <div class="space-y-3">
                             @if (in_array('final_approve', $allowedActions))
                                 @can('finalApprove', $ticket)
-                                    <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                    <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
                                             @click="showFinalApproval = true">
                                         Final Approval
                                     </button>
@@ -499,7 +499,7 @@
 
                             @if (in_array('for_revision', $allowedActions))
                                 @can('requestRevision', $ticket)
-                                    <button class="btn btn-warning w-full text-base-200 flex justify-between"
+                                    <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
                                             @click="showRevision = true">
                                         Request Revision
                                     </button>
@@ -512,7 +512,7 @@
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
-                                <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
                                         @click="showApproval = true">
                                     Approve Ticket
                                 </button>
@@ -521,7 +521,7 @@
 
                         @if (in_array('for_revision', $allowedActions))
                             @can('requestRevision', $ticket)
-                                <button class="btn btn-warning w-full text-base-200 flex justify-between"
+                                <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
                                         @click="showRevision = true">
                                     Request Revision
                                 </button>
@@ -534,7 +534,7 @@
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
-                                <button class="btn btn-success w-full text-base-200 flex justify-between"
+                                <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
                                         @click="showApproval = true">
                                     Approve Ticket
                                 </button>
@@ -543,7 +543,7 @@
 
                         @if (in_array('for_revision', $allowedActions))
                             @can('requestRevision', $ticket)
-                                <button class="btn btn-warning w-full text-base-200 flex justify-between"
+                                <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
                                         @click="showRevision = true">
                                     Request Revision
                                 </button>
@@ -552,7 +552,7 @@
 
                         @if (in_array('forward', $allowedActions))
                             @can('forwardToGso', $ticket)
-                                <button class="btn btn-info w-full text-base-200 flex justify-between"
+                                <button class="btn btn-info w-full text-base-200 dark:text-white flex justify-between"
                                         @click="showForward = true">
                                     Forward to GSO
                                 </button>
@@ -663,7 +663,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showRevision=false"/>
-                <x-mary-button label="Request Revision" class="btn-warning"
+                <x-mary-button label="Request Revision" class="btn-warning text-neutral-content"
                                wire:click="forRevision" spinner="forRevision"
                                x-bind:disabled="revisionRemarks.trim().length < 10"
                                @click="$wire.set('revisionRemarks', revisionRemarks)"/>
@@ -697,7 +697,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-mary-button label="Cancel" class="btn" @click="showForward=false"/>
-                <x-mary-button label="Forward to GSO" class="btn-info" wire:click="forwardToGso"
+                <x-mary-button label="Forward to GSO" class="btn-info text-neutral-content" wire:click="forwardToGso"
                                spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
                                @click="$wire.set('forwardRemarks', forwardRemarks)"/>
             </div>

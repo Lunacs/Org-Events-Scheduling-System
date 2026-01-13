@@ -112,8 +112,8 @@
             initialOrg: '{{ $organizationFilter }}',
             initialType: '{{ $eventTypeFilter }}'
         })" x-init="init()" x-on:open-filters.window="open = true" x-cloak
-            x-on:clear-filters.window="clearAll()">
-            <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
+            x-on:clear-filters.window="clearAll()" wire:transition>
+            <div x-show="open" x-transition.opacity  class="fixed inset-0 z-50 ">
                 <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
                 <div
                     class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
@@ -364,7 +364,9 @@
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </span>
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                        {{-- <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" /> --}}
+                                        <img src="{{ $event['organizationLogo'] }}" alt=""
+                                            class="w-4 h-4 rounded-full object-cover">
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </span>
                                 </div>
@@ -486,6 +488,19 @@
                             </template>
                         </div>
 
+                        <div class="flex justify-center items-center mt-6">
+                            {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
+                            @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
+                                <template x-if="data?.ticketNumber">
+                                    <x-mary-button label="View Full Info" icon-right="o-arrow-right"
+                                        class="btn-sm btn-block btn-outline" link="#"
+                                        x-bind:href="'{{ Auth::user()->isGSO() ? url('/gso/tickets') : url('/admin/ticket-review') }}/' +
+                                        data.ticketNumber"
+                                        wire:navigate />
+                                </template>
+                            @endif
+                        </div>
+
                         <div class="mt-6 flex justify-end">
                             <button type="button" class="btn btn-ghost" @click="close()">Close</button>
                         </div>
@@ -498,7 +513,7 @@
         @push('styles')
             <style>
                 /* Component-specific calendar enhancements */
-                
+
 
                 /* Loading skeleton animation */
                 @keyframes shimmer {
@@ -841,7 +856,7 @@
                                     info.el.setAttribute('tabindex', '0');
 
                                     // --- CUSTOM STYLING FOR PILL LOOK ---
-                                    
+
 
                                     // 4. Add the colored dot
                                     // Check if dot already exists to avoid duplication (if re-rendering)

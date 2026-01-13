@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketStatusUpdatedNotification extends Notification implements ShouldBroadcast
+class TicketStatusUpdatedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -45,21 +45,21 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     public function toMail(object $notifiable): MailMessage
     {
-		$statusMessage = $this->getStatusMessage();
-		$actionUrl = $this->getActionUrl();
+        $statusMessage = $this->getStatusMessage();
+        $actionUrl = $this->getActionUrl();
 
-		return (new MailMessage)
-			->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
-			->view('emails.tickets.ticket-status-updated', [
-				'ticket' => $this->ticket,
-				'statusMessage' => $statusMessage,
-				'oldStatus' => $this->oldStatus,
-				'newStatus' => $this->newStatus,
-				'remarks' => $this->remarks,
-				'actionUrl' => $actionUrl,
-				'actionText' => 'View Ticket',
-				'title' => $this->getStatusTitle(),
-			]);
+        return (new MailMessage)
+            ->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
+            ->view('emails.tickets.ticket-status-updated', [
+                'ticket' => $this->ticket,
+                'statusMessage' => $statusMessage,
+                'oldStatus' => $this->oldStatus,
+                'newStatus' => $this->newStatus,
+                'remarks' => $this->remarks,
+                'actionUrl' => $actionUrl,
+                'actionText' => 'View Ticket',
+                'title' => $this->getStatusTitle(),
+            ]);
     }
 
     /**
@@ -107,7 +107,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     private function getStatusTitle(): string
     {
-        return match($this->newStatus) {
+        return match ($this->newStatus) {
             'received' => 'Ticket Received',
             'gso_review' => 'Under GSO Review',
             'pending_osa_approval' => 'Pending OSA Approval',
@@ -128,7 +128,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         $ticketTitle = $this->ticket->title;
 
-        return match($this->newStatus) {
+        return match ($this->newStatus) {
             'received' => "Your ticket \"{$ticketTitle}\" has been received and is under review.",
             'gso_review' => "Your ticket \"{$ticketTitle}\" is now being reviewed by GSO.",
             'pending_osa_approval' => "Your ticket \"{$ticketTitle}\" is pending OSA approval.",
@@ -144,7 +144,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     private function getStatusIcon(): string
     {
-        return match($this->newStatus) {
+        return match ($this->newStatus) {
             'received' => 's-inbox',
             'gso_review' => 's-eye',
             'pending_osa_approval' => 's-clock',
@@ -163,7 +163,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     private function getStatusColor(): string
     {
-        return match($this->newStatus) {
+        return match ($this->newStatus) {
             'received' => 'info',
             'gso_review' => 'secondary',
             'pending_osa_approval' => 'warning',

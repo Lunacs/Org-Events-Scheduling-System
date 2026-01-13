@@ -76,9 +76,9 @@ class EventCalendar extends Component
 
         $event = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn ($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
@@ -165,7 +165,7 @@ class EventCalendar extends Component
 
     public function viewEvent($eventId)
     {
-        Log::info('ViewEvent called with ID: '.$eventId);
+        Log::info('ViewEvent called with ID: ' . $eventId);
 
         // Reset modal state first
         $this->showModal = false;
@@ -173,9 +173,9 @@ class EventCalendar extends Component
 
         $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn ($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
-                        'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
@@ -183,10 +183,10 @@ class EventCalendar extends Component
             ])
             ->find($eventId);
 
-        Log::info('Selected Event: '.($this->selectedEvent ? 'Found' : 'Not Found'));
+        Log::info('Selected Event: ' . ($this->selectedEvent ? 'Found' : 'Not Found'));
 
         if (! $this->selectedEvent) {
-            Log::error('Event not found with ID: '.$eventId);
+            Log::error('Event not found with ID: ' . $eventId);
             $this->dispatch('toast-error', message: 'Event not found');
 
             return;
@@ -249,11 +249,11 @@ class EventCalendar extends Component
         // Fetch only approved event schedules (from Event_Schedules table)
         $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
@@ -262,13 +262,13 @@ class EventCalendar extends Component
             // Always show only approved event schedules
             ->where('status', 'approved')
             // Filter by ticket status (approved or rescheduled)
-            ->whereHas('event.ticket', fn ($query) => $query->where('status', $this->statusFilter))
+            ->whereHas('event.ticket', fn($query) => $query->where('status', $this->statusFilter))
             // Apply organization filter if set
-            ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
             // Apply event type filter if set
-            ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
+            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
-            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
+            ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
             ->get();
 
         $allEvents = [];
@@ -316,8 +316,8 @@ class EventCalendar extends Component
 
             if ($startDate === $endDate) {
                 // Single-day event: Use standard start/end format
-                $startISO = $startDate.'T'.$startTime.'+08:00';
-                $endISO = $endDate.'T'.$endTime.'+08:00';
+                $startISO = $startDate . 'T' . $startTime . '+08:00';
+                $endISO = $endDate . 'T' . $endTime . '+08:00';
 
                 $allEvents[] = [
                     'id' => $event->event_id,
@@ -398,10 +398,10 @@ class EventCalendar extends Component
 
                 // 1. Spanning event for month view (single bar across days)
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id.'_span',
+                    'id' => $event->event_id . '_span',
                     'groupId' => $event->event_id,
-                    'start' => $startDate.'T'.$startTime.'+08:00',
-                    'end' => $endDate.'T'.$endTime.'+08:00',
+                    'start' => $startDate . 'T' . $startTime . '+08:00',
+                    'end' => $endDate . 'T' . $endTime . '+08:00',
                     'allDay' => false,
                     'display' => 'block', // Spanning bar in month view
                     'extendedProps' => array_merge($commonProps['extendedProps'], [
@@ -411,7 +411,7 @@ class EventCalendar extends Component
 
                 // 2. Recurring event for week/day views (proper height blocks)
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id.'_recur',
+                    'id' => $event->event_id . '_recur',
                     'groupId' => $event->event_id,
                     'startTime' => $startTime, // Time portion only (HH:MM:SS)
                     'endTime' => $endTime,     // Time portion only (HH:MM:SS)
@@ -430,7 +430,7 @@ class EventCalendar extends Component
         return $allEvents;
     }
 
-    protected function getEventColor($event)
+    protected function getEventColor($event): string
     {
         // Color coding based on organization or event type
         $colors = [
@@ -484,9 +484,9 @@ class EventCalendar extends Component
         // Count unique events that match the current filters
         $query = Event_Schedule::query()
             ->where('status', 'approved')
-            ->whereHas('event.ticket', fn ($query) => $query->where('status', $this->statusFilter))
-            ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)));
+            ->whereHas('event.ticket', fn($query) => $query->where('status', $this->statusFilter))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)));
 
         // Count distinct event_ids to get unique events (MySQL compatible)
         return (int) $query->selectRaw('COUNT(DISTINCT event_id) as count')->value('count');
@@ -500,18 +500,18 @@ class EventCalendar extends Component
 
         $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
                     ]),
             ])
             ->where('status', 'approved')
-            ->whereHas('event.ticket', fn ($query) => $query->whereIn('status', ['approved', 'rescheduled']))
+            ->whereHas('event.ticket', fn($query) => $query->whereIn('status', ['approved', 'rescheduled']))
             ->whereBetween('start_date', [$startOfMonth, $endOfMonth])
             ->orderBy('start_date')
             ->orderBy('start_time')
@@ -553,17 +553,20 @@ class EventCalendar extends Component
             // Date range formatting
             $dateDisplay = $startDate->format('M d, Y');
             if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
-                $dateDisplay = $startDate->format('M d').' - '.$endDate->format('M d, Y');
+                $dateDisplay = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
             }
 
             // Get event color using the same method as calendar
             $hexColor = $this->getEventColor($event);
             $colorName = $this->hexToTailwindColor($hexColor);
 
+            $orgLogo = $event->ticket->user->studentOrganization->logo ?? null;
+
             return [
                 'title' => $event->ticket->title ?? 'Untitled Event',
                 'description' => $event->ticket->description ?? null,
                 'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
+                'organizationLogo' => $orgLogo ? $orgLogo->logo_url : asset('images/default-org-logo.svg'),
                 'eventType' => $event->eventType?->type_name ?? 'N/A',
                 'date' => $dateDisplay,
                 'time' => $timeRange,
@@ -581,22 +584,21 @@ class EventCalendar extends Component
     private function getEventTypeIcon($typeName): string
     {
         $iconMap = [
-            'cultural' => 's-musical-note',
-            'competition' => 's-trophy',
-            'academic' => 's-academic-cap',
-            'workshop' => 's-academic-cap',
-            'meeting' => 's-building-office',
-            'social' => 's-sparkles',
+            'General Assemblies and Similar Activities' => 's-user-group',
+            'Organization Shirts / IGP' => 's-shopping-bag',
+            'Off-Campus Activities' => 's-map-pin',
+            'Online Activities' => 's-video-camera',
+            'Training, Rehearsals, Practices' => 's-academic-cap',
         ];
 
         $lowerType = strtolower($typeName);
         foreach ($iconMap as $key => $icon) {
-            if (str_contains($lowerType, $key)) {
+            if (str_contains($lowerType, strtolower($key))) {
                 return $icon;
             }
         }
 
-        return 's-calendar-days';
+        return 's-calendar';
     }
 
     /**

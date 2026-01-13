@@ -21,9 +21,9 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                        <span class="badge badge-lg badge-success text-white">
-                            <i class="fa-solid fa-check-circle mr-1"></i> Verified
-                        </span>
+                            <span class="badge badge-lg badge-success text-white">
+                                <i class="fa-solid fa-check-circle mr-1"></i> Verified
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -39,17 +39,16 @@
                 </div>
 
                 {{-- Profile Information --}}
-                <x-mary-card title="Profile Information" subtitle="Update your account details"
-                    x-data="{
-                        initialName: @js($name),
-                        initialEmail: @js($email),
-                        initialPhone: @js($phone ?? ''),
-                        get hasChanges() {
-                            return $wire.name !== this.initialName || 
-                                   $wire.email !== this.initialEmail || 
-                                   $wire.phone !== this.initialPhone;
-                        }
-                    }"
+                <x-mary-card title="Profile Information" subtitle="Update your account details" x-data="{
+                    initialName: {{ Js::from($name) }},
+                    initialEmail: {{ Js::from($email) }},
+                    initialPhone: {{ Js::from($phone ?? '') }},
+                    get hasChanges() {
+                        return $wire.name !== this.initialName ||
+                            $wire.email !== this.initialEmail ||
+                            $wire.phone !== this.initialPhone;
+                    }
+                }"
                     @profile-updated.window="
                         initialName = $wire.name;
                         initialEmail = $wire.email;
@@ -84,14 +83,13 @@
 
                 {{-- Password Change --}}
                 <x-mary-card id="password" title="Change Password"
-                    subtitle="Update your password to keep your account secure"
-                    x-data="{
+                    subtitle="Update your password to keep your account secure" x-data="{
                         get hasPasswordInput() {
                             return ($wire.current_password && $wire.current_password.length > 0) ||
-                                   ($wire.new_password && $wire.new_password.length > 0) ||
-                                   ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
+                                ($wire.new_password && $wire.new_password.length > 0) ||
+                                ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
                         }
-                    ">
+                    }">
                     <x-slot:menu>
                         <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
                     </x-slot:menu>
@@ -161,15 +159,14 @@
 
                 {{-- Notification Preferences --}}
                 <x-mary-card id="notifications" title="System Preferences"
-                    subtitle="Manage system notifications and alerts"
-                    x-data="{
-                        initialEmailNotifications: @js($email_notifications),
-                        initialSystemAlerts: @js($system_alerts),
-                        initialSecurityLogs: @js($security_logs),
+                    subtitle="Manage system notifications and alerts" x-data="{
+                        initialEmailNotifications: {{ Js::from($email_notifications) }},
+                        initialSystemAlerts: {{ Js::from($system_alerts) }},
+                        initialSecurityLogs: {{ Js::from($security_logs) }},
                         get hasChanges() {
                             return $wire.email_notifications !== this.initialEmailNotifications ||
-                                   $wire.system_alerts !== this.initialSystemAlerts ||
-                                   $wire.security_logs !== this.initialSecurityLogs;
+                                $wire.system_alerts !== this.initialSystemAlerts ||
+                                $wire.security_logs !== this.initialSecurityLogs;
                         }
                     }"
                     @preferences-updated.window="
@@ -252,8 +249,8 @@
                             </div>
                             <div class="stat-title">Last Login</div>
                             @if ($user->last_login)
-                            <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
-                            <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
+                                <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
+                                <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
                             @endif
                         </div>
 

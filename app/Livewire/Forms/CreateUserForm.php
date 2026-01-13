@@ -15,7 +15,7 @@ class CreateUserForm extends Form
 
     public $password = '';
 
-    #[Validate('required', as: 'password confirmation')]
+    #[Validate(rule: 'required', as: 'password confirmation')]
     public $password_confirmation = '';
 
     #[Validate('required|exists:roles,role_name', as: 'role')]
@@ -27,14 +27,14 @@ class CreateUserForm extends Form
     #[Validate('required_if:role,student-org|exists:positions,position_id', as: 'position')]
     public $position = '';
 
-    #[Validate('required|regex:/^09\d{9}$/', as: 'contact number')]
     public $phone = '';
 
     public function rules()
     {
         $rules = [
             'email' => 'required|email|unique:users,email',
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'phone' => 'required|regex:/^09\d{9}$/',
         ];
 
         if ($this->role === 'student-org') {
@@ -48,7 +48,7 @@ class CreateUserForm extends Form
     {
         return [
             'name.regex' => 'Name must only contain letters and spaces.',
-            'email.ends_with' => 'Email must end with @plv.edu.ph',
+            'email.ends_with' => 'student-org email must end with @plv.edu.ph',
             'phone.regex' => 'Contact number must be 11 digits and start with 09.',
 
             'name.required' => 'Name is required.',
@@ -58,9 +58,11 @@ class CreateUserForm extends Form
             'email.required' => 'Email is required.',
             'email.email' => 'Please provide a valid email address.',
             'email.unique' => 'This email is already registered.',
+
             'password.required' => 'Password is required.',
-            'password_confirmation.required' => 'Password confirmation is required.',
-            'password_confirmation.same' => 'Password confirmation does not match.',
+            'password confirmation.required' => 'Password confirmation is required.',
+            'password confirmation.same' => 'Password confirmation does not match.',
+
             'role.required' => 'Role is required.',
             'role.exists' => 'Selected role is invalid.',
             'org_name.required_if' => 'Organization is required for student org role.',

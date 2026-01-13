@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revision Requested</title>
+    <title>GSO For Revision</title>
 </head>
 
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; background-color: #f9fafb; margin: 0; padding: 0;">
@@ -15,7 +15,7 @@
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #ffffff; padding: 32px 30px 24px; border-bottom: 1px solid #e5e7eb;">
-                            <h1 style="color: #111827; margin: 0; font-size: 22px; font-weight: 600;">Revision Requested</h1>
+                            <h1 style="color: #111827; margin: 0; font-size: 22px; font-weight: 600;">GSO For Revision</h1>
                             <p style="color: #6b7280; margin: 6px 0 0 0; font-size: 14px;">PLV Event Scheduling System</p>
                         </td>
                     </tr>
@@ -30,14 +30,14 @@
 
                             <!-- Message -->
                             <p style="margin: 0 0 25px 0; color: #374151; font-size: 15px; line-height: 1.8;">
-                                Your ticket requires revisions before it can proceed. Please review the feedback below and update your submission.
+                                The General Services Office (GSO) has put this ticket for revision. Please review the feedback below and make your final decision.
                             </p>
 
                             <!-- Warning Box -->
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 25px;">
                                 <tr>
                                     <td style="background-color: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; border-radius: 0 6px 6px 0;">
-                                        <p style="margin: 0; color: #92400e; font-size: 14px;"><strong>✎ Action Required:</strong> Please make the necessary changes and resubmit your ticket.</p>
+                                        <p style="margin: 0; color: #92400e; font-size: 14px;"><strong>⚠ GSO Revision Required:</strong> The venue or resources require changes before approval.</p>
                                     </td>
                                 </tr>
                             </table>
@@ -82,7 +82,7 @@
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 25px;">
                                 <tr>
                                     <td style="background-color: #fef2f2; border-left: 3px solid #ef4444; padding: 16px; border-radius: 0 6px 6px 0;">
-                                        <p style="margin: 0 0 8px 0; color: #991b1b; font-size: 14px; font-weight: 600;">Revision Feedback:</p>
+                                        <p style="margin: 0 0 8px 0; color: #991b1b; font-size: 14px; font-weight: 600;">GSO Revision Reason:</p>
                                         <p style="margin: 0; color: #7f1d1d; font-size: 14px;">{{ $remarks }}</p>
                                     </td>
                                 </tr>
@@ -96,7 +96,7 @@
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
                                                 <td style="border-radius: 8px; background-color: #111827;">
-                                                    <a href="{{ $actionUrl }}" style="display: inline-block; padding: 14px 36px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">{{ $actionText ?? 'View and Revise Ticket' }}</a>
+                                                    <a href="{{ $actionUrl }}" style="display: inline-block; padding: 14px 36px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">{{ $actionText ?? 'Review Ticket' }}</a>
                                                 </td>
                                             </tr>
                                         </table>

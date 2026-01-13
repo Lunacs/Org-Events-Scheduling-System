@@ -42,25 +42,7 @@
 
         {{-- Notifications List Skeleton --}}
         <div class="bg-base-100 rounded-box shadow-lg p-6">
-            <div class="space-y-4">
-                @for ($i = 0; $i < 5; $i++)
-                    <div class="flex items-start gap-4 p-4 bg-base-200/50 rounded-lg border-l-4 border-base-300">
-                        <div class="skeleton w-10 h-10 rounded-full shrink-0"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="skeleton h-5 w-3/4 mb-2"></div>
-                            <div class="skeleton h-4 w-full mb-2"></div>
-                            <div class="flex gap-4 mt-2">
-                                <div class="skeleton h-3 w-24"></div>
-                                <div class="skeleton h-3 w-20"></div>
-                            </div>
-                        </div>
-                        <div class="skeleton w-3 h-3 rounded-full shrink-0"></div>
-                    </div>
-                    @if ($i < 4)
-                        <div class="divider my-0"></div>
-                    @endif
-                @endfor
-            </div>
+            @include('livewire.placeholders.notification-list')
         </div>
 
     </div>

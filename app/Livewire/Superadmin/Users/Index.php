@@ -11,6 +11,7 @@ use App\Services\TransactionLogService;
 use App\Livewire\Forms\CreateUserForm;
 use App\Livewire\Forms\EditUserForm;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -41,11 +42,74 @@ class Index extends Component
 
     public function updated($property, $value)
     {
-        if ($property === 'createForm.role') {
+        // Validate email in real-time (rules are dynamic based on role)
+        if ($property === 'createForm.email') {
+            $this->resetErrorBag('createForm.email');
             $this->createForm->validateOnly('email');
         }
-        if ($property === 'editForm.role') {
+
+        if ($property === 'createForm.role') {
+            // Re-validate email when role changes (for @plv.edu.ph rule)
+            if (!empty($this->createForm->email)) {
+                $this->resetErrorBag('createForm.email');
+                $this->createForm->validateOnly('email');
+            }
+        }
+
+        if ($property === 'editForm.email') {
+            $this->resetErrorBag('editForm.email');
             $this->editForm->validateOnly('email');
+        }
+
+        if ($property === 'editForm.role') {
+            // Re-validate email when role changes (for @plv.edu.ph rule)
+            if (!empty($this->editForm->email)) {
+                $this->resetErrorBag('editForm.email');
+                $this->editForm->validateOnly('email');
+            }
+        }
+
+        // Validate password fields on blur
+        if ($property === 'createForm.password') {
+            $this->resetErrorBag('createForm.password');
+            $this->createForm->validateOnly('password');
+        }
+
+        if ($property === 'createForm.password_confirmation') {
+            $this->resetErrorBag('createForm.password');
+            $this->resetErrorBag('createForm.password_confirmation');
+            $this->createForm->validateOnly('password');
+        }
+
+        if ($property === 'editForm.password') {
+            if (!empty($this->editForm->password)) {
+                $this->resetErrorBag('editForm.password');
+                $this->editForm->validateOnly('password');
+            }
+        }
+
+        if ($property === 'editForm.password_confirmation') {
+            // Only validate if password is provided
+            if (!empty($this->editForm->password)) {
+                $this->resetErrorBag('editForm.password');
+                $this->resetErrorBag('editForm.password_confirmation');
+                $this->editForm->validateOnly('password');
+            } else {
+                // Clear password errors if both fields are empty
+                $this->resetErrorBag('editForm.password');
+                $this->resetErrorBag('editForm.password_confirmation');
+            }
+        }
+
+        // Validate phone on blur
+        if ($property === 'createForm.phone') {
+            $this->resetErrorBag('createForm.phone');
+            $this->createForm->validateOnly('phone');
+        }
+
+        if ($property === 'editForm.phone') {
+            $this->resetErrorBag('editForm.phone');
+            $this->editForm->validateOnly('phone');
         }
     }
 
@@ -120,87 +184,98 @@ class Index extends Component
         // Validate with the rules() method
         $this->createForm->validate();
 
-        // Get the role ID from role name
-        $roleId = User::getRoleId($this->createForm->role);
+        DB::beginTransaction();
+        try {
+            // Get the role ID from role name
+            $roleId = User::getRoleId($this->createForm->role);
 
-        // Define available avatar seeds (same as AvatarSelector)
-        $avatarSeeds = [
-            'felix',
-            'aneka',
-            'bob',
-            'charlie',
-            'david',
-            'emma',
-            'frank',
-            'grace',
-            'hannah',
-            'ivan',
-            'julia',
-            'kevin',
-            'laura',
-            'mike',
-            'nina',
-            'oliver',
-            'peter',
-            'quinn',
-            'rachel',
-            'sam',
-            'tina',
-            'uma',
-            'victor',
-            'wendy',
-        ];
+            // Define available avatar seeds (same as AvatarSelector)
+            $avatarSeeds = [
+                'felix',
+                'aneka',
+                'bob',
+                'charlie',
+                'david',
+                'emma',
+                'frank',
+                'grace',
+                'hannah',
+                'ivan',
+                'julia',
+                'kevin',
+                'laura',
+                'mike',
+                'nina',
+                'oliver',
+                'peter',
+                'quinn',
+                'rachel',
+                'sam',
+                'tina',
+                'uma',
+                'victor',
+                'wendy',
+            ];
 
-        // Prepare user data
-        $userData = [
-            'name' => $this->createForm->name,
-            'email' => $this->createForm->email,
-            'password' => Hash::make($this->createForm->password),
-            'role_id' => $roleId,
-            'phone' => $this->createForm->phone,
-            'avatar_style' => 'big-ears',
-            'avatar_seed' => $avatarSeeds[array_rand($avatarSeeds)],
-        ];
+            // Prepare user data
+            $userData = [
+                'name' => $this->createForm->name,
+                'email' => $this->createForm->email,
+                'password' => Hash::make($this->createForm->password),
+                'role_id' => $roleId,
+                'phone' => $this->createForm->phone,
+                'avatar_style' => 'big-ears',
+                'avatar_seed' => $avatarSeeds[array_rand($avatarSeeds)],
+            ];
 
-        // Add role-specific data
-        if ($this->createForm->role === 'student-org') {
-            $userData['org_id'] = $this->createForm->org_name;
-            $userData['position_id'] = $this->createForm->position;
-            $userData['office_id'] = null;
-        } elseif ($this->createForm->role === 'osa') {
-            // Automatically assign OSA office
-            $osaOffice = Office::where('office_code', 'OSA')->first();
-            $userData['office_id'] = $osaOffice?->office_id;
-            $userData['org_id'] = null;
-            $userData['position_id'] = null;
-        } elseif ($this->createForm->role === 'gso') {
-            // Automatically assign GSO office
-            $gsoOffice = Office::where('office_code', 'GSO')->first();
-            $userData['office_id'] = $gsoOffice?->office_id;
-            $userData['org_id'] = null;
-            $userData['position_id'] = null;
-        } else {
-            $userData['org_id'] = null;
-            $userData['office_id'] = null;
-            $userData['position_id'] = null;
+            // Add role-specific data
+            if ($this->createForm->role === 'student-org') {
+                $userData['org_id'] = $this->createForm->org_name;
+                $userData['position_id'] = $this->createForm->position;
+                $userData['office_id'] = null;
+            } elseif ($this->createForm->role === 'osa') {
+                // Automatically assign OSA office
+                $osaOffice = Office::where('office_code', 'OSA')->first();
+                $userData['office_id'] = $osaOffice?->office_id;
+                $userData['org_id'] = null;
+                $userData['position_id'] = null;
+            } elseif ($this->createForm->role === 'gso') {
+                // Automatically assign GSO office
+                $gsoOffice = Office::where('office_code', 'GSO')->first();
+                $userData['office_id'] = $gsoOffice?->office_id;
+                $userData['org_id'] = null;
+                $userData['position_id'] = null;
+            } else {
+                $userData['org_id'] = null;
+                $userData['office_id'] = null;
+                $userData['position_id'] = null;
+            }
+
+            // Create user
+            $user = User::create($userData);
+
+            // Log the user creation
+            TransactionLogService::logUserOperation('created', $user);
+
+            DB::commit();
+
+            // Send notification after commit
+            $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
+            foreach ($superadmins as $admin) {
+                $admin->notify(new \App\Notifications\UserCreatedNotification($user, auth()->user()));
+            }
+
+            // Reset and close
+            $this->createForm->reset();
+            $this->dispatch('user-drawer-close');
+            $this->success('User created successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('User creation failed', [
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to create user: ' . $e->getMessage(), position: 'toast-top');
         }
-
-        // Create user
-        $user = User::create($userData);
-
-        // Log the user creation
-        TransactionLogService::logUserOperation('created', $user);
-
-        // Send notification to all superadmins
-        $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
-        foreach ($superadmins as $admin) {
-            $admin->notify(new \App\Notifications\UserCreatedNotification($user, auth()->user()));
-        }
-
-        // Reset and close
-        $this->createForm->reset();
-        $this->dispatch('user-drawer-close');
-        $this->success('User created successfully!', position: 'toast-top');
     }
 
     public function updateUser()
@@ -214,88 +289,100 @@ class Index extends Component
         // Validate
         $this->editForm->validate();
 
-        // Track changes
-        if ($originalUser['name'] !== $this->editForm->name) {
-            $changes[] = "Name: {$originalUser['name']} → {$this->editForm->name}";
-        }
-        if ($originalUser['email'] !== $this->editForm->email) {
-            $changes[] = "Email: {$originalUser['email']} → {$this->editForm->email}";
-        }
-        if ($originalUser['phone'] !== $this->editForm->phone) {
-            $changes[] = "Phone: {$originalUser['phone']} → {$this->editForm->phone}";
-        }
-
-        // Update user data
-        $user->name = $this->editForm->name;
-        $user->email = $this->editForm->email;
-        $user->phone = $this->editForm->phone;
-
-        // Only update role if not superadmin
-        if (! $user->isSuperAdmin()) {
-            $newRoleId = User::getRoleId($this->editForm->role);
-            if ($originalUser['role_id'] !== $newRoleId) {
-                $changes[] = 'Role changed';
+        DB::beginTransaction();
+        try {
+            // Track changes
+            if ($originalUser['name'] !== $this->editForm->name) {
+                $changes[] = "Name: {$originalUser['name']} → {$this->editForm->name}";
             }
-            $user->role_id = $newRoleId;
-
-            // Update role-specific data
-            if ($this->editForm->role === 'student-org') {
-                $user->org_id = $this->editForm->org_name;
-                $user->position_id = $this->editForm->position;
-                $user->office_id = null;
-                if ($originalUser['org_id'] !== $this->editForm->org_name) {
-                    $changes[] = 'Organization changed';
-                }
-                if ($originalUser['position_id'] !== $this->editForm->position) {
-                    $changes[] = 'Position changed';
-                }
-            } elseif ($this->editForm->role === 'osa') {
-                // Automatically assign OSA office
-                $osaOffice = Office::where('office_code', 'OSA')->first();
-                $user->office_id = $osaOffice?->office_id;
-                $user->org_id = null;
-                $user->position_id = null;
-                if ($originalUser['office_id'] !== $user->office_id) {
-                    $changes[] = 'Office automatically assigned to OSA';
-                }
-            } elseif ($this->editForm->role === 'gso') {
-                // Automatically assign GSO office
-                $gsoOffice = Office::where('office_code', 'GSO')->first();
-                $user->office_id = $gsoOffice?->office_id;
-                $user->org_id = null;
-                $user->position_id = null;
-                if ($originalUser['office_id'] !== $user->office_id) {
-                    $changes[] = 'Office automatically assigned to GSO';
-                }
-            } else {
-                $user->org_id = null;
-                $user->office_id = null;
-                $user->position_id = null;
+            if ($originalUser['email'] !== $this->editForm->email) {
+                $changes[] = "Email: {$originalUser['email']} → {$this->editForm->email}";
             }
+            if ($originalUser['phone'] !== $this->editForm->phone) {
+                $changes[] = "Phone: {$originalUser['phone']} → {$this->editForm->phone}";
+            }
+
+            // Update user data
+            $user->name = $this->editForm->name;
+            $user->email = $this->editForm->email;
+            $user->phone = $this->editForm->phone;
+
+            // Only update role if not superadmin
+            if (! $user->isSuperAdmin()) {
+                $newRoleId = User::getRoleId($this->editForm->role);
+                if ($originalUser['role_id'] !== $newRoleId) {
+                    $changes[] = 'Role changed';
+                }
+                $user->role_id = $newRoleId;
+
+                // Update role-specific data
+                if ($this->editForm->role === 'student-org') {
+                    $user->org_id = $this->editForm->org_name;
+                    $user->position_id = $this->editForm->position;
+                    $user->office_id = null;
+                    if ($originalUser['org_id'] !== $this->editForm->org_name) {
+                        $changes[] = 'Organization changed';
+                    }
+                    if ($originalUser['position_id'] !== $this->editForm->position) {
+                        $changes[] = 'Position changed';
+                    }
+                } elseif ($this->editForm->role === 'osa') {
+                    // Automatically assign OSA office
+                    $osaOffice = Office::where('office_code', 'OSA')->first();
+                    $user->office_id = $osaOffice?->office_id;
+                    $user->org_id = null;
+                    $user->position_id = null;
+                    if ($originalUser['office_id'] !== $user->office_id) {
+                        $changes[] = 'Office automatically assigned to OSA';
+                    }
+                } elseif ($this->editForm->role === 'gso') {
+                    // Automatically assign GSO office
+                    $gsoOffice = Office::where('office_code', 'GSO')->first();
+                    $user->office_id = $gsoOffice?->office_id;
+                    $user->org_id = null;
+                    $user->position_id = null;
+                    if ($originalUser['office_id'] !== $user->office_id) {
+                        $changes[] = 'Office automatically assigned to GSO';
+                    }
+                } else {
+                    $user->org_id = null;
+                    $user->office_id = null;
+                    $user->position_id = null;
+                }
+            }
+
+            // Only update password if provided
+            if (! empty($this->editForm->password)) {
+                $user->password = Hash::make($this->editForm->password);
+                $changes[] = 'Password updated';
+                // Log password change
+                TransactionLogService::logAuthEvent('password_changed', $user, 'Password changed via admin interface');
+            }
+
+            $user->save();
+
+            // Log the user update with changes
+            TransactionLogService::logUserOperation('updated', $user, $changes);
+
+            DB::commit();
+
+            // Reset and close
+            $this->editForm->reset();
+            $this->dispatch('user-drawer-close');
+
+            // Clear computed cache and refresh
+            unset($this->users);
+            $this->resetPage();
+
+            $this->success('User updated successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('User update failed', [
+                'user_id' => $this->editForm->user_id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to update user: ' . $e->getMessage(), position: 'toast-top');
         }
-
-        // Only update password if provided
-        if (! empty($this->editForm->password)) {
-            $user->password = Hash::make($this->editForm->password);
-            $changes[] = 'Password updated';
-            // Log password change
-            TransactionLogService::logAuthEvent('password_changed', $user, 'Password changed via admin interface');
-        }
-
-        $user->save();
-
-        // Log the user update with changes
-        TransactionLogService::logUserOperation('updated', $user, $changes);
-
-        // Reset and close
-        $this->editForm->reset();
-        $this->dispatch('user-drawer-close');
-
-        // Clear computed cache and refresh
-        unset($this->users);
-        $this->resetPage();
-
-        $this->success('User updated successfully!', position: 'toast-top');
     }
 
     public function resetCreateForm()
@@ -354,19 +441,32 @@ class Index extends Component
             return;
         }
 
-        // Log the user deletion before deleting
-        TransactionLogService::logUserOperation('deleted', $user);
+        DB::beginTransaction();
+        try {
+            // Log the user deletion before deleting
+            TransactionLogService::logUserOperation('deleted', $user);
 
-        $user->delete();
+            $user->delete();
 
-        // Close modal and refresh
-        $this->closeDeleteModal();
+            DB::commit();
 
-        // Clear computed cache and refresh
-        unset($this->users);
-        $this->resetPage();
+            // Close modal and refresh
+            $this->closeDeleteModal();
 
-        $this->success('User deleted successfully!', position: 'toast-top');
+            // Clear computed cache and refresh
+            unset($this->users);
+            $this->resetPage();
+
+            $this->success('User deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('User deletion failed', [
+                'user_id' => $this->deletingUserId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to delete user: ' . $e->getMessage(), position: 'toast-top');
+            $this->closeDeleteModal();
+        }
     }
 
     public function updatedSearch()
@@ -400,6 +500,57 @@ class Index extends Component
         };
     }
 
+    public function hasActiveFilters()
+    {
+        return $this->search !== '' || $this->roleFilter !== 'all';
+    }
+
+    public function hasCreateFormErrors()
+    {
+        // Check for any error keys starting with createForm.
+        $errors = $this->getErrorBag();
+        foreach ($errors->keys() as $key) {
+            if (str_starts_with($key, 'createForm.')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function hasEditFormErrors()
+    {
+        // Check for any error keys starting with editForm.
+        $errors = $this->getErrorBag();
+        foreach ($errors->keys() as $key) {
+            if (str_starts_with($key, 'editForm.')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isCreateFormValid()
+    {
+        // Check if all required fields are filled and no errors exist
+        return !empty($this->createForm->name)
+            && !empty($this->createForm->email)
+            && !empty($this->createForm->password)
+            && !empty($this->createForm->password_confirmation)
+            && !empty($this->createForm->role)
+            && !empty($this->createForm->phone)
+            && !$this->hasCreateFormErrors();
+    }
+
+    public function isEditFormValid()
+    {
+        // Check if all required fields are filled and no errors exist
+        return !empty($this->editForm->name)
+            && !empty($this->editForm->email)
+            && !empty($this->editForm->role)
+            && !empty($this->editForm->phone)
+            && !$this->hasEditFormErrors();
+    }
+
     public function render()
     {
         return view('livewire.superadmin.users.index')
@@ -409,6 +560,7 @@ class Index extends Component
                 'roles' => $this->roles,
                 'positions' => $this->positions,
                 'organizations' => $this->organizations,
+                'hasActiveFilters' => $this->hasActiveFilters(),
             ]);
     }
 

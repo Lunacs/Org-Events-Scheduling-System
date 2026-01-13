@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
 use Exception;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -444,6 +445,25 @@ class SubmitTicket extends Component
         $currentUser = auth()->user();
         $currentUserinfo = $currentUser->studentOrganization;
         $ticketCode = null;
+
+        // Rate limiting: max 3 ticket submissions per minute per user
+        $rateLimitKey = 'ticket-submit:' . $currentUser->user_id;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $this->isProcessing = false;
+            $this->toast(
+                type: 'warning',
+                title: 'Too Many Attempts',
+                description: "Please wait {$seconds} seconds before submitting again.",
+                position: 'toast-top toast-end',
+                icon: 'o-clock',
+                css: 'alert-warning',
+                timeout: 5000,
+                noProgress: true,
+            );
+            return;
+        }
+        RateLimiter::hit($rateLimitKey, 60); // 60 second decay
 
         try {
             // Validate all steps before submission

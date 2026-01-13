@@ -12,14 +12,14 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email|ends_with:@plv.edu.ph')]
+    #[Validate('required|string|email')]
     public string $email = '';
 
     #[Validate('required|string')]
     public string $password = '';
 
     #[Validate('boolean')]
-    public bool $remember = false;
+    public bool $remember = true;
 
     /**
      * Get custom validation messages.
@@ -80,7 +80,7 @@ class LoginForm extends Form
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'form.email' => 'Too many login attempts. Please try again in ' . ceil($seconds / 60) . ' minutes.',
+            'form.email' => 'Too many login attempts. Please try again in ' . ceil($seconds / 60) . ' minute(s).',
         ]);
     }
 

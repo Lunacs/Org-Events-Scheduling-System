@@ -25,9 +25,10 @@
                                 updates</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <x-mary-button label="Mark All as Read" icon="s-check" class="btn-ghost btn-sm cursor-pointer"
-                                wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
-                            <x-mary-button label="Clear All Read" icon="s-trash" class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
+                            <x-mary-button label="Mark All as Read" icon="s-check"
+                                class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
+                            <x-mary-button label="Clear All Read" icon="s-trash"
+                                class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
                                 wire:click="clearAllRead" :disabled="$readCount === 0"
                                 wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
                         </div>
@@ -127,7 +128,7 @@
                                 <option value="unread">Unread</option>
                                 <option value="read">Read</option>
                             </select>
-                            <button wire:click="clearFilters" type="button" class="btn btn-ghost"
+                            <button data-tip="Clear Filters" wire:click="clearFilters" type="button" class="tooltip btn btn-ghost"
                                 x-show="$wire.search || $wire.typeFilter || $wire.statusFilter" x-transition
                                 wire:loading.attr="disabled" wire:target="clearFilters">
                                 <svg wire:loading.remove wire:target="clearFilters" class="w-4 h-4" fill="none"
@@ -144,166 +145,162 @@
 
                 {{-- Notifications List --}}
                 <div class="bg-base-100 rounded-box shadow-lg p-6 relative min-h-[400px]">
-                    {{-- Loading Overlay --}}
-                    <div wire:loading.flex wire:target="search,typeFilter,statusFilter,clearFilters"
-                        class="absolute inset-0 bg-base-100/60 backdrop-blur-sm z-10 items-center justify-center rounded-box">
-                        <div class="text-center">
-                            <span class="loading loading-spinner loading-lg text-primary"></span>
-                            <p class="mt-2 text-sm text-base-content/70">Loading notifications...</p>
-                        </div>
+                    {{-- Skeleton Loader (Filtering/Searching) --}}
+                    <div wire:loading wire:target="search,typeFilter,statusFilter,clearFilters" class="w-full">
+                        @include('livewire.placeholders.notification-list')
                     </div>
 
                     {{-- Notifications Grid --}}
-                    <div class="space-y-4" wire:loading.remove.delay
+                    <div class="space-y-4" wire:loading.remove
                         wire:target="search,typeFilter,statusFilter,clearFilters">
                         @forelse($notifications as $notification)
-                        @php
-                        $data = $notification->data;
-                        $isUnread = is_null($notification->read_at);
-                        $createdAt = Illuminate\Support\Carbon::parse($notification->created_at);
-                        $timeAgo = $createdAt->diffForHumans();
+                            @php
+                                $data = $notification->data;
+                                $isUnread = is_null($notification->read_at);
+                                $createdAt = Illuminate\Support\Carbon::parse($notification->created_at);
+                                $timeAgo = $createdAt->diffForHumans();
 
-                        // Map notification colors
-                        $colorMap = [
-                        'primary' => 'primary',
-                        'success' => 'success',
-                        'error' => 'error',
-                        'warning' => 'warning',
-                        'info' => 'info',
-                        'secondary' => 'secondary',
-                        ];
-                        $color = $colorMap[$data['color'] ?? 'primary'] ?? 'primary';
+                                // Map notification colors
+                                $colorMap = [
+                                    'primary' => 'primary',
+                                    'success' => 'success',
+                                    'error' => 'error',
+                                    'warning' => 'warning',
+                                    'info' => 'info',
+                                    'secondary' => 'secondary',
+                                ];
+                                $color = $colorMap[$data['color'] ?? 'primary'] ?? 'primary';
 
-                        // Determine notification URL based on type
-                        $type = $data['type'] ?? '';
-                        $ticketNumber = $data['ticket_number'] ?? null;
-                        $url = null;
+                                // Determine notification URL based on type
+                                $type = $data['type'] ?? '';
+                                $ticketNumber = $data['ticket_number'] ?? null;
+                                $url = null;
 
-                        if (str_starts_with($type, 'ticket_') && $ticketNumber) {
-                        $url = route('osa.ticket-review.show', $ticketNumber);
-                        } else {
-                        $url = route('admin.notifications');
-                        }
+                                if (str_starts_with($type, 'ticket_') && $ticketNumber) {
+                                    $url = route('osa.ticket-review.show', $ticketNumber);
+                                } else {
+                                    $url = route('admin.notifications');
+                                }
 
-                        // Map colors to Tailwind classes
-                        $bgClass = match ($color) {
-                        'success' => 'bg-success/5 border-success hover:bg-success/10',
-                        'error' => 'bg-error/5 border-error hover:bg-error/10',
-                        'warning' => 'bg-warning/5 border-warning hover:bg-warning/10',
-                        'info' => 'bg-info/5 border-info hover:bg-info/10',
-                        'secondary' => 'bg-secondary/5 border-secondary hover:bg-secondary/10',
-                        default => 'bg-primary/5 border-primary hover:bg-primary/10',
-                        };
+                                // Map colors to Tailwind classes
+                                $bgClass = match ($color) {
+                                    'success' => 'bg-success/5 border-success hover:bg-success/10',
+                                    'error' => 'bg-error/5 border-error hover:bg-error/10',
+                                    'warning' => 'bg-warning/5 border-warning hover:bg-warning/10',
+                                    'info' => 'bg-info/5 border-info hover:bg-info/10',
+                                    'secondary' => 'bg-secondary/5 border-secondary hover:bg-secondary/10',
+                                    default => 'bg-primary/5 border-primary hover:bg-primary/10',
+                                };
 
-                        $iconBgClass = match ($color) {
-                        'success' => 'bg-success/20',
-                        'error' => 'bg-error/20',
-                        'warning' => 'bg-warning/20',
-                        'info' => 'bg-info/20',
-                        'secondary' => 'bg-secondary/20',
-                        default => 'bg-primary/20',
-                        };
+                                $iconBgClass = match ($color) {
+                                    'success' => 'bg-success/20',
+                                    'error' => 'bg-error/20',
+                                    'warning' => 'bg-warning/20',
+                                    'info' => 'bg-info/20',
+                                    'secondary' => 'bg-secondary/20',
+                                    default => 'bg-primary/20',
+                                };
 
-                        $iconTextClass = match ($color) {
-                        'success' => 'text-success',
-                        'error' => 'text-error',
-                        'warning' => 'text-warning',
-                        'info' => 'text-info',
-                        'secondary' => 'text-secondary',
-                        default => 'text-primary',
-                        };
+                                $iconTextClass = match ($color) {
+                                    'success' => 'text-success',
+                                    'error' => 'text-error',
+                                    'warning' => 'text-warning',
+                                    'info' => 'text-info',
+                                    'secondary' => 'text-secondary',
+                                    default => 'text-primary',
+                                };
 
-                        $dotClass = match ($color) {
-                        'success' => 'bg-success',
-                        'error' => 'bg-error',
-                        'warning' => 'bg-warning',
-                        'info' => 'bg-info',
-                        'secondary' => 'bg-secondary',
-                        default => 'bg-primary',
-                        };
-                        @endphp
+                                $dotClass = match ($color) {
+                                    'success' => 'bg-success',
+                                    'error' => 'bg-error',
+                                    'warning' => 'bg-warning',
+                                    'info' => 'bg-info',
+                                    'secondary' => 'bg-secondary',
+                                    default => 'bg-primary',
+                                };
+                            @endphp
 
-                        <div
-                            class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border-l-4 hover:shadow-md transition-all {{ !$isUnread ? 'opacity-75' : '' }} group">
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
-                                    <x-mary-icon name="s-bell" class="w-5 h-5 {{ $iconTextClass }}" />
-                                </div>
-                            </div>
-                            <a href="{{ $url }}" wire:navigate
-                                wire:click="markAsRead('{{ $notification->id }}')" class="flex-1 min-w-0 block">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <p class="font-semibold text-base-content">
-                                            {{ $data['title'] ?? 'Notification' }}
-                                        </p>
-                                        <p class="text-sm text-base-content/70 mt-1">
-                                            {{ $data['message'] ?? 'No message' }}
-                                        </p>
-
-                                        @if (isset($data['ticket_number']))
-                                        <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
-                                            <span class="flex items-center gap-1">
-                                                <x-mary-icon name="s-ticket" class="w-3 h-3" />
-                                                <span>{{ $data['ticket_number'] }}</span>
-                                            </span>
-                                            <span class="flex items-center gap-1">
-                                                <x-mary-icon name="s-clock" class="w-3 h-3" />
-                                                <span>{{ $timeAgo }}</span>
-                                            </span>
-                                        </div>
-                                        @else
-                                        <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
-                                            <span class="flex items-center gap-1">
-                                                <x-mary-icon name="s-clock" class="w-3 h-3" />
-                                                <span>{{ $timeAgo }}</span>
-                                            </span>
-                                        </div>
-                                        @endif
-                                    </div>
-                                    <div class="flex flex-col gap-2 ml-4">
-                                        @if ($isUnread)
-                                        <div class="w-3 h-3 {{ $dotClass }} rounded-full" title="Unread">
-                                        </div>
-                                        @endif
+                            <div
+                                class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border-l-4 hover:shadow-md transition-all {{ !$isUnread ? 'opacity-75' : '' }} group">
+                                <div class="shrink-0">
+                                    <div
+                                        class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
+                                        <x-mary-icon name="s-bell" class="w-5 h-5 {{ $iconTextClass }}" />
                                     </div>
                                 </div>
-                            </a>
-                            <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button wire:click.prevent="deleteNotification('{{ $notification->id }}')"
-                                    wire:confirm="Delete this notification? This action cannot be undone."
-                                    class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
-                                    title="Delete notification">
-                                    <x-mary-icon name="s-trash" class="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
+                                <a href="{{ $url }}" wire:navigate
+                                    wire:click="markAsRead('{{ $notification->id }}')" class="flex-1 min-w-0 block">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-base-content">
+                                                {{ $data['title'] ?? 'Notification' }}
+                                            </p>
+                                            <p class="text-sm text-base-content/70 mt-1">
+                                                {{ $data['message'] ?? 'No message' }}
+                                            </p>
 
-                        @if (!$loop->last)
-                        <div class="divider my-0"></div>
-                        @endif
+                                            @if (isset($data['ticket_number']))
+                                                <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
+                                                    <span class="flex items-center gap-1">
+                                                        <x-mary-icon name="s-ticket" class="w-3 h-3" />
+                                                        <span>{{ $data['ticket_number'] }}</span>
+                                                    </span>
+                                                    <span class="flex items-center gap-1">
+                                                        <x-mary-icon name="s-clock" class="w-3 h-3" />
+                                                        <span>{{ $timeAgo }}</span>
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
+                                                    <span class="flex items-center gap-1">
+                                                        <x-mary-icon name="s-clock" class="w-3 h-3" />
+                                                        <span>{{ $timeAgo }}</span>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="flex flex-col gap-2 ml-4">
+                                            @if ($isUnread)
+                                                <div class="w-3 h-3 {{ $dotClass }} rounded-full" title="Unread">
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </a>
+                                <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button wire:click.prevent="deleteNotification('{{ $notification->id }}')"
+                                        wire:confirm="Delete this notification? This action cannot be undone."
+                                        class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
+                                        title="Delete notification">
+                                        <x-mary-icon name="s-trash" class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (!$loop->last)
+                                <div class="divider my-0"></div>
+                            @endif
                         @empty
-                        <div class="text-center py-12">
-                            <x-mary-icon name="s-bell-slash"
-                                class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
-                            <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
-                            <p class="text-base-content/50 text-sm mt-2">
-                                <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting
-                                    your
-                                    filters</span>
-                                <span x-show="!$wire.search && !$wire.typeFilter && !$wire.statusFilter">You're all
-                                    caught
-                                    up!</span>
-                            </p>
-                        </div>
+                            <div class="text-center py-12">
+                                <x-mary-icon name="s-bell-slash"
+                                    class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
+                                <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
+                                <p class="text-base-content/50 text-sm mt-2">
+                                    <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting
+                                        your
+                                        filters</span>
+                                    <span x-show="!$wire.search && !$wire.typeFilter && !$wire.statusFilter">You're all
+                                        caught
+                                        up!</span>
+                                </p>
+                            </div>
                         @endforelse
                     </div>
                 </div>
 
                 {{-- Pagination --}}
                 @if ($notifications->hasPages())
-                <x-tickets.ticket-pagination :notifications="$notifications" />
+                    <x-tickets.ticket-pagination :notifications="$notifications" />
                 @endif
 
                 {{-- Notification Settings --}}

@@ -5,6 +5,7 @@ namespace App\Livewire\Superadmin\SystemSettings;
 use App\Models\Course;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -74,19 +75,28 @@ class CourseManager extends Component
             'newDepartment.string' => 'Department must be a string.',
         ]);
 
-        $course = Course::create([
-            'course_code' => $this->newCourseCode,
-            'course_name' => $this->newCourseName,
-            'department' => $this->newDepartment,
-        ]);
+        DB::beginTransaction();
+        try {
+            $course = Course::create([
+                'course_code' => $this->newCourseCode,
+                'course_name' => $this->newCourseName,
+                'department' => $this->newDepartment,
+            ]);
 
-        TransactionLogService::logCourseOperation('created', $course);
+            TransactionLogService::logCourseOperation('created', $course);
 
-        $this->reset(['newCourseCode', 'newCourseName', 'newDepartment']);
-        $this->addCourseModalOpen = false;
-        $this->resetErrorBag();
-        $this->clearCoursesCache();
-        $this->success('Course added successfully!', position: 'toast-top');
+            DB::commit();
+
+            $this->reset(['newCourseCode', 'newCourseName', 'newDepartment']);
+            $this->addCourseModalOpen = false;
+            $this->resetErrorBag();
+            $this->clearCoursesCache();
+            $this->success('Course added successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Course creation failed', ['error' => $e->getMessage()]);
+            $this->error('Failed to create course: ' . $e->getMessage(), position: 'toast-top');
+        }
     }
 
     public function resetAddCourseForm()
@@ -111,7 +121,7 @@ class CourseManager extends Component
     public function editCourse()
     {
         $this->validate([
-            'courseCode' => 'required|string|max:50|unique:courses,course_code,'.$this->editingCourseId.',course_id',
+            'courseCode' => 'required|string|max:50|unique:courses,course_code,' . $this->editingCourseId . ',course_id',
             'courseName' => 'required|string|max:255',
             'department' => 'nullable|string|max:255',
         ], messages: [
@@ -194,26 +204,33 @@ class CourseManager extends Component
 
         if (! $course) {
             $this->error('Course not found!', position: 'toast-top');
-
             return;
         }
 
         // Check if course has organizations
         if ($course->studentOrganizations()->count() > 0) {
             $this->error('Cannot delete course that has associated organizations!', position: 'toast-top');
-
             return;
         }
 
-        // Log the course deletion before deleting
-        TransactionLogService::logCourseOperation('deleted', $course);
+        DB::beginTransaction();
+        try {
+            // Log the course deletion before deleting
+            TransactionLogService::logCourseOperation('deleted', $course);
 
-        $course->delete();
+            $course->delete();
 
-        $this->reset(['deletingCourseId', 'deletingCourseName', 'hasAssociatedOrganizations']);
-        $this->deleteCourseModalOpen = false;
-        $this->clearCoursesCache();
-        $this->success('Course deleted successfully!', position: 'toast-top');
+            DB::commit();
+
+            $this->reset(['deletingCourseId', 'deletingCourseName', 'hasAssociatedOrganizations']);
+            $this->deleteCourseModalOpen = false;
+            $this->clearCoursesCache();
+            $this->success('Course deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Course deletion failed', ['error' => $e->getMessage()]);
+            $this->error('Failed to delete course: ' . $e->getMessage(), position: 'toast-top');
+        }
     }
 
     protected function clearCoursesCache()
@@ -228,4 +245,3 @@ class CourseManager extends Component
         Cache::forget('courses');
     }
 }
-

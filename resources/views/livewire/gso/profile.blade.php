@@ -14,9 +14,9 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                        <span class="badge badge-lg badge-success text-white">
-                            <i class="fa-solid fa-check-circle mr-1"></i> Verified
-                        </span>
+                            <span class="badge badge-lg badge-success text-white">
+                                <i class="fa-solid fa-check-circle mr-1"></i> Verified
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -30,17 +30,16 @@
                 <livewire:avatar-selector />
 
                 {{-- Profile Information --}}
-                <x-mary-card title="Profile Information" subtitle="Update your account details"
-                    x-data="{
-                        initialName: @js($name),
-                        initialEmail: @js($email),
-                        initialPhone: @js($phone ?? ''),
-                        get hasChanges() {
-                            return $wire.name !== this.initialName || 
-                                   $wire.email !== this.initialEmail || 
-                                   $wire.phone !== this.initialPhone;
-                        }
-                    }"
+                <x-mary-card title="Profile Information" subtitle="Update your account details" x-data="{
+                    initialName: {{ Js::from($name) }},
+                    initialEmail: {{ Js::from($email) }},
+                    initialPhone: {{ Js::from($phone ?? '') }},
+                    get hasChanges() {
+                        return $wire.name !== this.initialName ||
+                            $wire.email !== this.initialEmail ||
+                            $wire.phone !== this.initialPhone;
+                    }
+                }"
                     @profile-updated.window="
                         initialName = $wire.name;
                         initialEmail = $wire.email;
@@ -78,10 +77,10 @@
                     x-data="{
                         get hasPasswordInput() {
                             return ($wire.current_password && $wire.current_password.length > 0) ||
-                                   ($wire.new_password && $wire.new_password.length > 0) ||
-                                   ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
+                                ($wire.new_password && $wire.new_password.length > 0) ||
+                                ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
                         }
-                    ">
+                    }">
                     <x-slot:menu>
                         <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
                     </x-slot:menu>
@@ -142,8 +141,7 @@
 
                     <x-slot:actions>
                         <x-mary-button wire:click="updatePassword" icon="o-shield-check"
-                            class="btn-warning text-neutral-content"
-                            x-show="hasPasswordInput">
+                            class="btn-warning text-neutral-content" x-show="hasPasswordInput">
                             <span wire:loading.remove wire:target="updatePassword">Update Password</span>
                             <span wire:loading wire:target="updatePassword">Updating...</span>
                         </x-mary-button>
@@ -153,13 +151,13 @@
                 {{-- Notification Preferences --}}
                 <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates"
                     x-data="{
-                        initialEmailNotifications: @js($email_notifications),
-                        initialTicketUpdates: @js($ticket_updates),
-                        initialApprovalAlerts: @js($approval_alerts),
+                        initialEmailNotifications: {{ Js::from($email_notifications) }},
+                        initialTicketUpdates: {{ Js::from($ticket_updates) }},
+                        initialApprovalAlerts: {{ Js::from($approval_alerts) }},
                         get hasChanges() {
                             return $wire.email_notifications !== this.initialEmailNotifications ||
-                                   $wire.ticket_updates !== this.initialTicketUpdates ||
-                                   $wire.approval_alerts !== this.initialApprovalAlerts;
+                                $wire.ticket_updates !== this.initialTicketUpdates ||
+                                $wire.approval_alerts !== this.initialApprovalAlerts;
                         }
                     }"
                     @preferences-updated.window="
@@ -214,8 +212,7 @@
 
                     <x-slot:actions>
                         <x-mary-button wire:click="updatePreferences" icon="o-check"
-                            class="btn-info text-neutral-content"
-                            x-show="hasChanges">
+                            class="btn-info text-neutral-content" x-show="hasChanges">
                             <span wire:loading.remove wire:target="updatePreferences">Save Preferences</span>
                             <span wire:loading wire:target="updatePreferences">Saving...</span>
                         </x-mary-button>
@@ -243,8 +240,8 @@
                             </div>
                             <div class="stat-title">Last Login</div>
                             @if ($user->last_login)
-                            <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
-                            <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
+                                <div class="stat-value text-lg">{{ $user->last_login->format('M d, Y') }}</div>
+                                <div class="stat-desc">{{ $user->last_login->format('h:i A') }}</div>
                             @endif
                         </div>
 

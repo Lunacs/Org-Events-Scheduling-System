@@ -41,9 +41,12 @@
                     option-label="name" />
 
                 <div class="flex items-end">
-                    <x-mary-button icon="o-x-mark" class="btn-outline" wire:click="clearFilters">
-                        Clear Filters
-                    </x-mary-button>
+                    @if ($this->hasActiveFilters())
+                        <x-mary-button icon="o-x-mark" class="btn-outline" wire:click="clearFilters" wire:transition>
+                            Clear Filters
+                        </x-mary-button>
+                    @endif
+
                 </div>
             </div>
         </x-mary-card>
@@ -55,19 +58,19 @@
                         $roleString = $user->role?->role_name ?? 'unknown';
                     @endphp
                     <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
-                        'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap',
-                        'osa' => 'badge-primary text-base-200',
-                        'gso' => 'badge-info text-base-200',
-                        'student-org' => 'badge-success text-base-200 whitespace-nowrap',
-                        default => 'badge-ghost text-base-200',
+                        'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
+                        'osa' => 'badge-primary text-base-200 dark:text-white',
+                        'gso' => 'badge-info text-base-200 dark:text-white',
+                        'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
+                        default => 'badge-ghost text-base-200 dark:text-white',
                     }" />
                 @endscope
 
                 @scope('cell_email_verified_at', $user)
                     @if ($user->email_verified_at)
-                        <x-mary-badge value="Verified" class="badge-success text-base-200" />
+                        <x-mary-badge value="Verified" class="badge-success text-base-200 dark:text-white" />
                     @else
-                        <x-mary-badge value="Unverified" class="badge-warning text-base-200" />
+                        <x-mary-badge value="Unverified" class="badge-warning text-base-200 dark:text-white" />
                     @endif
                 @endscope
 
@@ -94,6 +97,27 @@
                         @endif
                     </div>
                 @endscope
+
+                <x-slot:empty>
+                    <div class="flex flex-col items-center justify-center py-12 text-center">
+                        <x-mary-icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
+                        <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
+                        <p class="text-base-content/50 max-w-sm mx-auto mt-2">
+                            @if ($this->hasActiveFilters())
+                                We couldn't find any users matching "<span
+                                    class="font-semibold text-base-content/80">{{ $search }}</span>" or your
+                                selected
+                                role.
+                            @else
+                                There are no users registered in the system yet.
+                            @endif
+                        </p>
+                        @if ($this->hasActiveFilters())
+                            <x-mary-button label="Clear all filters" icon="o-x-mark" wire:click="clearFilters"
+                                class="btn-ghost btn-sm mt-6 text-accent" wire:transition />
+                        @endif
+                    </div>
+                </x-slot:empty>
             </x-mary-table>
 
             {{-- Custom Pagination --}}
@@ -126,29 +150,22 @@
 
                 {{-- Form Content --}}
                 <div class="flex-1 overflow-y-auto">
-                    <form wire:submit="createUser" class="space-y-4">
-                        <x-mary-input label="Full Name" wire:model.blur="createForm.name" placeholder="John Dela Cruz"
-                            icon="o-user" required />
+                    <form wire:submit="createUser" class="space-y-4 p-1">
+                        <x-mary-input label="Full Name" wire:model.live.debounce.300ms="createForm.name"
+                            placeholder="John Dela Cruz" icon="o-user" required />
 
                         <x-mary-input label="Email Address" wire:model.blur="createForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
-                        {{-- In Create User Form - Password Field --}}
-                        <div x-data="{ showPassword: false }" class="relative">
-                            <x-mary-input label="Password" wire:model.blur="createForm.password" ::type="showPassword ? 'text' : 'password'"
-                                placeholder="Enter password" icon="o-lock-closed" required />
-                            <button type="button" @click="showPassword = !showPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                tabindex="-1">
-                                <i class="fas fa-eye-slash text-sm" x-show="!showPassword"></i>
-                                <i class="fas fa-eye text-sm" x-show="showPassword" style="display: none;"></i>
-                            </button>
-                        </div>
+                        {{-- Password Field with Strength Indicator --}}
+                        <x-forms.password-with-strength label="Password" model="createForm.password"
+                            placeholder="Enter password" :required="true" />
 
                         {{-- In Create User Form - Confirm Password Field --}}
                         <div x-data="{ showConfirmPassword: false }" class="relative">
-                            <x-mary-input label="Confirm Password" wire:model.blur="createForm.password_confirmation"
-                                ::type="showConfirmPassword ? 'text' : 'password'" placeholder="Confirm password" icon="o-lock-closed" required />
+                            <x-mary-input label="Confirm Password"
+                                wire:model.live.debounce.300ms="createForm.password_confirmation" ::type="showConfirmPassword ? 'text' : 'password'"
+                                placeholder="Confirm password" icon="o-lock-closed" required />
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                 class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
@@ -162,11 +179,12 @@
                             icon="o-shield-check" required />
 
                         @if ($createForm->role === 'student-org')
-                            <x-mary-select label="Organization Name" wire:model.blur="createForm.org_name"
-                                :options="$organizations" option-value="org_id" option-label="org_name"
-                                placeholder="Select organization" required />
+                            <x-mary-select label="Organization Name"
+                                wire:model.live.debounce.300ms="createForm.org_name" :options="$organizations"
+                                option-value="org_id" option-label="org_name" placeholder="Select organization"
+                                required />
 
-                            <x-mary-select label="Org Position" wire:model.blur="createForm.position"
+                            <x-mary-select label="Org Position" wire:model.live.debounce.300ms="createForm.position"
                                 :options="$positions" option-value="position_id" option-label="position_name"
                                 placeholder="Select organization position" required />
                         @endif
@@ -182,15 +200,16 @@
                             </div>
                         @endif
 
-                        <x-mary-input label="Contact Number" type="text" wire:model.blur="createForm.phone"
-                            placeholder="09123456789" icon="o-phone" required />
+                        <x-mary-input label="Contact Number" type="text"
+                            wire:model.live.debounce.700ms="createForm.phone" placeholder="09123456789"
+                            icon="o-phone" required />
                     </form>
                 </div>
 
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
                     <x-mary-button label="Cancel" @click="closeCreateUserDrawer()" />
-                    <x-mary-button label="Create User" wire:click="createUser" class="btn-primary"
+                    <x-mary-button label="Create User" wire:click="createUser" class="btn-primary" :disabled="!$this->isCreateFormValid()"
                         spinner="createUser" />
                 </div>
             </div>
@@ -221,25 +240,16 @@
                 {{-- Form Content --}}
                 <div class="flex-1 overflow-y-auto">
                     <form wire:submit="updateUser" class="space-y-4">
-                        <x-mary-input label="Full Name" wire:model.blur="editForm.name" placeholder="John Dela Cruz"
-                            icon="o-user" required />
+                        <x-mary-input label="Full Name" wire:model.live.debounce.300ms="editForm.name"
+                            placeholder="John Dela Cruz" icon="o-user" required />
 
                         <x-mary-input label="Email Address" wire:model.blur="editForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
-                        {{-- In Edit User Form - Password Field --}}
-                        <div x-data="{ showEditPassword: false }" class="relative">
-                            <x-mary-input label="New Password (leave blank to keep current)"
-                                wire:model.blur="editForm.password" ::type="showEditPassword ? 'text' : 'password'"
-                                placeholder="Enter new password" icon="o-lock-closed"
-                                hint="Only fill if you want to change the password (min 8 characters)" />
-                            <button type="button" @click="showEditPassword = !showEditPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                tabindex="-1">
-                                <i class="fas fa-eye-slash text-sm" x-show="!showEditPassword"></i>
-                                <i class="fas fa-eye text-sm" x-show="showEditPassword" style="display: none;"></i>
-                            </button>
-                        </div>
+                        {{-- Password Field with Strength Indicator --}}
+                        <x-forms.password-with-strength label="New Password (leave blank to keep current)"
+                            model="editForm.password" placeholder="Enter new password"
+                            hint="Only fill if you want to change the password" />
 
                         {{-- In Edit User Form - Confirm Password Field --}}
                         <div x-data="{ showEditConfirmPassword: false }" class="relative">
@@ -264,11 +274,12 @@
                                 icon="o-shield-check" required />
 
                             @if ($editForm->role === 'student-org')
-                                <x-mary-select label="Organization Name" wire:model.blur="editForm.org_name"
-                                    :options="$organizations" option-value="org_id" option-label="org_name"
-                                    placeholder="Select organization" required />
+                                <x-mary-select label="Organization Name"
+                                    wire:model.live.debounce.300ms="editForm.org_name" :options="$organizations"
+                                    option-value="org_id" option-label="org_name" placeholder="Select organization"
+                                    required />
 
-                                <x-mary-select label="Org Position" wire:model.blur="editForm.position"
+                                <x-mary-select label="Org Position" wire:model.live.debounce.300ms="editForm.position"
                                     :options="$positions" option-value="position_id" option-label="position_name"
                                     placeholder="Select organization position" required />
                             @endif
@@ -293,7 +304,7 @@
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
                     <x-mary-button label="Cancel" @click="closeEditUserDrawer()" />
-                    <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary"
+                    <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary" :disabled="!$this->isEditFormValid()"
                         spinner="updateUser" />
                 </div>
             </div>
