@@ -205,10 +205,24 @@ class SubmitTicket extends Component
     public function goToStep($step)
     {
         if ($step >= 1 && $step <= $this->totalSteps) {
-            $this->currentStep = $step;
-            $this->dispatch('step-changed');
+            // Only allow going to completed steps or the next step
+            if ($step <= $this->currentStep || $step === $this->currentStep + 1) {
+                // If moving forward, validate current step
+                if ($step > $this->currentStep) {
+                    try {
+                        $this->validateCurrentStep();
+                    } catch (ValidationException $e) {
+                        // Re-throw to show validation errors
+                        throw $e;
+                    }
+                }
+
+                $this->currentStep = $step;
+                $this->dispatch('step-changed');
+            }
         }
     }
+
 
     protected function getCurrentStepRules(): array
     {

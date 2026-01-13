@@ -14,16 +14,25 @@
                     <h3 class="text-lg font-semibold">All Event Requests</h3>
                     <p class="text-sm text-gray-600">Track the progress of your submitted tickets</p>
                 </div>
-                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary"
-                    link="/student-org/submit-ticket" wire:navigate />
+                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary hidden md:block"
+                               link="/student-org/submit-ticket" wire:navigate/>
+            </div>
+
+            <div class="flex justify-center items-center">
+                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary md:hidden"
+                               link="/student-org/submit-ticket" wire:navigate/>
             </div>
 
             {{-- Filter and Search --}}
             <x-mary-card>
                 <div class="flex flex-wrap gap-4 items-end">
                     <x-mary-input label="Search Tickets" wire:model.live="search"
-                        placeholder="Search by title, ID, or description..." icon="s-magnifying-glass"
-                        class="flex-1 min-w-64" />
+                                  x-data="{ placeholder: window.innerWidth < 768 ? 'Title, ID, or Description' : 'Search by title, ID, or description...' }"
+                                  x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, ID, or description...' })"
+                                  ::placeholder="placeholder"
+                                  icon="s-magnifying-glass"
+                                  class="flex-1 md:min-w-64 min-w-32"/>
+
 
                     <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
                         ['id' => '', 'name' => 'All Status'],
@@ -31,8 +40,7 @@
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'for_revision', 'name' => 'For Revision'],
                         ['id' => 'rescheduled', 'name' => 'Requires Rescheduling'],
-                    ]"
-                        placeholder="Filter by status" />
+                    ]"/>
 
                     <x-mary-select label="Date Range" wire:model.live="dateFilter" :options="[
                         ['id' => '', 'name' => 'All Time'],
@@ -40,10 +48,10 @@
                         ['id' => 'last_month', 'name' => 'Last Month'],
                         ['id' => 'last_3_months', 'name' => 'Last 3 Months'],
                         ['id' => 'this_year', 'name' => 'This Year'],
-                    ]"
-                        placeholder="Filter by date" />
+                    ]"/>
 
-                    <x-mary-button icon="s-funnel" class="btn-ghost" wire:click="clearFilters" />
+                    <x-mary-button icon="s-funnel" class="btn-ghost hidden md:block" wire:click="clearFilters"/>
+                    <x-mary-button label="Clear Filters" class="mt-6 md:hidden" wire:click="clearFilters"/>
                 </div>
             </x-mary-card>
 
@@ -52,7 +60,7 @@
                 <div class="space-y-4">
                     {{-- Ticket Item 1 --}}
                     @forelse ($tickets as $ticket)
-                        <x-tickets.ticketinfo :tickets="$ticket" />
+                        <x-tickets.ticketinfo :tickets="$ticket"/>
                     @empty
                         <div class="flex flex-col items-center gap-2">
                             <span class="text-base-content/70">No tickets found</span>
@@ -63,25 +71,25 @@
 
                 {{-- Pagination --}}
                 @if ($tickets->hasPages())
-                    <x-tickets.ticket-pagination :tickets="$tickets" />
+                    <x-tickets.ticket-pagination :tickets="$tickets"/>
                 @endif
             </x-mary-card>
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text"
-                    color="text-primary" />
+                             color="text-primary"/>
 
                 <x-mary-stat title="Under Review"
-                    value="{{ $allTickets->whereNotIn('status', ['approved', 'for_revision'])->count() }}"
-                    icon="s-clock" color="text-warning" />
+                             value="{{ $allTickets->whereNotIn('status', ['approved', 'for_revision'])->count() }}"
+                             icon="s-clock" color="text-warning"/>
 
                 <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}"
-                    icon="s-check-circle" color="text-success" />
+                             icon="s-check-circle" color="text-success"/>
 
                 <x-mary-stat title="Need Action"
-                    value="{{ $allTickets->whereIn('status', ['for_revision'])->count() }}"
-                    icon="s-exclamation-triangle" color="text-error" />
+                             value="{{ $allTickets->whereIn('status', ['for_revision'])->count() }}"
+                             icon="s-exclamation-triangle" color="text-error"/>
             </div>
         </div>
     </div>
@@ -104,14 +112,14 @@
          ">
             <div x-show="isLoading" class="flex items-center justify-center py-16">
                 <div class="flex flex-col items-center gap-3">
-                    <x-mary-loading class="loading-lg text-primary" />
+                    <x-mary-loading class="loading-lg text-primary"/>
                     <p class="text-sm text-base-content/70">Loading ticket details...</p>
                 </div>
             </div>
 
             <div x-show="!isLoading" x-cloak x-transition>
                 @if ($this->selectedTicket)
-                    <x-tickets.ticket-preview :ticket="$this->selectedTicket" />
+                    <x-tickets.ticket-preview :ticket="$this->selectedTicket"/>
                 @endif
             </div>
         </div>
@@ -119,19 +127,20 @@
 
     {{-- Comments modal --}}
     <x-mary-modal wire:model="showCommentsModal" title="Ticket Comments" class="backdrop-blur"
-        box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
+                  box-class="max-w-5xl max-h-[85vh] overflow-y-auto" @close="$wire.closeCommentsModal()">
 
         @if ($this->selectedTicket)
             @if (in_array(strtolower($this->selectedTicket->status), ['approved', 'for_rescheduling', 'needs_revision', 'for_revision']))
-                <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket" />
+                <x-tickets.latest-remark :status="$this->selectedTicket->status" :ticket="$this->selectedTicket"/>
             @endif
 
             <div class="mt-4">
-                <livewire:components.ticket-comments :ticket="$this->selectedTicket" :key="'ticket-comments-' . $this->selectedTicket->ticket_id" />
+                <livewire:components.ticket-comments :ticket="$this->selectedTicket"
+                                                     :key="'ticket-comments-' . $this->selectedTicket->ticket_id"/>
             </div>
         @else
             <div class="text-center py-8">
-                <x-mary-loading class="loading-lg" />
+                <x-mary-loading class="loading-lg"/>
             </div>
         @endif
     </x-mary-modal>
@@ -170,38 +179,37 @@
             }
         });
      ">
-        <div x-show="isLoading" class="flex items-center justify-center py-16">
-            <div class="flex flex-col items-center gap-3">
-                <x-mary-loading class="loading-lg text-primary" />
-                <p class="text-sm text-base-content/70">Loading form...</p>
+            <div x-show="isLoading" class="flex items-center justify-center py-16">
+                <div class="flex flex-col items-center gap-3">
+                    <x-mary-loading class="loading-lg text-primary"/>
+                    <p class="text-sm text-base-content/70">Loading form...</p>
+                </div>
+            </div>
+
+            <div x-show="!isLoading" x-cloak x-transition>
+                @if ($showEditDrawer && $selectedTicketId)
+                    @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
+                @endif
             </div>
         </div>
-
-        <div x-show="!isLoading" x-cloak x-transition>
-            @if ($showEditDrawer && $selectedTicketId)
-                @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
-            @endif
-        </div>
-</div>
-</x-mary-drawer>
+    </x-mary-drawer>
 
 
-
-{{-- Add JavaScript for handling attachment preview and download --}}
+    {{-- Add JavaScript for handling attachment preview and download --}}
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-attachment-preview', ({
-                url
-            }) => {
+                                                        url
+                                                    }) => {
                 if (url) {
                     window.open(url, '_blank');
                 }
             });
 
             Livewire.on('download-attachment', ({
-                url,
-                filename
-            }) => {
+                                                    url,
+                                                    filename
+                                                }) => {
                 if (url) {
                     // Create a temporary anchor element to trigger download
                     const link = document.createElement('a');
