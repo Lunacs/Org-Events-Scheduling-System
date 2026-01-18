@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckUserRole::class,
         ]);
 
+        $middleware->trustProxies(at: '*');
+
         // Configure maintenance mode to allow SuperAdmin access
         $middleware->preventRequestsDuringMaintenance(except: [
             'superadmin*',  // Allow all SuperAdmin routes

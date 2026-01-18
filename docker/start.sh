@@ -40,7 +40,7 @@ fi
 
 # Run migrations on startup
 echo "Running migrations..."
-php artisan migrate:fresh --seed --force || true
+php artisan migrate --force || true
 
 # Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
