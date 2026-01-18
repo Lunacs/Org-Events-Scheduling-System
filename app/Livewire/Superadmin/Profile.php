@@ -65,9 +65,33 @@ class Profile extends Component
     public function updateProfile()
     {
         $this->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.Auth::id().',user_id',
-            'phone' => 'nullable|string|max:20',
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+                'regex:/^[a-zA-Z\s\-\.]+$/',
+            ],
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'max:255',
+                'unique:users,email,' . Auth::id() . ',user_id',
+            ],
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^(\+63|0)?[9]\d{9}$/',
+            ],
+        ], [
+            'name.required' => 'Full name is required.',
+            'name.min' => 'Full name must be at least 2 characters.',
+            'name.max' => 'Full name must not exceed 255 characters.',
+            'name.regex' => 'Full name may only contain letters, spaces, hyphens, and periods.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please provide a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+            'phone.regex' => 'Please provide a valid Philippine mobile number (e.g., 09123456789 or +639123456789).',
         ]);
 
         $user = Auth::user();
@@ -84,8 +108,26 @@ class Profile extends Component
     public function updatePassword()
     {
         $this->validate([
-            'current_password' => 'required|current_password',
-            'new_password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'current_password' => [
+                'required',
+                'current_password',
+            ],
+            'new_password' => [
+                'required',
+                'confirmed',
+                'different:current_password',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+            ],
+        ], [
+            'current_password.required' => 'Current password is required.',
+            'current_password.current_password' => 'The current password is incorrect.',
+            'new_password.required' => 'New password is required.',
+            'new_password.confirmed' => 'Password confirmation does not match.',
+            'new_password.different' => 'New password must be different from current password.',
         ]);
 
         $user = Auth::user();

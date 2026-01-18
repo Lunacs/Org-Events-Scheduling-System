@@ -25,10 +25,11 @@
                                 updates</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <x-mary-button label="Mark All as Read" icon="s-check" class="btn-ghost btn-sm"
-                                wire:click="markAllAsRead" />
-                            <x-mary-button label="Clear All Read" icon="s-trash" class="btn-ghost btn-sm text-error"
-                                wire:click="clearAllRead"
+                            <x-mary-button label="Mark All as Read" icon="s-check"
+                                class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
+                            <x-mary-button label="Clear All Read" icon="s-trash"
+                                class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
+                                wire:click="clearAllRead" :disabled="$readCount === 0"
                                 wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
                         </div>
                     </div>
@@ -127,7 +128,7 @@
                                 <option value="unread">Unread</option>
                                 <option value="read">Read</option>
                             </select>
-                            <button wire:click="clearFilters" type="button" class="btn btn-ghost"
+                            <button data-tip="Clear Filters" wire:click="clearFilters" type="button" class="tooltip btn btn-ghost"
                                 x-show="$wire.search || $wire.typeFilter || $wire.statusFilter" x-transition
                                 wire:loading.attr="disabled" wire:target="clearFilters">
                                 <svg wire:loading.remove wire:target="clearFilters" class="w-4 h-4" fill="none"
@@ -144,17 +145,13 @@
 
                 {{-- Notifications List --}}
                 <div class="bg-base-100 rounded-box shadow-lg p-6 relative min-h-[400px]">
-                    {{-- Loading Overlay --}}
-                    <div wire:loading.flex wire:target="search,typeFilter,statusFilter,clearFilters"
-                        class="absolute inset-0 bg-base-100/60 backdrop-blur-sm z-10 items-center justify-center rounded-box">
-                        <div class="text-center">
-                            <span class="loading loading-spinner loading-lg text-primary"></span>
-                            <p class="mt-2 text-sm text-base-content/70">Loading notifications...</p>
-                        </div>
+                    {{-- Skeleton Loader (Filtering/Searching) --}}
+                    <div wire:loading wire:target="search,typeFilter,statusFilter,clearFilters" class="w-full">
+                        @include('livewire.placeholders.notification-list')
                     </div>
 
                     {{-- Notifications Grid --}}
-                    <div class="space-y-4" wire:loading.remove.delay
+                    <div class="space-y-4" wire:loading.remove
                         wire:target="search,typeFilter,statusFilter,clearFilters">
                         @forelse($notifications as $notification)
                             @php
@@ -225,7 +222,7 @@
 
                             <div
                                 class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border-l-4 hover:shadow-md transition-all {{ !$isUnread ? 'opacity-75' : '' }} group">
-                                <div class="flex-shrink-0">
+                                <div class="shrink-0">
                                     <div
                                         class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
                                         <x-mary-icon name="s-bell" class="w-5 h-5 {{ $iconTextClass }}" />
@@ -236,9 +233,11 @@
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
                                             <p class="font-semibold text-base-content">
-                                                {{ $data['title'] ?? 'Notification' }}</p>
+                                                {{ $data['title'] ?? 'Notification' }}
+                                            </p>
                                             <p class="text-sm text-base-content/70 mt-1">
-                                                {{ $data['message'] ?? 'No message' }}</p>
+                                                {{ $data['message'] ?? 'No message' }}
+                                            </p>
 
                                             @if (isset($data['ticket_number']))
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">

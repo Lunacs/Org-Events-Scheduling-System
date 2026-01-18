@@ -4,8 +4,10 @@ namespace App\Livewire\Osa;
 
 use App\Models\Student_Organization;
 use App\Models\Ticket;
+use App\Models\Event_Type;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Layout;
@@ -33,10 +35,14 @@ class Reports extends Component
 
     public $exportFormat = 'pdf';
 
+    // Chart data for analytics
+    public $chartData = [];
+
     public function mount()
     {
         $this->dateFrom = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = Carbon::now()->endOfMonth()->format('Y-m-d');
+        $this->loadChartData();
     }
 
     public function placeholder()
@@ -109,14 +115,14 @@ class Reports extends Component
                 case 'approved_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                         ->with([
-                            'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                 ->with('studentOrganization:org_id,org_name,logo'),
                             'events:event_id,ticket_id',
                             'eventType:event_type_id,type_name',
                         ])
                         ->where('status', 'approved')
                         ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
                         ->orderBy('created_at', 'desc')
                         ->limit(1000) // Add limit for performance
                         ->get();
@@ -124,14 +130,14 @@ class Reports extends Component
                 case 'for_revision_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                         ->with([
-                            'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                 ->with('studentOrganization:org_id,org_name,logo'),
                             'events:event_id,ticket_id',
                             'eventType:event_type_id,type_name',
                         ])
                         ->where('status', 'for_revision')
                         ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
                         ->orderBy('created_at', 'desc')
                         ->limit(1000) // Add limit for performance
                         ->get();
@@ -139,9 +145,9 @@ class Reports extends Component
                 case 'org_participation':
                     return Student_Organization::select(['org_id', 'org_name', 'org_code'])
                         ->withCount([
-                            'tickets' => fn ($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
+                            'tickets' => fn($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
                         ])
-                        ->when($this->organizationFilter, fn ($query) => $query->where('org_id', $this->organizationFilter))
+                        ->when($this->organizationFilter, fn($query) => $query->where('org_id', $this->organizationFilter))
                         ->orderBy('tickets_count', 'desc')
                         ->limit(100) // Add limit for performance
                         ->get();
@@ -183,7 +189,7 @@ class Reports extends Component
 
     protected function exportCsv($data)
     {
-        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.csv';
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');
@@ -254,10 +260,119 @@ class Reports extends Component
             'generatedAt' => now(),
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.pdf';
+        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
+        return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
             'Content-Type' => 'application/pdf',
         ]);
+    }
+
+    /**
+     * Load all chart data for analytics (independent of report filters)
+     */
+    public function loadChartData()
+    {
+        // Charts show last 12 months data regardless of report filters
+        $dateFrom = Carbon::now()->subMonths(12)->startOfMonth();
+        $dateTo = Carbon::now()->endOfDay();
+
+        $this->chartData = [
+            'eventsByMonth' => $this->getEventsByMonth($dateFrom, $dateTo),
+            'eventsByType' => $this->getEventsByType($dateFrom, $dateTo),
+            'statusDistribution' => $this->getStatusDistribution(),
+            'topOrganizations' => $this->getTopOrganizations(),
+        ];
+    }
+
+    /**
+     * Get events grouped by month for line chart (last 12 months)
+     */
+    protected function getEventsByMonth($dateFrom, $dateTo): array
+    {
+        $tickets = Ticket::select(
+            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+            DB::raw('COUNT(*) as count')
+        )
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        return [
+            'labels' => $tickets->pluck('month')->map(fn($m) => Carbon::parse($m)->format('M Y'))->toArray(),
+            'data' => $tickets->pluck('count')->toArray(),
+        ];
+    }
+
+    /**
+     * Get events grouped by type for bar chart (all time)
+     */
+    protected function getEventsByType($dateFrom, $dateTo): array
+    {
+        $tickets = Ticket::join('event__types', 'tickets.event_type_id', '=', 'event__types.event_type_id')
+            ->select('event__types.type_name', DB::raw('COUNT(*) as count'))
+            ->whereBetween('tickets.created_at', [$dateFrom, $dateTo])
+            ->groupBy('event__types.event_type_id', 'event__types.type_name')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        return [
+            'labels' => $tickets->pluck('type_name')->toArray(),
+            'data' => $tickets->pluck('count')->toArray(),
+        ];
+    }
+
+    /**
+     * Get ticket status distribution for doughnut chart (all time)
+     */
+    protected function getStatusDistribution(): array
+    {
+        $tickets = Ticket::select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
+            ->get();
+
+        // Define status colors and labels
+        $statusConfig = [
+            'approved' => ['label' => 'Approved', 'color' => 'rgb(34, 197, 94)'],
+            'pending' => ['label' => 'Pending', 'color' => 'rgb(251, 191, 36)'],
+            'under_review' => ['label' => 'Under Review', 'color' => 'rgb(59, 130, 246)'],
+            'for_revision' => ['label' => 'For Revision', 'color' => 'rgb(239, 68, 68)'],
+            'cancelled' => ['label' => 'Cancelled', 'color' => 'rgb(156, 163, 175)'],
+        ];
+
+        $labels = [];
+        $data = [];
+        $colors = [];
+
+        foreach ($tickets as $ticket) {
+            $config = $statusConfig[$ticket->status] ?? ['label' => ucfirst(str_replace('_', ' ', $ticket->status)), 'color' => 'rgb(168, 85, 247)'];
+            $labels[] = $config['label'];
+            $data[] = $ticket->count;
+            $colors[] = $config['color'];
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'colors' => $colors,
+        ];
+    }
+
+    /**
+     * Get top organizations by event count for horizontal bar chart (all time)
+     */
+    protected function getTopOrganizations(): array
+    {
+        $organizations = Student_Organization::select(['org_id', 'org_name'])
+            ->withCount('tickets')
+            ->orderByDesc('tickets_count')
+            ->limit(8)
+            ->get();
+
+        return [
+            'labels' => $organizations->pluck('org_name')->toArray(),
+            'data' => $organizations->pluck('tickets_count')->toArray(),
+        ];
     }
 }

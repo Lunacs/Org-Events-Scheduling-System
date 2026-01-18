@@ -183,14 +183,7 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="tableTitle"></h3>
                     <div class="flex space-x-2">
                         <x-mary-input placeholder="Search records..." x-model="searchTerm"
-                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm">
-                            <x-slot:prepend>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </x-slot:prepend>
+                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm" icon="o-magnifying-glass">
                         </x-mary-input>
                     </div>
                 </div>

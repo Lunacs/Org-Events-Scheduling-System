@@ -23,18 +23,25 @@ class OSAApprovalSeeder extends Seeder
             return;
         }
 
+        // Updated approval data to include all decision types from the extended enum
         $approvalData = [
             'approved' => 'Approved. All requirements are met.',
             'pending' => 'Pending review by the committee.',
             'for_revision' => 'Please revise the proposal and resubmit.',
+            'forwarded' => 'Forwarded to GSO for venue and facilities review.',
+            'revision_requested' => 'Revision requested. Please update the event details.',
         ];
 
         foreach ($tickets as $ticket) {
-            // Create OSA approval based on ticket status
+            // Match decision to ticket status for realistic data
             $decision = match ($ticket->status) {
                 'approved' => 'approved',
                 'for_revision' => 'for_revision',
-                'pending' => 'pending',
+                'gso_review' => 'forwarded',
+                'amended' => 'revision_requested',
+                'received' => 'pending',
+                'pending_osa_approval' => 'pending',
+                'completed' => 'approved',
                 default => 'pending',
             };
 

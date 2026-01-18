@@ -56,14 +56,9 @@
         {{-- Filters --}}
         <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div x-data="{ searching: false }">
+                <div>
                     <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
-                        icon="o-magnifying-glass" clearable @input="searching = true"
-                        x-on:livewire:updated="searching = false" />
-                    <div x-show="searching" x-cloak class="text-xs text-gray-500 mt-1">
-                        <span class="loading loading-spinner loading-xs"></span>
-                        Searching...
-                    </div>
+                        icon="o-magnifying-glass" clearable />
                 </div>
 
                 <x-mary-select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
@@ -81,12 +76,16 @@
 
                 <div class="flex gap-2">
                     <x-mary-input wire:model.live="dateFilter" type="date" placeholder="Filter by Date" />
-                    <x-mary-button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark" tooltip="Clear Filters">
-                        <span wire:loading.remove wire:target="clearFilters">Clear</span>
-                        <span wire:loading wire:target="clearFilters">
-                            <span class="loading loading-spinner loading-xs"></span>
-                        </span>
-                    </x-mary-button>
+                    @if ($search || $statusFilter || $organizationFilter || $dateFilter)
+                        <x-mary-button wire:click="clearFilters" wire:loading.attr="disabled"
+                            wire:target="clearFilters" class="btn-ghost" icon="o-x-mark"
+                            tooltip="Clear Filters">
+                            <span wire:loading.remove wire:target="clearFilters">Clear</span>
+                            <span wire:loading wire:target="clearFilters">
+                                <span class="loading loading-spinner loading-xs"></span>
+                            </span>
+                        </x-mary-button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -95,8 +94,8 @@
         <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
             <!-- Skeleton Loading State -->
             <div wire:loading.delay wire:target="search,statusFilter,organizationFilter,dateFilter,clearFilters">
-                <div class="overflow-x-auto">
-                    <table class="table table-zebra w-full">
+                <div class="overflow-x-auto hidden md:block">
+                    <table class="table table-zebra max-w-full">
                         <thead class="bg-base-200">
                             <tr>
                                 <th>Ticket #</th>
@@ -142,7 +141,7 @@
 
             <!-- Actual Content -->
             <div wire:loading.remove.delay wire:target="search,statusFilter,organizationFilter,dateFilter,clearFilters">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto hidden md:block">
                     <table class="table table-zebra w-full">
                         <thead class="bg-base-200">
                             <tr>
@@ -219,12 +218,62 @@
                     </table>
                 </div>
 
+                {{-- Mobile List View --}}
+                <div class="grid grid-cols-1 md:hidden">
+                    @forelse($tickets as $ticket)
+                        <div class="p-4 border-b border-base-200 shadow-sm last:border-b-0 hover:bg-base-200 transition-colors cursor-pointer"
+                            wire:key="mobile-ticket-{{ $ticket->ticket_id }}"
+                            onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-mono text-xs opacity-70">#{{ $ticket->ticket_number }}</span>
+                                @php
+                                    $statusClasses = [
+                                        'received' => 'badge-info',
+                                        'gso_review' => 'badge-info',
+                                        'amended' => 'badge-info',
+                                        'approved' => 'badge-success',
+                                        'for_revision' => 'badge-warning',
+                                    ];
+                                @endphp
+                                <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
+                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-sm" />
+                            </div>
+
+                            <h3 class="font-semibold text-lg">{{ $ticket->title }}</h3>
+                            <p class="text-sm text-base-content/70 line-clamp-2 mt-1">
+                                {{ Str::limit($ticket->description, 100) }}</p>
+
+                            <div class="flex items-center gap-2 mt-3 text-sm">
+                                <div class="avatar shrink-0">
+                                    <div class="w-6 h-6 rounded-full bg-base-200">
+                                        <img src="{{ $ticket->user->studentOrganization->logo_url }}"
+                                            alt="{{ $ticket->user->studentOrganization->org_name }} logo"
+                                            class="object-cover" />
+                                    </div>
+                                </div>
+                                <span
+                                    class="font-medium truncate">{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</span>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mt-3">
+                                {{ $ticket->created_at?->format('M d, Y') ?? 'N/A' }} •
+                                {{ $ticket->created_at?->format('h:i A') ?? '' }}
+                            </div>
+                        </div>
+                    @empty
+                        <div class="flex flex-col items-center gap-2 py-8">
+                            <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
+                            <span class="text-base-content/70">No tickets found</span>
+                        </div>
+                    @endforelse
+                </div>
+
                 {{-- Pagination
                 @if ($tickets->hasPages())
                     <div class="p-4 border-t border-base-300">
                         {{ $tickets->links() }}
-                    </div>
-                @endif --}}
+            </div>
+            @endif --}}
             </div>
         </div>
 

@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketSubmittedNotification extends Notification implements ShouldBroadcast
+class TicketSubmittedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -41,7 +42,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
         $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('New Ticket Submitted - '.$this->ticket->ticket_number)
+            ->subject('New Ticket Submitted - ' . $this->ticket->ticket_number)
             ->view('emails.tickets.ticket-submitted', [
                 'ticket' => $this->ticket,
                 'actionUrl' => $actionUrl,
@@ -58,7 +59,7 @@ class TicketSubmittedNotification extends Notification implements ShouldBroadcas
     {
         return [
             'title' => 'New Ticket Submitted',
-            'message' => 'A new ticket has been submitted: '.$this->ticket->title,
+            'message' => 'A new ticket has been submitted: ' . $this->ticket->title,
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_submitted',

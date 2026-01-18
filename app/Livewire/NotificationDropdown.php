@@ -51,6 +51,9 @@ class NotificationDropdown extends Component
         if ($notification) {
             $notification->markAsRead();
             $this->loadNotifications();
+
+            // Dispatch event to refresh notifications page
+            $this->dispatch('notifications-updated');
         }
     }
 

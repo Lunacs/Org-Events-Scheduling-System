@@ -39,7 +39,7 @@
             @persist('superadmin-sidebar')
                 {{-- SIDEBAR --}}
                 <x-slot:sidebar collapsible withNav drawer="main-drawer"
-                    class="bg-base-100 dark:bg-gray-900 lg:bg-inherit rounded-r-xl">
+                    class="bg-base-100 lg:bg-inherit rounded-r-xl">
 
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">

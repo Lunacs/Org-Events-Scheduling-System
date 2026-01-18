@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\TicketStatusUpdatedNotification;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
@@ -137,75 +138,92 @@ class Details extends Component
             'approvalRemarks.min' => 'Remarks must be at least 3 characters.',
         ]);
 
-        $oldStatus = $this->ticket->status;
-        $officeId = Auth::user()->office_id;
+        DB::beginTransaction();
+        try {
+            // Lock the ticket to prevent concurrent modifications
+            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
 
-        $this->ticket->update(['status' => 'pending_osa_approval']);
+            $oldStatus = $this->ticket->status;
+            $officeId = Auth::user()->office_id;
 
-        Office_Approval::updateOrCreate(
-            [
-                'ticket_id' => $this->ticket->ticket_id,
-                'office_id' => $officeId,
-            ],
-            [
-                'user_id' => Auth::id(),
-                'decision' => 'approved',
-                'remarks' => $this->approvalRemarks,
-            ]
-        );
+            $this->ticket->update(['status' => 'pending_osa_approval']);
 
-        $this->ticket->logApprovalHistory(
-            'office',
-            'approved',
-            $this->approvalRemarks,
-            $officeId
-        );
+            Office_Approval::updateOrCreate(
+                [
+                    'ticket_id' => $this->ticket->ticket_id,
+                    'office_id' => $officeId,
+                ],
+                [
+                    'user_id' => Auth::id(),
+                    'decision' => 'approved',
+                    'remarks' => $this->approvalRemarks,
+                ]
+            );
 
-        TransactionLogService::logOfficeApproval(
-            'GSO',
-            'approved',
-            $this->ticket,
-            ['Remarks' => $this->approvalRemarks]
-        );
+            $this->ticket->logApprovalHistory(
+                'office',
+                'approved',
+                $this->approvalRemarks,
+                $officeId
+            );
 
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'pending_osa_approval',
-            $this->approvalRemarks
-        ));
+            TransactionLogService::logOfficeApproval(
+                'GSO',
+                'approved',
+                $this->ticket,
+                ['Remarks' => $this->approvalRemarks]
+            );
 
-        $osaRoleId = User::getRoleId('osa');
-        $osaUsers = User::where('role_id', $osaRoleId)->get();
+            DB::commit();
 
-        Notification::sendNow(
-            $osaUsers,
-            new TicketStatusUpdatedNotification(
+            // Send notifications after commit
+            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has approved this ticket. Remarks: {$this->approvalRemarks}"
-            )
-        );
+                $this->approvalRemarks
+            ));
 
-        $this->ticket->load([
-            'osaApprovals.user',
-            'officeApprovals.office',
-            'officeApprovals.user',
-            'approvalHistory.user',
-            'approvalHistory.office',
-        ]);
+            $osaRoleId = User::getRoleId('osa');
+            $osaUsers = User::where('role_id', $osaRoleId)->get();
 
-        $this->approvalRemarks = '';
+            Notification::sendNow(
+                $osaUsers,
+                new TicketStatusUpdatedNotification(
+                    $this->ticket,
+                    $oldStatus,
+                    'pending_osa_approval',
+                    "GSO has approved this ticket. Remarks: {$this->approvalRemarks}"
+                )
+            );
 
-        $this->dispatch('refresh-notifications');
-        $this->dispatch('ticket-status-updated',
-            ticketId: $this->ticket->ticket_id,
-            newStatus: 'pending_osa_approval'
-        );
-        $this->dispatch('ticket-approved');
+            $this->ticket->load([
+                'osaApprovals.user',
+                'officeApprovals.office',
+                'officeApprovals.user',
+                'approvalHistory.user',
+                'approvalHistory.office',
+            ]);
 
-        $this->success('Ticket approved. Awaiting OSA final decision.');
+            $this->approvalRemarks = '';
+
+            $this->dispatch('refresh-notifications');
+            $this->dispatch(
+                'ticket-status-updated',
+                ticketId: $this->ticket->ticket_id,
+                newStatus: 'pending_osa_approval'
+            );
+            $this->dispatch('ticket-approved');
+
+            $this->success('Ticket approved. Awaiting OSA final decision.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('GSO ticket approval failed', [
+                'ticket_id' => $this->ticket->ticket_id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to approve ticket: ' . $e->getMessage());
+        }
     }
 
     public function forRevision()
@@ -219,74 +237,91 @@ class Details extends Component
             'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
         ]);
 
-        $oldStatus = $this->ticket->status;
-        $officeId = Auth::user()->office_id;
+        DB::beginTransaction();
+        try {
+            // Lock the ticket to prevent concurrent modifications
+            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
 
-        $this->ticket->update(['status' => 'pending_osa_approval']);
+            $oldStatus = $this->ticket->status;
+            $officeId = Auth::user()->office_id;
 
-        Office_Approval::updateOrCreate(
-            [
-                'ticket_id' => $this->ticket->ticket_id,
-                'office_id' => $officeId,
-            ],
-            [
-                'user_id' => Auth::id(),
-                'decision' => 'for_revision',
-                'remarks' => $this->revisionRemarks,
-            ]
-        );
+            $this->ticket->update(['status' => 'pending_osa_approval']);
 
-        $this->ticket->logApprovalHistory(
-            'office',
-            'for_revision',
-            $this->revisionRemarks,
-            $officeId
-        );
+            Office_Approval::updateOrCreate(
+                [
+                    'ticket_id' => $this->ticket->ticket_id,
+                    'office_id' => $officeId,
+                ],
+                [
+                    'user_id' => Auth::id(),
+                    'decision' => 'for_revision',
+                    'remarks' => $this->revisionRemarks,
+                ]
+            );
 
-        TransactionLogService::logOfficeApproval(
-            'GSO',
-            'for_revision',
-            $this->ticket,
-            ['Remarks' => $this->revisionRemarks]
-        );
+            $this->ticket->logApprovalHistory(
+                'office',
+                'for_revision',
+                $this->revisionRemarks,
+                $officeId
+            );
 
-        $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-            $this->ticket,
-            $oldStatus,
-            'pending_osa_approval',
-            "GSO has requested revisions: {$this->revisionRemarks}"
-        ));
+            TransactionLogService::logOfficeApproval(
+                'GSO',
+                'for_revision',
+                $this->ticket,
+                ['Remarks' => $this->revisionRemarks]
+            );
 
-        $osaRoleId = User::getRoleId('osa');
-        $osaUsers = User::where('role_id', $osaRoleId)->get();
+            DB::commit();
 
-        Notification::sendNow(
-            $osaUsers,
-            new TicketStatusUpdatedNotification(
+            // Send notifications after commit
+            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has requested revisions. Remarks: {$this->revisionRemarks}"
-            )
-        );
+                "GSO has requested revisions: {$this->revisionRemarks}"
+            ));
 
-        $this->ticket->load([
-            'osaApprovals.user',
-            'officeApprovals.office',
-            'officeApprovals.user',
-            'approvalHistory.user',
-            'approvalHistory.office',
-        ]);
+            $osaRoleId = User::getRoleId('osa');
+            $osaUsers = User::where('role_id', $osaRoleId)->get();
 
-        $this->revisionRemarks = '';
+            Notification::sendNow(
+                $osaUsers,
+                new TicketStatusUpdatedNotification(
+                    $this->ticket,
+                    $oldStatus,
+                    'pending_osa_approval',
+                    "GSO has requested revisions. Remarks: {$this->revisionRemarks}"
+                )
+            );
 
-        $this->dispatch('refresh-notifications');
-        $this->dispatch('ticket-status-updated',
-            ticketId: $this->ticket->ticket_id,
-            newStatus: 'pending_osa_approval'
-        );
-        $this->dispatch('ticket-for-revision');
+            $this->ticket->load([
+                'osaApprovals.user',
+                'officeApprovals.office',
+                'officeApprovals.user',
+                'approvalHistory.user',
+                'approvalHistory.office',
+            ]);
 
-        $this->warning('Revision requested. OSA will review and make the final decision.');
+            $this->revisionRemarks = '';
+
+            $this->dispatch('refresh-notifications');
+            $this->dispatch(
+                'ticket-status-updated',
+                ticketId: $this->ticket->ticket_id,
+                newStatus: 'pending_osa_approval'
+            );
+            $this->dispatch('ticket-for-revision');
+
+            $this->warning('Revision requested. OSA will review and make the final decision.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('GSO revision request failed', [
+                'ticket_id' => $this->ticket->ticket_id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to request revision: ' . $e->getMessage());
+        }
     }
 }

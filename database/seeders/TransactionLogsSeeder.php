@@ -12,7 +12,7 @@ class TransactionLogsSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = \App\Models\User::where('email', 'gso@example.com')->first();
+        $user = \App\Models\User::where('email', 'gso@plv.edu.ph')->first();
 
         if (! $user) {
             return;

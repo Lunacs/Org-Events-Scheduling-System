@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Traits\WithProfilePhoto;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -9,6 +10,7 @@ use Mary\Traits\Toast;
 class AvatarSelector extends Component
 {
     use Toast;
+    use WithProfilePhoto;
 
     public $selectedStyle;
 
@@ -19,9 +21,30 @@ class AvatarSelector extends Component
     ];
 
     protected const AVATAR_SEEDS = [
-        'felix', 'aneka', 'bob', 'charlie', 'david', 'emma', 'frank', 'grace',
-        'hannah', 'ivan', 'julia', 'kevin', 'laura', 'mike', 'nina', 'oliver',
-        'peter', 'quinn', 'rachel', 'sam', 'tina', 'uma', 'victor', 'wendy',
+        'felix',
+        'aneka',
+        'bob',
+        'charlie',
+        'david',
+        'emma',
+        'frank',
+        'grace',
+        'hannah',
+        'ivan',
+        'julia',
+        'kevin',
+        'laura',
+        'mike',
+        'nina',
+        'oliver',
+        'peter',
+        'quinn',
+        'rachel',
+        'sam',
+        'tina',
+        'uma',
+        'victor',
+        'wendy',
     ];
 
     protected const DEFAULT_STYLE = 'big-ears';
@@ -52,6 +75,69 @@ class AvatarSelector extends Component
         return $options;
     }
 
+    /**
+     * When a photo is uploaded, validate it but don't save yet.
+     * Just show a preview and wait for explicit save.
+     */
+    public function updatedPhoto()
+    {
+        // Only validate the photo, don't save yet
+        $this->validate(
+            ['photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240']],
+            [
+                'photo.image' => 'The file must be an image.',
+                'photo.mimes' => 'The image must be a JPG, PNG, or WebP file.',
+                'photo.max' => 'The image must not exceed 10MB.',
+            ]
+        );
+        // Photo preview will be shown automatically via $photo->temporaryUrl()
+
+        // Dispatch event to trigger avatar re-initialization
+        $this->dispatch('photo-uploaded');
+    }
+
+    /**
+     * Cancel the photo upload and clear the preview.
+     */
+    public function cancelPhotoUpload()
+    {
+        $this->photo = null;
+    }
+
+    /**
+     * Save the uploaded photo and switch to using it.
+     */
+    public function saveUploadedPhoto()
+    {
+        if (!$this->photo) {
+            $this->error('No photo to save.', position: 'toast-top');
+            return;
+        }
+
+        $this->saveProfilePhoto();
+        $this->dispatch('avatar-updated');
+        $this->js('window.dispatchEvent(new CustomEvent("avatar-changed"))');
+    }
+
+    /**
+     * Switch to using the uploaded photo as avatar.
+     */
+    public function useUploadedPhoto()
+    {
+        $user = Auth::user();
+
+        if (!$user->avatar) {
+            $this->error('No uploaded photo found.', position: 'toast-top');
+            return;
+        }
+
+        $user->update(['avatar_preference' => 'uploaded']);
+
+        $this->success('Now using your uploaded photo!', position: 'toast-top');
+        $this->dispatch('avatar-updated');
+        $this->js('window.dispatchEvent(new CustomEvent("avatar-changed"))');
+    }
+
     public function saveAvatar($style, $seed)
     {
         // Validate inputs
@@ -65,6 +151,7 @@ class AvatarSelector extends Component
         $user->update([
             'avatar_style' => $style,
             'avatar_seed' => $seed,
+            'avatar_preference' => 'dicebear', // Switch to DiceBear avatar
         ]);
 
         // Update local state to reflect saved values
@@ -84,6 +171,7 @@ class AvatarSelector extends Component
     {
         return view('livewire.avatar-selector', [
             'avatarOptions' => $this->avatarOptions,
+            'user' => Auth::user(),
         ]);
     }
 }

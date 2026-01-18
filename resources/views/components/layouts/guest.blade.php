@@ -31,31 +31,53 @@
 
 </head>
 
-<body class="font-sans text-gray-900 antialiased">
-    <div class="flex min-h-screen w-full bg-white p-4 sm:p-8 md:p-12 lg:p-20">
+<body class="font-sans text-gray-900 antialiased bg-gray-50 dark:bg-gray-950 overflow-hidden">
+    <div class="flex h-screen w-full p-3 sm:p-4 lg:p-6 gap-4">
         <!-- Left side - Image (Hidden on mobile) -->
-        <div class="hidden lg:flex lg:w-[55%] relative">
+        <div class="hidden lg:flex lg:w-[55%] relative overflow-hidden rounded-3xl shadow-2xl h-full">
             <div class="absolute inset-0">
                 <img src="{{ asset('images/suhay husay.png') }}"
-                    class="w-full h-full object-cover opacity-80 rounded-xl" alt="PLV Background" loading="eager" fetchpriority="high">
+                    class="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-10000 ease-linear"
+                    alt="PLV Background" loading="eager" fetchpriority="high">
             </div>
-            <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-tr from-secondary/40 via-transparent to-black/20"></div>
+            <div class="absolute bottom-10 left-10 right-10 text-white z-10">
+                <h2 class="text-3xl xl:text-4xl font-black mb-3 drop-shadow-lg">Org Events Scheduling System</h2>
+                <p class="text-base xl:text-lg font-medium opacity-90 drop-shadow-md max-w-lg">Streamlining event
+                    management and
+                    approvals for a more vibrant campus life.</p>
+            </div>
         </div>
 
         <!-- Right side - Login Form -->
-        <div
-            class="flex flex-col justify-center items-center w-full lg:w-[40%] bg-white rounded-xl shadow-xl dark:bg-gray-800 p-4 sm:p-6 md:p-8">
+        <div class="flex flex-col justify-center items-center w-full lg:w-[45%] p-4 lg:p-6 h-full">
             <!-- Logo -->
-            <div class="mb-6 sm:mb-8">
-                <a href="/" wire:navigate>
-                    <img src="{{ asset('images/osa-logo.jpg') }}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shadow-md"
-                        alt="OSA Logo" loading="eager" fetchpriority="high">
+            <div class="mb-6 transform hover:scale-105 transition-transform duration-300 shrink-0">
+                <a href="/" wire:navigate class="block">
+                    <div class="relative">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-r from-secondary to-secondary-focus rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
+                        </div>
+                        <img src="{{ asset('images/osa-logo.jpg') }}"
+                            class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shadow-2xl border-2 border-white dark:border-gray-800"
+                            alt="OSA Logo" loading="eager" fetchpriority="high">
+                    </div>
                 </a>
             </div>
 
             <!-- Login Form Container -->
-            <div class="w-full max-w-md px-2 sm:px-0">
-                {{ $slot }}
+            <div class="w-full max-w-lg shrink-0">
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none p-6 sm:p-8 border border-gray-100 dark:border-gray-800">
+                    {{ $slot }}
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-6 text-center shrink-0">
+                <p class="text-[10px] text-gray-400 dark:text-gray-600 font-medium uppercase tracking-widest">
+                    &copy; {{ date('Y') }} Office of Student Affairs • PLV
+                </p>
             </div>
         </div>
     </div>

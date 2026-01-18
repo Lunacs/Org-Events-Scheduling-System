@@ -6,25 +6,22 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 Route::middleware('guest')->group(function () {
-    // OSA/Admin Login
-    Volt::route('admin/login', 'pages.auth.osa-login')
+    // Unified Login Page
+    Volt::route('login', 'pages.auth.login')
+        ->name('login');
+
+    // Keep old routes for backward compatibility, but point to the unified login
+    Volt::route('admin/login', 'pages.auth.login')
         ->name('admin.login');
 
-    // Student Organization Login
-    Volt::route('student-org/login', 'pages.auth.student-org-login')
+    Volt::route('student-org/login', 'pages.auth.login')
         ->name('student-org.login');
 
-    // GSO/Offices Login
-    Volt::route('gso/login', 'pages.auth.gso-login')
+    Volt::route('gso/login', 'pages.auth.login')
         ->name('gso.login');
 
-    // SuperAdmin Login
-    Volt::route('superadmin/login', 'pages.auth.superadmin-login')
+    Volt::route('superadmin/login', 'pages.auth.login')
         ->name('superadmin.login');
-
-    // Default login redirects to OSA login
-    Volt::route('login', 'pages.auth.osa-login')
-        ->name('login');
 
     Volt::route('register', 'pages.auth.register')
         ->name('register');
@@ -50,4 +47,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // Handle GET requests to /logout (e.g., when session expires and browser redirects)
+    Route::get('logout', function () {
+        return redirect()->route('login');
+    })->name('logout.get');
 });

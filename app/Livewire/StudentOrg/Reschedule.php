@@ -125,9 +125,26 @@ class Reschedule extends Component
             return;
         }
 
-        $this->currentStep = (int) $step;
-        $this->dispatch('step-changed');
+        $targetStep = (int) $step;
+
+        // Don't allow jumping ahead without validation
+        if ($targetStep > $this->currentStep) {
+            try {
+                // Validate current step before moving forward
+                $this->validateCurrentStep();
+                $this->currentStep = $targetStep;
+                $this->dispatch('step-changed');
+            } catch (ValidationException $e) {
+                // Validation failed, stay on current step
+                throw $e;
+            }
+        } else {
+            // Allow going back without validation
+            $this->currentStep = $targetStep;
+            $this->dispatch('step-changed');
+        }
     }
+
 
     protected function getCurrentStepRules(): array
     {

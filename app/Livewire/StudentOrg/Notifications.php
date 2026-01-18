@@ -29,6 +29,8 @@ class Notifications extends Component
 
     public $unreadCount = 0;
 
+    public $readCount = 0;
+
     public $totalCount = 0;
 
     public $todayCount = 0;
@@ -61,6 +63,7 @@ class Notifications extends Component
 
                 return [
                     'unread' => (clone $allNotifications)->whereNull('read_at')->count(),
+                    'read' => (clone $allNotifications)->whereNotNull('read_at')->count(),
                     'total' => $allNotifications->count(),
                     'today' => (clone $allNotifications)->whereDate('created_at', $today)->count(),
                     'week' => (clone $allNotifications)->whereBetween('created_at', [$weekStart, $weekEnd])->count(),
@@ -69,6 +72,7 @@ class Notifications extends Component
         );
 
         $this->unreadCount = $counts['unread'] ?? 0;
+        $this->readCount = $counts['read'] ?? 0;
         $this->totalCount = $counts['total'] ?? 0;
         $this->todayCount = $counts['today'] ?? 0;
         $this->weekCount = $counts['week'] ?? 0;

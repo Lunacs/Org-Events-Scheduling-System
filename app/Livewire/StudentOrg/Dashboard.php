@@ -12,7 +12,13 @@ class Dashboard extends Component
     #[Layout('components.layouts.student-org-layout')]
     public function render()
     {
-        $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc');
+        // Get all tickets for the authenticated user with event type
+        $tickets = auth()->user()->tickets()->with('eventType')->orderBy('created_at', 'desc')->get();
+
+        // Get the 5 most recent tickets
+        $recentTickets = $tickets->take(5);
+
+        // Get upcoming approved events within the next 30 days
         $upcomingEvents = auth()->user()->tickets()
             ->where('status', 'approved')
             ->whereBetween('date_from', [now(), now()->addDays(30)])
@@ -25,7 +31,8 @@ class Dashboard extends Component
             ->get();
 
         return view('livewire.student-org.dashboard', [
-            'tickets' => $tickets->get(),
+            'tickets' => $tickets,
+            'recentTickets' => $recentTickets,
             'upcomingEvents' => $upcomingEvents,
             'recentNotifications' => $recentNotifications,
         ]);

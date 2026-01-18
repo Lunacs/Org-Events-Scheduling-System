@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketForRevisionNotification extends Notification implements ShouldBroadcast
+class TicketForRevisionNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -44,8 +45,8 @@ class TicketForRevisionNotification extends Notification implements ShouldBroadc
         $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Ticket For Revision - '.$this->ticket->ticket_number)
-            ->view('emails.tickets.ticket-for_revision', [
+            ->subject('Ticket For Revision - ' . $this->ticket->ticket_number)
+            ->view('emails.tickets.ticket-for-revision', [
                 'ticket' => $this->ticket,
                 'remarks' => $this->remarks,
                 'actionUrl' => $actionUrl,
@@ -62,12 +63,12 @@ class TicketForRevisionNotification extends Notification implements ShouldBroadc
     {
         return [
             'title' => 'Ticket For Revision',
-            'message' => 'Your ticket "'.$this->ticket->title.'" has been put for revision',
+            'message' => 'Your ticket "' . $this->ticket->title . '" has been put for revision',
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'type' => 'ticket_for_revision',
-            'icon' => 's-x-circle',
-            'color' => 'error',
+            'icon' => 's-pencil-square',
+            'color' => 'warning',
             'remarks' => $this->remarks,
             'action_url' => $this->getActionUrl($notifiable),
         ];

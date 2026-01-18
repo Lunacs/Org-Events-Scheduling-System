@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class GsoForRevisionTicketNotification extends Notification implements ShouldBroadcast
+class GsoForRevisionTicketNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +35,7 @@ class GsoForRevisionTicketNotification extends Notification implements ShouldBro
 
         return (new MailMessage)
             ->subject('GSO For Revision Ticket - ' . $this->ticket->ticket_number)
-            ->view('emails.tickets.gso-', [
+            ->view('emails.tickets.gso-for-revision', [
                 'ticket' => $this->ticket,
                 'remarks' => $this->remarks,
                 'actionUrl' => $actionUrl,
@@ -86,4 +87,3 @@ class GsoForRevisionTicketNotification extends Notification implements ShouldBro
         return route('student-org.my-tickets');
     }
 }
-

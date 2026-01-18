@@ -7,7 +7,9 @@ use App\Models\Student_Organization;
 use App\Models\User;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -95,7 +97,7 @@ class OrganizationManager extends Component
             'newCourseId' => 'nullable|exists:courses,course_id',
             'newAdviserName' => 'required|string|max:255',
             'newOrgStatus' => 'required|in:active,inactive,suspended',
-            'newOrgLogo' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:2048',
+            'newOrgLogo' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
         ], [
             'newOrgCode.unique' => 'The organization code has already been taken.',
             'newOrgCode.required' => 'The organization code is required.',
@@ -106,12 +108,12 @@ class OrganizationManager extends Component
             'newOrgStatus.required' => 'The organization status is required.',
             'newOrgLogo.image' => 'The logo must be an image file.',
             'newOrgLogo.mimes' => 'The logo must be a file of type: jpg, jpeg, png, gif, svg, webp.',
-            'newOrgLogo.max' => 'The logo may not be greater than 2MB.',
+            'newOrgLogo.max' => 'The logo may not be greater than 10MB.',
         ]);
 
         $logoPath = null;
         if ($this->newOrgLogo) {
-            $logoPath = $this->newOrgLogo->store('organizations/logos', 'public');
+            $logoPath = $this->compressAndStoreLogo($this->newOrgLogo);
         }
 
         $organization = Student_Organization::create([
@@ -165,12 +167,12 @@ class OrganizationManager extends Component
     public function editOrganization()
     {
         $this->validate([
-            'orgCode' => 'required|string|max:50|unique:student__organizations,org_code,'.$this->editingOrgId.',org_id',
+            'orgCode' => 'required|string|max:50|unique:student__organizations,org_code,' . $this->editingOrgId . ',org_id',
             'orgName' => 'required|string|max:255',
             'courseId' => 'nullable|exists:courses,course_id',
             'adviserName' => 'required|string|max:255',
             'orgStatus' => 'required|in:active,inactive,suspended',
-            'orgLogo' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:2048',
+            'orgLogo' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg,webp|max:10240',
         ]);
 
         $organization = Student_Organization::find($this->editingOrgId);
@@ -218,8 +220,8 @@ class OrganizationManager extends Component
                 if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
                     Storage::disk('public')->delete($organization->logo);
                 }
-                // Store new logo
-                $newLogoPath = $this->orgLogo->store('organizations/logos', 'public');
+                // Store new logo with compression
+                $newLogoPath = $this->compressAndStoreLogo($this->orgLogo);
                 $changes[] = 'Logo: Updated';
             }
 
@@ -307,15 +309,27 @@ class OrganizationManager extends Component
             return;
         }
 
-        // Log the organization deletion before deleting
-        TransactionLogService::logOrgOperation('deleted', $organization);
+        DB::beginTransaction();
+        try {
+            // Log the organization deletion before deleting
+            TransactionLogService::logOrgOperation('deleted', $organization);
 
-        $organization->delete();
+            $organization->delete();
 
-        $this->reset(['deletingOrgId', 'deletingOrgName', 'hasAssociatedUsers']);
-        $this->deleteOrgModalOpen = false;
-        $this->clearOrganizationsCache();
-        $this->success('Student organization deleted successfully!', position: 'toast-top');
+            DB::commit();
+
+            $this->reset(['deletingOrgId', 'deletingOrgName', 'hasAssociatedUsers']);
+            $this->deleteOrgModalOpen = false;
+            $this->clearOrganizationsCache();
+            $this->success('Student organization deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Organization deletion failed', [
+                'org_id' => $this->deletingOrgId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to delete organization: ' . $e->getMessage(), position: 'toast-top');
+        }
     }
 
     protected function clearOrganizationsCache()
@@ -331,5 +345,28 @@ class OrganizationManager extends Component
         Cache::forget('organizations');
         Cache::forget('courses');
     }
-}
 
+    /**
+     * Compress and store a logo image.
+     * Resizes to max 500x500 and converts to WebP at 80% quality.
+     */
+    protected function compressAndStoreLogo($uploadedFile): string
+    {
+        // Generate unique filename
+        $filename = 'organizations/logos/' . uniqid('org_') . '_' . time() . '.webp';
+
+        // Read, resize, and compress the image
+        $image = Image::read($uploadedFile->getRealPath());
+
+        // Resize to max 500x500 while maintaining aspect ratio
+        $image->scaleDown(500, 500);
+
+        // Encode as WebP with 80% quality for compression
+        $encoded = $image->toWebp(80);
+
+        // Store the compressed image
+        Storage::disk('public')->put($filename, (string) $encoded);
+
+        return $filename;
+    }
+}

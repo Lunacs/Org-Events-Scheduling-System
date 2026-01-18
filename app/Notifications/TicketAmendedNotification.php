@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketAmendedNotification extends Notification implements ShouldBroadcast
+class TicketAmendedNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -82,4 +83,3 @@ class TicketAmendedNotification extends Notification implements ShouldBroadcast
         return route('student-org.my-tickets');
     }
 }
-

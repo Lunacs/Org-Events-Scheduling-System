@@ -13,7 +13,7 @@
                 <div class="mb-8">
                     <div class="flex justify-between items-center">
                         @for($i = 1; $i <= $totalSteps; $i++)
-                            <div class="flex flex-col items-center flex-1">
+                            <div class="flex flex-col items-center flex-1 gap-1">
                                 <button
                                     type="button"
                                     wire:click="goToStep({{ $i }})"
@@ -22,10 +22,11 @@
                                     class="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors
                                     {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
                                     {{ $currentStep > $i ? 'bg-success text-white' : '' }}
-                                    {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}">
+                                    {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}"
+                                    @if($i > $currentStep + 1) disabled @endif>
                                     {{ $currentStep > $i ? '✓' : $i }}
                                 </button>
-                                <span class="text-xs text-center">
+                                <span class="text-xs text-center hidden md:block">
                                     @switch($i)
                                         @case(1) Select Event @break
                                         @case(2) New Schedule @break
@@ -33,8 +34,17 @@
                                         @case(4) Review @break
                                     @endswitch
                                 </span>
+                                <span class="text-xs text-center md:hidden">
+                                    @switch($i)
+                                        @case(1) Select @break
+                                        @case(2) Schedule @break
+                                        @case(3) Documents @break
+                                        @case(4) Review @break
+                                    @endswitch
+                                </span>
                             </div>
-                            @if($i < $totalSteps)
+
+                        @if($i < $totalSteps)
                                 <div class="flex-1 h-1 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-2"></div>
                             @endif
                         @endfor

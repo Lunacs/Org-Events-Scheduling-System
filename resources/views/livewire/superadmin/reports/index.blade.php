@@ -79,7 +79,7 @@
 
         {{-- Overview Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="stats shadow-lg border-primary border-2 bg-primary/20 text-primary-content">
+            <div class="stats shadow-lg border-primary border-2 bg-primary/10 text-primary-content">
                 <div class="stat">
                     <div class="stat-figure text-primary">
                         <x-mary-icon name="o-calendar" class="w-8 h-8" />
@@ -91,7 +91,7 @@
                 </div>
             </div>
 
-            <div class="stats shadow-lg border-primary border-2 bg-success/20">
+            <div class="stats shadow-lg border-primary border-2 bg-success/10">
                 <div class="stat">
                     <div class="stat-figure text-success">
                         <x-mary-icon name="o-check-circle" class="w-8 h-8" />
@@ -103,7 +103,7 @@
                 </div>
             </div>
 
-            <div class="stats shadow-lg border-info border-2 bg-info/20 text-info-content">
+            <div class="stats shadow-lg border-info border-2 bg-info/10 text-info-content">
                 <div class="stat">
                     <div class="stat-figure text-info">
                         <x-mary-icon name="o-ticket" class="w-8 h-8" />
@@ -114,7 +114,7 @@
                 </div>
             </div>
 
-            <div class="stats shadow-lg border-accent border-2 bg-accent/40 text-accent-content">
+            <div class="stats shadow-lg border-accent border-2 bg-accent/10 text-accent-content">
                 <div class="stat">
                     <div class="stat-figure text-accent">
                         <x-mary-icon name="o-user-group" class="w-8 h-8" />

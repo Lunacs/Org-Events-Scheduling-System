@@ -6,6 +6,7 @@ use App\Models\Event_Type;
 use App\Models\User;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -63,30 +64,39 @@ class EventTypeManager extends Component
             'newEventTypeDescription' => 'nullable|string|max:500',
         ]);
 
-        $eventType = Event_Type::create([
-            'type_name' => $this->newEventTypeName,
-            'description' => $this->newEventTypeDescription ?? 'Event type description',
-        ]);
+        DB::beginTransaction();
+        try {
+            $eventType = Event_Type::create([
+                'type_name' => $this->newEventTypeName,
+                'description' => $this->newEventTypeDescription ?? 'Event type description',
+            ]);
 
-        // Log the event type creation
-        TransactionLogService::logEventTypeOperation('created', $eventType);
+            // Log the event type creation
+            TransactionLogService::logEventTypeOperation('created', $eventType);
 
-        // Send notification to all superadmins
-        $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
-        foreach ($superadmins as $admin) {
-            $admin->notify(new \App\Notifications\SystemSettingsUpdatedNotification(
-                'event_type',
-                $eventType->type_name,
-                'created',
-                auth()->user()
-            ));
+            DB::commit();
+
+            // Send notification after commit
+            $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
+            foreach ($superadmins as $admin) {
+                $admin->notify(new \App\Notifications\SystemSettingsUpdatedNotification(
+                    'event_type',
+                    $eventType->type_name,
+                    'created',
+                    auth()->user()
+                ));
+            }
+
+            $this->reset(['newEventTypeName', 'newEventTypeDescription']);
+            $this->addEventTypeModalOpen = false;
+            $this->resetErrorBag();
+            $this->clearEventTypesCache();
+            $this->success('Event type added successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Event type creation failed', ['error' => $e->getMessage()]);
+            $this->error('Failed to create event type: ' . $e->getMessage(), position: 'toast-top');
         }
-
-        $this->reset(['newEventTypeName', 'newEventTypeDescription']);
-        $this->addEventTypeModalOpen = false;
-        $this->resetErrorBag();
-        $this->clearEventTypesCache();
-        $this->success('Event type added successfully!', position: 'toast-top');
     }
 
     public function resetAddEventTypeForm()
@@ -110,7 +120,7 @@ class EventTypeManager extends Component
     public function editEventType()
     {
         $this->validate([
-            'eventTypeName' => 'required|string|max:255|unique:event__types,type_name,'.$this->editingEventTypeId.',event_type_id',
+            'eventTypeName' => 'required|string|max:255|unique:event__types,type_name,' . $this->editingEventTypeId . ',event_type_id',
             'eventTypeDescription' => 'nullable|string|max:500',
         ]);
 
@@ -178,26 +188,33 @@ class EventTypeManager extends Component
 
         if (! $eventType) {
             $this->error('Event type not found!', position: 'toast-top');
-
             return;
         }
 
         // Check if event type is being used
         if ($eventType->events()->count() > 0) {
             $this->error('Cannot delete event type that is being used by events!', position: 'toast-top');
-
             return;
         }
 
-        // Log the event type deletion before deleting
-        TransactionLogService::logEventTypeOperation('deleted', $eventType);
+        DB::beginTransaction();
+        try {
+            // Log the event type deletion before deleting
+            TransactionLogService::logEventTypeOperation('deleted', $eventType);
 
-        $eventType->delete();
+            $eventType->delete();
 
-        $this->reset(['deletingEventTypeId', 'deletingEventTypeName', 'hasAssociatedEvents']);
-        $this->deleteModalOpen = false;
-        $this->clearEventTypesCache();
-        $this->success('Event type deleted successfully!', position: 'toast-top');
+            DB::commit();
+
+            $this->reset(['deletingEventTypeId', 'deletingEventTypeName', 'hasAssociatedEvents']);
+            $this->deleteModalOpen = false;
+            $this->clearEventTypesCache();
+            $this->success('Event type deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Event type deletion failed', ['error' => $e->getMessage()]);
+            $this->error('Failed to delete event type: ' . $e->getMessage(), position: 'toast-top');
+        }
     }
 
     protected function clearEventTypesCache()
@@ -212,4 +229,3 @@ class EventTypeManager extends Component
         Cache::forget('event_types');
     }
 }
-

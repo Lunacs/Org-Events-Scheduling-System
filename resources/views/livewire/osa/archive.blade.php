@@ -53,7 +53,9 @@
 
                 <button wire:click="applyFilters" type="button" class="btn btn-primary">Apply</button>
 
-                <button wire:click="clearFilters" type="button" class="btn btn-ghost">Clear Filters</button>
+                @if ($search !== '' || $statusFilter !== '' || $organizationFilter !== '' || $yearFilter != \Carbon\Carbon::now()->year)
+                    <button wire:click="clearFilters" type="button" class="btn btn-ghost">Clear Filters</button>
+                @endif
             </div>
         </div>
 
@@ -100,7 +102,8 @@
                     <div class="bg-info/10 p-2 rounded-full"></div>
                     <div>
                         <div class="text-lg font-bold">
-                            {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}</div>
+                            {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}
+                        </div>
                         <div class="text-sm text-base-content/70">Organizations</div>
                     </div>
                 </div>
@@ -206,7 +209,8 @@
                                                 {{ \Carbon\Carbon::parse($event->eventSchedules->first()->start_date)->format('M d, Y') }}
                                             </div>
                                             <div class="text-sm text-base-content/70">
-                                                {{ $event->eventSchedules->first()->start_time }}</div>
+                                                {{ $event->eventSchedules->first()->start_time }}
+                                            </div>
                                         @else
                                             <span class="text-base-content/50">TBD</span>
                                         @endif
@@ -225,7 +229,8 @@
                                     <td>
                                         <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>
                                         <div class="text-sm text-base-content/70">
-                                            {{ $event->ticket->updated_at->format('h:i A') }}</div>
+                                            {{ $event->ticket->updated_at->format('h:i A') }}
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="flex gap-1">
