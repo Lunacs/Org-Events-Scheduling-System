@@ -1,10 +1,27 @@
 # Stage 1: Build assets
 FROM node:20-alpine AS node-build
 WORKDIR /app
+
+# Install PHP and Composer for Tailwind CSS to scan vendor files (MaryUI components)
+RUN apk add --no-cache php83 php83-phar php83-json php83-mbstring php83-openssl php83-curl php83-dom php83-tokenizer php83-xml php83-xmlwriter && \
+    ln -sf /usr/bin/php83 /usr/bin/php
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    rm composer-setup.php
+
+# Install Composer dependencies first (needed for Tailwind @source directives)
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --ignore-platform-reqs --no-autoloader
+
+# Install npm dependencies
 COPY package*.json ./
 RUN npm ci
+
+# Copy source files for asset building
 COPY resources ./resources
 COPY vite.config.js ./
+
+# Build assets (vendor/robsontenorio/mary now exists for Tailwind to scan)
 RUN npm run build
 
 # Stage 2: PHP dependencies
