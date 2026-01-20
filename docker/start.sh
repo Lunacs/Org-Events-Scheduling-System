@@ -42,5 +42,11 @@ fi
 echo "Running migrations..."
 php artisan migrate --force || true
 
+# Run seeding if enabled
+if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then
+    echo "Seeding database..."
+    php artisan db:seed --force
+fi
+
 # Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf

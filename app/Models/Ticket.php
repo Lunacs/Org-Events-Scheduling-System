@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
 {
     /** @use HasFactory<\Database\Factories\TicketFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The primary key for the model.
@@ -180,7 +181,7 @@ class Ticket extends Model
     public function needsGsoApproval()
     {
         return in_array($this->status, ['received', 'amended']) &&
-               ($this->venue_requested || $this->special_requirements);
+            ($this->venue_requested || $this->special_requirements);
     }
 
     /**

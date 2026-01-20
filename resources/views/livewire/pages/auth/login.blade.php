@@ -34,8 +34,17 @@ new #[Layout('components.layouts.guest')] class extends Component {
             // Log email verification required
             TransactionLogService::logAuthEvent('email_verification_required', $user, 'Login blocked - email not verified');
 
-            // Send verification email
-            $user->sendEmailVerificationNotification();
+            // Send verification email (queued, non-blocking)
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Exception $e) {
+                \Log::error('Failed to queue verification email', [
+                    'user_id' => $user->user_id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue to verification page even if queueing fails
+            }
 
             // Redirect to email verification page
             $this->redirect(route('verification.notice'), navigate: true);
@@ -118,10 +127,10 @@ new #[Layout('components.layouts.guest')] class extends Component {
             </label>
 
             @if (Route::has('password.request'))
-            <a class="text-xs font-bold text-secondary hover:text-secondary-focus transition-colors hover:text-[oklch(45%_0.202_261.294)]! duration-300 ease-in-out"
-                href="{{ route('password.request') }}" wire:navigate>
-                Forgot password?
-            </a>
+                <a class="text-xs font-bold text-secondary hover:text-secondary-focus transition-colors hover:text-[oklch(45%_0.202_261.294)]! duration-300 ease-in-out"
+                    href="{{ route('password.request') }}" wire:navigate>
+                    Forgot password?
+                </a>
             @endif
         </div>
 
