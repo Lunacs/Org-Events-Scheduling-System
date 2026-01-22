@@ -7,21 +7,24 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            {{-- Header Section --}}
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-lg font-semibold">Event History & Analytics</h3>
-                    <p class="text-sm text-gray-600">View your organization's complete event history and performance
-                        metrics</p>
-                </div>
-                <div class="hidden md:flex md:flex-col items-center space-y-2 sm:space-x-3">
-                    <x-mary-button label="Export Report" icon="s-document-arrow-down"
-                                   class="btn-secondary btn-sm text-white"
-                                   wire:click="exportReport" disabled/>
-                    <x-mary-button label="Submit New Event" icon="s-document-plus"
-                                   class="btn-primary btn-sm text-white"
-                                   link="/student-org/submit-ticket" wire:navigate/>
+            {{-- Header --}}
+            <div class="mb-8">
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Event History & Analytics</h1>
+                            <p class="text-base-content/70 mt-1">View your organization's complete event history and performance
+                                metrics</p>
+                        </div>
+                        <div class="hidden md:flex md:flex-col items-center space-y-2 sm:space-x-3">
+                            <x-mary-button label="Export Report" icon="s-document-arrow-down"
+                                           class="btn-secondary btn-sm text-white"
+                                           wire:click="exportReport" disabled/>
+                            <x-mary-button label="Submit New Event" icon="s-document-plus"
+                                           class="btn-primary btn-sm text-white"
+                                           link="/student-org/submit-ticket" wire:navigate/>
+                        </div>
+                    </div>
                 </div>
             </div>
 

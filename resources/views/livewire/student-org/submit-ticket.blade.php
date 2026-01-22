@@ -7,6 +7,17 @@
 
     <div class="py-6 md:py-12 overflow-x-hidden">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            {{-- Header --}}
+            <div class="mb-8">
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Submit Ticket</h1>
+                            <p class="text-base-content/70 mt-1">Submit a ticket of your event request</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <x-mary-form wire:submit="save">
                 {{-- Progress Indicator --}}
@@ -190,7 +201,7 @@
                                 <div x-show="alternativeVenue && venues.find(v => v.venue_id == alternativeVenue)?.venue_name === 'Others (Please Specify)'"
                                      x-collapse
                                      x-cloak
-                                     class="mt-4">
+                                     class="mt-4"   >
                                     <x-mary-input
                                         label="Please specify alternative venue"
                                         wire:model.blur="alternativeVenueOther"

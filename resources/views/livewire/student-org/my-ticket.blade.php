@@ -7,16 +7,19 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            {{-- Header Actions --}}
-            <div class="flex justify-center md:justify-between items-center">
-                <div class="text-left">
-                    <h3 class="text-lg font-semibold">All Event Requests</h3>
-                    <p class="text-sm text-gray-600">Track the progress of your submitted tickets</p>
-                </div>
-                <div class="hidden md:block">
-                    <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary"
-                                   link="/student-org/submit-ticket" wire:navigate/>
+            {{-- Header --}}
+            <div class="mb-8">
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">All Event Requests</h1>
+                            <p class="text-base-content/70 mt-1">Track the progress of your submitted tickets</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary"
+                                           link="/student-org/submit-ticket" wire:navigate/>
+                        </div>
+                    </div>
                 </div>
             </div>
 
