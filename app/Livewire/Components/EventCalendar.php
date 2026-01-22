@@ -76,7 +76,7 @@ class EventCalendar extends Component
 
         $event = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
+                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'venue_other', 'user_id', 'status'])
                     ->with([
                         'user' => fn($q) => $q->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
@@ -99,7 +99,7 @@ class EventCalendar extends Component
             'status' => $event->ticket->status ?? 'approved',
             'ticketNumber' => $event->ticket->ticket_number ?? null,
             'type' => $event->eventType?->type_name ?? 'N/A',
-            'venue' => $event->ticket->venue_requested ?? 'TBD',
+            'venue' => $event->ticket->venue_display_name ?? 'TBD',
             'description' => $event->ticket->description ?? null,
             'schedules' => $event->eventSchedules->map(function ($s) {
                 // Use getRawOriginal to get exact database time values

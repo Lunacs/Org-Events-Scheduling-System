@@ -372,7 +372,7 @@
                                 </div>
                                 <div class="flex items-center gap-2 mt-3">
                                     <x-mary-badge value="{{ $event['eventType'] }}"
-                                        class="{{ $badgeClass }} text-xs font-medium text-neutral-content" />
+                                        class="{{ $badgeClass }} text-xs font-medium text-neutral-content whitespace-normal h-auto" />
                                 </div>
                             </div>
                         </div>

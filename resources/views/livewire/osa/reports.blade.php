@@ -208,7 +208,7 @@
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-lg font-semibold mb-4">Report Configuration</h2>
 
-                <div class="space-y-6">
+                <div class="max-md:grid max-md:grid-cols-1 max-md:gap-4 space-y-6">
                     {{-- Report Type --}}
                     <div>
                         <x-mary-radio wire:model.live="reportType" label="Report Type" :options="[
@@ -237,7 +237,7 @@
                     </div>
 
                     {{-- Date Range --}}
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-input wire:model="dateFrom" label="From Date" type="date" />
                         <x-mary-input wire:model="dateTo" label="To Date" type="date" />
                     </div>

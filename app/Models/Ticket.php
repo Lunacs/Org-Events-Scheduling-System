@@ -34,7 +34,9 @@ class Ticket extends Model
         'external_participants',
         'total_participants',
         'venue_requested',
+        'venue_other',
         'alternate_venue',
+        'alternate_venue_other',
         'special_requirements',
         'igp_requested',
         'igp_details',
@@ -80,6 +82,14 @@ class Ticket extends Model
     public function eventType()
     {
         return $this->belongsTo(Event_Type::class, 'event_type_id');
+    }
+
+    /**
+     * Venue requested for this ticket
+     */
+    public function venue()
+    {
+        return $this->belongsTo(Venue::class, 'venue_requested');
     }
 
     /**
@@ -206,6 +216,52 @@ class Ticket extends Model
                     'created_at' => $history->created_at,
                 ];
             });
+    }
+
+    /**
+     * Get the venue from the active schedule of the ticket's events
+     */
+    public function getScheduleVenueAttribute()
+    {
+        return $this->events
+            ->flatMap(fn($event) => $event->schedules)
+            ->where('status', 'active')
+            ->first()
+            ?->venue;
+    }
+
+    /**
+     * Get the display name for the requested venue
+     */
+    public function getVenueDisplayNameAttribute()
+    {
+        // Get venue from ticket's requested venue relationship
+        $requestedVenue = $this->venue?->venue_name;
+
+        if ($requestedVenue === 'Others (Please Specify)') {
+            return $this->venue_other;
+        }
+
+        return $requestedVenue;
+    }
+
+    public function alternateVenue()
+    {
+        return $this->belongsTo(Venue::class, 'alternate_venue');
+    }
+
+    /**
+     * Get the display name for the alternate venue
+     */
+    public function getAlternateVenueDisplayNameAttribute()
+    {
+        $alternateVenue = $this->alternateVenue?->venue_name;
+
+        if ($alternateVenue === 'Others (Please Specify)') {
+            return $this->alternate_venue_other;
+        }
+
+        return $alternateVenue;
     }
 
     /**

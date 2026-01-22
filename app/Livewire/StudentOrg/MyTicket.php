@@ -214,8 +214,8 @@ class MyTicket extends Component
 
     public function render()
     {
-        $allTickets = auth()->user()->tickets()->with('eventType')->get();
-        $ticketsQuery = auth()->user()->tickets()->with('eventType')
+        $allTickets = auth()->user()->tickets()->with('eventType')->with('venue')->get();
+        $ticketsQuery = auth()->user()->tickets()->with('eventType')->with('venue')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')

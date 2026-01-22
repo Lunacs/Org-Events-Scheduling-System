@@ -57,6 +57,8 @@ class Index extends Component
             'description',
             'status',
             'venue_requested',
+            'venue_other',
+            'date_from',
             'user_id',
             'event_type_id',
             'created_at',
@@ -65,7 +67,7 @@ class Index extends Component
                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])
                     ->with('studentOrganization:org_id,org_name'),
                 'events' => fn ($q) => $q->select(['event_id', 'ticket_id'])
-                    ->with('eventSchedules:schedule_id,event_id,start_date,start_time'),
+                    ->with('eventSchedules:schedule_id,event_id,start_date,start_time,venue'),
                 'attachments:attachment_id,ticket_id,file_path,file_name',
                 'eventType:event_type_id,type_name',
             ])

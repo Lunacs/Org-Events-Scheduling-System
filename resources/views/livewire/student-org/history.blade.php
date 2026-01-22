@@ -15,12 +15,23 @@
                     <p class="text-sm text-gray-600">View your organization's complete event history and performance
                         metrics</p>
                 </div>
-                <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                    <x-mary-button label="Export Report" icon="s-document-arrow-down" class="btn-secondary btn-sm text-white whitespace-normal h-auto"
+                <div class="hidden md:flex md:flex-col items-center space-y-2 sm:space-x-3">
+                    <x-mary-button label="Export Report" icon="s-document-arrow-down"
+                                   class="btn-secondary btn-sm text-white"
                                    wire:click="exportReport" disabled/>
-                    <x-mary-button label="Submit New Event" icon="s-document-plus" class="btn-primary btn-sm text-white whitespace-normal h-auto"
+                    <x-mary-button label="Submit New Event" icon="s-document-plus"
+                                   class="btn-primary btn-sm text-white"
                                    link="/student-org/submit-ticket" wire:navigate/>
                 </div>
+            </div>
+
+            <div class="md:hidden flex flex-row items-center space-y-0 space-x-3">
+                <x-mary-button label="Export Report" icon="s-document-arrow-down"
+                               class="btn-secondary btn-sm text-white"
+                               wire:click="exportReport" disabled/>
+                <x-mary-button label="Submit New Event" icon="s-document-plus"
+                               class="btn-primary btn-sm text-white"
+                               link="/student-org/submit-ticket" wire:navigate/>
             </div>
 
             {{-- Analytics Summary --}}
@@ -111,44 +122,50 @@
 
             {{-- Filter and Search --}}
             <x-mary-card>
-                <div class="flex flex-wrap gap-4 items-end">
-                    <x-mary-input label="Search Events" wire:model.live="search"
+                <div class="grid grid-cols-1 md:flex md:flex-wrap gap-4 md:items-end">
+                    <x-mary-input label="Search Events" wire:model.live.debounce.500ms="search"
                                   x-data="{ placeholder: window.innerWidth < 768 ? 'Title, Description or Venue' : 'Search by title, description, or venue...' }"
-                                  x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, ID, or description...' })"
+                                  x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, description, or venue...' })"
                                   ::placeholder="placeholder"
                                   icon="s-magnifying-glass"
                                   class="flex-1 md:min-w-64 min-w-32"/>
 
-                    <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
-                        ['id' => '', 'name' => 'All Status'],
-                        ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'for_revision', 'name' => 'Needs Revision'],
-                        ['id' => 'cancelled', 'name' => 'Cancelled'],
-                    ]" class="w-32"/>
+                    <div wire:loading.class="opacity-50">
+                        <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
+                            ['id' => '', 'name' => 'All Status'],
+                            ['id' => 'approved', 'name' => 'Approved'],
+                            ['id' => 'for_revision', 'name' => 'Needs Revision'],
+                            ['id' => 'cancelled', 'name' => 'Cancelled'],
+                        ]" class="w-32"/>
+                    </div>
 
-                    <x-mary-select
-                        label="Event Type"
-                        wire:model.live="typeFilter"
-                        :options="$this->eventTypes"
-                        class="w-32"
-                    />
+                    <div wire:loading.class="opacity-50">
+                        <x-mary-select label="Event Type" wire:model.live="typeFilter" :options="$this->eventTypes"
+                                       class="w-32"/>
+                    </div>
 
-                    <x-mary-select
-                        label="Year"
-                        wire:model.live="yearFilter"
-                        :options="$this->years"
-                        class="w-24"
-                    />
+                    <div wire:loading.class="opacity-50">
+                        <x-mary-select label="Year" wire:model.live="yearFilter" :options="$this->years" class="w-24"/>
+                    </div>
 
-                    <x-mary-button icon="s-arrow-path" class="btn-ghost btn-sm hidden md:block" wire:click="resetFilters"
-                                   tooltip="Reset Filters"/>
+                    <div class="hidden md:block">
+                        <x-mary-button icon="s-arrow-path" class="btn-ghost"
+                                       wire:click="resetFilters"
+                                       tooltip="Reset Filters"/>
+                    </div>
+
                     <x-mary-button label="Reset Filters" class="mt-6 md:hidden" wire:click="resetFilters"/>
                 </div>
             </x-mary-card>
 
             {{-- Event History List --}}
             <x-mary-card title="Event History" subtitle="Complete record of your organization's events">
-                <div class="space-y-6">
+                <div wire:loading.delay class="flex justify-center items-center py-8">
+                    <span class="loading loading-spinner loading-md"></span>
+                    <span class="ml-2 text-gray-500">Loading events...</span>
+                </div>
+
+                <div class="space-y-6" wire:loading.remove.delay>
                     @forelse($this->tickets as $ticket)
                         @php
                             $isApproved = $ticket->status === 'approved';
@@ -165,35 +182,46 @@
                         @endphp
 
 
-                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow {{ $isCancelled ? 'opacity-75' : '' }}">
+                        <div
+                            class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow {{ $isCancelled ? 'opacity-75' : '' }}">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-3 mb-2">
-                                        <div class="flex md:hidden flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                        <div
+                                            class="flex md:hidden flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                                             @if($isApproved)
-                                                <x-mary-badge value="Approved" class="badge-success text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="Approved"
+                                                              class="badge-success text-white whitespace-normal h-auto"/>
                                                 @if($isComplete)
-                                                    <x-mary-badge value="Completed" class="badge-info text-white whitespace-normal h-auto"/>
+                                                    <x-mary-badge value="Completed"
+                                                                  class="badge-info text-white whitespace-normal h-auto"/>
                                                 @endif
                                             @elseif($isForRevision)
-                                                <x-mary-badge value="For Revision" class="badge-warning text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="For Revision"
+                                                              class="badge-warning text-white whitespace-normal h-auto"/>
                                             @elseif($isCancelled)
-                                                <x-mary-badge value="Cancelled" class="badge-error text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="Cancelled"
+                                                              class="badge-error text-white whitespace-normal h-auto"/>
                                             @endif
                                         </div>
                                     </div>
                                     <div class="flex items-center space-x-3 mb-2">
                                         <h4 class="text-lg font-semibold">{{ $ticket->title }}</h4>
-                                        <div class="hidden md:flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                        <div
+                                            class="hidden md:flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                                             @if($isApproved)
-                                                <x-mary-badge value="Approved" class="badge-success text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="Approved"
+                                                              class="badge-success text-white whitespace-normal h-auto"/>
                                                 @if($isComplete)
-                                                    <x-mary-badge value="Completed" class="badge-info text-white whitespace-normal h-auto"/>
+                                                    <x-mary-badge value="Completed"
+                                                                  class="badge-info text-white whitespace-normal h-auto"/>
                                                 @endif
                                             @elseif($isForRevision)
-                                                <x-mary-badge value="For Revision" class="badge-warning text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="For Revision"
+                                                              class="badge-warning text-white whitespace-normal h-auto"/>
                                             @elseif($isCancelled)
-                                                <x-mary-badge value="Cancelled" class="badge-error text-white whitespace-normal h-auto"/>
+                                                <x-mary-badge value="Cancelled"
+                                                              class="badge-error text-white whitespace-normal h-auto"/>
                                             @endif
                                         </div>
                                     </div>
@@ -220,15 +248,18 @@
                                         </div>
                                         <div>
                                             <p class="text-xs text-gray-500 uppercase tracking-wide">Venue</p>
-                                            <p class="text-sm font-medium">{{ $ticket->schedule_venue ?? $ticket->venue_requested }}</p>
+                                            <p class="text-sm font-medium">
+                                                {{ $ticket->schedule_venue ?? $ticket->venue_display_name }}
+                                            </p>
                                         </div>
                                         <div>
                                             <p class="text-xs text-gray-500 uppercase tracking-wide">Expected</p>
-                                            <p class="text-sm font-medium">{{ $ticket->total_participants ?? $ticket->plv_participants }} attendees</p>
+                                            <p class="text-sm font-medium">{{ $ticket->total_participants ?? $ticket->plv_participants }}
+                                                attendees</p>
                                         </div>
                                         <div>
                                             <p class="text-xs text-gray-500 uppercase tracking-wide">Type</p>
-                                            <p class="text-sm font-medium">{{ $ticket->event_type_name }}</p>
+                                            <p class="text-sm font-medium">{{ $ticket->eventType->type_name }}</p>
                                         </div>
                                     </div>
 
@@ -239,7 +270,8 @@
                                             <p class="font-medium">{{ \Carbon\Carbon::parse($ticket->created_at)->format('M d, Y') }}</p>
                                         </div>
                                         <div>
-                                            <p class="text-gray-500">{{ $isForRevision ? 'For Revision' : ($isCancelled ? 'Cancelled' : 'Approved') }}:</p>
+                                            <p class="text-gray-500">{{ $isForRevision ? 'Revision Requested' : ($isCancelled ? 'Cancelled' : 'Approved') }}
+                                                :</p>
                                             <p class="font-medium">{{ \Carbon\Carbon::parse($ticket->updated_at)->format('M d, Y') }}</p>
                                         </div>
                                         <div>
@@ -252,13 +284,17 @@
                                 <div class="flex flex-col space-y-2 ml-6">
                                     <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details"
                                                    wire:click="openDetailsModal({{ $ticket->ticket_id }})"/>
-                                @if($isForRevision)
-                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost" tooltip="View Feedback"/>
-                                        <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost" tooltip="Resubmit Modified"/>
+                                    @if($isForRevision)
+                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"
+                                                       tooltip="View Feedback"/>
+                                        <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost"
+                                                       tooltip="Resubmit Modified"/>
                                     @elseif($isCancelled)
-                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost" tooltip="Cancellation Report"/>
+                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"
+                                                       tooltip="Cancellation Report"/>
                                     @else
-                                        <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost" tooltip="Download Report"/>
+                                        <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost"
+                                                       tooltip="Download Report"/>
                                     @endif
                                 </div>
                             </div>
@@ -277,7 +313,8 @@
                             @if($isForRevision && $for_revisionRemarks)
                                 <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-orange-600 mt-0.5"/>
+                                        <x-mary-icon name="s-exclamation-triangle"
+                                                     class="w-5 h-5 text-orange-600 mt-0.5"/>
                                         <div class="flex-1">
                                             <h5 class="font-medium text-orange-900">Revision Reasons</h5>
                                             <p class="text-sm text-orange-700 mt-1">{{ $for_revisionRemarks }}</p>
@@ -297,7 +334,8 @@
                             @elseif($isCancelled && $cancellationRemarks)
                                 <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-yellow-600 mt-0.5"/>
+                                        <x-mary-icon name="s-exclamation-triangle"
+                                                     class="w-5 h-5 text-yellow-600 mt-0.5"/>
                                         <div class="flex-1">
                                             <h5 class="font-medium text-yellow-900">Event Cancelled</h5>
                                             <p class="text-sm text-yellow-700 mt-1">{{ $cancellationRemarks }}</p>
@@ -310,7 +348,8 @@
                         <div class="text-center py-12 text-gray-500">
                             <x-mary-icon name="o-inbox" class="w-16 h-16 mx-auto mb-3 opacity-50"/>
                             <p class="text-lg font-medium mb-1">No event history yet</p>
-                            <p class="text-sm">Your approved, needing revision, and cancelled events will appear here</p>
+                            <p class="text-sm">Your approved, needing revision, and cancelled events will appear
+                                here</p>
                         </div>
                     @endforelse
                 </div>
@@ -326,14 +365,15 @@
     </div>
 
     {{-- Ticket Details Modal --}}
-    <x-mary-modal wire:model="showDetailsModal" title="Event Details" class="backdrop-blur" box-class="max-w-7xl max-h-[85vh] overflow-y-auto">
+    <x-mary-modal wire:model="showDetailsModal" title="Event Details" class="backdrop-blur"
+                  box-class="max-w-7xl max-h-[85vh] overflow-y-auto">
         @if($loadingDetails)
             <div class="flex justify-center items-center py-12">
                 <span class="loading loading-spinner loading-lg"></span>
             </div>
         @elseif($selectedTicket)
             <div class="grid grid-cols-1 gap-6">
-                <x-tickets.ticket-preview :ticket="$selectedTicket" />
+                <x-tickets.ticket-preview :ticket="$selectedTicket"/>
             </div>
         @endif
     </x-mary-modal>

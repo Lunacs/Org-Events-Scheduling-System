@@ -173,7 +173,7 @@
                                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         </svg>
                                         <span
-                                            class="text-base-content/80">{{ $ticket->venue_requested ?? 'TBD' }}</span>
+                                            class="text-base-content/80">{{ $ticket->venue_display_name ?? 'TBD' }}</span>
                                     </div>
                                 @endif
                             </div>

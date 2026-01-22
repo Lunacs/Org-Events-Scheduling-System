@@ -82,10 +82,15 @@
                         <div class="border rounded-lg p-4 space-y-2">
                             <div class="flex justify-between items-start">
                                 <div>
+                                    <div class="md:hidden mb-2">
+                                        <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                    </div>
                                     <p class="text-xs text-gray-500">#{{ $recentTicket->ticket_number }}</p>
                                     <h4 class="font-semibold">{{ $recentTicket->event_name ?? $recentTicket->title }}</h4>
                                 </div>
-                                <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                <div class="hidden md:block">
+                                    <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                </div>
                             </div>
                             <div class="text-sm text-gray-600">
                                 <p>

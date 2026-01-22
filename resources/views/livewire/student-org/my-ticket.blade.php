@@ -9,13 +9,15 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- Header Actions --}}
-            <div class="flex justify-between items-center">
-                <div>
+            <div class="flex justify-center md:justify-between items-center">
+                <div class="text-left">
                     <h3 class="text-lg font-semibold">All Event Requests</h3>
                     <p class="text-sm text-gray-600">Track the progress of your submitted tickets</p>
                 </div>
-                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary hidden md:block"
-                               link="/student-org/submit-ticket" wire:navigate/>
+                <div class="hidden md:block">
+                    <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary"
+                                   link="/student-org/submit-ticket" wire:navigate/>
+                </div>
             </div>
 
             <div class="flex justify-center items-center">
@@ -25,7 +27,7 @@
 
             {{-- Filter and Search --}}
             <x-mary-card>
-                <div class="flex flex-wrap gap-4 items-end">
+                <div class="grid grid-cols-1 md:flex md:flex-wrap gap-4 md:items-end md:justify-start">
                     <x-mary-input label="Search Tickets" wire:model.live="search"
                                   x-data="{ placeholder: window.innerWidth < 768 ? 'Title, ID, or Description' : 'Search by title, ID, or description...' }"
                                   x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, ID, or description...' })"
@@ -39,7 +41,7 @@
                         ['id' => 'under_review', 'name' => 'Under Review'],
                         ['id' => 'approved', 'name' => 'Approved'],
                         ['id' => 'for_revision', 'name' => 'For Revision'],
-                        ['id' => 'rescheduled', 'name' => 'Requires Rescheduling'],
+                        ['id' => 'rescheduled', 'name' => 'Rescheduled'],
                     ]"/>
 
                     <x-mary-select label="Date Range" wire:model.live="dateFilter" :options="[
