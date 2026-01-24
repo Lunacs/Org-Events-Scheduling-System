@@ -33,8 +33,8 @@ class EventCalendar extends Component
 
     public ?Event $selectedEvent = null;
 
-    #[Url(except: 'approved')]
-    public $statusFilter = 'approved';
+    #[Url(except: 'all')]
+    public $statusFilter = 'all';
 
     #[Url(except: '')]
     public $organizationFilter = '';
@@ -134,11 +134,15 @@ class EventCalendar extends Component
 
     public function clearFilters()
     {
-        $this->statusFilter = 'approved';
+        $this->statusFilter = 'all';
         $this->organizationFilter = '';
         $this->eventTypeFilter = '';
         $this->showPastEvents = false;
         $this->filterDrawerOpen = false; // Close drawer when clearing filters
+
+        // Clear computed property caches to force recomputation
+        unset($this->uniqueEventsCount, $this->upcomingEventsThisMonth, $this->eventsForCalendar);
+
         $this->dispatch('calendar-refetch');
     }
 
@@ -226,9 +230,9 @@ class EventCalendar extends Component
         return $this->eventsForCalendar;
     }
 
-    public function setFiltersAndGetEvents($status = 'approved', $organization = '', $eventType = '')
+    public function setFiltersAndGetEvents($status = 'all', $organization = '', $eventType = '')
     {
-        $this->statusFilter = $status ?? 'approved';
+        $this->statusFilter = $status ?? 'all';
         $this->organizationFilter = $organization ?? '';
         $this->eventTypeFilter = $eventType ?? '';
 
@@ -261,8 +265,15 @@ class EventCalendar extends Component
             ])
             // Always show only approved event schedules
             ->where('status', 'approved')
-            // Filter by ticket status (approved or rescheduled)
-            ->whereHas('event.ticket', fn($query) => $query->where('status', $this->statusFilter))
+            // Filter by ticket status - empty means show both approved and rescheduled
+            ->whereHas('event.ticket', function ($query) {
+                if ($this->statusFilter) {
+                    $query->where('status', $this->statusFilter);
+                } else {
+                    // Show both approved and rescheduled when no specific filter
+                    $query->whereIn('status', ['approved', 'rescheduled']);
+                }
+            })
             // Apply organization filter if set
             ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
             // Apply event type filter if set
@@ -325,8 +336,7 @@ class EventCalendar extends Component
                     'start' => $startISO,
                     'end' => $endISO,
                     'allDay' => false,
-                    'backgroundColor' => $this->getEventColor($event) . '80', // 50% opacity
-                    'borderColor' => $this->getEventColor($event),
+                    'backgroundColor' => $this->getEventColor($event), // 50% opacity
                     'textColor' => '#ffffff',
                     'extendedProps' => [
                         'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
@@ -379,8 +389,7 @@ class EventCalendar extends Component
 
                 $commonProps = [
                     'title' => $event->ticket->title,
-                    'backgroundColor' => $this->getEventColor($event) . '80', // 50% opacity
-                    'borderColor' => $this->getEventColor($event),
+                    'backgroundColor' => $this->getEventColor($event), // 50% opacity
                     'textColor' => '#ffffff',
                     'extendedProps' => [
                         'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
@@ -483,10 +492,19 @@ class EventCalendar extends Component
     {
         // Count unique events that match the current filters
         $query = Event_Schedule::query()
-            ->where('status', 'approved')
-            ->whereHas('event.ticket', fn($query) => $query->where('status', $this->statusFilter))
+            // Filter by ticket status - empty means show both approved and rescheduled
+            ->whereHas('event.ticket', function ($query) {
+                if ($this->statusFilter) {
+                    $query->where('status', $this->statusFilter);
+                } else {
+                    // Show both approved and rescheduled when no specific filter
+                    $query->whereIn('status', ['approved', 'rescheduled']);
+                }
+            })
             ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)));
+            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
+            // Hide past events (older than current year) by default unless toggle is on
+            ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
 
         // Count distinct event_ids to get unique events (MySQL compatible)
         return (int) $query->selectRaw('COUNT(DISTINCT event_id) as count')->value('count');

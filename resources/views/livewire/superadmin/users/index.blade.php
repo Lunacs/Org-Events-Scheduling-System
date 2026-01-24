@@ -122,7 +122,7 @@
 
             {{-- Custom Pagination --}}
             @if ($users->hasPages())
-                <x-tickets.ticket-pagination :tickets="$users" />
+                <x-tickets.ticket-pagination :tickets="$users" label="users" />
             @endif
         </x-mary-card>
     </div>
@@ -169,8 +169,8 @@
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                 class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
-                                <i class="fas fa-eye-slash text-sm" x-show="!showConfirmPassword"></i>
-                                <i class="fas fa-eye text-sm" x-show="showConfirmPassword" style="display: none;"></i>
+                                <x-mary-icon name="o-eye" class="w-5 h-5" x-show="showConfirmPassword" />
+                                <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirmPassword" />
                             </button>
                         </div>
 

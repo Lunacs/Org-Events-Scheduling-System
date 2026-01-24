@@ -38,9 +38,9 @@ FROM php:8.4-fpm
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx supervisor libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev default-mysql-client ca-certificates \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd \
+    libwebp-dev libonig-dev default-mysql-client ca-certificates \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd fileinfo \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html

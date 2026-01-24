@@ -60,7 +60,7 @@
             </x-mary-table>
 
             @if ($logs->hasPages())
-                <x-tickets.ticket-pagination :tickets="$logs" />
+                <x-tickets.ticket-pagination :tickets="$logs" label="logs" />
             @endif
         </x-mary-card>
     </div>

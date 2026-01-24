@@ -80,7 +80,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    --font-sans:
+        ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
         "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-heading: "Poppins", sans-serif;
 }
@@ -247,7 +248,7 @@ input[type="number"] {
     --fc-today-bg-color: oklch(76.662% 0.135 153.45 / 0.15);
     --fc-highlight-color: oklch(76.662% 0.135 153.45 / 0.1);
     --fc-event-bg-color: oklch(76.662% 0.135 153.45);
-    --fc-event-border-color: oklch(76.662% 0.135 153.45);
+    --fc-event-border-color: transparent;
     --fc-event-text-color: #ffffff;
     --fc-non-business-color: oklch(93% 0 0); /* base-200 */
     --fc-bg-event-color: oklch(76.662% 0.135 153.45 / 0.3);
@@ -277,7 +278,7 @@ input[type="number"] {
     --fc-today-bg-color: oklch(76.662% 0.135 153.45 / 0.25);
     --fc-highlight-color: oklch(76.662% 0.135 153.45 / 0.2);
     --fc-event-bg-color: oklch(76.662% 0.135 153.45);
-    --fc-event-border-color: oklch(76.662% 0.135 153.45);
+    --fc-event-border-color: transparent;
     --fc-event-text-color: oklch(15% 0.02 153.45); /* primary-content */
     --fc-non-business-color: oklch(18% 0.015 262.988); /* base-300 dark */
     --fc-bg-event-color: oklch(76.662% 0.135 153.45 / 0.4);
@@ -298,7 +299,9 @@ input[type="number"] {
     border: 1px solid var(--fc-border-color);
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .fc-theme-standard td,
@@ -433,7 +436,8 @@ input[type="number"] {
 .fc-popover {
     background-color: white;
     border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
         0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: 1px solid oklch(86% 0 0);
 }
@@ -779,7 +783,8 @@ input[type="number"] {
     background: white;
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -884,7 +889,8 @@ input[type="number"] {
     background: white;
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -991,7 +997,8 @@ input[type="number"] {
     background: white;
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 

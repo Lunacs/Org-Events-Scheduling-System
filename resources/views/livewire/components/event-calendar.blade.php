@@ -76,21 +76,15 @@
 
                     {{-- Toggle Past Events & Filter Button --}}
                     <div class="flex sm:justify-end justify-center md:justify-end order-1 md:order-2 shrink-0 gap-2">
-                        {{-- Toggle Past Events Button --}}
-                        <x-mary-button wire:click="togglePastEvents" class="btn-ghost btn-sm shrink-0" :icon="$showPastEvents ? 'o-eye' : 'o-eye-slash'"
-                            tooltip="{{ $showPastEvents ? 'Hide Past Events' : 'Show Past Events (Last Year/ Older)' }}">
-                            <span class="hidden sm:inline">{{ $showPastEvents ? 'Hide Past' : 'Show Past' }}</span>
-                        </x-mary-button>
-
                         {{-- Filter Button with Notification Badge --}}
                         <div x-data x-init="if (window.Alpine && !Alpine.store('filters')) { Alpine.store('filters', { status: 'approved', org: '', etype: '' }) }" class="relative">
-                            {{-- Notification Badge --}}
-                            <div x-show="[$store.filters?.status, $store.filters?.org, $store.filters?.etype].filter(v => v).length > 0"
+                            {{-- Notification Badge - includes past events indicator --}}
+                            <div x-show="[$store.filters?.status && $store.filters?.status !== 'all' ? $store.filters.status : '', $store.filters?.org, $store.filters?.etype].filter(v => v).length > 0 || {{ $showPastEvents ? 'true' : 'false' }}"
                                 class="absolute -top-2 -right-2 z-10">
                                 <div
-                                    class="badge badge-primary badge-sm h-5 w-5 p-0 flex items-center justify-center text-neutral-content text-xs font-bold">
+                                    class="badge {{ $showPastEvents ? 'badge-warning' : 'badge-primary' }} badge-sm h-5 w-5 p-0 flex items-center justify-center text-neutral-content text-xs font-bold">
                                     <span
-                                        x-text="[$store.filters?.status, $store.filters?.org, $store.filters?.etype].filter(v => v).length"></span>
+                                        x-text="[$store.filters?.status && $store.filters?.status !== 'all' ? $store.filters.status : '', $store.filters?.org, $store.filters?.etype].filter(v => v).length + {{ $showPastEvents ? '1' : '0' }}"></span>
                                 </div>
                             </div>
 
@@ -111,9 +105,9 @@
             initialStatus: '{{ $statusFilter }}',
             initialOrg: '{{ $organizationFilter }}',
             initialType: '{{ $eventTypeFilter }}'
-        })" x-init="init()" x-on:open-filters.window="open = true" x-cloak
-            x-on:clear-filters.window="clearAll()" wire:transition>
-            <div x-show="open" x-transition.opacity  class="fixed inset-0 z-50 ">
+        })" x-init="init()" x-on:open-filters.window="$nextTick(() => open = true)"
+            x-cloak x-on:clear-filters.window="clearAll()">
+            <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
                 <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
                 <div
                     class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
@@ -130,7 +124,7 @@
                                     <span class="label-text font-semibold">Status</span>
                                 </label>
                                 <select x-model="status" class="select select-bordered w-full">
-                                    <option value="">All Statuses</option>
+                                    <option value="all">All Events</option>
                                     <option value="approved">Approved</option>
                                     <option value="rescheduled">Rescheduled</option>
                                 </select>
@@ -162,10 +156,23 @@
                                 </select>
                             </div>
 
+                            {{-- Past Events Toggle --}}
+                            <div class="form-control">
+                                <label class="label cursor-pointer justify-start gap-3">
+                                    <input type="checkbox" class="toggle toggle-warning" wire:click="togglePastEvents"
+                                        {{ $showPastEvents ? 'checked' : '' }} />
+                                    <div>
+                                        <span class="label-text font-semibold">Show Past Events</span>
+                                        <p class="text-xs text-base-content/60">Include events from last year and older
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+
                             {{-- Active Filters Summary --}}
                             @php
                                 $activeFilters = [];
-                                if ($statusFilter) {
+                                if ($statusFilter && $statusFilter !== 'all') {
                                     $activeFilters[] =
                                         collect([
                                             ['id' => 'approved', 'name' => 'Approved'],
@@ -184,6 +191,9 @@
                                         $activeFilters[] = $type->type_name;
                                     }
                                 }
+                                if ($showPastEvents) {
+                                    $activeFilters[] = 'Past Events';
+                                }
                             @endphp
 
                             @if (count($activeFilters) > 0)
@@ -191,7 +201,8 @@
                                     <h4 class="font-semibold text-sm mb-2">Active Filters</h4>
                                     <div class="flex flex-wrap gap-2">
                                         @foreach ($activeFilters as $filter)
-                                            <x-mary-badge value="{{ $filter }}" class="badge-primary" />
+                                            <x-mary-badge value="{{ $filter }}"
+                                                class="{{ $filter === 'Past Events' ? 'badge-warning' : 'badge-primary' }}" />
                                         @endforeach
                                     </div>
                                 </div>
@@ -206,9 +217,15 @@
                 </div>
             </div>
 
-            {{-- Lightweight toast --}}
-            <div x-show="toast.show" x-transition.opacity class="fixed bottom-4 right-4 z-50">
-                <div class="alert alert-info shadow">
+            {{-- DaisyUI Toast (bottom-right) --}}
+            <div x-show="toast.show" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
+                class="toast toast-end toast-bottom z-[60]">
+                <div class="alert shadow-lg" :class="toast.type === 'success' ? 'alert-success' : 'alert-info'">
+                    <x-mary-icon x-show="toast.type === 'success'" name="o-check-circle" class="w-5 h-5" />
+                    <x-mary-icon x-show="toast.type !== 'success'" name="o-funnel" class="w-5 h-5" />
                     <span x-text="toast.message"></span>
                 </div>
             </div>
@@ -1004,12 +1021,13 @@
                 window.filterPanel = function(init) {
                     return {
                         open: false,
-                        status: init.initialStatus || 'approved',
+                        status: init.initialStatus || 'all',
                         org: init.initialOrg || '',
                         etype: init.initialType || '',
                         toast: {
                             show: false,
-                            message: ''
+                            message: '',
+                            type: 'info'
                         },
                         init() {
                             this.syncStore()
@@ -1029,15 +1047,16 @@
                                 }
                             }
                         },
-                        showToast(msg) {
+                        showToast(msg, type = 'info') {
                             this.toast.message = msg;
+                            this.toast.type = type;
                             this.toast.show = true;
-                            setTimeout(() => this.toast.show = false, 2000);
+                            setTimeout(() => this.toast.show = false, 2500);
                         },
                         summaryLabel() {
                             const parts = [];
                             // Only include status if it's actually filtered (not empty)
-                            if (this.status) {
+                            if (this.status && this.status !== 'all') {
                                 parts.push(this.status === 'approved' ? 'Approved' : 'Rescheduled');
                             }
                             // Only include org if it's actually filtered (not empty)
@@ -1052,10 +1071,17 @@
                             return parts.length > 0 ? `Filters applied: ${parts.join(' · ')}` : 'No filters applied';
                         },
                         async apply() {
-                            // Instant toast
-                            this.showToast(this.summaryLabel());
+                            // Close drawer first with $nextTick to ensure clean state
                             this.open = false;
+                            await this.$nextTick();
+
+                            // Show toast with success type
+                            this.showToast(this.summaryLabel(), 'success');
                             this.syncStore();
+
+                            // Convert 'all' to empty string for server-side filtering
+                            const statusValue = this.status === 'all' ? '' : this.status;
+
                             // Single roundtrip: set filters server-side and fetch events
                             const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
                             // Update calendar component's events state and refetch
@@ -1076,12 +1102,18 @@
                             }
                         },
                         async clearAll() {
-                            this.status = 'approved';
+                            this.status = 'all';
                             this.org = '';
                             this.etype = '';
-                            this.showToast('All filters cleared');
+
+                            // Close drawer first with $nextTick to ensure clean state
                             this.open = false;
+                            await this.$nextTick();
+
+                            // Show toast with success type
+                            this.showToast('All filters cleared', 'success');
                             this.syncStore();
+
                             const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
                             // Update calendar component's events state and refetch
                             if (window.osaCalendarInstance) {
