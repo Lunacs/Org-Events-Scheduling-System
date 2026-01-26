@@ -36,12 +36,12 @@
 
         <div class="min-w-0">
             <label class="text-sm font-medium text-base-content/70">Preferred Venue</label>
-            <p class="text-base-content break-words">{{ $ticket->venue_requested ?? 'TBD' }}</p>
+            <p class="text-base-content break-words">{{ $ticket->venue_display_name ?? 'TBD' }}</p>
         </div>
 
         <div class="min-w-0">
             <label class="text-sm font-medium text-base-content/70">Alternative Venue</label>
-            <p class="text-base-content break-words">{{ $ticket->alternate_venue ?? 'None' }}</p>
+            <p class="text-base-content break-words">{{ $ticket->alternate_venue_display_name ?? 'None' }}</p>
         </div>
     </div>
 

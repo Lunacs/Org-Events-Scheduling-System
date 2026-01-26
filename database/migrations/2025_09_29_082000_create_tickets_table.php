@@ -23,8 +23,10 @@ return new class extends Migration
             $table->integer('plv_participants');
             $table->integer('external_participants')->nullable();
             $table->integer('total_participants');
-            $table->string('venue_requested');
-            $table->string('alternate_venue')->nullable();
+            $table->foreignId('venue_requested')->nullable()->references('venue_id')->on('venues')->onDelete('set null');
+            $table->string('venue_other')->nullable();
+            $table->foreignId('alternate_venue')->nullable()->references('venue_id')->on('venues')->onDelete('set null');
+            $table->string('alternate_venue_other')->nullable();
             $table->string('special_requirements')->nullable();
             $table->boolean('igp_requested')->default(false);
             $table->string('igp_details')->nullable();

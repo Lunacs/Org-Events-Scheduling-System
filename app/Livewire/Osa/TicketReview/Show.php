@@ -50,7 +50,9 @@ class Show extends Component
             'time_from',
             'time_to',
             'venue_requested',
+            'venue_other',
             'alternate_venue',
+            'alternate_venue_other',
             'special_requirements',
             'plv_participants',
             'external_participants',
@@ -149,7 +151,7 @@ class Show extends Component
                 'end_date' => $this->ticket->date_to,
                 'start_time' => $this->ticket->time_from,
                 'end_time' => $this->ticket->time_to,
-                'venue' => $this->ticket->venue_requested,
+                'venue' => $this->ticket->venue_display_name,
                 'status' => 'approved',
                 'remarks' => 'Schedule created from approved ticket',
             ]);
@@ -337,7 +339,7 @@ class Show extends Component
                 'end_date' => $this->ticket->date_to,
                 'start_time' => $this->ticket->time_from,
                 'end_time' => $this->ticket->time_to,
-                'venue' => $this->ticket->venue_requested,
+                'venue' => $this->ticket->venue_display_name,
                 'status' => 'approved',
                 'remarks' => 'Schedule created from approved ticket after GSO review',
             ]);

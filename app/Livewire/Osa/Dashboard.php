@@ -115,7 +115,7 @@ class Dashboard extends Component
     public function upcomingEvents(): array
     {
         return Cache::remember('osa_dashboard_upcoming_events', $this->cacheDuration, function () {
-            return Ticket::select(['ticket_id', 'title', 'date_from', 'venue_requested', 'user_id'])
+            return Ticket::select(['ticket_id', 'title', 'date_from', 'venue_requested', 'venue_other', 'user_id'])
                 ->with([
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name,logo')
@@ -132,7 +132,7 @@ class Dashboard extends Component
                         'date' => $ticket->date_from
                             ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y')
                             : 'TBD',
-                        'venue' => $ticket->venue_requested ?? 'TBD',
+                        'venue' => $ticket->venue_display_name ?? 'TBD',
                     ];
                 })
                 ->toArray();

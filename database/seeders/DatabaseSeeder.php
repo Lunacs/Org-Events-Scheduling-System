@@ -29,7 +29,8 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             UserSeeder::class,
             EventTypeSeeder::class,
-            FundSourcesSeeder::class, // Must run before TicketSeeder
+            FundSourcesSeeder::class,
+            VenueSeeder::class,
             TicketSeeder::class,
             // EventSeeder::class,
             // EventSchedulesSeeder::class,

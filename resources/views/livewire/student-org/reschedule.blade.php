@@ -7,6 +7,17 @@
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            {{-- Header --}}
+            <div class="mb-8">
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Reschedule a Ticket</h1>
+                            <p class="text-base-content/70 mt-1">Reschedule a ticket of your event request</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <x-mary-form wire:submit="submitReschedule">
                 {{-- Progress Indicator --}}

@@ -102,7 +102,7 @@
                 $statusLabel = $approval['status_label'] ?? ucfirst($statusKey);
                 $statusBadgeClass = $statusBadges[$statusKey] ?? 'badge-neutral';
                 $priorityBadgeClass = $priorityBadges[$priorityKey] ?? 'badge-neutral';
-                $requestType = $approval['request_type'] ?? 'N/A';
+                $venue = $approval['venue'] ?? 'N/A';
                 $requirements = $approval['requirements'] ?? [];
                 $ticketKey = $approval['approval_id'] ?? \Illuminate\Support\Str::uuid()->toString();
                 $detailUrl = !empty($approval['ticket_number'])
@@ -146,7 +146,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            <span>{{ $requestType }}</span>
+                            <span>{{ $venue }}</span>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="badge {{ $priorityBadgeClass }} badge-sm">{{ $priorityLabel }}</span>

@@ -107,7 +107,7 @@
                         </div>
                     </div>
                     <div class="avatar placeholder">
-                        <div class="bg-success/10 text-success rounded-full w-12 h-12">
+                        <div class="bg-success/10 text-success rounded-full w-12 h-12 flex items-center justify-center">
                             <x-mary-icon name="o-check-badge" class="w-6 h-6" />
                         </div>
                     </div>
@@ -186,7 +186,7 @@
                         </div>
                     </div>
                     <div class="avatar placeholder">
-                        <div class="bg-accent/10 text-accent rounded-lg w-12 h-12">
+                        <div class="bg-accent/10 text-accent rounded-lg w-12 h-12 flex items-center justify-center">
                             <x-mary-icon name="o-bolt" class="w-6 h-6" />
                         </div>
                     </div>
@@ -199,16 +199,27 @@
             <!-- Left Column: Pending Approvals with Tabs -->
             <div class="col-span-1 lg:col-span-2">
                 <x-mary-card class="shadow-md" title="Action Required" subtitle="Review and process these requests">
+                    <!-- Desktop Menu (hidden on mobile) -->
                     <x-slot:menu>
-                        <div class="flex gap-2">
+                        <div class="hidden md:flex gap-2">
                             <div role="tablist" class="tabs tabs-boxed tabs-sm">
                                 <a role="tab" class="tab tab-active">Pending</a>
                                 <a role="tab" class="tab">Urgent</a>
                             </div>
                             <x-mary-button icon="o-arrow-right" link="/admin/tickets" class="btn-sm btn-ghost"
-                                label="View All" wire:navigate />
+                                           label="View All" wire:navigate />
                         </div>
                     </x-slot:menu>
+
+                    <!-- Mobile Menu (below subtitle) -->
+                    <div class="flex flex-col gap-3 mb-4 md:hidden">
+                        <div role="tablist" class="tabs tabs-boxed tabs-sm">
+                            <a role="tab" class="tab tab-active">Pending</a>
+                            <a role="tab" class="tab">Urgent</a>
+                        </div>
+                        <x-mary-button icon="o-arrow-right" link="/admin/tickets" class="btn-sm btn-ghost btn-block"
+                                       label="View All" wire:navigate />
+                    </div>
 
                     @if (count($pendingApprovals) > 0)
                         <div class="space-y-2">
@@ -295,7 +306,7 @@
 
             <!-- Right Column: Upcoming Events -->
             <div class="col-span-1">
-                <x-mary-card class="shadow-md sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
+                <x-mary-card class="shadow-md md:sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
                     <x-slot:menu>
                         <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost"
                             wire:navigate />
@@ -385,7 +396,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- Review Tickets -->
                     <a href="/admin/tickets" wire:navigate
-                        class="group p-6 bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 group-hover:bg-primary group-hover:scale-110 transition-all mb-3">
@@ -403,7 +414,7 @@
 
                     <!-- Approvals -->
                     <a href="/admin/approvals" wire:navigate
-                        class="group p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/20 rounded-xl border-2 border-transparent hover:border-secondary transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/20 rounded-xl border-2 border-transparent hover:border-secondary transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 group-hover:bg-secondary group-hover:scale-110 transition-all mb-3">
@@ -417,7 +428,7 @@
 
                     <!-- Calendar -->
                     <a href="/admin/calendar" wire:navigate
-                        class="group p-6 bg-gradient-to-br from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/20 rounded-xl border-2 border-transparent hover:border-accent transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/20 rounded-xl border-2 border-transparent hover:border-accent transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 group-hover:bg-accent group-hover:scale-110 transition-all mb-3">
@@ -430,7 +441,7 @@
 
                     <!-- Reports -->
                     <a href="/admin/reports" wire:navigate
-                        class="group p-6 bg-gradient-to-br from-info/5 to-info/10 hover:from-info/10 hover:to-info/20 rounded-xl border-2 border-transparent hover:border-info transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-info/5 to-info/10 hover:from-info/10 hover:to-info/20 rounded-xl border-2 border-transparent hover:border-info transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-info/10 group-hover:bg-info group-hover:scale-110 transition-all mb-3">

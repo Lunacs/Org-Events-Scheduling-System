@@ -7,6 +7,17 @@
 
     <div class="py-6 md:py-12 overflow-x-hidden">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            {{-- Header --}}
+            <div class="mb-8">
+                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Submit Ticket</h1>
+                            <p class="text-base-content/70 mt-1">Submit a ticket of your event request</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <x-mary-form wire:submit="save">
                 {{-- Progress Indicator --}}
@@ -34,7 +45,7 @@
                                 </button>
 
                                 <span class="text-xs text-center whitespace-nowrap px-1">
-                    @switch($i)
+                                @switch($i)
                                         @case(1)
                                             Organization
                                             @break
@@ -58,8 +69,8 @@
                                         @case(6)
                                             Review
                                             @break
-                                    @endswitch
-                </span>
+                                @endswitch
+                                </span>
                             </div>
                             @if ($i < $totalSteps)
                                 <div
@@ -149,11 +160,55 @@
                             <x-mary-datetime label="Event End Time" wire:model.blur="eventEndTime" type="time"
                                              required/>
 
-                            <x-mary-input label="Preferred Venue" wire:model.blur="preferredVenue"
-                                          placeholder="e.g., Student Center Auditorium" required/>
+                            <div x-data="{
+                                    preferredVenue: @entangle('preferredVenue').live,
+                                    venues: @js($venues)
+                                }">
+                                <x-mary-select
+                                    label="Preferred Venue"
+                                    wire:model.live="preferredVenue"
+                                    :options="$venues"
+                                    option-value="venue_id"
+                                    option-label="venue_name"
+                                    placeholder="Select a venue"
+                                    required
+                                />
 
-                            <x-mary-input label="Alternative Venue" wire:model.blur="alternativeVenue"
-                                          placeholder="Backup venue option"/>
+                                <div x-show="preferredVenue && venues.find(v => v.venue_id == preferredVenue)?.venue_name === 'Others (Please Specify)'"
+                                     x-collapse
+                                     x-cloak
+                                    class="mt-4">
+                                    <x-mary-input
+                                        label="Please specify preferred venue"
+                                        wire:model.blur="preferredVenueOther"
+                                        placeholder="Enter venue name"
+                                    />
+                                </div>
+                            </div>
+                            <div x-data="{
+                                    alternativeVenue: @entangle('alternativeVenue').live,
+                                    venues: @js($venues)
+                                }">
+                                <x-mary-select
+                                    label="Alternative Venue"
+                                    wire:model.live="alternativeVenue"
+                                    :options="$venues"
+                                    option-value="venue_id"
+                                    option-label="venue_name"
+                                    placeholder="Select backup venue"
+                                />
+
+                                <div x-show="alternativeVenue && venues.find(v => v.venue_id == alternativeVenue)?.venue_name === 'Others (Please Specify)'"
+                                     x-collapse
+                                     x-cloak
+                                     class="mt-4"   >
+                                    <x-mary-input
+                                        label="Please specify alternative venue"
+                                        wire:model.blur="alternativeVenueOther"
+                                        placeholder="Enter venue name"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mt-4">

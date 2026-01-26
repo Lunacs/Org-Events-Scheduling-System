@@ -188,77 +188,56 @@ class History extends Component
 
     public function getTicketsProperty()
     {
-        $userId = auth()->id();
+        $query = \App\Models\Ticket::query()
+            ->with([
+                'events.eventType',
+                'events' => function($q) {
+                    $q->with(['eventSchedules' => function($sq) {
+                        $sq->where('status', 'active')
+                            ->select('event_id', 'venue', 'start_date', 'end_date', 'status');
+                    }]);
+                },
+                'venue',
+                'latestOsaApproval',
+                'eventType'
+            ])
+            ->where('user_id', auth()->id())
+            ->whereIn('status', ['approved', 'for_revision', 'cancelled']);
 
-        $query = DB::table('tickets')
-            ->leftJoin('events', 'tickets.ticket_id', '=', 'events.ticket_id')
-            ->leftJoin('event__types', function($join) {
-                $join->on('events.event__type_id', '=', 'event__types.event_type_id')
-                    ->orOn('tickets.event_type_id', '=', 'event__types.event_type_id');
-            })
-            ->leftJoin('event_schedules', function($join) {
-                $join->on('events.event_id', '=', 'event_schedules.event_id')
-                    ->where('event_schedules.status', 'active');
-            })
-            ->leftJoin('o_s_a__approvals as latest_osa', function($join) {
-                $join->on('tickets.ticket_id', '=', 'latest_osa.ticket_id')
-                    ->whereRaw('latest_osa.updated_at = (
-                    SELECT MAX(updated_at)
-                    FROM o_s_a__approvals
-                    WHERE ticket_id = tickets.ticket_id
-                )');
-            })
-            ->where('tickets.user_id', $userId)
-            ->whereIn('tickets.status', ['approved', 'for_revision', 'cancelled']);
-
-        // Search filter
+        // Apply filters
         if ($this->search) {
             $query->where(function($q) {
-                $q->where('tickets.title', 'like', '%' . $this->search . '%')
-                    ->orWhere('tickets.description', 'like', '%' . $this->search . '%')
-                    ->orWhere('tickets.venue_requested', 'like', '%' . $this->search . '%')
-                    ->orWhere('event_schedules.venue', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', "%{$this->search}%")
+                    ->orWhere('description', 'like', "%{$this->search}%")
+                    ->orWhereHas('venue', function($vq) {
+                        $vq->where('venue_name', 'like', "%{$this->search}%");
+                    })
+                    ->orWhereHas('events.schedules', function($sq) {
+                        $sq->where('venue', 'like', "%{$this->search}%");
+                    });
             });
         }
 
-        // Status filter
         if ($this->statusFilter) {
-            $query->where('tickets.status', $this->statusFilter);
+            $query->where('status', $this->statusFilter);
         }
 
-        // Event type filter
         if ($this->typeFilter) {
-            $query->where('event__types.type_name', $this->typeFilter);
+            $query->whereHas('eventType', function($q) {
+                $q->where('type_name', $this->typeFilter);
+            });
         }
 
-        // Year filter
         if ($this->yearFilter) {
             $query->where(function($q) {
-                $q->whereYear('tickets.date_from', $this->yearFilter)
-                    ->orWhereYear('event_schedules.start_date', $this->yearFilter);
+                $q->whereYear('date_from', $this->yearFilter)
+                    ->orWhereHas('events.schedules', function($sq) {
+                        $sq->whereYear('start_date', $this->yearFilter);
+                    });
             });
         }
 
-        $tickets = $query->select(
-            'tickets.*',
-            'events.event_id',
-            'events.notes as event_notes',
-            'event__types.type_name as event_type_name',
-            'event_schedules.schedule_id',
-            'event_schedules.start_date',
-            'event_schedules.end_date',
-            'event_schedules.start_time',
-            'event_schedules.end_time',
-            'event_schedules.venue as schedule_venue',
-            'event_schedules.status as schedule_status',
-            'event_schedules.remarks as schedule_remarks',
-            'latest_osa.remarks as osa_remarks',
-            'latest_osa.decision as osa_decision'
-        )
-            ->orderByDesc('tickets.created_at')
-            ->paginate(10);
-
-        return $tickets;
+        return $query->latest('created_at')->paginate(10);
     }
 
     public function getEventTypesProperty()

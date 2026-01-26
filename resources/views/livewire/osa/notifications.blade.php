@@ -24,7 +24,7 @@
                                 system
                                 updates</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-col md:flex-row items-center gap-2">
                             <x-mary-button label="Mark All as Read" icon="s-check"
                                 class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
                             <x-mary-button label="Clear All Read" icon="s-trash"

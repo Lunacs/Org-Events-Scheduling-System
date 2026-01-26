@@ -98,7 +98,7 @@
                                     : 'text-white';
                         @endphp
                         <span
-                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }}">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }} text-white whitespace-normal h-auto">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
                     @endif
                 </div>
             </div>
