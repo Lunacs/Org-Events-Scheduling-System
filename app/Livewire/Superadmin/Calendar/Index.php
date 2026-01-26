@@ -21,7 +21,7 @@ class Index extends ComponentsEventCalendar
     #[Layout('components.layouts.superadmin')]
 
     // SuperAdmin can view all statuses
-    public $statusFilter = 'all';
+    // public $statusFilter = 'all';
 
     // Additional SuperAdmin controls
     public $selectedEventForAction = null;
@@ -31,11 +31,11 @@ class Index extends ComponentsEventCalendar
     public $actionType = ''; // cancel, reschedule, delete
 
     // Override to include all events (not just approved)
-    public function mount()
-    {
-        parent::mount();
-        $this->statusFilter = 'all'; // SuperAdmin sees all
-    }
+    // public function mount()
+    // {
+    //     parent::mount();
+    //     $this->statusFilter = 'all'; // SuperAdmin sees all
+    // }
 
     protected function getRoleSpecificData(): array
     {
@@ -97,7 +97,7 @@ class Index extends ComponentsEventCalendar
             $this->dispatch('calendar-refetch');
             $this->closeActionModal();
         } catch (\Exception $e) {
-            $this->error('Failed to approve event: '.$e->getMessage(), position: 'toast-top');
+            $this->error('Failed to approve event: ' . $e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -131,7 +131,7 @@ class Index extends ComponentsEventCalendar
             $this->dispatch('calendar-refetch');
             $this->closeActionModal();
         } catch (\Exception $e) {
-            $this->error('Failed to cancel event: '.$e->getMessage(), position: 'toast-top');
+            $this->error('Failed to cancel event: ' . $e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -170,7 +170,7 @@ class Index extends ComponentsEventCalendar
             $this->dispatch('calendar-refetch');
             $this->closeActionModal();
         } catch (\Exception $e) {
-            $this->error('Failed to delete event: '.$e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete event: ' . $e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -182,11 +182,11 @@ class Index extends ComponentsEventCalendar
         if ($this->statusFilter === 'all') {
             $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
                 ->with([
-                    'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                    'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                         ->with([
-                            'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                            'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                                 ->with([
-                                    'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                    'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                         ->with('studentOrganization:org_id,org_name,logo'),
                                 ]),
                             'eventType:event_type_id,type_name',
@@ -195,9 +195,9 @@ class Index extends ComponentsEventCalendar
                 // Only show approved event schedules
                 ->where('status', 'approved')
                 // Apply organization filter if set
-                ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
                 // Apply event type filter if set
-                ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
+                ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
                 ->get();
         } else {
             // Use parent method for specific status filtering
@@ -227,8 +227,8 @@ class Index extends ComponentsEventCalendar
             $endDate = $schedule->end_date ? $schedule->end_date->format('Y-m-d') : $startDate;
 
             if ($startDate === $endDate) {
-                $startISO = $startDate.'T'.$startTime.'+08:00';
-                $endISO = $endDate.'T'.$endTime.'+08:00';
+                $startISO = $startDate . 'T' . $startTime . '+08:00';
+                $endISO = $endDate . 'T' . $endTime . '+08:00';
 
                 $allEvents[] = [
                     'id' => $event->event_id,
@@ -295,10 +295,10 @@ class Index extends ComponentsEventCalendar
 
                 // Spanning event for month view
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id.'_span',
+                    'id' => $event->event_id . '_span',
                     'groupId' => $event->event_id,
-                    'start' => $startDate.'T'.$startTime.'+08:00',
-                    'end' => $endDate.'T'.$endTime.'+08:00',
+                    'start' => $startDate . 'T' . $startTime . '+08:00',
+                    'end' => $endDate . 'T' . $endTime . '+08:00',
                     'allDay' => false,
                     'display' => 'block',
                     'extendedProps' => array_merge($commonProps['extendedProps'], [
@@ -308,7 +308,7 @@ class Index extends ComponentsEventCalendar
 
                 // Recurring event for week/day views
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id.'_recur',
+                    'id' => $event->event_id . '_recur',
                     'groupId' => $event->event_id,
                     'startTime' => $startTime,
                     'endTime' => $endTime,
@@ -337,14 +337,14 @@ class Index extends ComponentsEventCalendar
 
         // For SuperAdmin: If statusFilter is 'all', don't filter by ticket status
         if ($this->statusFilter !== 'all') {
-            $query->whereHas('event.ticket', fn ($q) => $q->where('status', $this->statusFilter));
+            $query->whereHas('event.ticket', fn($q) => $q->where('status', $this->statusFilter));
         }
 
         // Apply organization filter if set
-        $query->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)));
+        $query->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)));
 
         // Apply event type filter if set
-        $query->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)));
+        $query->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)));
 
         // Count distinct event_ids to get unique events (MySQL compatible)
         return (int) $query->selectRaw('COUNT(DISTINCT event_id) as count')->value('count');
@@ -359,11 +359,11 @@ class Index extends ComponentsEventCalendar
 
         $query = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name'),
                             ]),
                         'eventType:event_type_id,type_name',
@@ -374,7 +374,7 @@ class Index extends ComponentsEventCalendar
 
         // For SuperAdmin: If statusFilter is 'all', show all ticket statuses
         if ($this->statusFilter !== 'all') {
-            $query->whereHas('event.ticket', fn ($q) => $q->where('status', $this->statusFilter));
+            $query->whereHas('event.ticket', fn($q) => $q->where('status', $this->statusFilter));
         }
 
         $eventSchedules = $query->orderBy('start_date')
@@ -417,7 +417,7 @@ class Index extends ComponentsEventCalendar
             // Date range formatting
             $dateDisplay = $startDate->format('M d, Y');
             if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
-                $dateDisplay = $startDate->format('M d').' - '.$endDate->format('M d, Y');
+                $dateDisplay = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
             }
 
             // Get event color using the same method as calendar
@@ -428,6 +428,7 @@ class Index extends ComponentsEventCalendar
                 'title' => $event->ticket->title ?? 'Untitled Event',
                 'description' => $event->ticket->description ?? null,
                 'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
+                'organizationLogo' => $event->ticket->user->studentOrganization->logo ?? asset('images/default-org-logo.svg'),
                 'eventType' => $event->eventType?->type_name ?? 'N/A',
                 'date' => $dateDisplay,
                 'time' => $timeRange,

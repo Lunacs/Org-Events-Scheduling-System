@@ -53,6 +53,8 @@ class LoginForm extends Form
      */
     public function authenticate(): void
     {
+        $this->email = trim($this->email);
+
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {

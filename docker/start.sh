@@ -24,13 +24,22 @@ if [ ! -f /var/www/html/public/build/manifest.json ]; then
     npm run build || true
 fi
 
+echo "Clearing old caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+
 echo "Caching config..."
 php artisan config:cache
 
 echo "Caching routes..."
 php artisan route:cache
 
-echo "Caching all"
+echo "Caching views..."
+php artisan view:cache
+
+echo "Optimizing..."
 php artisan optimize
 
 # Ensure storage link exists
@@ -40,7 +49,13 @@ fi
 
 # Run migrations on startup
 echo "Running migrations..."
-php artisan migrate:fresh --seed --force || true
+php artisan migrate --force || true
+
+# Run seeding if enabled
+if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then
+    echo "Seeding database..."
+    php artisan db:seed --force
+fi
 
 # Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf

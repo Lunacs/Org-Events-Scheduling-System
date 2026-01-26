@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student_Organization extends Model
 {
     /** @use HasFactory<StudentOrganizationFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -62,7 +63,7 @@ class Student_Organization extends Model
     /**
      * Users who belong to this organization
      */
-    public function users() : HasMany
+    public function users(): HasMany
     {
         return $this->hasMany(User::class, 'org_id');
     }
@@ -70,7 +71,7 @@ class Student_Organization extends Model
     /**
      * Tickets created by users in this organization
      */
-    public function tickets() : HasManyThrough
+    public function tickets(): HasManyThrough
     {
         return $this->hasManyThrough(Ticket::class, User::class, 'org_id', 'user_id', 'org_id', 'user_id');
     }

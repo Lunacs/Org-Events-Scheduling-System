@@ -19,6 +19,7 @@
         "livewire/livewire": "^3.6",
         "livewire/volt": "^1.7",
         "owenvoke/blade-fontawesome": "^2.9",
+        "resend/resend-laravel": "^1.1",
         "robsontenorio/mary": "^2.4"
     },
     "require-dev": {

@@ -216,6 +216,6 @@
 
     {{-- Pagination --}}
     @if ($approvals->total() > 0)
-        <x-tickets.ticket-pagination :tickets="$approvals" />
+        <x-tickets.ticket-pagination :tickets="$approvals" label="approvals" />
     @endif
 </div>
