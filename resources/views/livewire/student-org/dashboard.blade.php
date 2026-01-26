@@ -7,17 +7,38 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
             {{-- Welcome Card --}}
-            <x-mary-card title="Welcome Back!" subtitle="Here's an overview of your organization's activities">
-                <div class="flex items-center space-x-4">
-                    <x-mary-icon name="s-building-office" class="w-8 h-8 text-primary"/>
-                    <div>
-                        <h3 class="text-lg font-semibold">{{ auth()->user()->name ?? 'Student Organization' }}</h3>
-                        <p class="text-sm text-gray-600">Organization Dashboard</p>
+            @persist('student-dashboard-header')
+            <x-mary-card class="shadow-md">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <x-mary-icon name="s-building-office" class="w-8 h-8 text-primary"/>
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold font-heading text-primary">
+                                Welcome back, {{ auth()->user()->name ?? 'Student Organization' }}!
+                            </h1>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Here's an overview of your organization's activities
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="text-xs text-gray-500 hidden md:block">
+                            Last updated: <span class="font-medium">{{ now()->format('h:i A') }}</span>
+                        </div>
+
+                        <x-mary-button icon="o-arrow-path" class="btn-primary btn-sm" wire:click="$refresh">
+                            <span wire:loading.remove>Refresh</span>
+                            <span wire:loading>
+                        <span class="loading loading-spinner loading-xs"></span>
+                        Refreshing...
+                    </span>
+                        </x-mary-button>
                     </div>
                 </div>
             </x-mary-card>
+            @endpersist
 
             {{-- Stats Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -82,10 +103,15 @@
                         <div class="border rounded-lg p-4 space-y-2">
                             <div class="flex justify-between items-start">
                                 <div>
+                                    <div class="md:hidden mb-2">
+                                        <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                    </div>
                                     <p class="text-xs text-gray-500">#{{ $recentTicket->ticket_number }}</p>
                                     <h4 class="font-semibold">{{ $recentTicket->event_name ?? $recentTicket->title }}</h4>
                                 </div>
-                                <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                <div class="hidden md:block">
+                                    <x-tickets.progress-badge :status="$recentTicket->status"/>
+                                </div>
                             </div>
                             <div class="text-sm text-gray-600">
                                 <p>

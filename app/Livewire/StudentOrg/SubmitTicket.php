@@ -88,11 +88,11 @@ class SubmitTicket extends Component
     #[Validate('required|date_format:H:i|after:eventStartTime')]
     public $eventEndTime = '';
 
-    #[Validate('required|string|max:255|min:3')]
-    public $preferredVenue = '';
-
-    #[Validate('nullable|string|max:255|min:3')]
-    public $alternativeVenue = '';
+    public $venues = [];
+    public $preferredVenue;
+    public $preferredVenueOther;
+    public $alternativeVenue;
+    public $alternativeVenueOther;
 
     #[Validate('nullable|string|max:2000')]
     public $specialRequirements = '';
@@ -243,8 +243,10 @@ class SubmitTicket extends Component
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
                 'eventStartTime' => ['required', 'date_format:H:i'],
                 'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
-                'preferredVenue' => 'required|string|max:255|min:3',
-                'alternativeVenue' => 'nullable|string|max:255|min:3',
+                'preferredVenue' => 'required|integer|exists:venues,venue_id',
+                'preferredVenueOther' => $this->isOthersVenue($this->preferredVenue) ? 'required|string|max:255|min:3' : 'nullable',
+                'alternativeVenue' => 'nullable|integer|exists:venues,venue_id',
+                'alternativeVenueOther' => $this->isOthersVenue($this->alternativeVenue) ? 'required|string|max:255|min:3' : 'nullable',
                 'specialRequirements' => 'nullable|string|max:2000',
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
@@ -271,6 +273,16 @@ class SubmitTicket extends Component
             ],
             default => [],
         };
+    }
+
+    protected function isOthersVenue($venueId): bool
+    {
+        if (!$venueId) {
+            return false;
+        }
+
+        $venue = \App\Models\Venue::find($venueId);
+        return $venue && $venue->venue_name === 'Others (Please Specify)';
     }
 
     // Auto-save draft on property update
@@ -390,7 +402,9 @@ class SubmitTicket extends Component
         $ticket->time_from = $this->eventStartTime;
         $ticket->time_to = $this->eventEndTime;
         $ticket->venue_requested = $this->preferredVenue;
+        $ticket->venue_other = $this->preferredVenueOther;
         $ticket->alternate_venue = $this->alternativeVenue;
+        $ticket->alternate_venue_other = $this->alternativeVenueOther;
         $ticket->special_requirements = $this->specialRequirements;
         $ticket->estimated_budget = $this->totalBudget;
         $ticket->budget_breakdown = $this->budgetBreakdown;
@@ -419,8 +433,17 @@ class SubmitTicket extends Component
         $ticket->setRelation('fundSource', Fund_Sources::find($this->fundingSource));
         $ticket->setRelation('attachments', $previewAttachments);
 
+        // Load venue relationships
+        if ($this->preferredVenue) {
+            $ticket->setRelation('preferredVenueRelation', \App\Models\Venue::find($this->preferredVenue));
+        }
+        if ($this->alternativeVenue) {
+            $ticket->setRelation('alternativeVenueRelation', \App\Models\Venue::find($this->alternativeVenue));
+        }
+
         return $ticket;
     }
+
 
     public function mount()
     {
@@ -435,6 +458,7 @@ class SubmitTicket extends Component
         $this->organizationCourse = $currentUserinfo->course->course_name ?? '';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
         $this->proponent_contact = $currentUser->phone ?? '';
+        $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
         // Trigger validation for adviser_contact since it has a default value
         try {
@@ -472,8 +496,8 @@ class SubmitTicket extends Component
                 position: 'toast-top toast-end',
                 icon: 'o-clock',
                 css: 'alert-warning',
-                timeout: 5000,
                 noProgress: true,
+                timeout: 5000,
             );
             return;
         }
@@ -526,8 +550,10 @@ class SubmitTicket extends Component
                 'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
                 'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
-                'venue_requested' => $this->preferredVenue,
-                'alternate_venue' => $nullIfEmpty($this->alternativeVenue),
+                'venue_requested' => $nullIfEmptyInt($this->preferredVenue),
+                'venue_other' => $nullIfEmpty($this->preferredVenueOther),
+                'alternate_venue' => $nullIfEmptyInt($this->alternativeVenue),
+                'alternate_venue_other' => $nullIfEmpty($this->alternativeVenueOther),
                 'special_requirements' => $nullIfEmpty($this->specialRequirements),
                 'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
                 'fund_source_id' => (int) $this->fundingSource,
@@ -642,6 +668,7 @@ class SubmitTicket extends Component
             $this->isProcessing = false;
         }
     }
+
 
     public function loadDraft($draftData)
     {

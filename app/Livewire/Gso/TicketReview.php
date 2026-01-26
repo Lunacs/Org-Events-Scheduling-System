@@ -170,7 +170,7 @@ class TicketReview extends Component
                 ?? 'N/A',
             'request_type' => $ticket?->eventType?->type_name ?? 'N/A',
             'event_date' => $eventDate?->format('M d, Y') ?? 'N/A',
-            'venue' => $ticket?->venue_requested ?? 'TBD',
+            'venue' => $ticket?->venue_display_name ?? 'TBD',
             'priority' => $priority['key'],
             'priority_label' => $priority['label'],
             'priority_days_until' => $priority['days_until'],

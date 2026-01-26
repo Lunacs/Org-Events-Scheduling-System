@@ -18,9 +18,8 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <div class="flex flex-wrap justify-between items-end gap-4">
-                    <div class="flex items-end space-x-4">
-
-                        <div>
+                    <div class="flex items-end space-x-4 w-full md:w-auto">
+                        <div class="w-full mr-0 md:w-auto">
                             <x-mary-select label="Time Period" :options="[
                                 ['id' => 'this_week', 'name' => 'This Week'],
                                 ['id' => 'this_month', 'name' => 'This Month'],
@@ -29,7 +28,7 @@
                                 ['id' => 'this_year', 'name' => 'This Year'],
                                 ['id' => 'custom', 'name' => 'Custom Range'],
                             ]" option-value="id" option-label="name"
-                                x-model="timePeriod" @change="generateReport()" class="select-emerald" />
+                                x-model="timePeriod" @change="generateReport()" class="select-emerald w-full md:w-auto" />
                         </div>
 
                         <div x-show="timePeriod === 'custom'" x-cloak>
@@ -43,8 +42,8 @@
                         </div>
                     </div>
 
-                    <div class="flex space-x-2">
-                        <button class="btn btn-emerald" @click.prevent="exportReport()">
+                    <div class="grid grid-cols-1 gap-4 w-full md:w-auto md:flex md:space-x-2">
+                        <button class="btn btn-emerald w-full md:w-auto" @click.prevent="exportReport()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -52,7 +51,7 @@
                             </svg>
                             Export PDF
                         </button>
-                        <button class="btn btn-outline btn-emerald" @click.prevent="exportCSV()">
+                        <button class="btn btn-outline btn-emerald w-full md:w-auto" @click.prevent="exportCSV()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -179,63 +178,110 @@
         <!-- Detailed Report Table -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
             <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="tableTitle"></h3>
-                    <div class="flex space-x-2">
+                    <div class="md:flex md:space-x-2 w-full md:w-auto">
                         <x-mary-input placeholder="Search records..." x-model="searchTerm"
-                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm" icon="o-magnifying-glass">
+                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm w-full md:w-auto" icon="o-magnifying-glass">
                         </x-mary-input>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="table table-zebra w-full">
+                    <!-- Desktop Table View -->
+                    <table class="hidden md:table table-zebra w-full">
                         <thead>
-                            <tr class="bg-emerald-50 dark:bg-emerald-900/20">
-                                <th class="text-emerald-700 dark:text-emerald-300">Date</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Ticket ID</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Event</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Organization</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Request Type</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Decision</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Actions</th>
-                            </tr>
+                        <tr class="bg-emerald-50 dark:bg-emerald-900/20">
+                            <th class="text-emerald-700 dark:text-emerald-300">Date</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Ticket ID</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Event</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Organization</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Request Type</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Decision</th>
+                            <th class="text-emerald-700 dark:text-emerald-300">Actions</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <template x-for="record in paginatedRecords" :key="record.id">
-                                <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
-                                    <td x-text="record.date"></td>
-                                    <td>
-                                        <span class="font-mono text-sm" x-text="record.ticketId"></span>
-                                    </td>
-                                    <td x-text="record.eventName"></td>
-                                    <td x-text="record.organization"></td>
-                                    <td>
-                                        <span
-                                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' +
-                                            getRequestTypeClass(record.requestType)"
-                                            x-text="record.requestType || 'N/A'"></span>
-                                    </td>
-                                    <td>
-                                        <div class="badge" :class="getDecisionClass(record.decision)"
-                                            x-text="record.decision"></div>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-ghost" @click="goToDetails(record)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </template>
+                        <template x-for="record in paginatedRecords" :key="record.id">
+                            <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
+                                <td x-text="record.date"></td>
+                                <td>
+                                    <span class="font-mono text-sm" x-text="record.ticketId"></span>
+                                </td>
+                                <td x-text="record.eventName"></td>
+                                <td x-text="record.organization"></td>
+                                <td>
+                        <span
+                            :class="'badge border-none badge-lg h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 max-w-48 text-left text-sm font-medium shadow-sm ' +
+                            getRequestTypeClass(record.requestType)"
+                            x-text="record.requestType || 'N/A'"></span>
+                                </td>
+                                <td>
+                                    <div class="badge" :class="getDecisionClass(record.decision)"
+                                         x-text="record.decision"></div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-ghost" @click="goToDetails(record)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
                         </tbody>
                     </table>
+
+                    <!-- Mobile Card View -->
+                    <div class="md:hidden space-y-4">
+                        <template x-for="record in paginatedRecords" :key="record.id">
+                            <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="record.ticketId"></span>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="record.date"></p>
+                                    </div>
+                                    <div class="badge" :class="getDecisionClass(record.decision)" x-text="record.decision"></div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Event</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="record.eventName"></p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Organization</p>
+                                        <p class="text-sm text-gray-900 dark:text-gray-100" x-text="record.organization"></p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Request Type</p>
+                                        <span
+                                            :class="'badge border-none h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 text-left text-sm font-medium shadow-sm ' +
+                            getRequestTypeClass(record.requestType)"
+                                            x-text="record.requestType || 'N/A'"></span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+                                    <button class="btn btn-sm btn-ghost w-full" @click="goToDetails(record)">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Pagination -->
