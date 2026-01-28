@@ -14,82 +14,209 @@ class StudentOrganizationSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create specific student organizations with realistic data
-        $organizations = [
+        // PLV Student Organizations based on AY 2025-2026
+        ///TODO: Add org_name and update missing course codes and adviser names for non-acad orgs and BASEEC
+        $acad_organizations = [
             [
-                'org_code' => 'CSSO',
-                'org_name' => 'Computer Science Student Organization',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCS')->first()?->course_id ?? 1,
-                'adviser_name' => 'Dr. Maria Santos',
+                'org_code' => 'ACES',
+                'org_name' => 'Association of Civil Engineering Students',
+                'course_id' => \App\Models\Course::where('course_code', 'BSCE')->first()?->course_id ?? 1,
+                'adviser_name' => 'Mc. Lorenz M. Castillo',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'ITSO',
-                'org_name' => 'Information Technology Student Organization',
-                'course_id' => \App\Models\Course::where('course_code', 'BSIT')->first()?->course_id ?? 2,
-                'adviser_name' => 'Engr. John Martinez',
+                'org_code' => 'AEES',
+                'org_name' => 'Association of Electrical Engineering Students',
+                'course_id' => \App\Models\Course::where('course_code', 'BSEE')->first()?->course_id ?? 2,
+                'adviser_name' => 'Cristen Kate Celestial',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'ENGSOC',
-                'org_name' => 'Engineering Society',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCpE')->first()?->course_id ?? 3,
-                'adviser_name' => 'Engr. Carlos Rodriguez',
+                'org_code' => 'AJFEx',
+                'org_name' => 'Association of Junior Finance Executives',
+                'course_id' => \App\Models\Course::where('course_code', 'BSBA FM')->first()?->course_id ?? 3,
+                'adviser_name' => 'Lailani A. Santos',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'BUSCLUB',
-                'org_name' => 'Business Administration Club',
-                'course_id' => \App\Models\Course::where('course_code', 'BSBA')->first()?->course_id ?? 7,
-                'adviser_name' => 'Prof. Ana Garcia',
+                'org_code' => 'BACSTAGE',
+                'org_name' => 'Bachelor of Arts in Communication Studies - Theater Arts Grand Ensemble',
+                'course_id' => \App\Models\Course::where('course_code', 'BAC')->first()?->course_id ?? 7,
+                'adviser_name' => 'Renalyn T. Alvaran',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'EDUC-ORG',
-                'org_name' => 'Education Association',
-                'course_id' => \App\Models\Course::where('course_code', 'BSED')->first()?->course_id ?? 9,
-                'adviser_name' => 'Dr. Rosa Cruz',
+                'org_code' => 'BASEEC',
+                'org_name' => 'Believers And Seekers of Excellence among Early Childhood Educators',
+                'course_id' => \App\Models\Course::where('course_code', 'BECED')->first()?->course_id ?? 9,
+                'adviser_name' => 'Sharon D. Tarantan',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'CULT-ARTS',
-                'org_name' => 'Cultural Arts Group',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCS')->first()?->course_id ?? 1,
-                'adviser_name' => 'Prof. Luis Fernandez',
+                'org_code' => 'BPS',
+                'org_name' => 'Blue Pencil Society',
+                'course_id' => \App\Models\Course::where('course_code', 'BSED ENGLISH')->first()?->course_id ?? 1,
+                'adviser_name' => 'John Dominic T. De Jesus',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'ENV-ADVOC',
-                'org_name' => 'Environmental Advocates',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCE')->first()?->course_id ?? 6,
-                'adviser_name' => 'Engr. Patricia Reyes',
+                'org_code' => 'GAME',
+                'org_name' => 'Group of Aspiring Mathematics Educators √',
+                'course_id' => \App\Models\Course::where('course_code', 'BSED MATHEMATICS')->first()?->course_id ?? 6,
+                'adviser_name' => 'Cherry Mae M. Belloso',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'SPORTS-CLUB',
-                'org_name' => 'Sports and Athletics Club',
-                'course_id' => \App\Models\Course::where('course_code', 'BSBA')->first()?->course_id ?? 7,
-                'adviser_name' => 'Coach Rafael Santos',
+                'org_code' => 'JMA',
+                'org_name' => 'Junior Marketing Association',
+                'course_id' => \App\Models\Course::where('course_code', 'BSBA MM')->first()?->course_id ?? 7,
+                'adviser_name' => 'Mary Charmaine G. Cruz',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'TECH-INNOV',
-                'org_name' => 'Technology and Innovation Society',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCpE')->first()?->course_id ?? 3,
-                'adviser_name' => 'Dr. Elena Morales',
+                'org_code' => 'JPIA',
+                'org_name' => 'Junior Philippine Institute of Accountants - PLV',
+                'course_id' => \App\Models\Course::where('course_code', 'BSA')->first()?->course_id ?? 3,
+                'adviser_name' => 'Arden Mar S. Llanto',
                 'status' => 'active',
             ],
             [
-                'org_code' => 'ALUMNI-ORG',
-                'org_name' => 'Alumni Organization',
-                'course_id' => \App\Models\Course::where('course_code', 'BSCS')->first()?->course_id ?? 1,
-                'adviser_name' => 'Ms. Carmen Dela Cruz',
-                'status' => 'inactive',
+                'org_code' => 'JPMAP',
+                'org_name' => 'Junior People Management Association of the Philippines - PLV',
+                'course_id' => \App\Models\Course::where('course_code', 'BSBA HRDM')->first()?->course_id ?? 1,
+                'adviser_name' => 'Hernani S. Saluna',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'JSWAP',
+                'org_name' => 'Junior Social Workers Association of the Philippines',
+                'course_id' => \App\Models\Course::where('course_code', 'BSSW')->first()?->course_id ?? 1,
+                'adviser_name' => 'Brandon Louise Encarnacion',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'PSYCHSOC',
+                'org_name' => 'Psychology Society',
+                'course_id' => \App\Models\Course::where('course_code', 'BSP')->first()?->course_id ?? 1,
+                'adviser_name' => 'Mary Camille Delima',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'SADAFIL',
+                'org_name' => 'Samahan ng mga Nagpapakadalubhasa sa Filipino',
+                'course_id' => \App\Models\Course::where('course_code', 'BSED FILIPINO')->first()?->course_id ?? 1,
+                'adviser_name' => 'Erden Gutierrez',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'SCIRE',
+                'org_name' => 'Society of Competitive Individuals Reaching for Excellence',
+                'course_id' => \App\Models\Course::where('course_code', 'BSED SCIENCE')->first()?->course_id ?? 1,
+                'adviser_name' => 'Christian T, Pantoja',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'SÍNAG BÁNWA',
+                'org_name' => 'Samahan ng mga Iskolar ng Araling Panlipunan para sa Bayan',
+                'course_id' => \App\Models\Course::where('course_code', 'BSED SOCSTUD')->first()?->course_id ?? 1,
+                'adviser_name' => 'Arvin Nikko Tacorda',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'UPAS',
+                'org_name' => 'Union of Public Administration Students',
+                'course_id' => \App\Models\Course::where('course_code', 'BSPA')->first()?->course_id ?? 1,
+                'adviser_name' => 'Ronhel S. Patricio',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'VITS',
+                'org_name' => 'Valenzuela Information Technology Society',
+                'course_id' => \App\Models\Course::where('course_code', 'BSIT')->first()?->course_id ?? 1,
+                'adviser_name' => 'Ruffa May Monis',
+                'status' => 'active',
             ],
         ];
 
-        foreach ($organizations as $org) {
-            \App\Models\Student_Organization::create($org);
+        $nonacad_organizations = [
+            [
+                'org_code' => 'AKLAT',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'BRIDGE',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'CDT',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'DC',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'GOGH',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'RCYC',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'RS',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'SHIELD',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'SINGERS',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+            [
+                'org_code' => 'VTHK',
+                'org_name' => '',
+                'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
+                'adviser_name' => '',
+                'status' => 'active',
+            ],
+        ];
+
+        foreach ($acad_organizations as $acad_org) {
+            \App\Models\Student_Organization::create($acad_org);
+        }
+
+        foreach ($nonacad_organizations as $nonacad_org) {
+            \App\Models\Student_Organization::create($nonacad_org);
         }
 
         $this->command->info('Created 10 student organizations (9 active, 1 inactive)');
