@@ -15,7 +15,6 @@ class StudentOrganizationSeeder extends Seeder
     public function run(): void
     {
         // PLV Student Organizations based on AY 2025-2026
-        ///TODO: Add org_name and update missing course codes and adviser names for non-acad orgs and BASEEC
         $acad_organizations = [
             [
                 'org_code' => 'ACES',
@@ -141,72 +140,72 @@ class StudentOrganizationSeeder extends Seeder
         $nonacad_organizations = [
             [
                 'org_code' => 'AKLAT',
-                'org_name' => '',
+                'org_name' => 'Association for Knowledge, Learning, and Teaching',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Ma. Angelica C. Concepcion',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'BRIDGE',
-                'org_name' => '',
+                'org_name' => 'Barangay Research Initiative Directed toward General welfare and Economic sustainability',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Mark Anthony Rebuya',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'CDT',
-                'org_name' => '',
+                'org_name' => 'PLV Cultural Dance Troupe',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Noeme Grace H. Garcia',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'DC',
-                'org_name' => '',
+                'org_name' => 'PLV Dance Company',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Wenzel Kyne Fernandez',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'GOGH',
-                'org_name' => '',
+                'org_name' => 'PLV - Guild of Golden Hands',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Floraida S. Castañar-Alano',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'RCYC',
-                'org_name' => '',
+                'org_name' => 'PLV- Red Cross Youth Council',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Lei Ann Lopez',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'RS',
-                'org_name' => '',
+                'org_name' => 'Rover Scout',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Eduardo J. Andaya',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'SHIELD',
-                'org_name' => '',
+                'org_name' => 'Student Helping in Imminent Events and Life-threatening Disasters',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Salvador P. Villete',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'SINGERS',
-                'org_name' => '',
+                'org_name' => 'PLV Singers',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Arion Sanchez',
                 'status' => 'active',
             ],
             [
                 'org_code' => 'VTHK',
-                'org_name' => '',
+                'org_name' => 'Virulent Tigers Haud Ka\'Bu',
                 'course_id' => \App\Models\Course::where('course_code', '')->first()?->course_id ?? 1,
-                'adviser_name' => '',
+                'adviser_name' => 'Jayron M. Garcia',
                 'status' => 'active',
             ],
         ];
@@ -219,6 +218,6 @@ class StudentOrganizationSeeder extends Seeder
             \App\Models\Student_Organization::create($nonacad_org);
         }
 
-        $this->command->info('Created 10 student organizations (9 active, 1 inactive)');
+        $this->command->info('Created student organizations (acad and non acad).');
     }
 }

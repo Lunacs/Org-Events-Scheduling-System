@@ -157,10 +157,10 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Lanoira Cutie',
             'email' => 'lexerichsontalavera@plv.edu.ph',
-            'email_verified_at' => null,
+            'email_verified_at' => now(),
             'password' => Hash::make('Lanoira1'),
             'role_id' => User::getRoleId('student-org'),
-            'org_id' => $studentOrgs->first()?->org_id,
+            'org_id' => Student_Organization::where('org_code', 'VITS')->first()?->org_id,
             'office_id' => null,
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
         ]);

@@ -14,7 +14,6 @@ class VenueSeeder extends Seeder
     {
         //All venues here
         $venues = [
-            ['venue_name' => 'Others (Please Specify)', 'venue_location' => null],
             ['venue_name' => 'PLV Gymnasium', 'venue_location' => 'PLV Main Campus', 'is_active' => false],
             ['venue_name' => 'PLV Auditorium', 'venue_location' => 'PLV Main Campus - Main Building'],
             ['venue_name' => 'PLV Conference Hall', 'venue_location' => 'PLV Main Campus - COED Building'],

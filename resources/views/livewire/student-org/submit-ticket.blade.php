@@ -161,47 +161,50 @@
                                              required/>
 
                             <div x-data="{
-                                    preferredVenue: @entangle('preferredVenue').live,
-                                    venues: @js($venues)
-                                }">
+                                preferredVenue: @entangle('preferredVenue').live,
+                                showOtherPreferred: @entangle('preferredVenue').live === 'other',
+                                venues: @js($venues)
+                            }">
                                 <x-mary-select
                                     label="Preferred Venue"
                                     wire:model.live="preferredVenue"
-                                    :options="$venues"
+                                    :options="[...$venues, ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)']]"
                                     option-value="venue_id"
                                     option-label="venue_name"
                                     placeholder="Select a venue"
                                     required
                                 />
 
-                                <div x-show="preferredVenue && venues.find(v => v.venue_id == preferredVenue)?.venue_name === 'Others (Please Specify)'"
+                                <div x-show="preferredVenue === 'other'"
                                      x-collapse
                                      x-cloak
-                                    class="mt-4">
+                                     class="mt-4">
                                     <x-mary-input
                                         label="Please specify preferred venue"
                                         wire:model.blur="preferredVenueOther"
-                                        placeholder="Enter venue name"
+                                        placeholder="Enter venue name" required
                                     />
                                 </div>
                             </div>
+
                             <div x-data="{
-                                    alternativeVenue: @entangle('alternativeVenue').live,
-                                    venues: @js($venues)
-                                }">
+                                alternativeVenue: @entangle('alternativeVenue').live,
+                                showOtherAlternative: @entangle('alternativeVenue').live === 'other',
+                                venues: @js($venues)
+                            }">
                                 <x-mary-select
                                     label="Alternative Venue"
                                     wire:model.live="alternativeVenue"
-                                    :options="$venues"
+                                    :options="[...$venues, ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)']]"
                                     option-value="venue_id"
                                     option-label="venue_name"
                                     placeholder="Select backup venue"
                                 />
 
-                                <div x-show="alternativeVenue && venues.find(v => v.venue_id == alternativeVenue)?.venue_name === 'Others (Please Specify)'"
+                                <div x-show="alternativeVenue === 'other'"
                                      x-collapse
                                      x-cloak
-                                     class="mt-4"   >
+                                     class="mt-4">
                                     <x-mary-input
                                         label="Please specify alternative venue"
                                         wire:model.blur="alternativeVenueOther"
@@ -283,7 +286,7 @@
 
                         <div x-data="{ igp: @entangle('igp_requested') }">
                             <div class="mt-4">
-                                <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
+                                <x-mary-radio label="IGP (Income Generated Project) Request" wire:model.live="igp_requested" :options="[
                                     ['id' => 'true', 'name' => 'Requested'],
                                     ['id' => 'false', 'name' => 'Not Requested'],
                                 ]" inline
@@ -292,8 +295,8 @@
 
                             <div x-show="igp === 'true'" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-mary-textarea label="IGP Brief Description" wire:model.blur="igp_details"
-                                                     placeholder="List all descriptions for IGP requested items"
+                                    <x-mary-textarea label="IGP (Income Generated Project) Brief Description" wire:model.blur="igp_details"
+                                                     placeholder="List all descriptions for IGP (Income Generated Project) requested items"
                                                      rows="4"/>
                                 </div>
                             </div>
