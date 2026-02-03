@@ -87,12 +87,13 @@ class Index extends Component
                 ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
                 ->get()
                 ->map(function ($ticket) {
+                    $orgDeleted = $ticket->user?->studentOrganization?->trashed();
                     return [
                         'id' => $ticket->ticket_id,
                         'type' => 'ticket',
                         'title' => $ticket->title,
                         'identifier' => $ticket->ticket_number,
-                        'organization' => $ticket->user->studentOrganization->org_name ?? 'N/A',
+                        'organization' => $orgDeleted ? 'Deleted Organization' : ($ticket->user?->studentOrganization?->org_name ?? 'N/A'),
                         'status' => $ticket->status,
                         'date' => $ticket->created_at,
                         'archived_at' => $ticket->updated_at,

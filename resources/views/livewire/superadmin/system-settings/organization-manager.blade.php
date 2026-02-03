@@ -1,38 +1,81 @@
 <div>
-    <x-mary-card>
-        <div class="flex justify-between mb-5">
-            <h2 class="font-bold text-xl">Student Organizations</h2>
-            <x-mary-button icon="o-plus" class="btn-accent" wire:click="$set('addOrgModalOpen', true)">Add</x-mary-button>
+    <x-mary-card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">Student Organizations</h2>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Authorized campus groups and
+                    clubs</p>
+            </div>
+            <x-mary-button icon="o-plus" label="Register Org" class="btn-primary btn-sm shadow-sm w-full sm:w-auto"
+                wire:click="$set('addOrgModalOpen', true)" />
         </div>
 
-        @if (count($organizations) > 0)
-            <ul class="space-y-2">
-                @foreach ($organizations as $organization)
-                    <li class="flex items-center justify-between p-2 border rounded-lg">
-                        <div>
-                            <p class="font-medium">{{ $organization->org_name }}</p>
-                            <p class="text-xs text-gray-500">{{ $organization->org_code }} •
-                                {{ $organization->course->course_name ?? 'N/A' }}
-                            </p>
-                        </div>
-                        <div class="flex gap-1">
-                            <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                                wire:click="openEditOrgModal({{ $organization->org_id }})" wire:loading.attr="disabled">
-                            </x-mary-button>
-                            <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                wire:click="openDeleteOrgModal({{ $organization->org_id }})"
-                                wire:loading.attr="disabled">
-                            </x-mary-button>
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-        @else
-            <div class="text-center py-4 text-gray-500">
-                <x-mary-icon name="o-user-group" class="w-8 h-8 mx-auto mb-2" />
-                <p>No student organizations found</p>
+        <div class="space-y-6">
+            {{-- Academic Organizations Section --}}
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <x-mary-icon name="o-academic-cap" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Academic
+                        Organizations</h3>
+                    {{-- <span
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full font-medium">{{ count($academicOrgs) }}</span> --}}
+                    <span
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">{{ count($academicOrgs) }}</span>
+                </div>
+
+                @if (count($academicOrgs) > 0)
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                        @foreach ($academicOrgs as $organization)
+                            @include('livewire.superadmin.system-settings.partials.organization-card', [
+                                'organization' => $organization,
+                                'showCourse' => true,
+                            ])
+                        @endforeach
+                    </div>
+                @else
+                    <div
+                        class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
+                        <x-mary-icon name="o-academic-cap"
+                            class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No academic organizations</p>
+                        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Organizations linked to specific
+                            courses will appear here.</p>
+                    </div>
+                @endif
             </div>
-        @endif
+
+            {{-- Non-Academic Organizations Section --}}
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <x-mary-icon name="o-globe-alt" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Non-Academic
+                        Organizations</h3>
+                    <span
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">{{ count($nonAcademicOrgs) }}</span>
+                </div>
+
+                @if (count($nonAcademicOrgs) > 0)
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                        @foreach ($nonAcademicOrgs as $organization)
+                            @include('livewire.superadmin.system-settings.partials.organization-card', [
+                                'organization' => $organization,
+                                'showCourse' => false,
+                            ])
+                        @endforeach
+                    </div>
+                @else
+                    <div
+                        class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
+                        <x-mary-icon name="o-globe-alt"
+                            class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No non-academic organizations
+                        </p>
+                        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Institutional organizations (e.g.,
+                            Red Cross Youth) will appear here.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
     </x-mary-card>
 
     {{-- Add Student Organization Modal --}}
@@ -60,7 +103,7 @@
             {{-- Logo Upload with Preview --}}
             <div class="space-y-2">
                 <x-mary-file wire:model="newOrgLogo" label="Organization Logo (Optional)"
-                    hint="Max 10MB. Images auto-compressed to WebP format." accept="image/*" />
+                    hint="Max 10MB. Images auto-compressed to WebP format." accept=".jpg,.jpeg,.png,.gif,.svg,.webp" />
 
                 {{-- Loading indicator --}}
                 <div wire:loading wire:target="newOrgLogo" class="flex items-center gap-2 text-sm text-base-content/70">
@@ -135,7 +178,8 @@
                 <div class="space-y-2">
                     <x-mary-file wire:model="orgLogo"
                         label="{{ $currentOrgLogo ? 'Replace Logo' : 'Upload Logo (Optional)' }}"
-                        hint="Max 10MB. Images auto-compressed to WebP format." accept="image/*" />
+                        hint="Max 10MB. Images auto-compressed to WebP format."
+                        accept=".jpg,.jpeg,.png,.gif,.svg,.webp" />
 
                     {{-- Loading indicator --}}
                     <div wire:loading wire:target="orgLogo"
@@ -173,20 +217,21 @@
         <x-mary-modal wire:model="deleteOrgModalOpen" title="Delete Student Organization Confirmation"
             subtitle="This action cannot be undone" separator with-close-button close-on-escape>
             <div class="space-y-4">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor"
+                        <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
                         </svg>
-                        <p class="text-red-800 font-medium">Warning: This action is permanent</p>
+                        <p class="text-red-800 dark:text-red-200 font-medium">Warning: This action is permanent</p>
                     </div>
                 </div>
 
-                <p class="text-gray-700">
-                    You are about to delete <strong>{{ $deletingOrgName }}</strong>. This will permanently remove all
+                <p class="text-gray-700 dark:text-slate-300">
+                    You are about to delete <strong class="dark:text-white">{{ $deletingOrgName }}</strong>. This will
+                    permanently remove all
                     data
                     related to this organization.
                 </p>

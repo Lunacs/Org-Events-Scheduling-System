@@ -11,6 +11,7 @@ use App\Models\Student_Organization;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -18,12 +19,18 @@ use Mary\Traits\Toast;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+#[Lazy]
 class Index extends Component
 {
     use Toast;
 
     #[Title('Reports & Analytics - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
+
+    public function placeholder()
+    {
+        return view('livewire.superadmin.placeholders.reports');
+    }
 
     // Filters with URL state
     #[Url(except: '')]
@@ -34,6 +41,12 @@ class Index extends Component
 
     public $selectedOffices = [];
     public $selectedEventTypes = [];
+
+    // Filter drawer visibility
+    public bool $showFilterDrawer = false;
+
+    #[Url(except: '')]
+    public $searchTerm = '';
 
     #[Url(except: 'overview')]
     public $reportType = 'overview'; // overview, events, users, tickets
@@ -52,10 +65,42 @@ class Index extends Component
 
     public function clearFilters()
     {
-        $this->reset(['selectedOffices', 'selectedEventTypes']);
+        $this->reset(['selectedOffices', 'selectedEventTypes', 'searchTerm']);
         $this->loadChartData();
         $this->success('Filters cleared!', position: 'toast-top');
     }
+
+    public function resetDateRange()
+    {
+        $this->dateTo = now()->format('Y-m-d');
+        $this->dateFrom = now()->subDays(30)->format('Y-m-d');
+        $this->loadChartData();
+    }
+
+    public function resetOffices()
+    {
+        $this->selectedOffices = [];
+        $this->loadChartData();
+    }
+
+    public function resetEventTypes()
+    {
+        $this->selectedEventTypes = [];
+        $this->loadChartData();
+    }
+
+    public function resetSearch()
+    {
+        $this->searchTerm = '';
+        $this->loadChartData();
+    }
+
+    // MaryUI Chart configurations
+    public array $eventsByMonthChart = [];
+    public array $eventsByTypeChart = [];
+    public array $eventsByOfficeChart = [];
+    public array $ticketStatusChart = [];
+    public array $usersByRoleChart = [];
 
     public function loadChartData()
     {
@@ -66,6 +111,170 @@ class Index extends Component
             'eventsByOffice' => $this->getEventsByOffice(),
             'ticketStatusDistribution' => $this->getTicketStatusDistribution(),
             'usersByRole' => $this->getUsersByRole(),
+        ];
+
+        // Build MaryUI chart configurations
+        $this->buildChartConfigs();
+    }
+
+    protected function buildChartConfigs(): void
+    {
+        // Events by Month - Line Chart
+        $eventsByMonth = $this->chartData['eventsByMonth'];
+        $this->eventsByMonthChart = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $eventsByMonth['labels'] ?? [],
+                'datasets' => [
+                    [
+                        'label' => 'Events',
+                        'data' => $eventsByMonth['data'] ?? [],
+                        'borderColor' => 'rgb(79, 209, 197)',
+                        'backgroundColor' => 'rgba(79, 209, 197, 0.1)',
+                        'tension' => 0.4,
+                        'fill' => true,
+                        'pointBackgroundColor' => 'rgb(79, 209, 197)',
+                        'pointRadius' => 4,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                ],
+                'scales' => [
+                    'y' => ['beginAtZero' => true, 'grid' => ['display' => false]],
+                    'x' => ['grid' => ['display' => false]],
+                ],
+            ],
+        ];
+
+        // Events by Type - Doughnut Chart
+        $eventsByType = $this->chartData['eventsByType'];
+        $this->eventsByTypeChart = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => $eventsByType['labels'] ?? [],
+                'datasets' => [
+                    [
+                        'data' => $eventsByType['data'] ?? [],
+                        'backgroundColor' => [
+                            'rgba(79, 209, 197, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(248, 113, 113, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(14, 165, 233, 0.8)',
+                        ],
+                        'borderWidth' => 0,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => ['usePointStyle' => true, 'padding' => 20],
+                    ],
+                ],
+                'cutout' => '70%',
+            ],
+        ];
+
+        // Events by Office - Bar Chart
+        $eventsByOffice = $this->chartData['eventsByOffice'];
+        $this->eventsByOfficeChart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $eventsByOffice['labels'] ?? [],
+                'datasets' => [
+                    [
+                        'label' => 'Events',
+                        'data' => $eventsByOffice['data'] ?? [],
+                        'backgroundColor' => 'rgba(79, 209, 197, 0.8)',
+                        'borderRadius' => 6,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                ],
+                'scales' => [
+                    'y' => ['beginAtZero' => true, 'grid' => ['borderDash' => [2, 4]]],
+                    'x' => ['grid' => ['display' => false]],
+                ],
+            ],
+        ];
+
+        // Ticket Status Distribution - Pie Chart
+        $ticketStatus = $this->chartData['ticketStatusDistribution'];
+        $this->ticketStatusChart = [
+            'type' => 'pie',
+            'data' => [
+                'labels' => $ticketStatus['labels'] ?? [],
+                'datasets' => [
+                    [
+                        'data' => $ticketStatus['data'] ?? [],
+                        'backgroundColor' => [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                        ],
+                        'borderWidth' => 0,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => ['usePointStyle' => true, 'padding' => 20],
+                    ],
+                ],
+            ],
+        ];
+
+        // Users by Role - Horizontal Bar Chart
+        $usersByRole = $this->chartData['usersByRole'];
+        $this->usersByRoleChart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $usersByRole['labels'] ?? [],
+                'datasets' => [
+                    [
+                        'label' => 'Users',
+                        'data' => $usersByRole['data'] ?? [],
+                        'backgroundColor' => 'rgba(99, 102, 241, 0.8)',
+                        'borderRadius' => 6,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'indexAxis' => 'y',
+                'plugins' => [
+                    'legend' => ['display' => false],
+                ],
+                'scales' => [
+                    'x' => ['beginAtZero' => true, 'grid' => ['borderDash' => [2, 4]]],
+                    'y' => ['grid' => ['display' => false]],
+                ],
+            ],
         ];
     }
 
@@ -176,6 +385,13 @@ class Index extends Component
             });
         }
 
+        if ($this->searchTerm) {
+            $query->where(function ($q) {
+                $q->where('tickets.ticket_number', 'like', '%' . $this->searchTerm . '%')
+                    ->orWhere('tickets.title', 'like', '%' . $this->searchTerm . '%');
+            });
+        }
+
         return $query;
     }
 
@@ -195,6 +411,11 @@ class Index extends Component
     }
 
     public function updatedSelectedEventTypes()
+    {
+        $this->loadChartData();
+    }
+
+    public function updatedSearchTerm()
     {
         $this->loadChartData();
     }
@@ -225,13 +446,14 @@ class Index extends Component
         return $query->with(['eventType', 'user.studentOrganization'])
             ->get()
             ->map(function ($ticket) {
+                $orgDeleted = $ticket->user?->studentOrganization?->trashed();
                 return [
                     'Ticket Number' => $ticket->ticket_number,
                     'Event Title' => $ticket->title,
                     'Date From' => Carbon::parse($ticket->date_from)->format('M d, Y'),
                     'Date To' => Carbon::parse($ticket->date_to)->format('M d, Y'),
                     'Event Type' => $ticket->eventType->type_name ?? 'N/A',
-                    'Organization' => $ticket->user->studentOrganization->org_name ?? 'N/A',
+                    'Organization' => $orgDeleted ? 'Deleted Organization' : ($ticket->user?->studentOrganization?->org_name ?? 'N/A'),
                     'Status' => ucfirst(str_replace('_', ' ', $ticket->status)),
                     'Venue' => $ticket->venue_requested ?? 'N/A',
                     'Created At' => $ticket->created_at->format('M d, Y H:i:s'),

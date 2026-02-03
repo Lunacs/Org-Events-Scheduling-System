@@ -47,8 +47,8 @@
                         <li><a href="/student-org/calendar" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
                         </li>
-                        <li><a href="/student-org/my-tickets" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">My Tickets</a></li>
+                        <li><a href="{{ route('faq') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
                     @elseif($variant === 'osa')
                         <li><a href="/admin/dashboard" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -57,8 +57,8 @@
                         <li><a href="/admin/calendar" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
                         </li>
-                        <li><a href="/admin/reports" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Reports</a></li>
+                        <li><a href="{{ route('faq') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
                     @elseif($variant === 'gso')
                         <li><a href="{{ route('gso.dashboard') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -67,8 +67,8 @@
                         <li><a href="{{ route('gso.calendar') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
                         </li>
-                        <li><a href="/gso/reports" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Reports</a></li>
+                        <li><a href="{{ route('faq') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
                     @elseif($variant === 'superadmin')
                         <li><a href="{{ route('superadmin.dashboard') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -78,11 +78,15 @@
                         <li><a href="{{ route('superadmin.calendar') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
                         </li>
-                        <li><a href="{{ route('superadmin.reports') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Reports</a></li>
+                        <li><a href="{{ route('faq') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
                     @else
                         <li><a href="/" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Home</a></li>
+                        <li><a href="{{ route('faq') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
+                        <li><a href="{{ route('about-us') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
                         <li><a href="/login" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Login</a></li>
                     @endif

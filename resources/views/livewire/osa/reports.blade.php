@@ -366,9 +366,12 @@
                         </thead>
                         <tbody>
                             @foreach ($reportData->take(10) as $ticket)
+                                @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr>
                                     <td>{{ $ticket->title }}</td>
-                                    <td>{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</td>
+                                    <td class="{{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                        {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
+                                    </td>
                                     <td>{{ $ticket->events->first()?->created_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
@@ -399,9 +402,11 @@
                         </thead>
                         <tbody>
                             @foreach ($reportData->take(10) as $ticket)
+                                @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr>
                                     <td>{{ $ticket->title }}</td>
-                                    <td>{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                                    <td class="{{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                        {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
                                     </td>
                                     <td>{{ $ticket->created_at->format('M d, Y') }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>

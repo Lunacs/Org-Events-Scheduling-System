@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\Student_Organization;
 use App\Models\Ticket;
+use App\Models\Transaction_Logs;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
@@ -23,6 +24,9 @@ class Dashboard extends Component
     // Cache duration in seconds - optimized for better performance
     protected $cacheDuration = 300; // 5 minutes cache for better performance
 
+    // Statuses that require OSA action
+    protected array $osaActionStatuses = ['received', 'amended', 'pending_osa_approval'];
+
     public function placeholder()
     {
         return view('livewire.osa.placeholders.dashboard');
@@ -41,9 +45,9 @@ class Dashboard extends Component
             $currentMonth = $now->month;
             $currentYear = $now->year;
 
-            // Optimize: Use raw queries for faster counts
+            // Count tickets requiring OSA action
             return [
-                'pending' => Ticket::where('status', 'pending')->count(),
+                'pending' => Ticket::whereIn('status', $this->osaActionStatuses)->count(),
                 'forwarded' => Ticket::whereHas('officeApprovals', function ($query) {
                     $query->where('decision', 'pending');
                 })->count(),
@@ -89,12 +93,12 @@ class Dashboard extends Component
     public function pendingApprovals(): array
     {
         return Cache::remember('osa_dashboard_pending_approvals', $this->cacheDuration, function () {
-            return Ticket::select(['ticket_id', 'ticket_number', 'title', 'created_at', 'user_id'])
+            return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id'])
                 ->with([
                     'user' => fn($q) => $q->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name,logo')
                 ])
-                ->where('status', 'pending')
+                ->whereIn('status', $this->osaActionStatuses)
                 ->orderBy('created_at', 'asc')
                 ->limit(5)
                 ->get()
@@ -103,6 +107,9 @@ class Dashboard extends Component
                         'id' => $ticket->ticket_id,
                         'ticket_number' => $ticket->ticket_number,
                         'title' => $ticket->title,
+                        'status' => $ticket->status,
+                        'status_label' => $this->getStatusLabel($ticket->status),
+                        'status_class' => $this->getStatusClass($ticket->status),
                         'organization' => $ticket->user?->studentOrganization?->org_name ?? 'N/A',
                         'submitted' => $ticket->created_at->setTimezone('Asia/Manila')->diffForHumans(),
                     ];
@@ -139,6 +146,52 @@ class Dashboard extends Component
         });
     }
 
+    #[Computed(persist: true, seconds: 600)]
+    public function recentActivity(): array
+    {
+        return Cache::remember('osa_dashboard_recent_activity', $this->cacheDuration, function () {
+            return Transaction_Logs::with('user')
+                ->whereIn('action', [
+                    'Ticket Approved',
+                    'Ticket Rejected',
+                    'Ticket Forwarded',
+                    'Ticket For Revision',
+                    'Ticket Status Updated',
+                    'New Ticket Submitted',
+                ])
+                ->latest('created_at')
+                ->limit(5)
+                ->get()
+                ->map(function ($log) {
+                    return [
+                        'id' => $log->log_id,
+                        'action' => $log->action,
+                        'details' => $log->details,
+                        'time_ago' => $log->created_at?->diffForHumans() ?? 'Just now',
+                        'icon' => $this->getActivityIcon($log->action),
+                        'icon_class' => $this->getActivityIconClass($log->action),
+                    ];
+                })
+                ->toArray();
+        });
+    }
+
+    #[Computed(persist: true, seconds: 600)]
+    public function todaysSummary(): array
+    {
+        return Cache::remember('osa_dashboard_todays_summary', $this->cacheDuration, function () {
+            $today = now()->startOfDay();
+
+            return [
+                'newRequests' => Ticket::whereDate('created_at', $today)->count(),
+                'processed' => Ticket::whereIn('status', ['approved', 'for_revision', 'gso_review'])
+                    ->whereDate('updated_at', $today)
+                    ->count(),
+                'pending' => Ticket::whereIn('status', $this->osaActionStatuses)->count(),
+            ];
+        });
+    }
+
     public function refreshData()
     {
         // Clear cache to force refresh
@@ -146,9 +199,18 @@ class Dashboard extends Component
         Cache::forget('osa_dashboard_recent_tickets');
         Cache::forget('osa_dashboard_pending_approvals');
         Cache::forget('osa_dashboard_upcoming_events');
+        Cache::forget('osa_dashboard_recent_activity');
+        Cache::forget('osa_dashboard_todays_summary');
 
         // Unset computed properties to force re-render
-        unset($this->stats, $this->recentTickets, $this->pendingApprovals, $this->upcomingEvents);
+        unset(
+            $this->stats,
+            $this->recentTickets,
+            $this->pendingApprovals,
+            $this->upcomingEvents,
+            $this->recentActivity,
+            $this->todaysSummary
+        );
 
         $this->success('Dashboard data refreshed!', position: 'toast-top', noProgress: true);
     }
@@ -163,6 +225,8 @@ class Dashboard extends Component
         $this->recentTickets;
         $this->pendingApprovals;
         $this->upcomingEvents;
+        $this->recentActivity;
+        $this->todaysSummary;
 
         $this->success('Cache warmed successfully!', position: 'toast-top');
     }
@@ -178,5 +242,59 @@ class Dashboard extends Component
             ['key' => 'submitted', 'label' => 'Submitted'],
             ['key' => 'status', 'label' => 'Status'],
         ];
+    }
+
+    /**
+     * Get status label for display
+     */
+    protected function getStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'received' => 'Received',
+            'amended' => 'Amended',
+            'pending_osa_approval' => 'Final Approval',
+            default => ucfirst(str_replace('_', ' ', $status)),
+        };
+    }
+
+    /**
+     * Get status badge class
+     */
+    protected function getStatusClass(string $status): string
+    {
+        return match ($status) {
+            'received' => 'badge-info',
+            'amended' => 'badge-warning',
+            'pending_osa_approval' => 'badge-primary',
+            default => 'badge-ghost',
+        };
+    }
+
+    /**
+     * Get activity icon based on action
+     */
+    protected function getActivityIcon(string $action): string
+    {
+        return match (true) {
+            str_contains($action, 'Approved') => 'o-check-circle',
+            str_contains($action, 'Rejected'), str_contains($action, 'Revision') => 'o-x-circle',
+            str_contains($action, 'Forwarded') => 'o-paper-airplane',
+            str_contains($action, 'Submitted') => 'o-document-plus',
+            default => 'o-information-circle',
+        };
+    }
+
+    /**
+     * Get activity icon color class
+     */
+    protected function getActivityIconClass(string $action): string
+    {
+        return match (true) {
+            str_contains($action, 'Approved') => 'text-success',
+            str_contains($action, 'Rejected'), str_contains($action, 'Revision') => 'text-error',
+            str_contains($action, 'Forwarded') => 'text-info',
+            str_contains($action, 'Submitted') => 'text-primary',
+            default => 'text-gray-500',
+        };
     }
 }

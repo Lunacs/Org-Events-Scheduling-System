@@ -15,18 +15,25 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+#[Lazy]
 class Index extends Component
 {
     use Toast, WithPagination;
 
     #[Title('Superadmin - User Management')]
     #[Layout('components.layouts.superadmin')]
+
+    public function placeholder()
+    {
+        return view('livewire.superadmin.placeholders.users');
+    }
 
     // Search and filter properties with URL state
     #[Url(except: '')]
@@ -268,13 +275,13 @@ class Index extends Component
             // Reset and close
             $this->createForm->reset();
             $this->dispatch('user-drawer-close');
-            $this->success('User created successfully!', position: 'toast-top');
+            $this->success('User created successfully!', position: 'toast-bottom');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('User creation failed', [
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to create user: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to create user: ' . $e->getMessage(), position: 'toast-bottom');
         }
     }
 

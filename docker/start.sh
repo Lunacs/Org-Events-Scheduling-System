@@ -47,9 +47,14 @@ if [ ! -L /var/www/html/public/storage ]; then
   php artisan storage:link || true
 fi
 
-# Run migrations on startup
-echo "Running migrations..."
-php artisan migrate --force || true
+# Run migration:fresh if enabled
+if [ "${MIGRATE_FRESH:-false}" = "true" ]; then
+    echo "Running migration:fresh..."
+    php artisan migrate:fresh --force
+else
+    echo "Running migrations..."
+    php artisan migrate --force || echo "Migration failed or already up-to-date"
+fi
 
 # Run seeding if enabled
 if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then

@@ -66,7 +66,10 @@
                 @endscope
 
                 @scope('cell_organization', $ticket)
-                    <span class="text-sm">{{ $ticket->user->studentOrganization->org_name ?? 'N/A' }}</span>
+                    @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
+                    <span class="text-sm {{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                        {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'N/A' }}
+                    </span>
                 @endscope
 
                 @scope('cell_status', $ticket)

@@ -6,6 +6,7 @@ use App\Models\Office;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -17,12 +18,20 @@ class Index extends Component
     #[Layout('components.layouts.superadmin')]
 
     // Office Settings
+    #[Url]
+    public $activeTab = 'organizations';
+
     public $defaultOfficeId = '';
 
     public $crossOfficeApprovals = false;
 
     // Cache duration
     protected $cacheDuration = 10;
+
+    public function mount()
+    {
+        // #[Url] attribute on $activeTab handles query parameter binding automatically
+    }
 
     public function render()
     {
@@ -75,6 +84,7 @@ class Index extends Component
         Cache::forget('organizations');
         Cache::forget('courses');
         Cache::forget('offices');
+        Cache::forget('venues');
         Cache::forget('system_settings');
 
         $this->dispatch('refresh-cache');

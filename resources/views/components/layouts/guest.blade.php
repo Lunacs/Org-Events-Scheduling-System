@@ -68,7 +68,7 @@
             <!-- Login Form Container -->
             <div class="w-full max-w-lg shrink-0">
                 <div
-                    class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none p-6 sm:p-8 border border-gray-100 dark:border-gray-800">
+                    class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none max-sm:p-0 p-6 sm:p-8 border border-gray-100 dark:border-gray-800">
                     {{ $slot }}
                 </div>
             </div>

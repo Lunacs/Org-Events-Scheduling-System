@@ -69,8 +69,11 @@ class OrganizationManager extends Component
 
     public function render()
     {
+        $organizations = $this->getOrganizations();
+
         return view('livewire.superadmin.system-settings.organization-manager', [
-            'organizations' => $this->getOrganizations(),
+            'academicOrgs' => $organizations->filter(fn($org) => $org->course_id !== null)->values(),
+            'nonAcademicOrgs' => $organizations->filter(fn($org) => $org->course_id === null)->values(),
             'allCourses' => $this->getCourses(),
         ]);
     }
@@ -78,7 +81,7 @@ class OrganizationManager extends Component
     protected function getOrganizations()
     {
         return Cache::remember('organizations', $this->cacheDuration, function () {
-            return Student_Organization::with('course')->orderBy('org_name', 'desc')->get();
+            return Student_Organization::with('course')->orderBy('org_name', 'asc')->get();
         });
     }
 

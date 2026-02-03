@@ -3,6 +3,8 @@
 namespace App\Livewire\Superadmin;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -11,12 +13,18 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+#[Lazy]
 class Notifications extends Component
 {
     use Toast, WithPagination;
 
     #[Title('Notifications - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
+
+    public function placeholder()
+    {
+        return view('livewire.superadmin.placeholders.notifications');
+    }
 
     #[Url(except: '')]
     public $search = '';
@@ -123,70 +131,90 @@ class Notifications extends Component
 
     public function markAsRead($notificationId)
     {
-        $user = auth()->user();
-        $notification = $user->notifications()->find($notificationId);
+        try {
+            $user = auth()->user();
+            $notification = $user->notifications()->find($notificationId);
 
-        if ($notification) {
-            $notification->markAsRead();
-            // Clear cache to refresh counts
-            Cache::forget("superadmin_notifications_counts_{$user->user_id}");
-            $this->loadCounts();
+            if ($notification) {
+                $notification->markAsRead();
+                // Clear cache to refresh counts
+                Cache::forget("superadmin_notifications_counts_{$user->user_id}");
+                $this->loadCounts();
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to mark notification as read: ' . $e->getMessage());
+            $this->error('Failed to mark notification as read.', position: 'toast-top');
         }
     }
 
     public function markAllAsRead()
     {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
 
-        // Only mark system-level notifications as read
-        $user->notifications()
-            ->whereRaw('JSON_EXTRACT(data, "$.type") NOT LIKE ?', ['ticket_%'])
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            // Only mark system-level notifications as read
+            $user->notifications()
+                ->whereRaw('JSON_EXTRACT(data, "$.type") NOT LIKE ?', ['ticket_%'])
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
 
-        // Clear cache to refresh counts
-        Cache::forget("superadmin_notifications_counts_{$user->user_id}");
-        $this->loadCounts();
+            // Clear cache to refresh counts
+            Cache::forget("superadmin_notifications_counts_{$user->user_id}");
+            $this->loadCounts();
 
-        $this->success('All notifications marked as read.', position: 'toast-top');
+            $this->success('All notifications marked as read.', position: 'toast-top');
+        } catch (\Exception $e) {
+            Log::error('Failed to mark all notifications as read: ' . $e->getMessage());
+            $this->error('Failed to mark all notifications as read.', position: 'toast-top');
+        }
     }
 
     public function deleteNotification($notificationId)
     {
-        $user = auth()->user();
-        $notification = $user->notifications()->find($notificationId);
+        try {
+            $user = auth()->user();
+            $notification = $user->notifications()->find($notificationId);
 
-        if ($notification) {
-            $notification->delete();
+            if ($notification) {
+                $notification->delete();
+
+                // Clear cache to refresh counts
+                Cache::forget("superadmin_notifications_counts_{$user->user_id}");
+                $this->loadCounts();
+                $this->resetPage();
+
+                $this->success('Notification deleted.', position: 'toast-top');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to delete notification: ' . $e->getMessage());
+            $this->error('Failed to delete notification.', position: 'toast-top');
+        }
+    }
+
+    public function clearAllRead()
+    {
+        try {
+            $user = auth()->user();
+
+            // Only delete read system-level notifications
+            $deletedCount = $user->notifications()
+                ->whereRaw('JSON_EXTRACT(data, "$.type") NOT LIKE ?', ['ticket_%'])
+                ->whereNotNull('read_at')
+                ->delete();
 
             // Clear cache to refresh counts
             Cache::forget("superadmin_notifications_counts_{$user->user_id}");
             $this->loadCounts();
             $this->resetPage();
 
-            $this->success('Notification deleted.', position: 'toast-top');
-        }
-    }
-
-    public function clearAllRead()
-    {
-        $user = auth()->user();
-
-        // Only delete read system-level notifications
-        $deletedCount = $user->notifications()
-            ->whereRaw('JSON_EXTRACT(data, "$.type") NOT LIKE ?', ['ticket_%'])
-            ->whereNotNull('read_at')
-            ->delete();
-
-        // Clear cache to refresh counts
-        Cache::forget("superadmin_notifications_counts_{$user->user_id}");
-        $this->loadCounts();
-        $this->resetPage();
-
-        if ($deletedCount > 0) {
-            $this->success("{$deletedCount} read notification(s) cleared.", position: 'toast-top');
-        } else {
-            $this->info('No read notifications to clear.', position: 'toast-top');
+            if ($deletedCount > 0) {
+                $this->success("{$deletedCount} read notification(s) cleared.", position: 'toast-top');
+            } else {
+                $this->info('No read notifications to clear.', position: 'toast-top');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to clear read notifications: ' . $e->getMessage());
+            $this->error('Failed to clear read notifications.', position: 'toast-top');
         }
     }
 

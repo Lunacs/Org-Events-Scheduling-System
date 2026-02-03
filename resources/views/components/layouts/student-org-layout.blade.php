@@ -35,6 +35,8 @@
 <body class="font-sans antialiased scroll-smooth">
     <div class="min-h-screen">
 
+        {{-- Announcements Banner --}}
+        <x-announcement-banner />
         {{-- MAIN --}}
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
@@ -46,7 +48,7 @@
                         <div class="flex items-center">
                             <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
                                 fetchpriority="high">
-                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Student Org</h2>
+                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
                         </div>
                     </div>
 
@@ -73,6 +75,9 @@
                     @persist('student-navigation')
                         <livewire:layout.navigation />
                     @endpersist
+
+                    {{-- Announcements Banner --}}
+                    {{-- <x-announcement-banner /> --}}
                 </div>
 
                 {{-- Page Content --}}

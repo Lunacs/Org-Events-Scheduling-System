@@ -1,21 +1,74 @@
-<div class="overflow-hidden">
-    {{-- Alert Banner --}}
-    <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
-        <div class="flex items-start gap-3">
-            <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-            <div class="flex-1 min-w-0">
-                <p class="font-semibold text-sm md:text-base text-base-content">Please read carefully before proceeding
-                </p>
-                <p class="text-xs md:text-sm text-base-content/70 mt-0.5">By checking the agreement box, you acknowledge
-                    and accept all terms below</p>
+{{--
+    Terms and Conditions Component
+    CMS-powered with fallback to hardcoded content
+--}}
+
+@php
+    $termsSection = \App\Models\ContentSection::getByKey('terms_conditions');
+@endphp
+
+@if ($termsSection && $termsSection->is_active)
+    {{-- CMS-powered Terms & Conditions --}}
+    <div class="overflow-hidden">
+        {{-- Alert Banner --}}
+        <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
+            <div class="flex items-start gap-3">
+                <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm md:text-base text-base-content">Please read carefully before
+                        proceeding</p>
+                    <p class="text-xs md:text-sm text-base-content/70 mt-0.5">By checking the agreement box, you
+                        acknowledge and accept all terms below</p>
+                </div>
             </div>
+        </div>
+
+        {{-- CMS Content --}}
+        <div
+            class="text-sm md:text-base text-base-content overflow-hidden max-h-[28rem] overflow-y-auto pr-2 custom-scrollbar">
+            <x-content-section key="terms_conditions" :show-title="false" />
         </div>
     </div>
 
-    {{-- Terms List with Better Spacing --}}
-    <div
-        class="text-sm md:text-base text-base-content overflow-hidden max-h-[28rem] overflow-y-auto pr-2 custom-scrollbar">
-        <div class="space-y-3 md:space-y-4">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: oklch(var(--bc) / 0.2);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: oklch(var(--bc) / 0.3);
+        }
+    </style>
+@else
+    {{-- Fallback: Hardcoded Terms & Conditions --}}
+    <div class="overflow-hidden">
+        {{-- Alert Banner --}}
+        <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
+            <div class="flex items-start gap-3">
+                <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm md:text-base text-base-content">Please read carefully before
+                        proceeding
+                    </p>
+                    <p class="text-xs md:text-sm text-base-content/70 mt-0.5">By checking the agreement box, you
+                        acknowledge
+                        and accept all terms below</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Terms List with Better Spacing --}}
+        <div
+            class="text-sm md:text-base text-base-content overflow-hidden max-h-[28rem] overflow-y-auto pr-2 custom-scrollbar">
             {{-- Term 1 --}}
             <div class="flex gap-3 bg-base-200/50 p-3 rounded-lg hover:bg-base-200 transition-colors">
                 <div
@@ -147,23 +200,24 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: oklch(var(--bc) / 0.2);
-        border-radius: 3px;
-    }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: oklch(var(--bc) / 0.2);
+            border-radius: 3px;
+        }
 
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: oklch(var(--bc) / 0.3);
-    }
-</style>
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: oklch(var(--bc) / 0.3);
+        }
+    </style>
+@endif

@@ -31,7 +31,7 @@ trait WithProfilePhoto
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:10240', // 10MB max
+                'max:5120', // 5MB max
             ],
         ];
     }
@@ -44,7 +44,7 @@ trait WithProfilePhoto
         return [
             'photo.image' => 'The file must be an image.',
             'photo.mimes' => 'The image must be a JPG, PNG, or WebP file.',
-            'photo.max' => 'The image must not exceed 10MB.',
+            'photo.max' => 'The image must not exceed 5MB.',
         ];
     }
 
