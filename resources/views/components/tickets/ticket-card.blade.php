@@ -1,5 +1,9 @@
 @props(['ticket', 'role' => 'osa'])
 
+@php
+    $orgDeleted = $ticket->user?->studentOrganization?->trashed();
+@endphp
+
 <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
     wire:key="ticket-review-{{ $ticket->ticket_id }}" x-data="{ isHovered: false }" @mouseenter="isHovered = true"
     @mouseleave="isHovered = false">
@@ -9,7 +13,12 @@
             <div class="flex-1 min-h-18">
                 <h3 class="font-bold text-lg text-base-content line-clamp-2">{{ $ticket->title }}</h3>
                 <p class="text-sm text-base-content/70 mt-1">
-                    {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</p>
+                    @if ($orgDeleted)
+                        <span class="italic">Deleted Organization</span>
+                    @else
+                        {{ $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
+                    @endif
+                </p>
             </div>
             @php
                 $statusClasses = [

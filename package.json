@@ -17,6 +17,7 @@
         "laravel-vite-plugin": "^2.0.0",
         "postcss": "^8.4.31",
         "tailwindcss": "^4.1.13",
+        "trix": "^2.0.10",
         "vite": "^7.0.4"
     },
     "dependencies": {
@@ -27,6 +28,7 @@
         "@fullcalendar/interaction": "^6.1.19",
         "@fullcalendar/list": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
-        "chart.js": "^4.5.1"
+        "chart.js": "^4.5.1",
+        "sortablejs": "^1.15.6"
     }
 }

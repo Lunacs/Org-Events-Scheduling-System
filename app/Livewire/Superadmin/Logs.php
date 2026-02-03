@@ -9,16 +9,23 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Cache;
 use Mary\Traits\Toast;
 
+#[Lazy]
 class Logs extends Component
 {
     use WithPagination, Toast;
 
     #[Title('Superadmin - Transaction Logs')]
     #[Layout('components.layouts.superadmin')]
+
+    public function placeholder()
+    {
+        return view('livewire.superadmin.placeholders.logs');
+    }
 
     // Search and filter properties with URL state
     #[Url(except: '')]

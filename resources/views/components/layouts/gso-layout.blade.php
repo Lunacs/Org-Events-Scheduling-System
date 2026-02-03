@@ -92,6 +92,9 @@
                     @persist('gso-navigation')
                         <livewire:layout.navigation />
                     @endpersist
+
+                    {{-- Announcements Banner --}}
+                    <x-announcement-banner />
                 </div>
 
                 {{-- Page Content --}}

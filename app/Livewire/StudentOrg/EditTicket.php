@@ -147,7 +147,6 @@ class EditTicket extends Component
             }
 
             $this->populateFormFields();
-
         } catch (Exception $e) {
             Log::error('Failed to load ticket for editing', [
                 'ticket_id' => $ticketId,
@@ -214,6 +213,14 @@ class EditTicket extends Component
 
     public function getRequiredDocuments()
     {
+        // Try to get from database first
+        $eventType = Event_Type::find($this->eventType);
+        if ($eventType && $eventType->documentary_requirements) {
+            // Return as HTML string for rich text display
+            return $eventType->documentary_requirements;
+        }
+
+        // Fallback to config
         return config("event_requirements.documents.{$this->eventType}", [
             'Pick an event type to see needed attachments.'
         ]);
@@ -427,7 +434,6 @@ class EditTicket extends Component
             // Close drawer and refresh parent
             $this->dispatch('close-edit-drawer');
             $this->dispatch('ticket-updated')->to(MyTicket::class);
-
         } catch (Exception $e) {
             DB::rollBack();
 

@@ -1,81 +1,177 @@
 <div>
-    <div class="p-6 space-y-6">
+    <div class="p-6 space-y-6" wire:loading.class="opacity-50 pointer-events-none"
+        wire:target="refreshData, dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
+
         {{-- Header --}}
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold font-heading">Reports & Analytics</h1>
+                <h1 class="text-2xl font-bold font-heading text-base-content">Reports & Analytics</h1>
                 <p class="text-sm text-base-content/60 mt-1">Generate and export system reports</p>
             </div>
             <div class="flex gap-2">
-                <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click="refreshData">
-                    Refresh
-                </x-mary-button>
-                <x-mary-button icon="o-arrow-down-tray" class="btn-primary" x-on:click="$refs.exportMenu.showModal()">
+                <button class="btn btn-outline gap-2" wire:click="refreshData">
+                    <x-mary-icon name="o-arrow-path" class="w-4 h-4" wire:loading.class="animate-spin"
+                        wire:target="refreshData" />
+                    <span wire:loading.remove wire:target="refreshData">Refresh</span>
+                    <span wire:loading wire:target="refreshData">Loading...</span>
+                </button>
+
+                {{-- Filter Toggle Button --}}
+                <button class="btn btn-outline gap-2 border-base-300" wire:click="$toggle('showFilterDrawer')">
+                    <x-mary-icon name="o-adjustments-horizontal" class="w-4 h-4" />
+                    Filter
+                    @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
+                        <span
+                            class="badge badge-primary badge-sm">{{ count($selectedOffices) + count($selectedEventTypes) }}</span>
+                    @endif
+                </button>
+
+                <button class="btn btn-primary gap-2" onclick="document.getElementById('exportModal').showModal()">
+                    <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
                     Export Report
-                </x-mary-button>
+                </button>
             </div>
         </div>
 
-        {{-- Filters --}}
-        <x-mary-card title="Filters">
-            {{-- Active Filters Display --}}
-            @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
-                <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-base-300">
-                    @foreach ($selectedOffices as $orgId)
-                        @php
-                            $org = $offices->firstWhere('org_id', $orgId);
-                        @endphp
-                        @if ($org)
-                            <div class="badge badge-primary gap-2">
-                                {{ $org->org_name }}
-                                <button
-                                    wire:click="$set('selectedOffices', {{ json_encode(array_values(array_diff($selectedOffices, [$orgId]))) }})"
-                                    class="btn btn-ghost btn-xs btn-circle">
-                                    <x-mary-icon name="o-x-mark" class="w-3 h-3" />
-                                </button>
-                            </div>
-                        @endif
-                    @endforeach
-
-                    @foreach ($selectedEventTypes as $typeId)
-                        @php
-                            $type = $eventTypes->firstWhere('event_type_id', $typeId);
-                        @endphp
-                        @if ($type)
-                            <div class="badge badge-secondary gap-2">
-                                {{ $type->type_name }}
-                                <button
-                                    wire:click="$set('selectedEventTypes', {{ json_encode(array_values(array_diff($selectedEventTypes, [$typeId]))) }})"
-                                    class="btn btn-ghost btn-xs btn-circle">
-                                    <x-mary-icon name="o-x-mark" class="w-3 h-3" />
-                                </button>
-                            </div>
-                        @endif
-                    @endforeach
-
-                    <button wire:click="clearFilters" class="badge badge-ghost gap-2 hover:badge-error">
-                        Clear all
-                        <x-mary-icon name="o-x-mark" class="w-3 h-3" />
-                    </button>
+        {{-- Filter Drawer (Right Side) --}}
+        <x-mary-drawer wire:model="showFilterDrawer" title="Filters" subtitle="Refine your report data" separator
+            with-close-button class="w-11/12 lg:w-1/3" right>
+            <div class="space-y-6">
+                {{-- Date Range Section --}}
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-base font-medium">Date range</span>
+                        <button class="text-teal-600 font-medium text-sm hover:underline"
+                            wire:click="resetDateRange">Reset</button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm text-base-content/60 mb-1">From:</label>
+                            <input type="date" wire:model.live="dateFrom"
+                                class="input input-bordered w-full bg-base-100" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm text-base-content/60 mb-1">To:</label>
+                            <input type="date" wire:model.live="dateTo"
+                                class="input input-bordered w-full bg-base-100" />
+                        </div>
+                    </div>
                 </div>
-            @endif
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <x-mary-input label="From Date" wire:model.live="dateFrom" type="date" />
+                <div class="divider my-2"></div>
 
-                <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
+                {{-- Organizations Section --}}
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-base font-medium">Organizations</span>
+                        <button class="text-teal-600 font-medium text-sm hover:underline"
+                            wire:click="resetOffices">Reset</button>
+                    </div>
+                    <div class="max-h-48 overflow-y-auto space-y-1 border border-base-200 rounded-lg p-2">
+                        @foreach ($offices as $office)
+                            <label
+                                class="flex items-center gap-3 px-3 py-2.5 hover:bg-base-200 rounded-md cursor-pointer transition-colors group">
+                                <input type="checkbox" value="{{ $office->org_id }}" wire:model.live="selectedOffices"
+                                    class="checkbox checkbox-primary checkbox-sm border-base-300" />
+                                <span
+                                    class="text-sm group-hover:text-primary transition-colors">{{ $office->org_name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @if (count($selectedOffices) > 0)
+                        <div class="text-sm text-base-content/60">{{ count($selectedOffices) }} selected</div>
+                    @endif
+                </div>
 
-                {{-- Organizations Dropdown with Checkboxes --}}
-                <x-mary-choices label="Organizations" wire:model.live="selectedOffices" :options="$offices"
-                    option-value="org_id" option-label="org_name" searchable placeholder="Select organizations..."
-                    height="max-h-60" icon="o-building-office" search-function />
+                <div class="divider my-2"></div>
 
-                {{-- Event Types Dropdown with Checkboxes --}}
-                <x-mary-choices label="Event Types" wire:model.live="selectedEventTypes" :options="$eventTypes"
-                    option-value="event_type_id" option-label="type_name" searchable placeholder="Select event types..."
-                    height="max-h-60" icon="o-calendar" search-function />
+                {{-- Event Types Section --}}
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-base font-medium">Event types</span>
+                        <button class="text-teal-600 font-medium text-sm hover:underline"
+                            wire:click="resetEventTypes">Reset</button>
+                    </div>
+                    <div class="max-h-48 overflow-y-auto space-y-1 border border-base-200 rounded-lg p-2">
+                        @foreach ($eventTypes as $type)
+                            <label
+                                class="flex items-center gap-3 px-3 py-2.5 hover:bg-base-200 rounded-md cursor-pointer transition-colors group">
+                                <input type="checkbox" value="{{ $type->event_type_id }}"
+                                    wire:model.live="selectedEventTypes"
+                                    class="checkbox checkbox-primary checkbox-sm border-base-300" />
+                                <span
+                                    class="text-sm group-hover:text-primary transition-colors">{{ $type->type_name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @if (count($selectedEventTypes) > 0)
+                        <div class="text-sm text-base-content/60">{{ count($selectedEventTypes) }} selected</div>
+                    @endif
+                </div>
             </div>
-        </x-mary-card>
+
+            <x-slot:actions>
+                <x-mary-button label="Reset all" wire:click="clearFilters" class="btn-ghost" />
+                <x-mary-button label="Apply" @click="$wire.showFilterDrawer = false" class="btn-primary"
+                    icon="o-check" />
+            </x-slot:actions>
+        </x-mary-drawer>
+
+        {{-- Active Filters Display Bar --}}
+        @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0 || $searchTerm)
+            <div
+                class="flex flex-wrap items-center gap-3 p-4 bg-base-100 rounded-xl border border-base-200 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                <span class="text-sm text-base-content/50 font-medium flex items-center gap-2">
+                    <x-mary-icon name="o-funnel" class="w-4 h-4" />
+                    Active Filters:
+                </span>
+
+                @if ($searchTerm)
+                    <div class="badge badge-neutral gap-2 py-3.5 px-4 font-medium text-xs">
+                        Search: "{{ $searchTerm }}"
+                        <button wire:click="resetSearch"
+                            class="btn btn-ghost btn-xs btn-circle hover:bg-neutral-content/20 transition-colors">
+                            <x-mary-icon name="o-x-mark" class="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                @endif
+
+                @foreach ($selectedOffices as $orgId)
+                    @php $org = $offices->firstWhere('org_id', $orgId); @endphp
+                    @if ($org)
+                        <div class="badge badge-primary gap-2 py-3.5 px-4 font-medium text-xs">
+                            <x-mary-icon name="o-building-office" class="w-3.5 h-3.5" />
+                            {{ $org->org_name }}
+                            <button
+                                wire:click="$set('selectedOffices', {{ json_encode(array_values(array_diff($selectedOffices, [$orgId]))) }})"
+                                class="btn btn-ghost btn-xs btn-circle hover:bg-primary-focus transition-colors">
+                                <x-mary-icon name="o-x-mark" class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    @endif
+                @endforeach
+
+                @foreach ($selectedEventTypes as $typeId)
+                    @php $type = $eventTypes->firstWhere('event_type_id', $typeId); @endphp
+                    @if ($type)
+                        <div class="badge badge-secondary gap-2 py-3.5 px-4 font-medium text-xs">
+                            <x-mary-icon name="o-calendar" class="w-3.5 h-3.5" />
+                            {{ $type->type_name }}
+                            <button
+                                wire:click="$set('selectedEventTypes', {{ json_encode(array_values(array_diff($selectedEventTypes, [$typeId]))) }})"
+                                class="btn btn-ghost btn-xs btn-circle hover:bg-secondary-focus transition-colors">
+                                <x-mary-icon name="o-x-mark" class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    @endif
+                @endforeach
+
+                <button wire:click="clearFilters"
+                    class="btn btn-ghost btn-xs normal-case text-error hover:bg-error/10 ml-auto">
+                    Clear all
+                </button>
+            </div>
+        @endif
 
         {{-- Overview Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -84,10 +180,12 @@
                     <div class="stat-figure text-primary">
                         <x-mary-icon name="o-calendar" class="w-8 h-8" />
                     </div>
-                    <div class="stat-title text-primary-content opacity-90">Total Events</div>
-                    <div class="stat-value text-primary-content">{{ $chartData['overview']['total_events'] ?? 0 }}
+                    <div class="stat-title text-primary-content opacity-90 dark:text-base-content">Total Events</div>
+                    <div class="stat-value text-primary-content dark:text-white">
+                        {{ $chartData['overview']['total_events'] ?? 0 }}
                     </div>
-                    <div class="stat-desc text-primary-content opacity-50">In selected period</div>
+                    <div class="stat-desc text-primary-content opacity-50 dark:text-base-content">In selected period
+                    </div>
                 </div>
             </div>
 
@@ -96,10 +194,13 @@
                     <div class="stat-figure text-success">
                         <x-mary-icon name="o-check-circle" class="w-8 h-8" />
                     </div>
-                    <div class="stat-title text-success-content opacity-90">Approved Events</div>
-                    <div class="stat-value text-success-content">{{ $chartData['overview']['approved_events'] ?? 0 }}
+                    <div class="stat-title text-success-content opacity-90 dark:text-base-content">Approved Events
                     </div>
-                    <div class="stat-desc text-success-content opacity-50">Successfully approved</div>
+                    <div class="stat-value text-success-content dark:text-white">
+                        {{ $chartData['overview']['approved_events'] ?? 0 }}
+                    </div>
+                    <div class="stat-desc text-success-content opacity-50 dark:text-base-content">Successfully approved
+                    </div>
                 </div>
             </div>
 
@@ -108,9 +209,10 @@
                     <div class="stat-figure text-info">
                         <x-mary-icon name="o-ticket" class="w-8 h-8" />
                     </div>
-                    <div class="stat-title text-info-content opacity-90">Total Tickets</div>
-                    <div class="stat-value text-info-content">{{ $chartData['overview']['total_tickets'] ?? 0 }}</div>
-                    <div class="stat-desc text-info-content opacity-50">All submissions</div>
+                    <div class="stat-title text-info-content opacity-90 dark:text-base-content">Total Tickets</div>
+                    <div class="stat-value text-info-content dark:text-white">
+                        {{ $chartData['overview']['total_tickets'] ?? 0 }}</div>
+                    <div class="stat-desc text-info-content opacity-50 dark:text-base-content">All submissions</div>
                 </div>
             </div>
 
@@ -119,9 +221,11 @@
                     <div class="stat-figure text-accent">
                         <x-mary-icon name="o-user-group" class="w-8 h-8" />
                     </div>
-                    <div class="stat-title text-accent-content opacity-90">Active Organizations</div>
-                    <div class="stat-value text-accent-content">{{ $chartData['overview']['active_orgs'] ?? 0 }}</div>
-                    <div class="stat-desc text-accent-content opacity-50">With events</div>
+                    <div class="stat-title text-accent-content opacity-90 dark:text-base-content">Active Organizations
+                    </div>
+                    <div class="stat-value text-accent-content dark:text-white">
+                        {{ $chartData['overview']['active_orgs'] ?? 0 }}</div>
+                    <div class="stat-desc text-accent-content opacity-50 dark:text-base-content">With events</div>
                 </div>
             </div>
         </div>
@@ -130,197 +234,92 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Events by Month Chart --}}
             <x-mary-card title="Events by Month" class="shadow-lg">
-                <div class="h-64 flex items-center justify-center">
-                    <canvas id="eventsByMonthChart" width="400" height="200"></canvas>
-                </div>
+                @if (!empty($eventsByMonthChart))
+                    <x-mary-chart wire:model="eventsByMonthChart" class="h-80" />
+                @else
+                    <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <span>No data available</span>
+                    </div>
+                @endif
             </x-mary-card>
 
             {{-- Events by Type Chart --}}
             <x-mary-card title="Events by Type" class="shadow-lg">
-                <div class="h-64 flex items-center justify-center">
-                    <canvas id="eventsByTypeChart" width="400" height="200"></canvas>
-                </div>
+                @if (!empty($eventsByTypeChart))
+                    <x-mary-chart wire:model="eventsByTypeChart" class="h-80" />
+                @else
+                    <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <span>No data available</span>
+                    </div>
+                @endif
             </x-mary-card>
 
             {{-- Events by Office Chart --}}
             <x-mary-card title="Events by Organization" class="shadow-lg">
-                <div class="h-64 flex items-center justify-center">
-                    <canvas id="eventsByOfficeChart" width="400" height="200"></canvas>
-                </div>
+                @if (!empty($eventsByOfficeChart))
+                    <x-mary-chart wire:model="eventsByOfficeChart" class="h-80" />
+                @else
+                    <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <span>No data available</span>
+                    </div>
+                @endif
             </x-mary-card>
 
             {{-- Ticket Status Distribution --}}
             <x-mary-card title="Ticket Status Distribution" class="shadow-lg">
-                <div class="h-64 flex items-center justify-center">
-                    <canvas id="ticketStatusChart" width="400" height="200"></canvas>
-                </div>
+                @if (!empty($ticketStatusChart))
+                    <x-mary-chart wire:model="ticketStatusChart" class="h-80" />
+                @else
+                    <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <span>No data available</span>
+                    </div>
+                @endif
             </x-mary-card>
         </div>
 
         {{-- Users by Role Chart --}}
         <x-mary-card title="Users by Role" class="shadow-lg">
-            <div class="h-64 flex items-center justify-center">
-                <canvas id="usersByRoleChart" width="800" height="200"></canvas>
-            </div>
+            @if (!empty($usersByRoleChart))
+                <x-mary-chart wire:model="usersByRoleChart" class="h-72" />
+            @else
+                <div class="flex items-center justify-center h-72 text-base-content/50">
+                    <span>No data available</span>
+                </div>
+            @endif
         </x-mary-card>
     </div>
 
     {{-- Export Modal --}}
-    <x-mary-modal id="exportMenu" title="Export Report" x-ref="exportMenu">
-        <div class="space-y-4">
-            <p class="text-sm text-base-content/70">
+    <dialog id="exportModal" class="modal">
+        <div class="modal-box max-w-sm">
+            <h3 class="font-bold text-lg mb-4">Export Report</h3>
+            <p class="text-sm text-base-content/70 mb-6">
                 Choose a format to export the current report data.
             </p>
-            <div class="flex flex-col gap-2">
-                <x-mary-button icon="o-document-text" class="btn-outline btn-block justify-start"
-                    wire:click="exportReport('csv')" x-on:click="$refs.exportMenu.close()">
-                    Export as CSV
-                </x-mary-button>
-                <x-mary-button icon="o-document" class="btn-outline btn-block justify-start"
-                    wire:click="exportReport('pdf')" x-on:click="$refs.exportMenu.close()">
-                    Export as PDF
-                </x-mary-button>
+            <div class="flex flex-col gap-3">
+                <button class="btn btn-outline gap-3 justify-start h-14" wire:click="exportReport('csv')">
+                    <x-mary-icon name="o-document-text" class="w-5 h-5 text-primary" />
+                    <div class="text-left">
+                        <div class="font-bold">Export as CSV</div>
+                        <div class="text-xs opacity-50 text-base-content">Spreadsheet compatible format</div>
+                    </div>
+                </button>
+                <button class="btn btn-outline gap-3 justify-start h-14" wire:click="exportReport('pdf')">
+                    <x-mary-icon name="o-document" class="w-5 h-5 text-secondary" />
+                    <div class="text-left">
+                        <div class="font-bold">Export as PDF</div>
+                        <div class="text-xs opacity-50 text-base-content">Print-ready document</div>
+                    </div>
+                </button>
+            </div>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-ghost">Cancel</button>
+                </form>
             </div>
         </div>
-    </x-mary-modal>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
 </div>
-
-@push('scripts')
-    <script>
-        document.addEventListener('livewire:navigated', () => {
-            initializeCharts();
-        });
-
-        function initializeCharts() {
-            // Check if Chart.js is available
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded');
-                return;
-            }
-
-            const chartData = @json($chartData);
-
-            // Events by Month Chart
-            if (document.getElementById('eventsByMonthChart')) {
-                new Chart(document.getElementById('eventsByMonthChart'), {
-                    type: 'line',
-                    data: {
-                        labels: chartData.eventsByMonth.labels,
-                        datasets: [{
-                            label: 'Events',
-                            data: chartData.eventsByMonth.data,
-                            borderColor: 'rgb(79, 209, 197)',
-                            backgroundColor: 'rgba(79, 209, 197, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Events by Type Chart
-            if (document.getElementById('eventsByTypeChart')) {
-                new Chart(document.getElementById('eventsByTypeChart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: chartData.eventsByType.labels,
-                        datasets: [{
-                            data: chartData.eventsByType.data,
-                            backgroundColor: [
-                                'rgb(79, 209, 197)',
-                                'rgb(99, 102, 241)',
-                                'rgb(251, 191, 36)',
-                                'rgb(248, 113, 113)',
-                                'rgb(168, 85, 247)',
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            }
-
-            // Events by Office Chart
-            if (document.getElementById('eventsByOfficeChart')) {
-                new Chart(document.getElementById('eventsByOfficeChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.eventsByOffice.labels,
-                        datasets: [{
-                            label: 'Events',
-                            data: chartData.eventsByOffice.data,
-                            backgroundColor: 'rgb(79, 209, 197)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Ticket Status Chart
-            if (document.getElementById('ticketStatusChart')) {
-                new Chart(document.getElementById('ticketStatusChart'), {
-                    type: 'pie',
-                    data: {
-                        labels: chartData.ticketStatusDistribution.labels,
-                        datasets: [{
-                            data: chartData.ticketStatusDistribution.data,
-                            backgroundColor: [
-                                'rgb(34, 197, 94)',
-                                'rgb(59, 130, 246)',
-                                'rgb(251, 191, 36)',
-                                'rgb(239, 68, 68)',
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            }
-
-            // Users by Role Chart
-            if (document.getElementById('usersByRoleChart')) {
-                new Chart(document.getElementById('usersByRoleChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.usersByRole.labels,
-                        datasets: [{
-                            label: 'Users',
-                            data: chartData.usersByRole.data,
-                            backgroundColor: 'rgb(99, 102, 241)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    </script>
-@endpush

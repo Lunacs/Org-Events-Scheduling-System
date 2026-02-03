@@ -4,6 +4,7 @@ namespace App\Livewire\Superadmin;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -64,81 +65,95 @@ class Profile extends Component
 
     public function updateProfile()
     {
-        $this->validate([
-            'name' => [
-                'required',
-                'string',
-                'min:2',
-                'max:255',
-                'regex:/^[a-zA-Z\s\-\.]+$/',
-            ],
-            'email' => [
-                'required',
-                'email:rfc,dns',
-                'max:255',
-                'unique:users,email,' . Auth::id() . ',user_id',
-            ],
-            'phone' => [
-                'nullable',
-                'string',
-                'regex:/^(\+63|0)?[9]\d{9}$/',
-            ],
-        ], [
-            'name.required' => 'Full name is required.',
-            'name.min' => 'Full name must be at least 2 characters.',
-            'name.max' => 'Full name must not exceed 255 characters.',
-            'name.regex' => 'Full name may only contain letters, spaces, hyphens, and periods.',
-            'email.required' => 'Email address is required.',
-            'email.email' => 'Please provide a valid email address.',
-            'email.unique' => 'This email address is already in use.',
-            'phone.regex' => 'Please provide a valid Philippine mobile number (e.g., 09123456789 or +639123456789).',
-        ]);
+        try {
+            $this->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'min:2',
+                    'max:255',
+                    'regex:/^[a-zA-Z\s\-\.]+$/',
+                ],
+                'email' => [
+                    'required',
+                    'email:rfc,dns',
+                    'max:255',
+                    'unique:users,email,' . Auth::id() . ',user_id',
+                ],
+                'phone' => [
+                    'nullable',
+                    'string',
+                    'regex:/^(\+63|0)?[9]\d{9}$/',
+                ],
+            ], [
+                'name.required' => 'Full name is required.',
+                'name.min' => 'Full name must be at least 2 characters.',
+                'name.max' => 'Full name must not exceed 255 characters.',
+                'name.regex' => 'Full name may only contain letters, spaces, hyphens, and periods.',
+                'email.required' => 'Email address is required.',
+                'email.email' => 'Please provide a valid email address.',
+                'email.unique' => 'This email address is already in use.',
+                'phone.regex' => 'Please provide a valid Philippine mobile number (e.g., 09123456789 or +639123456789).',
+            ]);
 
-        $user = Auth::user();
-        $user->update([
-            'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-        ]);
+            $user = Auth::user();
+            $user->update([
+                'name' => $this->name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+            ]);
 
-        $this->success('Profile updated successfully!', position: 'toast-top');
-        $this->dispatch('avatar-updated');
+            $this->success('Profile updated successfully!', position: 'toast-top');
+            $this->dispatch('avatar-updated');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Failed to update profile: ' . $e->getMessage());
+            $this->error('Failed to update profile. Please try again.', position: 'toast-top');
+        }
     }
 
     public function updatePassword()
     {
-        $this->validate([
-            'current_password' => [
-                'required',
-                'current_password',
-            ],
-            'new_password' => [
-                'required',
-                'confirmed',
-                'different:current_password',
-                Password::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(),
-            ],
-        ], [
-            'current_password.required' => 'Current password is required.',
-            'current_password.current_password' => 'The current password is incorrect.',
-            'new_password.required' => 'New password is required.',
-            'new_password.confirmed' => 'Password confirmation does not match.',
-            'new_password.different' => 'New password must be different from current password.',
-        ]);
+        try {
+            $this->validate([
+                'current_password' => [
+                    'required',
+                    'current_password',
+                ],
+                'new_password' => [
+                    'required',
+                    'confirmed',
+                    'different:current_password',
+                    Password::min(8)
+                        ->mixedCase()
+                        ->numbers()
+                        ->symbols()
+                        ->uncompromised(),
+                ],
+            ], [
+                'current_password.required' => 'Current password is required.',
+                'current_password.current_password' => 'The current password is incorrect.',
+                'new_password.required' => 'New password is required.',
+                'new_password.confirmed' => 'Password confirmation does not match.',
+                'new_password.different' => 'New password must be different from current password.',
+            ]);
 
-        $user = Auth::user();
-        $user->update([
-            'password' => Hash::make($this->new_password),
-        ]);
+            $user = Auth::user();
+            $user->update([
+                'password' => Hash::make($this->new_password),
+            ]);
 
-        // Reset password fields
-        $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
+            // Reset password fields
+            $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
 
-        $this->success('Password updated successfully!', position: 'toast-top');
+            $this->success('Password updated successfully!', position: 'toast-top');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Failed to update password: ' . $e->getMessage());
+            $this->error('Failed to update password. Please try again.', position: 'toast-top');
+        }
     }
 
     public function updatePreferences()

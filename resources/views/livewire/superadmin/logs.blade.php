@@ -22,42 +22,60 @@
                 <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
             </div>
 
-            <x-mary-table :headers="$headers" :rows="$logs">
-                @scope('cell_when', $log)
-                    <div class="text-sm">
-                        <div class="font-medium">{{ $log->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
-                        <div class="text-gray-500">{{ $log->created_at->setTimezone('Asia/Manila')->format('g:i A') }}</div>
-                    </div>
-                @endscope
+            <div class="relative">
+                <div wire:loading.class="opacity-50 pointer-events-none" class="transition-opacity duration-200">
+                    <x-mary-table :headers="$headers" :rows="$logs">
+                        @scope('cell_when', $log)
+                            <div class="text-sm">
+                                <div class="font-medium">
+                                    {{ $log->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
+                                <div class="text-gray-500">
+                                    {{ $log->created_at->setTimezone('Asia/Manila')->format('g:i A') }}</div>
+                            </div>
+                        @endscope
 
-                @scope('cell_who', $log)
-                    @if ($log->user)
-                        <div class="text-sm">
-                            <div class="font-medium">{{ $log->user->name }}</div>
-                            <div class="text-gray-500">{{ $log->user->email }}</div>
-                        </div>
-                    @else
-                        <span class="text-gray-500">System</span>
-                    @endif
-                @endscope
+                        @scope('cell_who', $log)
+                            @if ($log->user)
+                                <div class="text-sm">
+                                    <div class="font-medium">{{ $log->user->name }}</div>
+                                    <div class="text-gray-500">{{ $log->user->email }}</div>
+                                </div>
+                            @else
+                                <span class="text-gray-500">System</span>
+                            @endif
+                        @endscope
 
-                @scope('cell_action', $log)
-                    <x-mary-badge :value="$log->action" :class="match ($log->action) {
-                        'CREATE' => 'badge-success',
-                        'UPDATE' => 'badge-info',
-                        'DELETE' => 'badge-error',
-                        'APPROVE' => 'badge-success',
-                        'REJECT' => 'badge-warning',
-                        default => 'badge-ghost',
-                    }" />
-                @endscope
+                        @scope('cell_action', $log)
+                            <x-mary-badge :value="$log->action" :class="match ($log->action) {
+                                'CREATE' => 'badge-success',
+                                'UPDATE' => 'badge-info',
+                                'DELETE' => 'badge-error',
+                                'APPROVE' => 'badge-success',
+                                'REJECT' => 'badge-warning',
+                                default => 'badge-ghost',
+                            }" />
+                        @endscope
 
-                @scope('cell_details', $log)
-                    <div class="text-sm max-w-xs" title="{{ $log->details }}">
-                        {{ $log->details ?: 'No details' }}
-                    </div>
-                @endscope
-            </x-mary-table>
+                        @scope('cell_details', $log)
+                            <div class="text-sm max-w-xs" title="{{ $log->details }}">
+                                {{ $log->details ?: 'No details' }}
+                            </div>
+                        @endscope
+
+                        <x-slot:empty>
+                            <div class="text-center py-12">
+                                <div
+                                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
+                                    <x-mary-icon name="o-document-magnifying-glass"
+                                        class="w-8 h-8 text-base-content/30" />
+                                </div>
+                                <h3 class="text-lg font-bold text-base-content/70">No logs found</h3>
+                                <p class="text-sm text-base-content/50">Try adjusting your search or filters.</p>
+                            </div>
+                        </x-slot:empty>
+                    </x-mary-table>
+                </div>
+            </div>
 
             @if ($logs->hasPages())
                 <x-tickets.ticket-pagination :tickets="$logs" label="logs" />

@@ -4,11 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Tonysm\RichTextLaravel\Models\Traits\HasRichText;
 
 class Event_Type extends Model
 {
     /** @use HasFactory<\Database\Factories\EventTypeFactory> */
     use HasFactory;
+    use HasRichText;
+
+    /**
+     * The rich text attributes.
+     */
+    protected $richTextAttributes = [
+        'documentary_requirements',
+    ];
 
     /**
      * The table associated with the model.

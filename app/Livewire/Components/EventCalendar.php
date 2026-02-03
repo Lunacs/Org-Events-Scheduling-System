@@ -265,12 +265,12 @@ class EventCalendar extends Component
             ])
             // Always show only approved event schedules
             ->where('status', 'approved')
-            // Filter by ticket status - empty means show both approved and rescheduled
+            // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
-                if ($this->statusFilter) {
+                if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
-                    // Show both approved and rescheduled when no specific filter
+                    // Show both approved and rescheduled when 'all' or no specific filter
                     $query->whereIn('status', ['approved', 'rescheduled']);
                 }
             })
@@ -336,7 +336,8 @@ class EventCalendar extends Component
                     'start' => $startISO,
                     'end' => $endISO,
                     'allDay' => false,
-                    'backgroundColor' => $this->getEventColor($event), // 50% opacity
+                    'display' => 'block', // Show as solid bar instead of dot
+                    'backgroundColor' => $this->getEventColor($event),
                     'textColor' => '#ffffff',
                     'extendedProps' => [
                         'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
@@ -492,12 +493,12 @@ class EventCalendar extends Component
     {
         // Count unique events that match the current filters
         $query = Event_Schedule::query()
-            // Filter by ticket status - empty means show both approved and rescheduled
+            // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
-                if ($this->statusFilter) {
+                if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
-                    // Show both approved and rescheduled when no specific filter
+                    // Show both approved and rescheduled when 'all' or no specific filter
                     $query->whereIn('status', ['approved', 'rescheduled']);
                 }
             })
@@ -578,13 +579,13 @@ class EventCalendar extends Component
             $hexColor = $this->getEventColor($event);
             $colorName = $this->hexToTailwindColor($hexColor);
 
-            $orgLogo = $event->ticket->user->studentOrganization->logo ?? null;
+            $org = $event->ticket->user->studentOrganization ?? null;
 
             return [
                 'title' => $event->ticket->title ?? 'Untitled Event',
                 'description' => $event->ticket->description ?? null,
-                'organization' => $event->ticket->user->studentOrganization->org_name ?? 'No Organization',
-                'organizationLogo' => $orgLogo ? $orgLogo->logo_url : asset('images/default-org-logo.svg'),
+                'organization' => $org->org_name ?? 'No Organization',
+                'organizationLogo' => $org ? $org->logo_url : asset('images/default-org-logo.svg'),
                 'eventType' => $event->eventType?->type_name ?? 'N/A',
                 'date' => $dateDisplay,
                 'time' => $timeRange,

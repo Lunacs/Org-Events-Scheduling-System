@@ -32,7 +32,9 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
         // SECURITY: Invalidate all previous reset tokens for this email
         // This ensures only the latest link is valid (prevents token backlog attacks)
-        DB::table('password_reset_tokens')->where('email', strtolower($this->email))->delete();
+        DB::table('password_reset_tokens')
+            ->where('email', strtolower($this->email))
+            ->delete();
 
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
@@ -62,10 +64,10 @@ new #[Layout('components.layouts.guest')] class extends Component {
     <x-ui.auth-session-status class="mb-6" :status="session('status')" />
 
     @if (session('error'))
-    <div
-        class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400">
-        {{ session('error') }}
-    </div>
+        <div
+            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400">
+            {{ session('error') }}
+        </div>
     @endif
 
     <form wire:submit="sendPasswordResetLink" class="space-y-6">
@@ -103,7 +105,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
     <div class="mt-8 text-center">
         <a href="{{ route('login') }}"
-            class="inline-flex justify-center items-center border border-gray-600 hover:bg-gray-300 hover:border-gray-400 transition-colors duration-300 ease-in-out rounded-xl w-full py-3 px-6"
+            class="text-gray-600 inline-flex justify-center items-center border border-gray-600 hover:bg-gray-300 hover:border-gray-400 transition-colors duration-300 ease-in-out rounded-xl w-full py-3 px-6"
             wire:navigate>
             <!-- <i class="fas fa-arrow-left mr-2"></i> -->
             Back to Login

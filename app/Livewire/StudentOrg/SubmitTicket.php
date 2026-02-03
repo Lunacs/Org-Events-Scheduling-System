@@ -47,7 +47,9 @@ class SubmitTicket extends Component
 
     public $proponent_contact = '';
 
-    #[Validate('required|numeric|digits:11|regex:/^[0-9\s\-\+\(\)]+$/')]
+    #[Validate('required', message: 'The adviser contact number is required.')]
+    #[Validate('numeric', message: 'The adviser contact number must contain only numbers.')]
+    #[Validate('digits:11', message: 'The adviser contact number must be 11 digits.')]
     public $adviser_contact = '09';
 
     #[Validate('required|boolean')]
@@ -76,16 +78,25 @@ class SubmitTicket extends Component
     public $expectedNonPLVParticipants = 0;
 
     // Step 3: Schedule & Venue
-    #[Validate('required|date|after_or_equal:today')]
+    #[Validate('required', message: 'The event start date is required.')]
+    #[Validate('date', message: 'The event start date must be a valid date.')]
+    #[Validate('after_or_equal:today', message: 'The event start date must be today or later.')]
     public $eventStartDate = '';
 
-    #[Validate('required|date|after_or_equal:eventStartDate')]
+    #[Validate('required', message: 'The event end date is required.')]
+    #[Validate('date', message: 'The event end date must be a valid date.')]
+    #[Validate('after_or_equal:eventStartDate', message: 'The event end date must be on or after the start date.')]
     public $eventEndDate = '';
 
-    #[Validate('required|date_format:H:i')]
+    #[Validate('required', message: 'The event start time is required.')]
+    #[Validate('date_format:H:i', message: 'The event start time must be in HH:MM format.')]
+    #[Validate('after_or_equal:00:01', message: 'Event start time must be at or after 12:01 AM.')]
     public $eventStartTime = '';
 
-    #[Validate('required|date_format:H:i|after:eventStartTime')]
+    #[Validate('required', message: 'The event end time is required.')]
+    #[Validate('date_format:H:i', message: 'The event end time must be in HH:MM format.')]
+    #[Validate('after:eventStartTime', message: 'The end time must be after the start time.')]
+    #[Validate('before_or_equal:21:00', message: 'Event end time must be at or before 9:00 PM.')]
     public $eventEndTime = '';
 
     public $venues = [];
@@ -241,8 +252,8 @@ class SubmitTicket extends Component
             3 => [
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-                'eventStartTime' => ['required', 'date_format:H:i'],
-                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
+                'eventStartTime' => 'required|date_format:H:i|after_or_equal:00:01',
+                'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
                 'preferredVenue' => 'required|integer|exists:venues,venue_id',
                 'preferredVenueOther' => $this->isOthersVenue($this->preferredVenue) ? 'required|string|max:255|min:3' : 'nullable',
                 'alternativeVenue' => 'nullable|integer|exists:venues,venue_id',
@@ -293,20 +304,6 @@ class SubmitTicket extends Component
             return;
         }
 
-        // Real-time validation for adviser_contact
-        if ($property === 'adviser_contact') {
-            try {
-                $this->validateOnly('adviser_contact', [
-                    'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
-                ], [
-                    'adviser_contact.digits' => 'The adviser contact number must be 11 digits.',
-                    'adviser_contact.regex' => 'The adviser contact number must contain only numbers.',
-                ]);
-            } catch (ValidationException $e) {
-                // Validation error handled by Livewire
-            }
-        }
-
         // Exclude certain properties from auto-save
         if (in_array($property, ['newAttachments', 'isProcessing'])) {
             return;
@@ -334,32 +331,35 @@ class SubmitTicket extends Component
                 'expectedNonPLVParticipants.min' => 'The number of non-PLV participants must be at least 0.',
                 'expectedPLVParticipants.max' => 'The number of PLV participants must be less than 100000.',
                 'expectedNonPLVParticipants.max' => 'The number of non-PLV participants must be less than 100000.',
+                'eventStartTime.after_or_equal' => 'Event start time must be at or after 12:01 AM.',
+                'eventEndTime.before_or_equal' => 'Event end time must be at or before 9:00 PM.',
+                'eventEndTime.after' => 'The end time must be after the start time.',
             ]);
         }
 
         // Custom time range validation (runs for step 3 or when validating all steps)
-        if (($this->currentStep === 3 || $this->currentStep === $this->totalSteps) && $this->eventStartTime && $this->eventEndTime) {
-            try {
-                $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
-                $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
-                $minTime = \Carbon\Carbon::createFromFormat('H:i', '00:01');
-                $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
+        // if (($this->currentStep === 3 || $this->currentStep === $this->totalSteps) && $this->eventStartTime && $this->eventEndTime) {
+        //     try {
+        //         $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
+        //         $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
+        //         $minTime = \Carbon\Carbon::createFromFormat('H:i', '00:01');
+        //         $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
 
-                if ($startTime->lt($minTime)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'eventStartTime' => 'Event start time must be at or after 12:01 AM.',
-                    ]);
-                }
+        //         if ($startTime->lt($minTime)) {
+        //             throw \Illuminate\Validation\ValidationException::withMessages([
+        //                 'eventStartTime' => 'Event start time must be at or after 12:01 AM.',
+        //             ]);
+        //         }
 
-                if ($endTime->gt($maxTime)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'eventEndTime' => 'Event end time must be at or before 9:00 PM.',
-                    ]);
-                }
-            } catch (\Carbon\Exceptions\InvalidFormatException $e) {
-                // Invalid time format - let the regular validation handle it
-            }
-        }
+        //         if ($endTime->gt($maxTime)) {
+        //             throw \Illuminate\Validation\ValidationException::withMessages([
+        //                 'eventEndTime' => 'Event end time must be at or before 9:00 PM.',
+        //             ]);
+        //         }
+        //     } catch (\Carbon\Exceptions\InvalidFormatException $e) {
+        //         // Invalid time format - let the regular validation handle it
+        //     }
+        // }
     }
 
     protected function validateAllSteps()
@@ -455,7 +455,7 @@ class SubmitTicket extends Component
         $this->adviser = $currentUserinfo->adviser_name ?? '';
         $this->contactEmail = $currentUser->email ?? '';
         $this->proponentName = $currentUser->name ?? '';
-        $this->organizationCourse = $currentUserinfo->course->course_name ?? '';
+        $this->organizationCourse = $currentUserinfo->course->course_name ?? 'Non Academic Org';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
         $this->proponent_contact = $currentUser->phone ?? '';
         $this->venues = \App\Models\Venue::where('is_active', true)->get();
@@ -787,6 +787,14 @@ class SubmitTicket extends Component
 
     public function getRequiredDocuments()
     {
+        // Try to get from database first
+        $eventType = Event_Type::find($this->eventType);
+        if ($eventType && $eventType->documentary_requirements) {
+            // Return as HTML string for rich text display
+            return $eventType->documentary_requirements;
+        }
+
+        // Fallback to config
         return config("event_requirements.documents.{$this->eventType}", ['Pick an event type to see needed attachments.']);
     }
 

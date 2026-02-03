@@ -51,74 +51,77 @@
             </div>
         </x-mary-card>
 
-        <x-mary-card shadow>
-            <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" :per-page-values="[10, 25, 50]" class="rounded-lg">
-                @scope('cell_role_id', $user)
-                    @php
-                        $roleString = $user->role?->role_name ?? 'unknown';
-                    @endphp
-                    <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
-                        'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
-                        'osa' => 'badge-primary text-base-200 dark:text-white',
-                        'gso' => 'badge-info text-base-200 dark:text-white',
-                        'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
-                        default => 'badge-ghost text-base-200 dark:text-white',
-                    }" />
-                @endscope
+        <x-mary-card shadow class="relative">
+            <div wire:loading.class="opacity-50 pointer-events-none" class="transition-opacity duration-200">
+                <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" :per-page-values="[10, 25, 50]"
+                    class="rounded-lg">
+                    @scope('cell_role_id', $user)
+                        @php
+                            $roleString = $user->role?->role_name ?? 'unknown';
+                        @endphp
+                        <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
+                            'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
+                            'osa' => 'badge-primary text-base-200 dark:text-white',
+                            'gso' => 'badge-info text-base-200 dark:text-white',
+                            'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
+                            default => 'badge-ghost text-base-200 dark:text-white',
+                        }" />
+                    @endscope
 
-                @scope('cell_email_verified_at', $user)
-                    @if ($user->email_verified_at)
-                        <x-mary-badge value="Verified" class="badge-success text-base-200 dark:text-white" />
-                    @else
-                        <x-mary-badge value="Unverified" class="badge-warning text-base-200 dark:text-white" />
-                    @endif
-                @endscope
+                    @scope('cell_email_verified_at', $user)
+                        @if ($user->email_verified_at)
+                            <x-mary-badge value="Verified" class="badge-success text-base-200 dark:text-white" />
+                        @else
+                            <x-mary-badge value="Unverified" class="badge-warning text-base-200 dark:text-white" />
+                        @endif
+                    @endscope
 
-                @scope('cell_organization', $user)
-                    @if ($user->studentOrganization)
-                        <span class="text-sm">{{ $user->studentOrganization->org_name }}</span>
-                    @elseif($user->office)
-                        <span class="text-sm">{{ $user->office->office_name }}</span>
-                    @else
-                        <span class="text-sm text-gray-500">N/A</span>
-                    @endif
-                @endscope
+                    @scope('cell_organization', $user)
+                        @if ($user->studentOrganization)
+                            <span class="text-sm">{{ $user->studentOrganization->org_name }}</span>
+                        @elseif($user->office)
+                            <span class="text-sm">{{ $user->office->office_name }}</span>
+                        @else
+                            <span class="text-sm text-gray-500">N/A</span>
+                        @endif
+                    @endscope
 
-                @scope('cell_actions', $user)
-                    <div class="flex space-x-1">
-                        <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                            @click="openEditUserDrawer({{ $user->user_id }})">
-                            Edit
-                        </x-mary-button>
-                        @if (!$user->isSuperAdmin())
-                            <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
+                    @scope('cell_actions', $user)
+                        <div class="flex space-x-1">
+                            <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
+                                @click="openEditUserDrawer({{ $user->user_id }})">
+                                Edit
                             </x-mary-button>
-                        @endif
-                    </div>
-                @endscope
-
-                <x-slot:empty>
-                    <div class="flex flex-col items-center justify-center py-12 text-center">
-                        <x-mary-icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
-                        <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
-                        <p class="text-base-content/50 max-w-sm mx-auto mt-2">
-                            @if ($this->hasActiveFilters())
-                                We couldn't find any users matching "<span
-                                    class="font-semibold text-base-content/80">{{ $search }}</span>" or your
-                                selected
-                                role.
-                            @else
-                                There are no users registered in the system yet.
+                            @if (!$user->isSuperAdmin())
+                                <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                    wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
+                                </x-mary-button>
                             @endif
-                        </p>
-                        @if ($this->hasActiveFilters())
-                            <x-mary-button label="Clear all filters" icon="o-x-mark" wire:click="clearFilters"
-                                class="btn-ghost btn-sm mt-6 text-accent" wire:transition />
-                        @endif
-                    </div>
-                </x-slot:empty>
-            </x-mary-table>
+                        </div>
+                    @endscope
+
+                    <x-slot:empty>
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <x-mary-icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
+                            <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
+                            <p class="text-base-content/50 max-w-sm mx-auto mt-2">
+                                @if ($this->hasActiveFilters())
+                                    We couldn't find any users matching "<span
+                                        class="font-semibold text-base-content/80">{{ $search }}</span>" or your
+                                    selected
+                                    role.
+                                @else
+                                    There are no users registered in the system yet.
+                                @endif
+                            </p>
+                            @if ($this->hasActiveFilters())
+                                <x-mary-button label="Clear all filters" icon="o-x-mark" wire:click="clearFilters"
+                                    class="btn-ghost btn-sm mt-6 text-accent" wire:transition />
+                            @endif
+                        </div>
+                    </x-slot:empty>
+                </x-mary-table>
+            </div>
 
             {{-- Custom Pagination --}}
             @if ($users->hasPages())

@@ -71,10 +71,12 @@ class Ticket extends Model
 
     /**
      * User who created this ticket
+     * Note: withTrashed() ensures soft-deleted users are still loaded
+     * so tickets remain visible even after the user is deleted
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     /**

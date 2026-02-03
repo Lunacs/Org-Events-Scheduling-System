@@ -80,10 +80,12 @@
             </thead>
             <tbody>
                 @forelse ($data as $ticket)
+                    @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                     <tr>
                         <td>{{ $ticket->ticket_number }}</td>
                         <td>{{ $ticket->title }}</td>
-                        <td>{{ optional($ticket->user->studentOrganization)->org_name ?? 'N/A' }}</td>
+                        <td>{{ $orgDeleted ? 'Deleted Organization' : optional($ticket->user?->studentOrganization)->org_name ?? 'N/A' }}
+                        </td>
                         <td>{{ optional($ticket->eventType)->type_name ?? 'N/A' }}</td>
                         <td>{{ ucfirst($ticket->status) }}</td>
                         <td>{{ optional($ticket->created_at)?->format('Y-m-d H:i') }}</td>

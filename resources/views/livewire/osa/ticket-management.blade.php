@@ -77,9 +77,8 @@
                 <div class="flex gap-2">
                     <x-mary-input wire:model.live="dateFilter" type="date" placeholder="Filter by Date" />
                     @if ($search || $statusFilter || $organizationFilter || $dateFilter)
-                        <x-mary-button wire:click="clearFilters" wire:loading.attr="disabled"
-                            wire:target="clearFilters" class="btn-ghost" icon="o-x-mark"
-                            tooltip="Clear Filters">
+                        <x-mary-button wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters"
+                            class="btn-ghost" icon="o-x-mark" tooltip="Clear Filters">
                             <span wire:loading.remove wire:target="clearFilters">Clear</span>
                             <span wire:loading wire:target="clearFilters">
                                 <span class="loading loading-spinner loading-xs"></span>
@@ -154,9 +153,10 @@
                         </thead>
                         <tbody>
                             @forelse($tickets as $ticket)
+                                @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr class="hover:cursor-pointer hover:bg-base-200 transition-colors duration-200"
                                     wire:key="ticket-{{ $ticket->ticket_id }}"
-                                    title="Ticket: {{ $ticket->title }} | Organization: {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }} | Status: {{ ucfirst(str_replace('_', ' ', $ticket->status)) }} | Click to view details"
+                                    title="Ticket: {{ $ticket->title }} | Organization: {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }} | Status: {{ ucfirst(str_replace('_', ' ', $ticket->status)) }} | Click to view details"
                                     onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
                                     <td>
                                         <span class="font-mono text-sm">#{{ $ticket->ticket_number }}</span>
@@ -171,14 +171,22 @@
                                         <div class="flex items-center gap-2">
                                             <div class="avatar shrink-0">
                                                 <div class="w-8 h-8 rounded-full bg-base-200">
-                                                    <img src="{{ $ticket->user->studentOrganization->logo_url }}"
-                                                        alt="{{ $ticket->user->studentOrganization->org_name }} logo"
-                                                        class="object-cover" />
+                                                    @if (!$orgDeleted && $ticket->user?->studentOrganization)
+                                                        <img src="{{ $ticket->user->studentOrganization->logo_url }}"
+                                                            alt="{{ $ticket->user->studentOrganization->org_name }} logo"
+                                                            class="object-cover" />
+                                                    @else
+                                                        <div class="w-full h-full flex items-center justify-center">
+                                                            <x-mary-icon name="o-building-office"
+                                                                class="w-4 h-4 text-base-content/30" />
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div>
-                                                <div class="font-medium">
-                                                    {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}
+                                                <div
+                                                    class="font-medium {{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                                    {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -246,13 +254,21 @@
                             <div class="flex items-center gap-2 mt-3 text-sm">
                                 <div class="avatar shrink-0">
                                     <div class="w-6 h-6 rounded-full bg-base-200">
-                                        <img src="{{ $ticket->user->studentOrganization->logo_url }}"
-                                            alt="{{ $ticket->user->studentOrganization->org_name }} logo"
-                                            class="object-cover" />
+                                        @php $mobileOrgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
+                                        @if (!$mobileOrgDeleted && $ticket->user?->studentOrganization)
+                                            <img src="{{ $ticket->user->studentOrganization->logo_url }}"
+                                                alt="{{ $ticket->user->studentOrganization->org_name }} logo"
+                                                class="object-cover" />
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <x-mary-icon name="o-building-office"
+                                                    class="w-3 h-3 text-base-content/30" />
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                                 <span
-                                    class="font-medium truncate">{{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</span>
+                                    class="font-medium truncate {{ $mobileOrgDeleted ? 'italic text-base-content/50' : '' }}">{{ $mobileOrgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}</span>
                             </div>
 
                             <div class="text-xs text-base-content/60 mt-3">

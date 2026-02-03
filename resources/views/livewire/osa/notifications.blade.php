@@ -108,6 +108,7 @@
                         <div class="relative">
                             <select wire:model.live="typeFilter" class="select select-bordered w-full">
                                 <option value="">All Types</option>
+                                <option value="announcement">Announcements</option>
                                 <option value="ticket_submitted">New Submissions</option>
                                 <option value="ticket_amended">Amended Tickets</option>
                                 <option value="gso_approved">GSO Approved</option>
@@ -128,7 +129,8 @@
                                 <option value="unread">Unread</option>
                                 <option value="read">Read</option>
                             </select>
-                            <button data-tip="Clear Filters" wire:click="clearFilters" type="button" class="tooltip btn btn-ghost"
+                            <button data-tip="Clear Filters" wire:click="clearFilters" type="button"
+                                class="tooltip btn btn-ghost"
                                 x-show="$wire.search || $wire.typeFilter || $wire.statusFilter" x-transition
                                 wire:loading.attr="disabled" wire:target="clearFilters">
                                 <svg wire:loading.remove wire:target="clearFilters" class="w-4 h-4" fill="none"
@@ -238,6 +240,13 @@
                                             <p class="text-sm text-base-content/70 mt-1">
                                                 {{ $data['message'] ?? 'No message' }}
                                             </p>
+
+                                            @if (($data['type'] ?? '') === 'announcement' && isset($data['content']) && is_string($data['content']))
+                                                <div
+                                                    class="mt-2 p-3 bg-base-200/50 rounded-lg text-sm text-base-content/80">
+                                                    {{ $data['content'] }}
+                                                </div>
+                                            @endif
 
                                             @if (isset($data['ticket_number']))
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
