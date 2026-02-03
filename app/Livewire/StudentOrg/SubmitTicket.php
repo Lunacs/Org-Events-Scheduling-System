@@ -468,7 +468,17 @@ class SubmitTicket extends Component
         $this->proponent_contact = $currentUser->phone ?? '';
         $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
-        // Trigger validation for adviser_contact since it has a default value
+        // Load resubmit data if available
+        if (session()->has('resubmit_ticket')) {
+            $data = session()->pull('resubmit_ticket');
+            foreach ($data as $key => $value) {
+                if (property_exists($this, $key)) {
+                    $this->{$key} = $value;
+                }
+            }
+        }
+
+        // Trigger validation for adviser_contact
         try {
             $this->validateOnly('adviser_contact', [
                 'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',

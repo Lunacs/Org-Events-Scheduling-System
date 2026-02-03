@@ -40,17 +40,20 @@
                          class="w-5 h-5 text-orange-500 mt-0.5"/>
             <div class="flex-1">
                 <p class="text-sm font-medium text-orange-700">
-                        For Revision
+                    For Revision
                 </p>
                 @if($ticket->latestOsaApproval?->remarks)
                     <p class="text-sm text-orange-600 mt-1">{{ $ticket->latestOsaApproval->remarks }}</p>
                 @else
-                    <p class="text-sm text-orange-600 mt-1">Event for revision. It may be due to different concerns from the
+                    <p class="text-sm text-orange-600 mt-1">Event for revision. It may be due to different concerns from
+                        the
                         offices, or time conflicts. Submit another ticket and try again.</p>
                 @endif
                 <p class="text-xs text-orange-500 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
                     <x-mary-button label="Submit Revision" icon="s-arrow-up"
-                                   class="btn-sm btn-primary mt-2" link="submit-ticket" tooltip="Revise Event" wire:navigate/>
+                                   class="btn-sm btn-primary mt-2"
+                                   tooltip="Revise Event"
+                                   wire:click="$dispatch('resubmit-ticket', { ticketId: {{ $ticket->ticket_id }} })"/>
             </div>
         </div>
     </div>

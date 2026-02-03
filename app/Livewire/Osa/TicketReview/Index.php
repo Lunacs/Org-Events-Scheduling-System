@@ -64,7 +64,8 @@ class Index extends Component
             'created_at',
         ])
             ->with([
-                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                'user' => fn ($q) => $q->withTrashed()
+                    ->select(['user_id', 'org_id'])
                     ->with('studentOrganization:org_id,org_name'),
                 'events' => fn ($q) => $q->select(['event_id', 'ticket_id'])
                     ->with('eventSchedules:schedule_id,event_id,start_date,start_time,venue'),

@@ -78,7 +78,7 @@ class EventCalendar extends Component
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'venue_other', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
@@ -179,7 +179,7 @@ class EventCalendar extends Component
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
@@ -257,28 +257,26 @@ class EventCalendar extends Component
                     ->with([
                         'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->withTrashed()
+                                    ->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
                     ]),
             ])
-            // Always show only approved event schedules
             ->where('status', 'approved')
-            // Filter by ticket status - empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
+                // Include soft-deleted users when checking ticket status
+                $query->whereHas('user', fn($q) => $q->withTrashed());
+
                 if ($this->statusFilter) {
                     $query->where('status', $this->statusFilter);
                 } else {
-                    // Show both approved and rescheduled when no specific filter
                     $query->whereIn('status', ['approved', 'rescheduled']);
                 }
             })
-            // Apply organization filter if set
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            // Apply event type filter if set
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
             ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
-            // Hide past events (older than current year) by default unless toggle is on
             ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
             ->get();
 
@@ -494,6 +492,7 @@ class EventCalendar extends Component
         $query = Event_Schedule::query()
             // Filter by ticket status - empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
+                $query->whereHas('user', fn($q) => $q->withTrashed());
                 if ($this->statusFilter) {
                     $query->where('status', $this->statusFilter);
                 } else {
@@ -501,7 +500,7 @@ class EventCalendar extends Component
                     $query->whereIn('status', ['approved', 'rescheduled']);
                 }
             })
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
             ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
             ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
@@ -522,7 +521,7 @@ class EventCalendar extends Component
                     ->with([
                         'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',

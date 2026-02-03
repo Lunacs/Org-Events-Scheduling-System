@@ -38,6 +38,18 @@ class TicketComment extends Model
 
         $user = $this->user;
 
+        // Prepare naming parts
+        $text = $user->name . ' (';
+        $close = ')';
+
+        // Default values
+        $osa = 'OSA';;
+        $gso = $user->office?->office_code ?? 'GSO';
+        $studentOrg = $user->studentOrganization?->org_code  ?? 'Student Org';
+        $admin = 'Admin';
+
+        // Position for student org users
+        $position = $user->position?->position_name;
         // Load role relationship if not already loaded
         if (!$user->relationLoaded('role')) {
             $user->load('role');
@@ -45,10 +57,10 @@ class TicketComment extends Model
 
         // Return based on user's role
         return match ($user->role?->role_name) {
-            'osa' => 'OSA',
-            'gso' => $user->office?->office_code ?? 'GSO',
-            'student-org' => $user->studentOrganization?->org_code ?? 'Student Org',
-            'superadmin' => 'Admin',
+            'osa' => $text . $osa . $close,
+            'gso' => $text . $gso . $close,
+            'student-org' => $text . $studentOrg . ' - ' . $position . $close,
+            'superadmin' => $admin,
             default => $user->name,
         };
     }

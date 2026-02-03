@@ -79,7 +79,7 @@ class Reports extends Component
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
-                'ticket.user.studentOrganization',
+                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             ])
             ->whereIn('decision', ['approved', 'Approved', 'for_revision', 'For Revision'])
             ->where('office_id', $officeId);
@@ -101,9 +101,13 @@ class Reports extends Component
             $query->where(function (Builder $builder) use ($term) {
                 $builder->whereHas('ticket', function (Builder $ticketQuery) use ($term) {
                     $ticketQuery
-                        ->whereRaw('LOWER(ticket_number) LIKE ?', [$term])
-                        ->orWhereRaw('LOWER(title) LIKE ?', [$term])
-                        ->orWhereHas('user.studentOrganization', fn(Builder $orgQuery) => $orgQuery->whereRaw('LOWER(org_name) LIKE ?', [$term]));
+                        ->where('title', 'like', $term)
+                        ->orWhere('ticket_number', 'like', $term)
+                        ->orWhereHas('user', function (Builder $userQuery) use ($term) {
+                            $userQuery->withTrashed()
+                                ->where('name', 'like', $term)
+                                ->orWhereHas('studentOrganization', fn(Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
+                        });
                 });
             });
         }
