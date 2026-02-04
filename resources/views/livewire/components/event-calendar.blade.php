@@ -435,7 +435,16 @@
                                     class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
                                         group-hover:scale-110 transition-transform duration-300
                                         shadow-sm dark:shadow-md">
-                                    <x-mary-icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
+                                    @php
+                                        $iconName =
+                                            !empty($event['icon']) &&
+                                            is_string($event['icon']) &&
+                                            (str_starts_with($event['icon'], 's-') ||
+                                                str_starts_with($event['icon'], 'o-'))
+                                                ? $event['icon']
+                                                : 's-calendar';
+                                    @endphp
+                                    <x-mary-icon name="{{ $iconName }}" class="w-7 h-7 {{ $iconText }}" />
                                 </div>
                                 {{-- Organization logo thumbnail --}}
                                 <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"

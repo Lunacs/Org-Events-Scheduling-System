@@ -593,7 +593,11 @@ class EventCalendar extends Component
                 'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
                 'color' => $colorName,
                 'hexColor' => $hexColor,
-                'icon' => $this->getEventTypeIcon($event->eventType?->type_name ?? ''),
+                'icon' => $this->getEventTypeIcon(
+                    is_object($event->eventType) && isset($event->eventType->type_name)
+                        ? $event->eventType->type_name
+                        : ''
+                ),
                 'start_date' => $schedule->start_date,
                 'event_id' => $event->event_id,
             ];
@@ -602,6 +606,11 @@ class EventCalendar extends Component
 
     private function getEventTypeIcon($typeName): string
     {
+        // Ensure we have a valid string to prevent invalid icon names like "1"
+        if (!is_string($typeName) || empty(trim($typeName))) {
+            return 's-calendar'; // Return default if not a valid string
+        }
+
         $iconMap = [
             'General Assemblies and Similar Activities' => 's-user-group',
             'Organization Shirts / IGP' => 's-shopping-bag',
@@ -610,7 +619,7 @@ class EventCalendar extends Component
             'Training, Rehearsals, Practices' => 's-academic-cap',
         ];
 
-        $lowerType = strtolower($typeName);
+        $lowerType = strtolower(trim($typeName));
         foreach ($iconMap as $key => $icon) {
             if (str_contains($lowerType, strtolower($key))) {
                 return $icon;
