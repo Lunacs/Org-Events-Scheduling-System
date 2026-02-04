@@ -508,8 +508,9 @@
                     <div class="relative inline-block mb-6">
                         <div
                             class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
-                            <x-mary-icon name="o-calendar-days"
-                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
+                            {{-- <x-mary-icon name="s-calendar-days"
+                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" /> --}}
+                            <i class="fa-light fa-calendar"></i>
                         </div>
                         <div
                             class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
