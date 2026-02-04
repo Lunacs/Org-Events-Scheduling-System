@@ -62,7 +62,7 @@ COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
 ENV APP_ENV=production
-ENV APP_DEBUG=false
+ENV APP_DEBUG=true
 ENV LOG_CHANNEL=stderr
 
 EXPOSE 80
