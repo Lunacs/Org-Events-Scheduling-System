@@ -508,8 +508,7 @@
                     <div class="relative inline-block mb-6">
                         <div
                             class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
-                            {{-- <x-mary-icon name="s-calendar-days"
-                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" /> --}}
+
                             <i
                                 class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
                         </div>
@@ -597,8 +596,7 @@
                                         <div class="bg-base-200 rounded-lg p-3">
                                             <template x-if="s.start_date === s.end_date || !s.end_date">
                                                 <div class="flex items-center gap-2 text-sm">
-                                                    {{-- <x-mary-icon name="o-calendar-days"
-                                                        class="w-4 h-4 text-primary" /> --}}
+
                                                     <i
                                                         class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
                                                     <span x-text="formatDate(s.start_date)"></span>
@@ -607,16 +605,14 @@
                                             <template x-if="s.start_date !== s.end_date && s.end_date">
                                                 <div class="space-y-1">
                                                     <div class="flex items-center gap-2 text-sm">
-                                                        {{-- <x-mary-icon name="o-calendar-days"
-                                                            class="w-4 h-4 text-primary" /> --}}
+
                                                         <i
                                                             class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
                                                         <span class="font-medium text-base-content/70">Start:</span>
                                                         <span x-text="formatDate(s.start_date)"></span>
                                                     </div>
                                                     <div class="flex items-center gap-2 text-sm">
-                                                        {{-- <x-mary-icon name="o-calendar-days"
-                                                            class="w-4 h-4 text-primary" /> --}}
+
                                                         <i
                                                             class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
                                                         <span class="font-medium text-base-content/70">End:</span>
