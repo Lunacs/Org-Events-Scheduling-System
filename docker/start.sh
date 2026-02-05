@@ -29,6 +29,7 @@ php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 php artisan cache:clear
+php artisan icons:clear
 
 echo "Caching config..."
 php artisan config:cache
@@ -38,6 +39,9 @@ php artisan route:cache
 
 echo "Caching views..."
 php artisan view:cache
+
+echo "Caching views..."
+php artisan icons:cache
 
 echo "Optimizing..."
 php artisan optimize

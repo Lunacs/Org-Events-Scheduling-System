@@ -435,15 +435,6 @@
                                     class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
                                         group-hover:scale-110 transition-transform duration-300
                                         shadow-sm dark:shadow-md">
-                                    @php
-                                        $iconName =
-                                            !empty($event['icon']) &&
-                                            is_string($event['icon']) &&
-                                            (str_starts_with($event['icon'], 's-') ||
-                                                str_starts_with($event['icon'], 'o-'))
-                                                ? $event['icon']
-                                                : 's-calendar';
-                                    @endphp
                                     <x-mary-icon name="{{ $iconName }}" class="w-7 h-7 {{ $iconText }}" />
                                 </div>
                                 {{-- Organization logo thumbnail --}}
@@ -508,9 +499,8 @@
                     <div class="relative inline-block mb-6">
                         <div
                             class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
-
-                            <i
-                                class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
+                            <x-mary-icon name="o-calendar-days"
+                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
                         </div>
                         <div
                             class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
@@ -596,25 +586,22 @@
                                         <div class="bg-base-200 rounded-lg p-3">
                                             <template x-if="s.start_date === s.end_date || !s.end_date">
                                                 <div class="flex items-center gap-2 text-sm">
-
-                                                    <i
-                                                        class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
+                                                    <x-mary-icon name="o-calendar-days"
+                                                        class="w-4 h-4 text-primary" />
                                                     <span x-text="formatDate(s.start_date)"></span>
                                                 </div>
                                             </template>
                                             <template x-if="s.start_date !== s.end_date && s.end_date">
                                                 <div class="space-y-1">
                                                     <div class="flex items-center gap-2 text-sm">
-
-                                                        <i
-                                                            class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
+                                                        <x-mary-icon name="o-calendar-days"
+                                                            class="w-4 h-4 text-primary" />
                                                         <span class="font-medium text-base-content/70">Start:</span>
                                                         <span x-text="formatDate(s.start_date)"></span>
                                                     </div>
                                                     <div class="flex items-center gap-2 text-sm">
-
-                                                        <i
-                                                            class="fa-light fa-calendar w-12 h-12 text-base-content/30 dark:text-base-content/20"></i>
+                                                        <x-mary-icon name="o-calendar-days"
+                                                            class="w-4 h-4 text-primary" />
                                                         <span class="font-medium text-base-content/70">End:</span>
                                                         <span x-text="formatDate(s.end_date)"></span>
                                                     </div>
