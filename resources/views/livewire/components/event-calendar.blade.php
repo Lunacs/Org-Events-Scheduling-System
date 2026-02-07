@@ -525,9 +525,9 @@
                         </x-mary-button>
                     </div>
                 </div>
+        </x-mary-card>
     </div>
     @endif
-    </x-mary-card>
 
     {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
     <div x-data="eventDetailsModal()" x-on:open-event.window="openById($event.detail.id)">

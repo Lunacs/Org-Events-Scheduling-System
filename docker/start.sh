@@ -34,14 +34,14 @@ php artisan icons:clear
 echo "Caching config..."
 php artisan config:cache
 
+echo "Caching views..."
+php artisan icons:cache
+
 echo "Caching routes..."
 php artisan route:cache
 
 echo "Caching views..."
 php artisan view:cache
-
-echo "Caching views..."
-php artisan icons:cache
 
 echo "Optimizing..."
 php artisan optimize
@@ -50,6 +50,9 @@ php artisan optimize
 if [ ! -L /var/www/html/public/storage ]; then
   php artisan storage:link || true
 fi
+
+php artisan icons:clear
+php artisan icons:cache
 
 # Run migration:fresh if enabled
 if [ "${MIGRATE_FRESH:-false}" = "true" ]; then
