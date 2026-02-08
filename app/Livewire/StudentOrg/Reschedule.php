@@ -268,6 +268,24 @@ class Reschedule extends Component
 
     public function updatedSupportingDocuments()
     {
+        // Handle single file upload (S3 driver doesn't support multiple)
+        // Wrap single file in array for consistent processing
+        $files = $this->supportingDocuments;
+        if (!is_array($files)) {
+            $files = $files ? [$files] : [];
+        }
+
+        // If no files, return early
+        if (empty($files)) {
+            return;
+        }
+
+        // Get existing documents that are already validated
+        $existingDocs = collect($this->supportingDocuments)->filter(fn($doc) => is_object($doc) && $doc !== $files[0] ?? null)->values()->all();
+
+        // Temporarily set as array for validation
+        $this->supportingDocuments = $files;
+
         $this->validate([
             'supportingDocuments' => 'array|max:10',
             'supportingDocuments.*' => [
@@ -276,6 +294,9 @@ class Reschedule extends Component
                 'mimes:' . self::ALLOWED_MIMES,
             ],
         ]);
+
+        // Append new files to existing documents
+        $this->supportingDocuments = array_merge($existingDocs, $files);
     }
 
     public function removeAttachment($index)
@@ -385,7 +406,6 @@ class Reschedule extends Component
                 timeout: 3000,
                 redirectTo: route('student-org.dashboard')
             );
-
         } catch (ValidationException $e) {
             DB::rollBack();
             $this->isProcessing = false;
@@ -513,7 +533,7 @@ class Reschedule extends Component
         if ($user->position->position_name === 'President') {
             $query->where('user_id', $user->user_id);
         } elseif (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
-            $query->whereHas('user', function($q) use ($user) {
+            $query->whereHas('user', function ($q) use ($user) {
                 $q->withTrashed()->where('org_id', $user->org_id);
             });
         }

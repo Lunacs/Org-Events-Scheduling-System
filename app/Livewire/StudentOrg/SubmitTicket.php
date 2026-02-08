@@ -254,13 +254,13 @@ class SubmitTicket extends Component
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
                 'eventStartTime' => ['required', 'date_format:H:i'],
                 'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
-                'preferredVenue' => ['required', function($attribute, $value, $fail) {
+                'preferredVenue' => ['required', function ($attribute, $value, $fail) {
                     if ($value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected venue is invalid.');
                     }
                 }],
                 'preferredVenueOther' => $this->preferredVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
-                'alternativeVenue' => ['nullable', function($attribute, $value, $fail) {
+                'alternativeVenue' => ['nullable', function ($attribute, $value, $fail) {
                     if ($value && $value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected alternative venue is invalid.');
                     }
@@ -722,6 +722,21 @@ class SubmitTicket extends Component
 
     public function updatedNewAttachments()
     {
+        // Handle single file upload (S3 driver doesn't support multiple)
+        // Wrap single file in array for consistent processing
+        $files = $this->newAttachments;
+        if (!is_array($files)) {
+            $files = $files ? [$files] : [];
+        }
+
+        // If no files, return early
+        if (empty($files)) {
+            return;
+        }
+
+        // Temporarily set as array for validation
+        $this->newAttachments = $files;
+
         $this->validate([
             'newAttachments.*' => [
                 'file',
@@ -750,15 +765,17 @@ class SubmitTicket extends Component
             ],
         ]);
 
-        // Check available disk space
-        $totalSize = collect($this->newAttachments)->sum(fn($file) => $file->getSize());
-        if (disk_free_space(storage_path()) < ($totalSize * 2)) {
-            throw ValidationException::withMessages([
-                'newAttachments' => 'Insufficient storage space.',
-            ]);
+        // Check available disk space (skip for S3/cloud storage)
+        if (config('filesystems.default') === 'local') {
+            $totalSize = collect($files)->sum(fn($file) => $file->getSize());
+            if (disk_free_space(storage_path()) < ($totalSize * 2)) {
+                throw ValidationException::withMessages([
+                    'newAttachments' => 'Insufficient storage space.',
+                ]);
+            }
         }
 
-        $this->attachments = array_merge($this->attachments, $this->newAttachments);
+        $this->attachments = array_merge($this->attachments, $files);
         $this->reset('newAttachments');
     }
 
