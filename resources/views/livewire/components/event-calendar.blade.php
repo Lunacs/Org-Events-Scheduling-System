@@ -688,7 +688,7 @@
     @endpush
 
     {{-- FullCalendar Scripts (Alpine-powered) --}}
-    @push('scripts')
+    @script
         <script>
             window.osaCalendar = function() {
                 return {
@@ -1463,6 +1463,6 @@
                 }
             }
         </script>
-    @endpush
+    @endscript
 </div>
 </div>
