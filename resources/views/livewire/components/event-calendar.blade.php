@@ -421,18 +421,6 @@
                                 'orange' => 'badge-warning',
                                 default => 'badge-info',
                             };
-                            // Icon name based on color/type for visual distinction
-                            $iconName = match ($color) {
-                                'blue' => 'o-calendar-days',
-                                'green' => 'o-check-circle',
-                                'purple' => 'o-star',
-                                'yellow' => 'o-exclamation-triangle',
-                                'red' => 'o-fire',
-                                'cyan' => 'o-bolt',
-                                'lime' => 'o-sparkles',
-                                'orange' => 'o-sun',
-                                default => 'o-calendar-days',
-                            };
                         @endphp
                         <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
                                 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20
@@ -447,7 +435,7 @@
                                     class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
                                         group-hover:scale-110 transition-transform duration-300
                                         shadow-sm dark:shadow-md">
-                                    <x-mary-icon name="{{ $iconName }}" class="w-7 h-7 {{ $iconText }}" />
+                                    <x-mary-icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
                                 </div>
                                 {{-- Organization logo thumbnail --}}
                                 <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
@@ -537,332 +525,333 @@
                         </x-mary-button>
                     </div>
                 </div>
+            @endif
         </x-mary-card>
-    </div>
-    @endif
 
-    {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
-    <div x-data="eventDetailsModal()" x-on:open-event.window="openById($event.detail.id)">
-        <template x-if="open">
-            <div class="fixed inset-0 z-50 flex items-center justify-center">
-                <div class="absolute inset-0 bg-black/40" @click="close()"></div>
-                <div class="relative bg-base-100 w-11/12 max-w-3xl rounded-box shadow-xl border border-base-300 p-6">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-4 flex-1">
-                            <img :src="data?.organizationLogo || '{{ asset('images/default-org-logo.svg') }}'"
-                                :alt="(data?.organization || 'Organization') + ' logo'"
-                                class="w-16 h-16 object-cover rounded-lg">
-                            <div>
-                                <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
-                                <p class="text-base-content/70" x-text="data?.organization || ''"></p>
-                            </div>
-                        </div>
-                        <span class="badge"
-                            :class="{
-                                'badge-success text-white': (data?.status || '') === 'approved',
-                                'badge-warning text-white': (data?.status || '') === 'rescheduled',
-                                'badge-primary text-white': ['approved', 'rescheduled'].indexOf(data?.status ||
-                                    '') === -1
-                            }"
-                            x-text="(data?.status||'').replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())"></span>
-                    </div>
-
-                    <div x-show="loading" class="flex items-center justify-center py-10">
-                        <div class="loading loading-dots loading-xl text-primary"></div>
-                    </div>
-
-                    <div x-show="!loading" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h3 class="font-semibold mb-3">Event Details</h3>
-                                <div class="space-y-2 text-sm">
-                                    <div>
-                                        <span class="font-medium text-base-content/70">Ticket #:</span>
-                                        <span x-text="data?.ticketNumber || '—'"></span>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-base-content/70">Type:</span>
-                                        <span x-text="data?.type || 'N/A'"></span>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium text-base-content/70">Venue:</span>
-                                        <span x-text="data?.venue || 'TBD'"></span>
-                                    </div>
+        {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
+        <div x-data="eventDetailsModal()" x-on:open-event.window="openById($event.detail.id)">
+            <template x-if="open">
+                <div class="fixed inset-0 z-50 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-black/40" @click="close()"></div>
+                    <div
+                        class="relative bg-base-100 w-11/12 max-w-3xl rounded-box shadow-xl border border-base-300 p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-4 flex-1">
+                                <img :src="data?.organizationLogo || '{{ asset('images/default-org-logo.svg') }}'"
+                                    :alt="(data?.organization || 'Organization') + ' logo'"
+                                    class="w-16 h-16 object-cover rounded-lg">
+                                <div>
+                                    <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>
+                                    <p class="text-base-content/70" x-text="data?.organization || ''"></p>
                                 </div>
                             </div>
+                            <span class="badge"
+                                :class="{
+                                    'badge-success text-white': (data?.status || '') === 'approved',
+                                    'badge-warning text-white': (data?.status || '') === 'rescheduled',
+                                    'badge-primary text-white': ['approved', 'rescheduled'].indexOf(data?.status ||
+                                        '') === -1
+                                }"
+                                x-text="(data?.status||'').replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())"></span>
+                        </div>
 
-                            <div>
-                                <h3 class="font-semibold mb-3">Schedule</h3>
-                                <div class="space-y-2">
-                                    <template x-for="(s, idx) in (data?.schedules||[])" :key="idx">
-                                        <div class="bg-base-200 rounded-lg p-3">
-                                            <template x-if="s.start_date === s.end_date || !s.end_date">
-                                                <div class="flex items-center gap-2 text-sm">
-                                                    <x-mary-icon name="o-calendar-days"
-                                                        class="w-4 h-4 text-primary" />
-                                                    <span x-text="formatDate(s.start_date)"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="s.start_date !== s.end_date && s.end_date">
-                                                <div class="space-y-1">
+                        <div x-show="loading" class="flex items-center justify-center py-10">
+                            <div class="loading loading-dots loading-xl text-primary"></div>
+                        </div>
+
+                        <div x-show="!loading" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="font-semibold mb-3">Event Details</h3>
+                                    <div class="space-y-2 text-sm">
+                                        <div>
+                                            <span class="font-medium text-base-content/70">Ticket #:</span>
+                                            <span x-text="data?.ticketNumber || '—'"></span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-base-content/70">Type:</span>
+                                            <span x-text="data?.type || 'N/A'"></span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-base-content/70">Venue:</span>
+                                            <span x-text="data?.venue || 'TBD'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 class="font-semibold mb-3">Schedule</h3>
+                                    <div class="space-y-2">
+                                        <template x-for="(s, idx) in (data?.schedules||[])" :key="idx">
+                                            <div class="bg-base-200 rounded-lg p-3">
+                                                <template x-if="s.start_date === s.end_date || !s.end_date">
                                                     <div class="flex items-center gap-2 text-sm">
                                                         <x-mary-icon name="o-calendar-days"
                                                             class="w-4 h-4 text-primary" />
-                                                        <span class="font-medium text-base-content/70">Start:</span>
                                                         <span x-text="formatDate(s.start_date)"></span>
                                                     </div>
-                                                    <div class="flex items-center gap-2 text-sm">
-                                                        <x-mary-icon name="o-calendar-days"
-                                                            class="w-4 h-4 text-primary" />
-                                                        <span class="font-medium text-base-content/70">End:</span>
-                                                        <span x-text="formatDate(s.end_date)"></span>
+                                                </template>
+                                                <template x-if="s.start_date !== s.end_date && s.end_date">
+                                                    <div class="space-y-1">
+                                                        <div class="flex items-center gap-2 text-sm">
+                                                            <x-mary-icon name="o-calendar-days"
+                                                                class="w-4 h-4 text-primary" />
+                                                            <span
+                                                                class="font-medium text-base-content/70">Start:</span>
+                                                            <span x-text="formatDate(s.start_date)"></span>
+                                                        </div>
+                                                        <div class="flex items-center gap-2 text-sm">
+                                                            <x-mary-icon name="o-calendar-days"
+                                                                class="w-4 h-4 text-primary" />
+                                                            <span class="font-medium text-base-content/70">End:</span>
+                                                            <span x-text="formatDate(s.end_date)"></span>
+                                                        </div>
                                                     </div>
+                                                </template>
+                                                <div class="flex items-center gap-2 text-sm mt-1">
+                                                    <x-mary-icon name="o-clock" class="w-4 h-4 text-primary" />
+                                                    <span class="font-medium text-base-content/70">Time:</span>
+                                                    <span x-text="timeRange(s.start_time, s.end_time)"></span>
                                                 </div>
-                                            </template>
-                                            <div class="flex items-center gap-2 text-sm mt-1">
-                                                <x-mary-icon name="o-clock" class="w-4 h-4 text-primary" />
-                                                <span class="font-medium text-base-content/70">Time:</span>
-                                                <span x-text="timeRange(s.start_time, s.end_time)"></span>
                                             </div>
-                                        </div>
-                                    </template>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
+
+                            <template x-if="data?.description">
+                                <div>
+                                    <h3 class="font-semibold mb-3">Description</h3>
+                                    <p class="text-sm text-base-content/80" x-text="data.description"></p>
+                                </div>
+                            </template>
                         </div>
 
-                        <template x-if="data?.description">
-                            <div>
-                                <h3 class="font-semibold mb-3">Description</h3>
-                                <p class="text-sm text-base-content/80" x-text="data.description"></p>
-                            </div>
-                        </template>
-                    </div>
+                        <div class="flex justify-center items-center mt-6">
+                            {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
+                            @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
+                                <template x-if="data?.ticketNumber">
+                                    <x-mary-button label="View Full Info" icon-right="o-arrow-right"
+                                        class="btn-sm btn-block btn-outline" link="#"
+                                        x-bind:href="'{{ Auth::user()->isGSO() ? url('/gso/tickets') : url('/admin/ticket-review') }}/' +
+                                        data.ticketNumber"
+                                        wire:navigate />
+                                </template>
+                            @endif
+                        </div>
 
-                    <div class="flex justify-center items-center mt-6">
-                        {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
-                        @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
-                            <template x-if="data?.ticketNumber">
-                                <x-mary-button label="View Full Info" icon-right="o-arrow-right"
-                                    class="btn-sm btn-block btn-outline" link="#"
-                                    x-bind:href="'{{ Auth::user()->isGSO() ? url('/gso/tickets') : url('/admin/ticket-review') }}/' +
-                                    data.ticketNumber"
-                                    wire:navigate />
-                            </template>
-                        @endif
-                    </div>
-
-                    <div class="mt-6 flex justify-end">
-                        <button type="button" class="btn btn-ghost" @click="close()">Close</button>
+                        <div class="mt-6 flex justify-end">
+                            <button type="button" class="btn btn-ghost" @click="close()">Close</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </template>
-    </div>
+            </template>
+        </div>
 
-    {{-- Custom Calendar Styles for OSA Calendar Component --}}
-    @push('styles')
-        <style>
-            /* Component-specific calendar enhancements */
+        {{-- Custom Calendar Styles for OSA Calendar Component --}}
+        @push('styles')
+            <style>
+                /* Component-specific calendar enhancements */
 
 
-            /* Loading skeleton animation */
-            @keyframes shimmer {
-                0% {
-                    background-position: -1000px 0;
+                /* Loading skeleton animation */
+                @keyframes shimmer {
+                    0% {
+                        background-position: -1000px 0;
+                    }
+
+                    100% {
+                        background-position: 1000px 0;
+                    }
                 }
 
-                100% {
-                    background-position: 1000px 0;
+                #osa-calendar.loading .fc-view-harness {
+                    background: linear-gradient(90deg,
+                            oklch(var(--b2)) 0%,
+                            oklch(var(--b3)) 50%,
+                            oklch(var(--b2)) 100%);
+                    background-size: 1000px 100%;
+                    animation: shimmer 2s infinite;
                 }
-            }
+            </style>
+        @endpush
 
-            #osa-calendar.loading .fc-view-harness {
-                background: linear-gradient(90deg,
-                        oklch(var(--b2)) 0%,
-                        oklch(var(--b3)) 50%,
-                        oklch(var(--b2)) 100%);
-                background-size: 1000px 100%;
-                animation: shimmer 2s infinite;
-            }
-        </style>
-    @endpush
+        {{-- FullCalendar Scripts (Alpine-powered) --}}
+        @push('scripts')
+            <script>
+                window.osaCalendar = function() {
+                    return {
+                        calendar: null,
+                        currentView: '{{ $viewMode }}',
+                        suppressUrlUpdate: true,
+                        allEvents: @json($events), // Store events in component state for dynamic updates
+                        searchQuery: '', // For filtering events by search
+                        init() {
+                            if (typeof window.FullCalendar === 'undefined' || typeof window.FullCalendarPlugins ===
+                                'undefined') {
+                                console.error('FullCalendar not loaded. Run your asset build.');
+                                return;
+                            }
 
-    {{-- FullCalendar Scripts (Alpine-powered) --}}
-    @script
-        <script>
-            window.osaCalendar = function() {
-                return {
-                    calendar: null,
-                    currentView: '{{ $viewMode }}',
-                    suppressUrlUpdate: true,
-                    allEvents: @json($events), // Store events in component state for dynamic updates
-                    searchQuery: '', // For filtering events by search
-                    init() {
-                        if (typeof window.FullCalendar === 'undefined' || typeof window.FullCalendarPlugins ===
-                            'undefined') {
-                            console.error('FullCalendar not loaded. Run your asset build.');
-                            return;
-                        }
+                            // Listen for search events
+                            window.addEventListener('calendar-search', (e) => {
+                                this.searchQuery = e.detail?.query || '';
+                                this.calendar.refetchEvents();
+                            });
 
-                        // Listen for search events
-                        window.addEventListener('calendar-search', (e) => {
-                            this.searchQuery = e.detail?.query || '';
-                            this.calendar.refetchEvents();
-                        });
+                            // Responsive height calculation helper
+                            const getHeight = () => {
+                                if (window.innerWidth >= 1024) return 750;
+                                if (window.innerWidth >= 768) return 650;
+                                return 500; // Mobile screens
+                            };
 
-                        // Responsive height calculation helper
-                        const getHeight = () => {
-                            if (window.innerWidth >= 1024) return 750;
-                            if (window.innerWidth >= 768) return 650;
-                            return 500; // Mobile screens
-                        };
+                            // Store getHeight for resize handler
+                            this.getHeight = getHeight;
 
-                        // Store getHeight for resize handler
-                        this.getHeight = getHeight;
+                            const height = getHeight();
+                            const initialView = '{{ $viewMode }}';
+                            const component = this; // Store component reference for use in callbacks
 
-                        const height = getHeight();
-                        const initialView = '{{ $viewMode }}';
-                        const component = this; // Store component reference for use in callbacks
+                            this.calendar = new window.FullCalendar.Calendar(this.$refs.cal, {
+                                plugins: [
+                                    window.FullCalendarPlugins.dayGridPlugin,
+                                    window.FullCalendarPlugins.timeGridPlugin,
+                                    window.FullCalendarPlugins.listPlugin,
+                                    window.FullCalendarPlugins.interactionPlugin,
+                                ],
+                                initialView: initialView,
+                                headerToolbar: false,
+                                height,
+                                // Filter events based on current view
+                                // Month view: Show spanning events (forMonthView: true) or single-day events
+                                // Week/Day/List views: Show recurring events (forTimeView: true) or single-day events
+                                events: function(info, successCallback, failureCallback) {
+                                    // Performance optimization: Use requestIdleCallback for non-blocking event processing
+                                    const processEvents = () => {
+                                        // Safely get current view
+                                        let currentView = null;
 
-                        this.calendar = new window.FullCalendar.Calendar(this.$refs.cal, {
-                            plugins: [
-                                window.FullCalendarPlugins.dayGridPlugin,
-                                window.FullCalendarPlugins.timeGridPlugin,
-                                window.FullCalendarPlugins.listPlugin,
-                                window.FullCalendarPlugins.interactionPlugin,
-                            ],
-                            initialView: initialView,
-                            headerToolbar: false,
-                            height,
-                            // Filter events based on current view
-                            // Month view: Show spanning events (forMonthView: true) or single-day events
-                            // Week/Day/List views: Show recurring events (forTimeView: true) or single-day events
-                            events: function(info, successCallback, failureCallback) {
-                                // Performance optimization: Use requestIdleCallback for non-blocking event processing
-                                const processEvents = () => {
-                                    // Safely get current view
-                                    let currentView = null;
-
-                                    // Try to get view from info parameter first
-                                    if (info && info.view && info.view.type) {
-                                        currentView = info.view.type;
-                                    }
-                                    // Fallback to component's tracked current view
-                                    else if (component && component.currentView) {
-                                        currentView = component.currentView;
-                                    }
-                                    // Fallback to calendar's view if available
-                                    else if (component && component.calendar && component.calendar.view &&
-                                        component
-                                        .calendar.view.type) {
-                                        currentView = component.calendar.view.type;
-                                    }
-                                    // Final fallback to initial view
-                                    else {
-                                        currentView = initialView;
-                                    }
-
-                                    // Filter events based on view type
-                                    // Use component's allEvents which gets updated when filters change
-                                    const eventsToFilter = component.allEvents || [];
-                                    let filteredEvents = eventsToFilter.filter(event => {
-                                        const props = event.extendedProps || {};
-                                        const isMultiDay = props.forMonthView || props.forTimeView;
-
-                                        // Single-day events: Show in all views
-                                        if (!isMultiDay) {
-                                            return true;
+                                        // Try to get view from info parameter first
+                                        if (info && info.view && info.view.type) {
+                                            currentView = info.view.type;
+                                        }
+                                        // Fallback to component's tracked current view
+                                        else if (component && component.currentView) {
+                                            currentView = component.currentView;
+                                        }
+                                        // Fallback to calendar's view if available
+                                        else if (component && component.calendar && component.calendar.view &&
+                                            component
+                                            .calendar.view.type) {
+                                            currentView = component.calendar.view.type;
+                                        }
+                                        // Final fallback to initial view
+                                        else {
+                                            currentView = initialView;
                                         }
 
-                                        // Month view: Only show spanning events
-                                        if (currentView === 'dayGridMonth') {
-                                            return props.forMonthView === true;
-                                        }
-
-                                        // Week/Day/List views: Only show recurring events
-                                        return props.forTimeView === true;
-                                    });
-
-                                    // Apply search filter if active
-                                    if (component.searchQuery && component.searchQuery.trim()) {
-                                        const query = component.searchQuery.toLowerCase().trim();
-                                        filteredEvents = filteredEvents.filter(event => {
-                                            const title = (event.title || '').toLowerCase();
+                                        // Filter events based on view type
+                                        // Use component's allEvents which gets updated when filters change
+                                        const eventsToFilter = component.allEvents || [];
+                                        let filteredEvents = eventsToFilter.filter(event => {
                                             const props = event.extendedProps || {};
-                                            const org = (props.organization || '').toLowerCase();
-                                            const venue = (props.venue || '').toLowerCase();
-                                            const eventType = (props.eventType || '').toLowerCase();
-                                            return title.includes(query) ||
-                                                org.includes(query) ||
-                                                venue.includes(query) ||
-                                                eventType.includes(query);
+                                            const isMultiDay = props.forMonthView || props.forTimeView;
+
+                                            // Single-day events: Show in all views
+                                            if (!isMultiDay) {
+                                                return true;
+                                            }
+
+                                            // Month view: Only show spanning events
+                                            if (currentView === 'dayGridMonth') {
+                                                return props.forMonthView === true;
+                                            }
+
+                                            // Week/Day/List views: Only show recurring events
+                                            return props.forTimeView === true;
                                         });
-                                    }
 
-                                    successCallback(filteredEvents);
-                                };
-
-                                // Use requestIdleCallback if available for better performance
-                                if ('requestIdleCallback' in window) {
-                                    requestIdleCallback(processEvents, {
-                                        timeout: 100
-                                    });
-                                } else {
-                                    // Fallback to setTimeout for browsers without requestIdleCallback
-                                    setTimeout(processEvents, 0);
-                                }
-                            },
-                            themeSystem: 'standard',
-
-                            // CRITICAL: Time handling configuration
-                            // FullCalendar receives ISO strings WITH timezone offset (+08:00)
-                            // Set timeZone to 'Asia/Manila' so FullCalendar interprets these times
-                            // as Asia/Manila time WITHOUT converting to user's local timezone
-                            // This ensures events display at the exact times stored in the database
-                            // Example: "2025-11-05T08:00:00+08:00" will display as 8:00 AM in Manila time
-                            timeZone: 'Asia/Manila',
-                            nowIndicator: true,
-                            eventDataTransform: function(eventData) {
-                                // Ensure allDay is explicitly false for timed events
-                                if (eventData.allDay === undefined && eventData.start && eventData.end) {
-                                    eventData.allDay = false;
-                                }
-
-                                return eventData;
-                            },
-
-                            // Custom event content to show time in month view
-                            eventContent: function(arg) {
-                                const viewType = arg.view.type;
-                                const event = arg.event;
-                                const props = event.extendedProps || {};
-
-                                // Only customize for month view - add time prefix
-                                if (viewType === 'dayGridMonth') {
-                                    // Get raw time from extendedProps (database value)
-                                    const rawStartTime = props.rawStartTime || '';
-
-                                    // Format time to short format (e.g., "9AM", "2PM")
-                                    let timeStr = '';
-                                    if (rawStartTime) {
-                                        try {
-                                            const [hours, minutes] = rawStartTime.split(':');
-                                            const h = parseInt(hours, 10);
-                                            const period = h >= 12 ? 'PM' : 'AM';
-                                            const hour12 = h % 12 || 12;
-                                            // Show minutes only if not :00
-                                            const m = parseInt(minutes, 10);
-                                            timeStr = m > 0 ?
-                                                `${hour12}:${m.toString().padStart(2, '0')}${period}` :
-                                                `${hour12}${period}`;
-                                        } catch (e) {
-                                            timeStr = '';
+                                        // Apply search filter if active
+                                        if (component.searchQuery && component.searchQuery.trim()) {
+                                            const query = component.searchQuery.toLowerCase().trim();
+                                            filteredEvents = filteredEvents.filter(event => {
+                                                const title = (event.title || '').toLowerCase();
+                                                const props = event.extendedProps || {};
+                                                const org = (props.organization || '').toLowerCase();
+                                                const venue = (props.venue || '').toLowerCase();
+                                                const eventType = (props.eventType || '').toLowerCase();
+                                                return title.includes(query) ||
+                                                    org.includes(query) ||
+                                                    venue.includes(query) ||
+                                                    eventType.includes(query);
+                                            });
                                         }
+
+                                        successCallback(filteredEvents);
+                                    };
+
+                                    // Use requestIdleCallback if available for better performance
+                                    if ('requestIdleCallback' in window) {
+                                        requestIdleCallback(processEvents, {
+                                            timeout: 100
+                                        });
+                                    } else {
+                                        // Fallback to setTimeout for browsers without requestIdleCallback
+                                        setTimeout(processEvents, 0);
+                                    }
+                                },
+                                themeSystem: 'standard',
+
+                                // CRITICAL: Time handling configuration
+                                // FullCalendar receives ISO strings WITH timezone offset (+08:00)
+                                // Set timeZone to 'Asia/Manila' so FullCalendar interprets these times
+                                // as Asia/Manila time WITHOUT converting to user's local timezone
+                                // This ensures events display at the exact times stored in the database
+                                // Example: "2025-11-05T08:00:00+08:00" will display as 8:00 AM in Manila time
+                                timeZone: 'Asia/Manila',
+                                nowIndicator: true,
+                                eventDataTransform: function(eventData) {
+                                    // Ensure allDay is explicitly false for timed events
+                                    if (eventData.allDay === undefined && eventData.start && eventData.end) {
+                                        eventData.allDay = false;
                                     }
 
-                                    // Create custom HTML with time badge
-                                    return {
-                                        html: `<div class="fc-event-main-frame">
+                                    return eventData;
+                                },
+
+                                // Custom event content to show time in month view
+                                eventContent: function(arg) {
+                                    const viewType = arg.view.type;
+                                    const event = arg.event;
+                                    const props = event.extendedProps || {};
+
+                                    // Only customize for month view - add time prefix
+                                    if (viewType === 'dayGridMonth') {
+                                        // Get raw time from extendedProps (database value)
+                                        const rawStartTime = props.rawStartTime || '';
+
+                                        // Format time to short format (e.g., "9AM", "2PM")
+                                        let timeStr = '';
+                                        if (rawStartTime) {
+                                            try {
+                                                const [hours, minutes] = rawStartTime.split(':');
+                                                const h = parseInt(hours, 10);
+                                                const period = h >= 12 ? 'PM' : 'AM';
+                                                const hour12 = h % 12 || 12;
+                                                // Show minutes only if not :00
+                                                const m = parseInt(minutes, 10);
+                                                timeStr = m > 0 ?
+                                                    `${hour12}:${m.toString().padStart(2, '0')}${period}` :
+                                                    `${hour12}${period}`;
+                                            } catch (e) {
+                                                timeStr = '';
+                                            }
+                                        }
+
+                                        // Create custom HTML with time badge
+                                        return {
+                                            html: `<div class="fc-event-main-frame">
                                                 <div class="fc-event-title-container">
                                                     <div class="fc-event-title fc-sticky flex items-center gap-1 overflow-hidden">
                                                         ${timeStr ? `<span class="text-[10px] opacity-80 font-medium shrink-0">${timeStr}</span>` : ''}
@@ -870,599 +859,599 @@
                                                     </div>
                                                 </div>
                                             </div>`
-                                    };
-                                }
+                                        };
+                                    }
 
-                                // For timeGrid views (week/day) - show title with proper structure
-                                if (viewType === 'timeGridWeek' || viewType === 'timeGridDay') {
-                                    return {
-                                        html: `<div class="fc-event-main-frame">
+                                    // For timeGrid views (week/day) - show title with proper structure
+                                    if (viewType === 'timeGridWeek' || viewType === 'timeGridDay') {
+                                        return {
+                                            html: `<div class="fc-event-main-frame">
                                                 <div class="fc-event-title-container">
                                                     <div class="fc-event-title fc-sticky">${event.title}</div>
                                                 </div>
                                             </div>`
-                                    };
-                                }
+                                        };
+                                    }
 
-                                // For list view - show title
-                                if (viewType === 'listWeek' || viewType === 'listMonth' || viewType ===
-                                    'listDay') {
+                                    // For list view - show title
+                                    if (viewType === 'listWeek' || viewType === 'listMonth' || viewType ===
+                                        'listDay') {
+                                        return {
+                                            html: `<a class="fc-list-event-title">${event.title}</a>`
+                                        };
+                                    }
+
+                                    // Default: let FullCalendar handle it
                                     return {
-                                        html: `<a class="fc-list-event-title">${event.title}</a>`
+                                        domNodes: arg.domNodes
                                     };
-                                }
-
-                                // Default: let FullCalendar handle it
-                                return {
-                                    domNodes: arg.domNodes
-                                };
-                            },
-
-                            // View-specific options
-                            views: {
-                                dayGridMonth: {
-                                    dayMaxEvents: 3, // Show max 3 events, rest in "more" link
-                                    eventMaxStack: 3,
-                                    moreLinkText: 'more',
-                                    dayHeaderFormat: {
-                                        weekday: 'short'
-                                    },
                                 },
-                                timeGridWeek: {
-                                    eventDisplay: 'auto',
-                                    dayHeaderFormat: {
-                                        weekday: 'short',
-                                        month: 'numeric',
-                                        day: 'numeric',
-                                        omitCommas: true
+
+                                // View-specific options
+                                views: {
+                                    dayGridMonth: {
+                                        dayMaxEvents: 3, // Show max 3 events, rest in "more" link
+                                        eventMaxStack: 3,
+                                        moreLinkText: 'more',
+                                        dayHeaderFormat: {
+                                            weekday: 'short'
+                                        },
                                     },
-                                    // slotDuration: '00:30:00', // 30-minute slots
-                                    // snapDuration: '00:15:00', // Snap to 15-minute intervals
-                                    eventMinHeight: 15, // Minimum height in pixels
-                                    eventShortHeight: 20, // Height for short events
-                                    expandRows: false, // Let events size based on duration
-                                    slotEventOverlap: true, // Allow overlapping events
+                                    timeGridWeek: {
+                                        eventDisplay: 'auto',
+                                        dayHeaderFormat: {
+                                            weekday: 'short',
+                                            month: 'numeric',
+                                            day: 'numeric',
+                                            omitCommas: true
+                                        },
+                                        // slotDuration: '00:30:00', // 30-minute slots
+                                        // snapDuration: '00:15:00', // Snap to 15-minute intervals
+                                        eventMinHeight: 15, // Minimum height in pixels
+                                        eventShortHeight: 20, // Height for short events
+                                        expandRows: false, // Let events size based on duration
+                                        slotEventOverlap: true, // Allow overlapping events
+                                    },
+                                    timeGridDay: {
+                                        dayHeaderFormat: {
+                                            weekday: 'long',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        },
+                                        slotLabelFormat: {
+                                            hour: 'numeric',
+                                            minute: '2-digit',
+                                            meridiem: 'short'
+                                        },
+                                        slotDuration: '00:30:00', // 30-minute slots
+                                        snapDuration: '00:15:00', // Snap to 15-minute intervals
+                                        eventMinHeight: 15, // Minimum height in pixels
+                                        eventShortHeight: 20, // Height for short events
+                                        expandRows: false, // Let events size based on duration
+                                        slotEventOverlap: true, // Allow overlapping events
+                                        noEventsContent: function() {
+                                            return {
+                                                html: '<div class="flex flex-col items-center justify-center py-12 text-base-content/60">' +
+                                                    '<svg class="w-32 h-32 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>' +
+                                                    '</svg>' +
+                                                    '<p class="text-md font-medium">No events scheduled for this period</p>' +
+                                                    '</div>'
+                                            };
+                                        }
+                                    },
+                                    listWeek: {
+                                        listDayFormat: {
+                                            weekday: 'long',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        },
+                                        listDaySideFormat: false,
+                                        noEventsContent: function() {
+                                            return {
+                                                html: '<div class="flex flex-col items-center justify-center py-12 text-base-content/60">' +
+                                                    '<svg class="w-32 h-32 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>' +
+                                                    '</svg>' +
+                                                    '<p class="text-lg font-medium">No events scheduled for this period</p>' +
+                                                    '</div>'
+                                            };
+                                        }
+                                    }
                                 },
-                                timeGridDay: {
-                                    dayHeaderFormat: {
-                                        weekday: 'long',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        year: 'numeric'
-                                    },
-                                    slotLabelFormat: {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        meridiem: 'short'
-                                    },
-                                    slotDuration: '00:30:00', // 30-minute slots
-                                    snapDuration: '00:15:00', // Snap to 15-minute intervals
-                                    eventMinHeight: 15, // Minimum height in pixels
-                                    eventShortHeight: 20, // Height for short events
-                                    expandRows: false, // Let events size based on duration
-                                    slotEventOverlap: true, // Allow overlapping events
-                                    noEventsContent: function() {
-                                        return {
-                                            html: '<div class="flex flex-col items-center justify-center py-12 text-base-content/60">' +
-                                                '<svg class="w-32 h-32 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>' +
-                                                '</svg>' +
-                                                '<p class="text-md font-medium">No events scheduled for this period</p>' +
-                                                '</div>'
-                                        };
-                                    }
+
+                                // Interaction & behavior
+                                eventClick: (info) => {
+                                    this.openEventModal(info.event.id)
                                 },
-                                listWeek: {
-                                    listDayFormat: {
-                                        weekday: 'long',
-                                        month: 'short',
-                                        day: 'numeric'
-                                    },
-                                    listDaySideFormat: false,
-                                    noEventsContent: function() {
-                                        return {
-                                            html: '<div class="flex flex-col items-center justify-center py-12 text-base-content/60">' +
-                                                '<svg class="w-32 h-32 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>' +
-                                                '</svg>' +
-                                                '<p class="text-lg font-medium">No events scheduled for this period</p>' +
-                                                '</div>'
-                                        };
+
+                                // Performance: Debounce date range changes
+                                datesSet: (info) => {
+                                    // Clear existing timeout
+                                    if (component.dateSetTimeout) {
+                                        clearTimeout(component.dateSetTimeout);
                                     }
-                                }
-                            },
 
-                            // Interaction & behavior
-                            eventClick: (info) => {
-                                this.openEventModal(info.event.id)
-                            },
+                                    // Debounce calendar refetch on date range changes
+                                    component.dateSetTimeout = setTimeout(() => {
+                                        // Only refetch if needed (e.g., when loading from server)
+                                        // Currently, events are client-side filtered, so no need to refetch
+                                    }, 300);
+                                },
 
-                            // Performance: Debounce date range changes
-                            datesSet: (info) => {
-                                // Clear existing timeout
-                                if (component.dateSetTimeout) {
-                                    clearTimeout(component.dateSetTimeout);
-                                }
+                                // Display settings
+                                eventDisplay: 'auto', // Auto sizing based on duration
+                                eventTextColor: '#ffffff',
+                                weekNumbers: false,
+                                weekText: 'W',
+                                allDaySlot: false, // Hide all-day slot since events have specific times
+                                nextDayThreshold: '09:00:00', // Events ending before 9am count as ending on previous day
 
-                                // Debounce calendar refetch on date range changes
-                                component.dateSetTimeout = setTimeout(() => {
-                                    // Only refetch if needed (e.g., when loading from server)
-                                    // Currently, events are client-side filtered, so no need to refetch
-                                }, 300);
-                            },
+                                // Time settings
+                                slotMinTime: '07:00:00',
+                                slotMaxTime: '23:00:00',
+                                slotLabelInterval: '01:00:00', // Show labels every hour
+                                scrollTime: '08:00:00',
+                                scrollTimeReset: true,
+                                slotEventOverlap: true, // Allow overlapping events
 
-                            // Display settings
-                            eventDisplay: 'auto', // Auto sizing based on duration
-                            eventTextColor: '#ffffff',
-                            weekNumbers: false,
-                            weekText: 'W',
-                            allDaySlot: false, // Hide all-day slot since events have specific times
-                            nextDayThreshold: '09:00:00', // Events ending before 9am count as ending on previous day
+                                // Event rendering - CRITICAL for height calculation
+                                eventMinHeight: 15, // Minimum height in pixels
+                                eventShortHeight: 20, // Height threshold for "short" events
 
-                            // Time settings
-                            slotMinTime: '07:00:00',
-                            slotMaxTime: '23:00:00',
-                            slotLabelInterval: '01:00:00', // Show labels every hour
-                            scrollTime: '08:00:00',
-                            scrollTimeReset: true,
-                            slotEventOverlap: true, // Allow overlapping events
+                                // Ensure proper duration calculation
+                                defaultTimedEventDuration: '01:00:00', // Default 1 hour if no end time
+                                forceEventDuration: false, // Use actual end times, not forced duration
 
-                            // Event rendering - CRITICAL for height calculation
-                            eventMinHeight: 15, // Minimum height in pixels
-                            eventShortHeight: 20, // Height threshold for "short" events
+                                // Week settings
+                                firstDay: 1, // Monday
 
-                            // Ensure proper duration calculation
-                            defaultTimedEventDuration: '01:00:00', // Default 1 hour if no end time
-                            forceEventDuration: false, // Use actual end times, not forced duration
-
-                            // Week settings
-                            firstDay: 1, // Monday
-
-                            // List view settings
-                            listDayFormat: {
-                                weekday: 'long',
-                                month: 'short',
-                                day: 'numeric'
-                            },
-                            listDaySideFormat: false,
-                            eventDidMount: (info) => {
-                                // Performance: Optimize element for better scrolling
-                                const element = info.el;
-                                if (element) {
-                                    element.style.willChange = 'transform'; // Hint for browser optimization
-                                }
-
-                                const e = info.event;
-                                const p = e.extendedProps || {};
-
-                                // Format time for tooltip using raw database times to avoid timezone conversion
-                                // Raw times are stored in HH:MM:SS format from the database (Asia/Manila timezone)
-                                const formatTimeFromString = (timeStr) => {
-                                    if (!timeStr) return '';
-                                    try {
-                                        // Parse HH:MM:SS format
-                                        const [hours, minutes] = timeStr.split(':');
-                                        const h = parseInt(hours, 10);
-                                        const m = parseInt(minutes, 10);
-
-                                        // Convert to 12-hour format
-                                        const period = h >= 12 ? 'PM' : 'AM';
-                                        const hour12 = h % 12 || 12;
-
-                                        return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
-                                    } catch (e) {
-                                        return timeStr; // Return as-is if parsing fails
+                                // List view settings
+                                listDayFormat: {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric'
+                                },
+                                listDaySideFormat: false,
+                                eventDidMount: (info) => {
+                                    // Performance: Optimize element for better scrolling
+                                    const element = info.el;
+                                    if (element) {
+                                        element.style.willChange = 'transform'; // Hint for browser optimization
                                     }
-                                };
 
-                                // Use raw times from extendedProps (database values) for accurate tooltip
-                                const rawStartTime = p.rawStartTime || '';
-                                const rawEndTime = p.rawEndTime || '';
-                                const startTimeFormatted = formatTimeFromString(rawStartTime);
-                                const endTimeFormatted = formatTimeFromString(rawEndTime);
-                                const timeRange = (startTimeFormatted && endTimeFormatted) ?
-                                    `\n${startTimeFormatted} - ${endTimeFormatted}` :
-                                    '';
+                                    const e = info.event;
+                                    const p = e.extendedProps || {};
 
-                                info.el.title =
-                                    `${e.title}${timeRange}\n${p.organization || ''}\n${p.eventType || ''}\n${p.venue || ''}`;
+                                    // Format time for tooltip using raw database times to avoid timezone conversion
+                                    // Raw times are stored in HH:MM:SS format from the database (Asia/Manila timezone)
+                                    const formatTimeFromString = (timeStr) => {
+                                        if (!timeStr) return '';
+                                        try {
+                                            // Parse HH:MM:SS format
+                                            const [hours, minutes] = timeStr.split(':');
+                                            const h = parseInt(hours, 10);
+                                            const m = parseInt(minutes, 10);
 
-                                // Apply consistent styling
-                                info.el.style.borderRadius = '6px';
-                                info.el.style.fontSize = '12px';
-                                info.el.style.padding = '2px 4px';
+                                            // Convert to 12-hour format
+                                            const period = h >= 12 ? 'PM' : 'AM';
+                                            const hour12 = h % 12 || 12;
 
-                                // Add status-based CSS classes for better theming
-                                if (p.status) {
-                                    info.el.classList.add(`event-${p.status}`);
-                                }
+                                            return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+                                        } catch (e) {
+                                            return timeStr; // Return as-is if parsing fails
+                                        }
+                                    };
 
-                                // Special styling for list view
-                                if (info.view.type === 'listWeek') {
-                                    const c = e.backgroundColor || e.borderColor || '#10b981';
-                                    info.el.style.setProperty('--event-color', c);
+                                    // Use raw times from extendedProps (database values) for accurate tooltip
+                                    const rawStartTime = p.rawStartTime || '';
+                                    const rawEndTime = p.rawEndTime || '';
+                                    const startTimeFormatted = formatTimeFromString(rawStartTime);
+                                    const endTimeFormatted = formatTimeFromString(rawEndTime);
+                                    const timeRange = (startTimeFormatted && endTimeFormatted) ?
+                                        `\n${startTimeFormatted} - ${endTimeFormatted}` :
+                                        '';
 
-                                    // Add colored indicator dot
-                                    const dotEl = info.el.querySelector('.fc-list-event-dot');
-                                    if (dotEl) {
-                                        dotEl.style.borderColor = c;
-                                        dotEl.style.backgroundColor = c;
+                                    info.el.title =
+                                        `${e.title}${timeRange}\n${p.organization || ''}\n${p.eventType || ''}\n${p.venue || ''}`;
+
+                                    // Apply consistent styling
+                                    info.el.style.borderRadius = '6px';
+                                    info.el.style.fontSize = '12px';
+                                    info.el.style.padding = '2px 4px';
+
+                                    // Add status-based CSS classes for better theming
+                                    if (p.status) {
+                                        info.el.classList.add(`event-${p.status}`);
                                     }
-                                }
 
-                                // Add accessibility attributes
-                                info.el.setAttribute('role', 'button');
-                                info.el.setAttribute('aria-label', `Event: ${e.title}`);
-                                info.el.setAttribute('tabindex', '0');
+                                    // Special styling for list view
+                                    if (info.view.type === 'listWeek') {
+                                        const c = e.backgroundColor || e.borderColor || '#10b981';
+                                        info.el.style.setProperty('--event-color', c);
 
-                                // --- CUSTOM STYLING FOR PILL LOOK ---
-
-
-                                // 4. Add the colored dot
-                                // Check if dot already exists to avoid duplication (if re-rendering)
-
-
-                                // 5. Refine padding and rounding
-                                info.el.style.borderRadius = '4px';
-                                info.el.style.padding = '2px 6px';
-                                info.el.style.fontWeight = '500';
-                                info.el.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
-
-                                // Keyboard accessibility
-                                info.el.addEventListener('keydown', (ev) => {
-                                    if (ev.key === 'Enter' || ev.key === ' ') {
-                                        ev.preventDefault();
-                                        this.openEventModal(e.id);
+                                        // Add colored indicator dot
+                                        const dotEl = info.el.querySelector('.fc-list-event-dot');
+                                        if (dotEl) {
+                                            dotEl.style.borderColor = c;
+                                            dotEl.style.backgroundColor = c;
+                                        }
                                     }
-                                });
-                            },
-                            viewDidMount: () => {
-                                this.updateTitle()
-                                this.currentView = this.calendar.view.type
-                                // Refetch events when view changes to apply correct filtering
-                                this.calendar.refetchEvents()
-                            },
-                            datesSet: () => {
-                                if (this.suppressUrlUpdate) return;
-                                const d = this.calendar.getDate();
-                                const y = d.getFullYear();
-                                const m = String(d.getMonth() + 1).padStart(2, '0');
-                                const day = String(d.getDate()).padStart(2, '0');
-                                const dateStr = `${y}-${m}-${day}`;
-                                const view = this.calendar.view.type;
-                                const params = new URLSearchParams(window.location.search);
-                                params.set('date', dateStr);
-                                if (view && view !== 'dayGridMonth') params.set('viewMode', view);
-                                else params.delete('viewMode');
-                                const newUrl = window.location.pathname + (params.toString() ? '?' + params
-                                    .toString() : '');
-                                window.history.replaceState({}, '', newUrl);
-                                this.$wire.set('dateParam', dateStr);
-                                this.$wire.set('viewMode', view);
-                                this.currentView = view;
-                            },
-                        });
 
-                        this.calendar.render();
-                        // expose for other parts (e.g., filterPanel) and stability
-                        window.fullCalendar = this.calendar;
-                        window.osaCalendarInstance = this; // Expose component instance for event updates
-                        this.updateTitle();
+                                    // Add accessibility attributes
+                                    info.el.setAttribute('role', 'button');
+                                    info.el.setAttribute('aria-label', `Event: ${e.title}`);
+                                    info.el.setAttribute('tabindex', '0');
 
-                        // Navigate to initial date from server
-                        const initialDate = '{{ $currentDate->format('Y-m-d') }}';
-                        if (initialDate) this.calendar.gotoDate(new Date(initialDate));
+                                    // --- CUSTOM STYLING FOR PILL LOOK ---
 
-                        setTimeout(() => {
-                            this.suppressUrlUpdate = false
-                        }, 100);
 
-                        // Livewire bridge
-                        this.$wire.on('calendar-prev', () => this.prev());
-                        this.$wire.on('calendar-next', () => this.next());
-                        this.$wire.on('calendar-today', () => this.today());
-                        this.$wire.on('calendar-change-view', (data) => this.changeView(data.view));
-                        this.$wire.on('calendar-refetch', async () => {
-                            const currentDate = this.calendar.getDate();
-                            const currentView = this.calendar.view.type;
-                            const updated = await this.$wire.getUpdatedEvents();
-                            // Update component's allEvents state
-                            this.allEvents = updated || [];
-                            // Refetch events to apply view-based filtering
-                            this.calendar.refetchEvents();
-                            this.calendar.gotoDate(currentDate);
-                            this.calendar.changeView(currentView);
+                                    // 4. Add the colored dot
+                                    // Check if dot already exists to avoid duplication (if re-rendering)
+
+
+                                    // 5. Refine padding and rounding
+                                    info.el.style.borderRadius = '4px';
+                                    info.el.style.padding = '2px 6px';
+                                    info.el.style.fontWeight = '500';
+                                    info.el.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+
+                                    // Keyboard accessibility
+                                    info.el.addEventListener('keydown', (ev) => {
+                                        if (ev.key === 'Enter' || ev.key === ' ') {
+                                            ev.preventDefault();
+                                            this.openEventModal(e.id);
+                                        }
+                                    });
+                                },
+                                viewDidMount: () => {
+                                    this.updateTitle()
+                                    this.currentView = this.calendar.view.type
+                                    // Refetch events when view changes to apply correct filtering
+                                    this.calendar.refetchEvents()
+                                },
+                                datesSet: () => {
+                                    if (this.suppressUrlUpdate) return;
+                                    const d = this.calendar.getDate();
+                                    const y = d.getFullYear();
+                                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const dateStr = `${y}-${m}-${day}`;
+                                    const view = this.calendar.view.type;
+                                    const params = new URLSearchParams(window.location.search);
+                                    params.set('date', dateStr);
+                                    if (view && view !== 'dayGridMonth') params.set('viewMode', view);
+                                    else params.delete('viewMode');
+                                    const newUrl = window.location.pathname + (params.toString() ? '?' + params
+                                        .toString() : '');
+                                    window.history.replaceState({}, '', newUrl);
+                                    this.$wire.set('dateParam', dateStr);
+                                    this.$wire.set('viewMode', view);
+                                    this.currentView = view;
+                                },
+                            });
+
+                            this.calendar.render();
+                            // expose for other parts (e.g., filterPanel) and stability
+                            window.fullCalendar = this.calendar;
+                            window.osaCalendarInstance = this; // Expose component instance for event updates
                             this.updateTitle();
-                        });
 
-                        // Responsive resize handling
-                        let resizeTimer;
-                        const handleResize = () => {
-                            clearTimeout(resizeTimer);
-                            resizeTimer = setTimeout(() => {
-                                // Update height for different screen sizes
-                                const newHeight = this.getHeight();
-                                this.calendar.setOption('height', newHeight);
-                                // Call updateSize to recalculate calendar layout and adjust to container
-                                this.calendar.updateSize();
-                            }, 250);
-                        };
-                        window.addEventListener('resize', handleResize);
-                        // Handle orientation change on mobile devices
-                        window.addEventListener('orientationchange', () => {
+                            // Navigate to initial date from server
+                            const initialDate = '{{ $currentDate->format('Y-m-d') }}';
+                            if (initialDate) this.calendar.gotoDate(new Date(initialDate));
+
                             setTimeout(() => {
-                                handleResize();
+                                this.suppressUrlUpdate = false
                             }, 100);
-                        });
-                    },
-                    updateTitle() {
-                        const el = document.getElementById('calendar-title');
-                        if (el && this.calendar) el.textContent = this.calendar.view.title;
-                    },
-                    prev() {
-                        this.calendar.prev();
-                        this.updateTitle()
-                    },
-                    next() {
-                        this.calendar.next();
-                        this.updateTitle()
-                    },
-                    today() {
-                        this.calendar.today();
-                        this.updateTitle()
-                    },
-                    changeView(v) {
-                        this.currentView = v;
-                        this.calendar.changeView(v);
-                        this.updateTitle();
-                    },
-                    openEventModal(id) {
-                        // Extract original event_id from compound IDs (event_id_span or event_id_recur)
-                        // For example: "123_span" or "123_recur" -> "123"
-                        let eventId = id;
-                        if (typeof id === 'string' && id.includes('_')) {
-                            const lastUnderscore = id.lastIndexOf('_');
-                            const suffix = id.substring(lastUnderscore + 1);
-                            if (suffix === 'span' || suffix === 'recur') {
-                                // Extract everything before the last underscore
-                                eventId = id.substring(0, lastUnderscore);
-                                // Convert to number if it's numeric
-                                const numericId = parseInt(eventId, 10);
-                                if (!isNaN(numericId)) {
-                                    eventId = numericId;
+
+                            // Livewire bridge
+                            this.$wire.on('calendar-prev', () => this.prev());
+                            this.$wire.on('calendar-next', () => this.next());
+                            this.$wire.on('calendar-today', () => this.today());
+                            this.$wire.on('calendar-change-view', (data) => this.changeView(data.view));
+                            this.$wire.on('calendar-refetch', async () => {
+                                const currentDate = this.calendar.getDate();
+                                const currentView = this.calendar.view.type;
+                                const updated = await this.$wire.getUpdatedEvents();
+                                // Update component's allEvents state
+                                this.allEvents = updated || [];
+                                // Refetch events to apply view-based filtering
+                                this.calendar.refetchEvents();
+                                this.calendar.gotoDate(currentDate);
+                                this.calendar.changeView(currentView);
+                                this.updateTitle();
+                            });
+
+                            // Responsive resize handling
+                            let resizeTimer;
+                            const handleResize = () => {
+                                clearTimeout(resizeTimer);
+                                resizeTimer = setTimeout(() => {
+                                    // Update height for different screen sizes
+                                    const newHeight = this.getHeight();
+                                    this.calendar.setOption('height', newHeight);
+                                    // Call updateSize to recalculate calendar layout and adjust to container
+                                    this.calendar.updateSize();
+                                }, 250);
+                            };
+                            window.addEventListener('resize', handleResize);
+                            // Handle orientation change on mobile devices
+                            window.addEventListener('orientationchange', () => {
+                                setTimeout(() => {
+                                    handleResize();
+                                }, 100);
+                            });
+                        },
+                        updateTitle() {
+                            const el = document.getElementById('calendar-title');
+                            if (el && this.calendar) el.textContent = this.calendar.view.title;
+                        },
+                        prev() {
+                            this.calendar.prev();
+                            this.updateTitle()
+                        },
+                        next() {
+                            this.calendar.next();
+                            this.updateTitle()
+                        },
+                        today() {
+                            this.calendar.today();
+                            this.updateTitle()
+                        },
+                        changeView(v) {
+                            this.currentView = v;
+                            this.calendar.changeView(v);
+                            this.updateTitle();
+                        },
+                        openEventModal(id) {
+                            // Extract original event_id from compound IDs (event_id_span or event_id_recur)
+                            // For example: "123_span" or "123_recur" -> "123"
+                            let eventId = id;
+                            if (typeof id === 'string' && id.includes('_')) {
+                                const lastUnderscore = id.lastIndexOf('_');
+                                const suffix = id.substring(lastUnderscore + 1);
+                                if (suffix === 'span' || suffix === 'recur') {
+                                    // Extract everything before the last underscore
+                                    eventId = id.substring(0, lastUnderscore);
+                                    // Convert to number if it's numeric
+                                    const numericId = parseInt(eventId, 10);
+                                    if (!isNaN(numericId)) {
+                                        eventId = numericId;
+                                    }
                                 }
                             }
-                        }
 
-                        this.$dispatch('open-event', {
-                            id: eventId
-                        })
-                    },
+                            this.$dispatch('open-event', {
+                                id: eventId
+                            })
+                        },
+                    }
                 }
-            }
 
-            window.filterPanel = function(init) {
-                return {
-                    open: false,
-                    status: init.initialStatus || 'all',
-                    org: init.initialOrg || '',
-                    etype: init.initialType || '',
-                    toast: {
-                        show: false,
-                        message: '',
-                        type: 'info'
-                    },
-                    init() {
-                        this.syncStore()
-                    },
-                    syncStore() {
-                        if (window.Alpine) {
-                            if (!Alpine.store('filters')) {
-                                Alpine.store('filters', {
-                                    status: this.status,
-                                    org: this.org,
-                                    etype: this.etype
-                                });
-                            } else {
-                                Alpine.store('filters').status = this.status;
-                                Alpine.store('filters').org = this.org;
-                                Alpine.store('filters').etype = this.etype;
+                window.filterPanel = function(init) {
+                    return {
+                        open: false,
+                        status: init.initialStatus || 'all',
+                        org: init.initialOrg || '',
+                        etype: init.initialType || '',
+                        toast: {
+                            show: false,
+                            message: '',
+                            type: 'info'
+                        },
+                        init() {
+                            this.syncStore()
+                        },
+                        syncStore() {
+                            if (window.Alpine) {
+                                if (!Alpine.store('filters')) {
+                                    Alpine.store('filters', {
+                                        status: this.status,
+                                        org: this.org,
+                                        etype: this.etype
+                                    });
+                                } else {
+                                    Alpine.store('filters').status = this.status;
+                                    Alpine.store('filters').org = this.org;
+                                    Alpine.store('filters').etype = this.etype;
+                                }
                             }
-                        }
-                    },
-                    showToast(msg, type = 'info') {
-                        this.toast.message = msg;
-                        this.toast.type = type;
-                        this.toast.show = true;
-                        setTimeout(() => this.toast.show = false, 2500);
-                    },
-                    summaryLabel() {
-                        const parts = [];
-                        // Only include status if it's actually filtered (not empty)
-                        if (this.status && this.status !== 'all') {
-                            parts.push(this.status === 'approved' ? 'Approved' : 'Rescheduled');
-                        }
-                        // Only include org if it's actually filtered (not empty)
-                        if (this.org) {
-                            parts.push('Selected Org');
-                        }
-                        // Only include event type if it's actually filtered (not empty)
-                        if (this.etype) {
-                            parts.push('Selected Type');
-                        }
-                        // Include past events toggle if it's on (server-side rendered check)
-                        @if ($showPastEvents)
-                            parts.push('Past Events');
-                        @endif
-                        // Return message only if there are active filters
-                        return parts.length > 0 ? `Filters applied: ${parts.join(' · ')}` : 'No filters applied';
-                    },
-                    async apply() {
-                        // Close drawer first with $nextTick to ensure clean state
-                        this.open = false;
-                        await this.$nextTick();
+                        },
+                        showToast(msg, type = 'info') {
+                            this.toast.message = msg;
+                            this.toast.type = type;
+                            this.toast.show = true;
+                            setTimeout(() => this.toast.show = false, 2500);
+                        },
+                        summaryLabel() {
+                            const parts = [];
+                            // Only include status if it's actually filtered (not empty)
+                            if (this.status && this.status !== 'all') {
+                                parts.push(this.status === 'approved' ? 'Approved' : 'Rescheduled');
+                            }
+                            // Only include org if it's actually filtered (not empty)
+                            if (this.org) {
+                                parts.push('Selected Org');
+                            }
+                            // Only include event type if it's actually filtered (not empty)
+                            if (this.etype) {
+                                parts.push('Selected Type');
+                            }
+                            // Include past events toggle if it's on (server-side rendered check)
+                            @if ($showPastEvents)
+                                parts.push('Past Events');
+                            @endif
+                            // Return message only if there are active filters
+                            return parts.length > 0 ? `Filters applied: ${parts.join(' · ')}` : 'No filters applied';
+                        },
+                        async apply() {
+                            // Close drawer first with $nextTick to ensure clean state
+                            this.open = false;
+                            await this.$nextTick();
 
-                        // Show toast with success type
-                        this.showToast(this.summaryLabel(), 'success');
-                        this.syncStore();
+                            // Show toast with success type
+                            this.showToast(this.summaryLabel(), 'success');
+                            this.syncStore();
 
-                        // Convert 'all' to empty string for server-side filtering
-                        const statusValue = this.status === 'all' ? '' : this.status;
+                            // Convert 'all' to empty string for server-side filtering
+                            const statusValue = this.status === 'all' ? '' : this.status;
 
-                        // Single roundtrip: set filters server-side and fetch events
-                        const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
-                        // Update calendar component's events state and refetch
-                        if (window.osaCalendarInstance) {
-                            window.osaCalendarInstance.allEvents = updated || [];
-                            window.osaCalendarInstance.calendar.refetchEvents();
-                        } else if (window.fullCalendar) {
-                            // Fallback: update global calendar if component instance not available
-                            const currentDate = window.fullCalendar.getDate();
-                            const currentView = window.fullCalendar.view.type;
-                            window.fullCalendar.removeAllEvents();
-                            if (updated && updated.length) window.fullCalendar.addEventSource(updated);
-                            window.fullCalendar.gotoDate(currentDate);
-                            window.fullCalendar.changeView(currentView);
-                        } else {
-                            // Fallback: trigger existing refetch behavior
-                            this.$wire.dispatch('calendar-refetch');
-                        }
-                    },
-                    async clearAll() {
-                        this.status = 'all';
-                        this.org = '';
-                        this.etype = '';
+                            // Single roundtrip: set filters server-side and fetch events
+                            const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
+                            // Update calendar component's events state and refetch
+                            if (window.osaCalendarInstance) {
+                                window.osaCalendarInstance.allEvents = updated || [];
+                                window.osaCalendarInstance.calendar.refetchEvents();
+                            } else if (window.fullCalendar) {
+                                // Fallback: update global calendar if component instance not available
+                                const currentDate = window.fullCalendar.getDate();
+                                const currentView = window.fullCalendar.view.type;
+                                window.fullCalendar.removeAllEvents();
+                                if (updated && updated.length) window.fullCalendar.addEventSource(updated);
+                                window.fullCalendar.gotoDate(currentDate);
+                                window.fullCalendar.changeView(currentView);
+                            } else {
+                                // Fallback: trigger existing refetch behavior
+                                this.$wire.dispatch('calendar-refetch');
+                            }
+                        },
+                        async clearAll() {
+                            this.status = 'all';
+                            this.org = '';
+                            this.etype = '';
 
-                        // Close drawer first with $nextTick to ensure clean state
-                        this.open = false;
-                        await this.$nextTick();
+                            // Close drawer first with $nextTick to ensure clean state
+                            this.open = false;
+                            await this.$nextTick();
 
-                        // Show toast with success type
-                        this.showToast('All filters cleared', 'success');
-                        this.syncStore();
+                            // Show toast with success type
+                            this.showToast('All filters cleared', 'success');
+                            this.syncStore();
 
-                        const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
-                        // Update calendar component's events state and refetch
-                        if (window.osaCalendarInstance) {
-                            window.osaCalendarInstance.allEvents = updated || [];
-                            window.osaCalendarInstance.calendar.refetchEvents();
-                        } else if (window.fullCalendar) {
-                            // Fallback: update global calendar if component instance not available
-                            const currentDate = window.fullCalendar.getDate();
-                            const currentView = window.fullCalendar.view.type;
-                            window.fullCalendar.removeAllEvents();
-                            if (updated && updated.length) window.fullCalendar.addEventSource(updated);
-                            window.fullCalendar.gotoDate(currentDate);
-                            window.fullCalendar.changeView(currentView);
-                        } else {
-                            this.$wire.dispatch('calendar-refetch');
+                            const updated = await this.$wire.setFiltersAndGetEvents(this.status, this.org, this.etype);
+                            // Update calendar component's events state and refetch
+                            if (window.osaCalendarInstance) {
+                                window.osaCalendarInstance.allEvents = updated || [];
+                                window.osaCalendarInstance.calendar.refetchEvents();
+                            } else if (window.fullCalendar) {
+                                // Fallback: update global calendar if component instance not available
+                                const currentDate = window.fullCalendar.getDate();
+                                const currentView = window.fullCalendar.view.type;
+                                window.fullCalendar.removeAllEvents();
+                                if (updated && updated.length) window.fullCalendar.addEventSource(updated);
+                                window.fullCalendar.gotoDate(currentDate);
+                                window.fullCalendar.changeView(currentView);
+                            } else {
+                                this.$wire.dispatch('calendar-refetch');
+                            }
                         }
                     }
                 }
-            }
-        </script>
-        <script>
-            window.eventDetailsModal = function() {
-                return {
-                    open: false,
-                    loading: false,
-                    data: null,
-                    // simple in-memory cache: id -> data or Promise
-                    cache: {},
-                    async openById(id) {
-                        this.open = true;
-                        const cached = this.cache[id];
-                        if (cached) {
-                            // cached may be data or a pending Promise
-                            if (cached.then) {
-                                this.loading = true;
-                                try {
-                                    const details = await cached;
-                                    this.data = details || null;
-                                } catch (e) {
-                                    console.error('Failed to load event details', e);
-                                } finally {
+            </script>
+            <script>
+                window.eventDetailsModal = function() {
+                    return {
+                        open: false,
+                        loading: false,
+                        data: null,
+                        // simple in-memory cache: id -> data or Promise
+                        cache: {},
+                        async openById(id) {
+                            this.open = true;
+                            const cached = this.cache[id];
+                            if (cached) {
+                                // cached may be data or a pending Promise
+                                if (cached.then) {
+                                    this.loading = true;
+                                    try {
+                                        const details = await cached;
+                                        this.data = details || null;
+                                    } catch (e) {
+                                        console.error('Failed to load event details', e);
+                                    } finally {
+                                        this.loading = false;
+                                    }
+                                } else {
+                                    this.data = cached;
                                     this.loading = false;
                                 }
-                            } else {
-                                this.data = cached;
+                                return;
+                            }
+
+                            this.loading = true;
+                            this.data = null;
+                            // store the pending promise to dedupe concurrent requests
+                            const promise = this.$wire.getEventDetails(id)
+                                .then((details) => {
+                                    this.cache[id] = details || null;
+                                    return this.cache[id];
+                                })
+                                .catch((e) => {
+                                    console.error('Failed to load event details', e);
+                                    // bust cache entry on error
+                                    delete this.cache[id];
+                                    return null;
+                                });
+
+                            this.cache[id] = promise;
+
+                            try {
+                                const details = await promise;
+                                this.data = details;
+                            } finally {
                                 this.loading = false;
                             }
-                            return;
-                        }
-
-                        this.loading = true;
-                        this.data = null;
-                        // store the pending promise to dedupe concurrent requests
-                        const promise = this.$wire.getEventDetails(id)
-                            .then((details) => {
-                                this.cache[id] = details || null;
-                                return this.cache[id];
-                            })
-                            .catch((e) => {
-                                console.error('Failed to load event details', e);
-                                // bust cache entry on error
-                                delete this.cache[id];
-                                return null;
-                            });
-
-                        this.cache[id] = promise;
-
-                        try {
-                            const details = await promise;
-                            this.data = details;
-                        } finally {
+                        },
+                        close() {
+                            this.open = false;
+                            this.data = null;
                             this.loading = false;
-                        }
-                    },
-                    close() {
-                        this.open = false;
-                        this.data = null;
-                        this.loading = false;
-                    },
-                    formatDate(d) {
-                        if (!d) return '—';
-                        try {
-                            const dt = new Date(d);
-                            return dt.toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: '2-digit',
-                                year: 'numeric'
-                            });
-                        } catch (_) {
-                            return d;
-                        }
-                    },
-                    timeRange(a, b) {
-                        if (!a && !b) return '—';
-
-                        // Format time from HH:MM:SS to readable format (e.g., "8:00 AM")
-                        const formatTime = (timeStr) => {
-                            if (!timeStr) return '';
+                        },
+                        formatDate(d) {
+                            if (!d) return '—';
                             try {
-                                // Parse HH:MM:SS format
-                                const [hours, minutes] = timeStr.split(':');
-                                const h = parseInt(hours, 10);
-                                const m = parseInt(minutes, 10);
-
-                                // Convert to 12-hour format
-                                const period = h >= 12 ? 'PM' : 'AM';
-                                const hour12 = h % 12 || 12;
-
-                                return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
-                            } catch (e) {
-                                return timeStr; // Return as-is if parsing fails
+                                const dt = new Date(d);
+                                return dt.toLocaleDateString(undefined, {
+                                    month: 'short',
+                                    day: '2-digit',
+                                    year: 'numeric'
+                                });
+                            } catch (_) {
+                                return d;
                             }
-                        };
+                        },
+                        timeRange(a, b) {
+                            if (!a && !b) return '—';
 
-                        const startFormatted = formatTime(a);
-                        const endFormatted = formatTime(b);
+                            // Format time from HH:MM:SS to readable format (e.g., "8:00 AM")
+                            const formatTime = (timeStr) => {
+                                if (!timeStr) return '';
+                                try {
+                                    // Parse HH:MM:SS format
+                                    const [hours, minutes] = timeStr.split(':');
+                                    const h = parseInt(hours, 10);
+                                    const m = parseInt(minutes, 10);
 
-                        return `${startFormatted}${(startFormatted && endFormatted) ? ' - ' : ''}${endFormatted}`;
+                                    // Convert to 12-hour format
+                                    const period = h >= 12 ? 'PM' : 'AM';
+                                    const hour12 = h % 12 || 12;
+
+                                    return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+                                } catch (e) {
+                                    return timeStr; // Return as-is if parsing fails
+                                }
+                            };
+
+                            const startFormatted = formatTime(a);
+                            const endFormatted = formatTime(b);
+
+                            return `${startFormatted}${(startFormatted && endFormatted) ? ' - ' : ''}${endFormatted}`;
+                        }
                     }
                 }
-            }
-        </script>
-    @endscript
-</div>
+            </script>
+        @endpush
+    </div>
 </div>
