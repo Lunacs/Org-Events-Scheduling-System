@@ -71,12 +71,11 @@ class Reschedule extends Component
     {
         $ticketNumber = request()->get('ticket');
 
-        // Sanitize input
         if (!preg_match('/^TKT-[A-Z]+-\d{4}$/', $ticketNumber)) {
             return;
         }
 
-        $ticket = auth()->user()->tickets()
+        $ticket = $this->getBaseTicketsQuery()
             ->where('ticket_number', $ticketNumber)
             ->whereIn('status', ['approved', 'for_rescheduling'])
             ->first();
@@ -234,12 +233,30 @@ class Reschedule extends Component
 
     private function authorizeSelectedTicket(): void
     {
-        $ticket = Ticket::find($this->selectedEventId);
+        $user = auth()->user();
+        $ticket = \App\Models\Ticket::find($this->selectedEventId);
 
-        if (!$ticket || $ticket->user_id !== auth()->id()) {
+        if (!$ticket) {
+            throw ValidationException::withMessages([
+                'selectedEventId' => 'Ticket not found.',
+            ]);
+        }
+
+        // President can only reschedule their own tickets
+        if ($user->position->position_name === 'President' && $ticket->user_id !== $user->user_id) {
             throw ValidationException::withMessages([
                 'selectedEventId' => 'You are not authorized to reschedule this event.',
             ]);
+        }
+
+        // Chairperson/Adviser can reschedule any ticket in their org
+        if (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
+            $ticketOrgId = $ticket->user->org_id ?? null;
+            if ($ticketOrgId !== $user->org_id) {
+                throw ValidationException::withMessages([
+                    'selectedEventId' => 'You are not authorized to reschedule this event.',
+                ]);
+            }
         }
 
         if (!in_array($ticket->status, ['approved', 'for_rescheduling'])) {
@@ -276,7 +293,7 @@ class Reschedule extends Component
             return null;
         }
 
-        $ticket = auth()->user()->tickets()->find($this->selectedEventId);
+        $ticket = $this->getBaseTicketsQuery()->find($this->selectedEventId);
         if (!$ticket) {
             return null;
         }
@@ -488,9 +505,25 @@ class Reschedule extends Component
         }
     }
 
+    private function getBaseTicketsQuery()
+    {
+        $user = auth()->user();
+        $query = \App\Models\Ticket::query();
+
+        if ($user->position->position_name === 'President') {
+            $query->where('user_id', $user->user_id);
+        } elseif (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->withTrashed()->where('org_id', $user->org_id);
+            });
+        }
+
+        return $query;
+    }
+
     public function render()
     {
-        $approvedEvents = auth()->user()->tickets()
+        $approvedEvents = $this->getBaseTicketsQuery()
             ->whereIn('status', ['approved', 'for_rescheduling'])
             ->where('date_from', '>=', now()->addDays(self::MIN_RESCHEDULE_DAYS))
             ->get()
@@ -501,7 +534,7 @@ class Reschedule extends Component
             ]);
 
         $selectedEvent = $this->selectedEventId
-            ? auth()->user()->tickets()->find($this->selectedEventId)
+            ? $this->getBaseTicketsQuery()->find($this->selectedEventId)
             : null;
 
         return view('livewire.student-org.reschedule', [

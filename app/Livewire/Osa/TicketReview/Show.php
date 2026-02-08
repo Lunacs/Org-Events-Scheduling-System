@@ -76,7 +76,8 @@ class Show extends Component
             'created_at',
             'updated_at',
         ])->with([
-            'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
+            'user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'email', 'role_id', 'org_id', 'position_id', 'avatar_style', 'avatar_seed']),
             'user.role:role_id,role_name',
             'user.studentOrganization:org_id,org_name,org_code,course_id,adviser_name,logo',
             'user.studentOrganization.course:course_id,course_name',
@@ -87,14 +88,17 @@ class Show extends Component
             'eventType:event_type_id,type_name',
             'fundSource:source_id,source_name',
             'comments:id,ticket_id,user_id,content,created_at',
-            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'comments.user.role:role_id,role_name',
             'osaApprovals:osa_approval_id,ticket_id,user_id,decision,remarks,created_at',
-            'osaApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'osaApprovals.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'osaApprovals.user.role:role_id,role_name',
             'officeApprovals:id,ticket_id,office_id,user_id,decision,remarks,created_at',
             'officeApprovals.office:office_id,office_name',
-            'officeApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'officeApprovals.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'officeApprovals.user.role:role_id,role_name',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }

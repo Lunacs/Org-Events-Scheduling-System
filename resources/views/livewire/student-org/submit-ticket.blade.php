@@ -171,39 +171,59 @@
                                 <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
                                                  required/>
 
-                                <div x-data="{
+                            <div x-data="{
                                 preferredVenue: @entangle('preferredVenue').live,
+                                showOtherPreferred: @entangle('preferredVenue').live === 'other',
                                 venues: @js($venues)
                             }">
-                                    <x-mary-select label="Preferred Venue" wire:model.live="preferredVenue"
-                                                   :options="$venues" option-value="venue_id" option-label="venue_name"
-                                                   placeholder="Select a venue" required/>
+                                <x-mary-select
+                                    label="Preferred Venue"
+                                    wire:model.live="preferredVenue"
+                                    :options="[...$venues, ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)']]"
+                                    option-value="venue_id"
+                                    option-label="venue_name"
+                                    placeholder="Select a venue"
+                                    required
+                                />
 
-                                    <div
-                                        x-show="preferredVenue && venues.find(v => v.venue_id == preferredVenue)?.venue_name === 'Others (Please Specify)'"
-                                        x-collapse x-cloak class="mt-4">
-                                        <x-mary-input label="Please specify preferred venue"
-                                                      wire:model.live="preferredVenueOther"
-                                                      placeholder="Enter venue name"/>
-                                    </div>
-                                </div>
-                                <div x-data="{
-                                alternativeVenue: @entangle('alternativeVenue').live,
-                                venues: @js($venues)
-                            }">
-                                    <x-mary-select label="Alternative Venue" wire:model.live="alternativeVenue"
-                                                   :options="$venues" option-value="venue_id" option-label="venue_name"
-                                                   placeholder="Select backup venue"/>
-
-                                    <div
-                                        x-show="alternativeVenue && venues.find(v => v.venue_id == alternativeVenue)?.venue_name === 'Others (Please Specify)'"
-                                        x-collapse x-cloak class="mt-4">
-                                        <x-mary-input label="Please specify alternative venue"
-                                                      wire:model.live.debounce.300ms="alternativeVenueOther"
-                                                      placeholder="Enter venue name"/>
-                                    </div>
+                                <div x-show="preferredVenue === 'other'"
+                                     x-collapse
+                                     x-cloak
+                                     class="mt-4">
+                                    <x-mary-input
+                                        label="Please specify preferred venue"
+                                        wire:model.live="preferredVenueOther"
+                                        placeholder="Enter venue name" required
+                                    />
                                 </div>
                             </div>
+
+                            <div x-data="{
+                                alternativeVenue: @entangle('alternativeVenue').live,
+                                showOtherAlternative: @entangle('alternativeVenue').live === 'other',
+                                venues: @js($venues)
+                            }">
+                                <x-mary-select
+                                    label="Alternative Venue"
+                                    wire:model.live="alternativeVenue"
+                                    :options="[...$venues, ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)']]"
+                                    option-value="venue_id"
+                                    option-label="venue_name"
+                                    placeholder="Select backup venue"
+                                />
+
+                                <div x-show="alternativeVenue === 'other'"
+                                     x-collapse
+                                     x-cloak
+                                     class="mt-4">
+                                    <x-mary-input
+                                        label="Please specify alternative venue"
+                                        wire:model.blur="alternativeVenueOther"
+                                        placeholder="Enter venue name"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
                             <div class="mt-4">
                                 <x-mary-textarea label="Special Requirements"
@@ -280,26 +300,25 @@
                                                  rows="4"/>
                             </div>
 
-                            <div x-data="{ igp: @entangle('igp_requested') }">
-                                <div class="mt-4">
-                                    <x-mary-radio label="IGP Request" wire:model.live="igp_requested" :options="[
+                        <div x-data="{ igp: @entangle('igp_requested') }">
+                            <div class="mt-4">
+                                <x-mary-radio label="IGP (Income Generated Project) Request" wire:model.live="igp_requested" :options="[
                                     ['id' => 'true', 'name' => 'Requested'],
                                     ['id' => 'false', 'name' => 'Not Requested'],
                                 ]"
                                                   inline required/>
                                 </div>
 
-                                <div x-show="igp === 'true'" x-collapse x-cloak>
-                                    <div class="mt-4">
-                                        <x-mary-textarea label="IGP Brief Description"
-                                                         wire:model.live.debounce.300ms="igp_details"
-                                                         placeholder="List all descriptions for IGP requested items"
-                                                         rows="4"/>
-                                    </div>
+                            <div x-show="igp === 'true'" x-collapse x-cloak>
+                                <div class="mt-4">
+                                    <x-mary-textarea label="IGP (Income Generated Project) Brief Description" wire:model.live.debounce.300ms="igp_details"
+                                                     placeholder="List all descriptions for IGP (Income Generated Project) requested items"
+                                                     rows="4"/>
                                 </div>
                             </div>
-                        </x-mary-card>
-                    @endif
+                        </div>
+                    </x-mary-card>
+                @endif
 
                     {{-- Step 5: Attachments --}}
                     @if ($currentStep === 5)
@@ -424,27 +443,6 @@
 
     @script
     <script>
-        // Listen for form submission
-        const form = document.querySelector('[wire\\:submit="save"]');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                console.log('Form submit event fired at:', new Date().toISOString());
-                console.log('Event defaultPrevented:', e.defaultPrevented);
-                console.log('Livewire component ready:', !!window.Livewire);
-            });
-        }
-
-        // Listen for Livewire commit
-        document.addEventListener('livewire:commit', ({ detail }) => {
-            console.log('Livewire commit:', detail);
-        });
-
-        // Listen for console log events from Livewire
-        $wire.on('log-to-console', (event) => {
-            console.log(event.message || event[0]?.message || 'Livewire event received');
-        });
-
-        // Step changed handler
         $wire.on('step-changed', () => {
             setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });

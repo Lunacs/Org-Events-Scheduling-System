@@ -78,7 +78,7 @@ class EventCalendar extends Component
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'venue_other', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
@@ -179,7 +179,7 @@ class EventCalendar extends Component
             ->with([
                 'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
@@ -257,7 +257,8 @@ class EventCalendar extends Component
                     ->with([
                         'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->withTrashed()
+                                    ->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
@@ -267,6 +268,9 @@ class EventCalendar extends Component
             ->where('status', 'approved')
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
+                // Include soft-deleted users when checking ticket status
+                $query->whereHas('user', fn($q) => $q->withTrashed());
+
                 if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
@@ -275,7 +279,7 @@ class EventCalendar extends Component
                 }
             })
             // Apply organization filter if set
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
             // Apply event type filter if set
             ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
@@ -495,14 +499,16 @@ class EventCalendar extends Component
         $query = Event_Schedule::query()
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
-                if ($this->statusFilter && $this->statusFilter !== 'all') {
+                if ($this->statusFilter && $this->statusFilter !== 'all')
+                $query->whereHas('user', fn($q) => $q->withTrashed());
+                if ($this->statusFilter) {
                     $query->where('status', $this->statusFilter);
                 } else {
                     // Show both approved and rescheduled when 'all' or no specific filter
                     $query->whereIn('status', ['approved', 'rescheduled']);
                 }
             })
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
             ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
             ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
@@ -523,7 +529,7 @@ class EventCalendar extends Component
                     ->with([
                         'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                                'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
@@ -593,11 +599,7 @@ class EventCalendar extends Component
                 'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
                 'color' => $colorName,
                 'hexColor' => $hexColor,
-                'icon' => $this->getEventTypeIcon(
-                    is_object($event->eventType) && isset($event->eventType->type_name)
-                        ? $event->eventType->type_name
-                        : ''
-                ),
+                'icon' => $this->getEventTypeIcon($event->eventType?->type_name ?? ''),
                 'start_date' => $schedule->start_date,
                 'event_id' => $event->event_id,
             ];
@@ -606,11 +608,6 @@ class EventCalendar extends Component
 
     private function getEventTypeIcon($typeName): string
     {
-        // Ensure we have a valid string to prevent invalid icon names like "1"
-        if (!is_string($typeName) || empty(trim($typeName))) {
-            return 's-calendar'; // Return default if not a valid string
-        }
-
         $iconMap = [
             'General Assemblies and Similar Activities' => 's-user-group',
             'Organization Shirts / IGP' => 's-shopping-bag',
@@ -619,7 +616,7 @@ class EventCalendar extends Component
             'Training, Rehearsals, Practices' => 's-academic-cap',
         ];
 
-        $lowerType = strtolower(trim($typeName));
+        $lowerType = strtolower($typeName);
         foreach ($iconMap as $key => $icon) {
             if (str_contains($lowerType, strtolower($key))) {
                 return $icon;

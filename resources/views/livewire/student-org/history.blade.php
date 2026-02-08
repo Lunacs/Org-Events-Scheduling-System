@@ -290,8 +290,11 @@
                                     @if($isForRevision)
 {{--                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"--}}
 {{--                                                       tooltip="View Feedback"/>--}}
-                                        <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost"
-                                                       tooltip="Resubmit Modified"/>
+                                        <x-mary-button
+                                            icon="s-arrow-path"
+                                            class="btn-sm btn-ghost"
+                                            tooltip="Resubmit Modified"
+                                            wire:click="resubmitTicket({{ $ticket->ticket_id }})" />
                                     @elseif($isCancelled)
 {{--                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"--}}
 {{--                                                       tooltip="Cancellation Report"/>--}}

@@ -238,15 +238,15 @@ class Ticket extends Model
      */
     public function getVenueDisplayNameAttribute()
     {
-        // Get venue from ticket's requested venue relationship
-        $requestedVenue = $this->venue?->venue_name;
-
-        if ($requestedVenue === 'Others (Please Specify)') {
+        // If venue_requested is null, use the custom venue_other field
+        if ($this->venue_requested === null) {
             return $this->venue_other;
         }
 
-        return $requestedVenue;
+        // Otherwise, get the venue name from the relationship
+        return $this->venue?->venue_name;
     }
+
 
     public function alternateVenue()
     {
@@ -258,13 +258,13 @@ class Ticket extends Model
      */
     public function getAlternateVenueDisplayNameAttribute()
     {
-        $alternateVenue = $this->alternateVenue?->venue_name;
-
-        if ($alternateVenue === 'Others (Please Specify)') {
+        // If venue_requested is null, use the custom venue_other field
+        if ($this->alternate_venue === null) {
             return $this->alternate_venue_other;
         }
 
-        return $alternateVenue;
+        // Otherwise, get the venue name from the relationship
+        return $this->alternateVenue?->venue_name;
     }
 
     /**

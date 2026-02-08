@@ -30,13 +30,13 @@ class Details extends Component
     public function mount($ticketNumber)
     {
         $this->ticket = Ticket::with([
-            'user.studentOrganization',
+            'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             'events.eventSchedules',
             'attachments',
-            'osaApprovals.user',
+            'osaApprovals.user' => fn($q) => $q->withTrashed(),
             'officeApprovals.office',
-            'officeApprovals.user',
-            'approvalHistory.user',
+            'officeApprovals.user' => fn($q) => $q->withTrashed(),
+            'approvalHistory.user' => fn($q) => $q->withTrashed(),
             'approvalHistory.office',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }
@@ -88,7 +88,6 @@ class Details extends Component
             'status_label' => ucfirst(str_replace('_', ' ', $decision)),
             'status_badge' => match ($decision) {
                 'approved' => 'badge-success',
-                'for_revision' => 'badge-warning',
                 default => 'badge-warning',
             },
             'office_id' => $officeId,
@@ -141,7 +140,9 @@ class Details extends Component
         DB::beginTransaction();
         try {
             // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
+            $this->ticket = Ticket::with([
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+            ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
             $officeId = Auth::user()->office_id;
@@ -198,10 +199,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'osaApprovals.user',
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'events.eventSchedules',
+                'attachments',
+                'osaApprovals.user' => fn($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user',
-                'approvalHistory.user',
+                'officeApprovals.user' => fn($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 
@@ -240,7 +244,9 @@ class Details extends Component
         DB::beginTransaction();
         try {
             // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
+            $this->ticket = Ticket::with([
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+            ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
             $officeId = Auth::user()->office_id;
@@ -297,10 +303,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'osaApprovals.user',
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'events.eventSchedules',
+                'attachments',
+                'osaApprovals.user' => fn($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user',
-                'approvalHistory.user',
+                'officeApprovals.user' => fn($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 

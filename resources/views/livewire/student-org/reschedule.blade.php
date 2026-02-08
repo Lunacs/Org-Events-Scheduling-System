@@ -13,7 +13,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 class="text-3xl font-heading font-bold text-base-content">Reschedule a Ticket</h1>
-                            <p class="text-base-content/70 mt-1">Reschedule a ticket of your event request</p>
+                            <p class="text-base-content/70 mt-1">Reschedule a ticket of your organization's event request</p>
                         </div>
                     </div>
                 </div>

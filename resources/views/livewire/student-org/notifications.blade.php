@@ -51,7 +51,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 class="text-3xl font-bold text-base-content">Notifications Center</h1>
-                            <p class="text-base-content/70 mt-1">Stay updated on your event requests and university
+                            <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and university
                                 announcements</p>
                         </div>
                         <div class="flex flex-col md:flex-row items-center gap-2">

@@ -60,7 +60,7 @@
             </div>
 
             {{-- Recent Tickets --}}
-            <x-mary-card title="Recent Ticket Submissions" subtitle="Your latest event requests">
+            <x-mary-card title="Recent Ticket Submissions" subtitle="The latest event requests from your organization: {{ auth()->user()->studentOrganization->org_name }}">
                 <x-slot:menu>
                     <x-mary-button label="View All" link="/student-org/my-tickets" icon="s-eye"
                                    class="btn-sm btn-ghost" wire:navigate />

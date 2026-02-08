@@ -59,7 +59,7 @@ class SubmitTicket extends Component
     #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
     public $eventTitle = '';
 
-    #[Validate('required|max:2000|min:20')]
+    #[Validate('required|max:100000|min:20')]
     public $eventDescription = '';
 
     #[Validate('required|integer|exists:event__types,event_type_id')]
@@ -252,6 +252,20 @@ class SubmitTicket extends Component
             3 => [
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
+                'eventStartTime' => ['required', 'date_format:H:i'],
+                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
+                'preferredVenue' => ['required', function($attribute, $value, $fail) {
+                    if ($value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
+                        $fail('The selected venue is invalid.');
+                    }
+                }],
+                'preferredVenueOther' => $this->preferredVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
+                'alternativeVenue' => ['nullable', function($attribute, $value, $fail) {
+                    if ($value && $value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
+                        $fail('The selected alternative venue is invalid.');
+                    }
+                }],
+                'alternativeVenueOther' => $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
                 'eventStartTime' => 'required|date_format:H:i|after_or_equal:00:01',
                 'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
                 'preferredVenue' => 'required|integer|exists:venues,venue_id',
@@ -460,7 +474,17 @@ class SubmitTicket extends Component
         $this->proponent_contact = $currentUser->phone ?? '';
         $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
-        // Trigger validation for adviser_contact since it has a default value
+        // Load resubmit data if available
+        if (session()->has('resubmit_ticket')) {
+            $data = session()->pull('resubmit_ticket');
+            foreach ($data as $key => $value) {
+                if (property_exists($this, $key)) {
+                    $this->{$key} = $value;
+                }
+            }
+        }
+
+        // Trigger validation for adviser_contact
         try {
             $this->validateOnly('adviser_contact', [
                 'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
@@ -550,10 +574,10 @@ class SubmitTicket extends Component
                 'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
                 'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
-                'venue_requested' => $nullIfEmptyInt($this->preferredVenue),
-                'venue_other' => $nullIfEmpty($this->preferredVenueOther),
-                'alternate_venue' => $nullIfEmptyInt($this->alternativeVenue),
-                'alternate_venue_other' => $nullIfEmpty($this->alternativeVenueOther),
+                'venue_requested' => $this->preferredVenue === 'other' ? null : $nullIfEmptyInt($this->preferredVenue),
+                'venue_other' => $this->preferredVenue === 'other' ? $this->preferredVenueOther : $nullIfEmpty($this->preferredVenueOther),
+                'alternate_venue' => $this->alternativeVenue === 'other' ? null : $nullIfEmptyInt($this->alternativeVenue),
+                'alternate_venue_other' => $this->alternativeVenue === 'other' ? $this->alternativeVenueOther : $nullIfEmpty($this->alternativeVenueOther),
                 'special_requirements' => $nullIfEmpty($this->specialRequirements),
                 'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
                 'fund_source_id' => (int) $this->fundingSource,
