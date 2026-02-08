@@ -99,6 +99,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'timestamp' => now()->toDateTimeString(),
         ]);
     })->name('keep-alive');
+
+    // Signed URL routes for attachment access (private storage)
+    Route::get('/attachments/{attachment}/preview', [\App\Http\Controllers\AttachmentController::class, 'preview'])
+        ->name('attachments.preview')
+        ->middleware('signed');
+    Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
+        ->name('attachments.download')
+        ->middleware('signed');
 });
 
 // OSA routes

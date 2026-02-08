@@ -324,4 +324,55 @@ class Details extends Component
             $this->error('Failed to request revision: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Generate a temporary URL and open in a new tab for preview.
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, false);
+
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Generate a temporary URL that forces download and dispatch to client.
+     */
+    public function downloadAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, true);
+
+        $this->dispatch('download-attachment', url: $url);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem.
+     * Uses S3 temporaryUrl for cloud storage, or signed routes for local storage.
+     */
+    private function makeTemporaryUrl(int $attachmentId, bool $forceDownload = false): string
+    {
+        $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
+
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            $routeName,
+            now()->addMinutes(5),
+            ['attachment' => $attachmentId]
+        );
+    }
 }
