@@ -19,6 +19,7 @@ use App\Livewire\Osa\TicketManagement;
 use App\Livewire\Superadmin\Dashboard;
 use App\Livewire\StudentOrg\Reschedule;
 use App\Livewire\StudentOrg\SubmitTicket;
+use App\Livewire\StudentOrg\TicketDetails;
 use App\Livewire\StudentOrg\Notifications;
 // Gso/Offices Imports
 use App\Livewire\Gso\Details as GsoDetails;
@@ -176,6 +177,7 @@ Route::prefix('student-org')
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
         Route::get('/my-tickets', MyTicket::class)->name('student-org.my-tickets');
+        Route::get('/tickets/{ticketNumber}', TicketDetails::class)->name('student-org.ticket-details');
         Route::get('/calendar', Calendar::class)->name('student-org.calendar');
         Route::get('/reschedule', Reschedule::class)->name('student-org.reschedule');
         Route::get('/notifications', Notifications::class)->name('student-org.notifications');

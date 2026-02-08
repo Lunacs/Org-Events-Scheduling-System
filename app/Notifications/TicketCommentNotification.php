@@ -113,9 +113,9 @@ class TicketCommentNotification extends Notification implements ShouldQueue, Sho
      */
     private function getActionUrl(object $notifiable): string
     {
-        // Student Org users go to their tickets page
+        // Student Org users go to their ticket details page with comments anchor
         if ($notifiable->isStudentOrg()) {
-            return route('student-org.my-tickets');
+            return route('student-org.ticket-details', $this->ticket->ticket_number) . '#comments';
         }
 
         // OSA users go to ticket review
