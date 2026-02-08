@@ -421,6 +421,18 @@
                                 'orange' => 'badge-warning',
                                 default => 'badge-info',
                             };
+                            // Icon name based on color/type for visual distinction
+                            $iconName = match ($color) {
+                                'blue' => 'o-calendar-days',
+                                'green' => 'o-check-circle',
+                                'purple' => 'o-star',
+                                'yellow' => 'o-exclamation-triangle',
+                                'red' => 'o-fire',
+                                'cyan' => 'o-bolt',
+                                'lime' => 'o-sparkles',
+                                'orange' => 'o-sun',
+                                default => 'o-calendar-days',
+                            };
                         @endphp
                         <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
                                 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20
