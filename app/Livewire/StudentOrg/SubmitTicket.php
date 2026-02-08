@@ -737,43 +737,15 @@ class SubmitTicket extends Component
         // Temporarily set as array for validation
         $this->newAttachments = $files;
 
+        // Note: Using Laravel's built-in mimes validation instead of finfo_file
+        // because temp files are stored on S3 and not accessible locally
         $this->validate([
             'newAttachments.*' => [
                 'file',
                 'max:10240',
                 'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
-                function ($attribute, $value, $fail) {
-                    // Check actual file content, not just extension
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $mimeType = finfo_file($finfo, $value->getRealPath());
-                    finfo_close($finfo);
-
-                    $allowedMimes = [
-                        'application/pdf',
-                        'application/msword',
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'image/jpeg',
-                        'image/png',
-                        'application/vnd.ms-excel',
-                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    ];
-
-                    if (! in_array($mimeType, $allowedMimes)) {
-                        $fail('Invalid file type detected.');
-                    }
-                },
             ],
         ]);
-
-        // Check available disk space (skip for S3/cloud storage)
-        if (config('filesystems.default') === 'local') {
-            $totalSize = collect($files)->sum(fn($file) => $file->getSize());
-            if (disk_free_space(storage_path()) < ($totalSize * 2)) {
-                throw ValidationException::withMessages([
-                    'newAttachments' => 'Insufficient storage space.',
-                ]);
-            }
-        }
 
         $this->attachments = array_merge($this->attachments, $files);
         $this->reset('newAttachments');
