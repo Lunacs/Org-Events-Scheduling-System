@@ -17,9 +17,9 @@
                                 metrics</p>
                         </div>
                         <div class="hidden md:flex md:flex-col items-center space-y-2 sm:space-x-3">
-                            <x-mary-button label="Export Report" icon="s-document-arrow-down"
-                                           class="btn-secondary btn-sm text-white"
-                                           wire:click="exportReport" disabled/>
+{{--                            <x-mary-button label="Export Report" icon="s-document-arrow-down"--}}
+{{--                                           class="btn-secondary btn-sm text-white"--}}
+{{--                                           wire:click="exportReport" disabled/>--}}
                             <x-mary-button label="Submit New Event" icon="s-document-plus"
                                            class="btn-primary btn-sm text-white"
                                            link="/student-org/submit-ticket" wire:navigate/>
@@ -29,9 +29,9 @@
             </div>
 
             <div class="md:hidden flex flex-row items-center space-y-0 space-x-3">
-                <x-mary-button label="Export Report" icon="s-document-arrow-down"
-                               class="btn-secondary btn-sm text-white"
-                               wire:click="exportReport" disabled/>
+{{--                <x-mary-button label="Export Report" icon="s-document-arrow-down"--}}
+{{--                               class="btn-secondary btn-sm text-white"--}}
+{{--                               wire:click="exportReport" disabled/>--}}
                 <x-mary-button label="Submit New Event" icon="s-document-plus"
                                class="btn-primary btn-sm text-white"
                                link="/student-org/submit-ticket" wire:navigate/>
@@ -288,16 +288,16 @@
                                     <x-mary-button icon="s-eye" class="btn-sm btn-ghost" tooltip="View Details"
                                                    wire:click="openDetailsModal({{ $ticket->ticket_id }})"/>
                                     @if($isForRevision)
-                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"
-                                                       tooltip="View Feedback"/>
+{{--                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"--}}
+{{--                                                       tooltip="View Feedback"/>--}}
                                         <x-mary-button icon="s-arrow-path" class="btn-sm btn-ghost"
                                                        tooltip="Resubmit Modified"/>
                                     @elseif($isCancelled)
-                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"
-                                                       tooltip="Cancellation Report"/>
+{{--                                        <x-mary-button icon="s-document-text" class="btn-sm btn-ghost"--}}
+{{--                                                       tooltip="Cancellation Report"/>--}}
                                     @else
-                                        <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost"
-                                                       tooltip="Download Report"/>
+{{--                                        <x-mary-button icon="s-document-arrow-down" class="btn-sm btn-ghost"--}}
+{{--                                                       tooltip="Download Report"/>--}}
                                     @endif
                                 </div>
                             </div>
