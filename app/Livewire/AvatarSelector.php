@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Traits\WithProfilePhoto;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -81,19 +82,28 @@ class AvatarSelector extends Component
      */
     public function updatedPhoto()
     {
-        // Only validate the photo, don't save yet
-        $this->validate(
-            ['photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240']],
-            [
-                'photo.image' => 'The file must be an image.',
-                'photo.mimes' => 'The image must be a JPG, PNG, or WebP file.',
-                'photo.max' => 'The image must not exceed 10MB.',
-            ]
-        );
-        // Photo preview will be shown automatically via $photo->temporaryUrl()
+        try {
+            // Only validate the photo, don't save yet
+            $this->validate(
+                ['photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']],
+                [
+                    'photo.image' => 'The file must be an image.',
+                    'photo.mimes' => 'The image must be a JPG, PNG, or WebP file.',
+                    'photo.max' => 'The image must not exceed 5MB.',
+                ]
+            );
+            // Photo preview will be shown automatically via $photo->temporaryUrl()
 
-        // Dispatch event to trigger avatar re-initialization
-        $this->dispatch('photo-uploaded');
+            // Dispatch event to trigger avatar re-initialization
+            $this->dispatch('photo-uploaded');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->photo = null;
+            throw $e; // Re-throw to let Livewire handle validation display
+        } catch (\Exception $e) {
+            Log::error('Photo upload failed: ' . $e->getMessage());
+            $this->photo = null;
+            $this->error('The photo failed to upload. Please try again with a smaller file.', position: 'toast-top');
+        }
     }
 
     /**
@@ -109,14 +119,20 @@ class AvatarSelector extends Component
      */
     public function saveUploadedPhoto()
     {
-        if (!$this->photo) {
-            $this->error('No photo to save.', position: 'toast-top');
-            return;
-        }
+        try {
+            if (!$this->photo) {
+                $this->error('No photo to save.', position: 'toast-top');
+                return;
+            }
 
-        $this->saveProfilePhoto();
-        $this->dispatch('avatar-updated');
-        $this->js('window.dispatchEvent(new CustomEvent("avatar-changed"))');
+            $this->saveProfilePhoto();
+            $this->dispatch('avatar-updated');
+            $this->js('window.dispatchEvent(new CustomEvent("avatar-changed"))');
+        } catch (\Exception $e) {
+            Log::error('Failed to save profile photo: ' . $e->getMessage());
+            $this->photo = null;
+            $this->error('Failed to save the photo. Please try again.', position: 'toast-top');
+        }
     }
 
     /**

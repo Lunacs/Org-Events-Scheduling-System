@@ -10,35 +10,31 @@
     forwardRemarks: '',
     finalApprovalRemarks: ''
 }" x-on:ticket-approved.window="showApproval = false; approvalRemarks = ''"
-     x-on:ticket-forwarded.window="showForward = false; forwardRemarks = ''"
-     x-on:ticket-for-revision.window="showRevision = false; revisionRemarks = ''"
-     x-on:ticket-final-approved.window="showFinalApproval = false; finalApprovalRemarks = ''" x-cloak>
+    x-on:ticket-forwarded.window="showForward = false; forwardRemarks = ''"
+    x-on:ticket-for-revision.window="showRevision = false; revisionRemarks = ''"
+    x-on:ticket-final-approved.window="showFinalApproval = false; finalApprovalRemarks = ''" x-cloak>
 
     {{-- Flash Messages --}}
     @if (session()->has('success'))
-        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show"
-             x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-success mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show"
-             x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-error mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if (session()->has('info'))
-        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show"
-             x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-info mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('info') }}</span>
         </div>
     @endif
 
     @if (session()->has('warning'))
-        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show"
-             x-init="setTimeout(() => show = false, 5000)">
+        <div class="alert alert-warning mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
             <span>{{ session('warning') }}</span>
         </div>
     @endif
@@ -50,7 +46,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ $backRoute }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4"/>
+                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                             Back to Tickets
                         </a>
                     </div>
@@ -113,25 +109,25 @@
         {{-- Ticket Details - Now using modular components --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Organization Information --}}
-            <x-tickets.sections.organization-info :ticket="$ticket"/>
+            <x-tickets.sections.organization-info :ticket="$ticket" />
 
             {{-- Event Details --}}
-            <x-tickets.sections.event-details :ticket="$ticket"/>
+            <x-tickets.sections.event-details :ticket="$ticket" />
 
             {{-- Schedule & Venue --}}
-            <x-tickets.sections.schedule-venue :ticket="$ticket"/>
+            <x-tickets.sections.schedule-venue :ticket="$ticket" />
 
             {{-- Budget Information --}}
-            <x-tickets.sections.budget-info :ticket="$ticket"/>
+            <x-tickets.sections.budget-info :ticket="$ticket" />
 
             {{-- Additional Information --}}
-            <x-tickets.sections.additional-info :ticket="$ticket"/>
+            <x-tickets.sections.additional-info :ticket="$ticket" />
 
             {{-- Attachments --}}
-            <x-tickets.sections.attachments-list :ticket="$ticket"/>
+            <x-tickets.sections.attachments-list :ticket="$ticket" />
 
             {{-- Comments --}}
-            <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id"/>
+            <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
         </div>
 
         {{-- Sidebar --}}
@@ -139,6 +135,7 @@
             {{-- Ticket Info --}}
             <div class="bg-base-100 rounded-box shadow-lg p-6">
                 <h2 class="text-xl font-bold text-base-content mb-4">Ticket Details</h2>
+                @php $userDeleted = $ticket->user?->trashed(); @endphp
                 <div class="space-y-3">
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Ticket Number</label>
@@ -147,12 +144,16 @@
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Submitted By</label>
-                        <p class="text-base-content">{{ $ticket->user->name }}</p>
+                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
+                            {{ $userDeleted ? 'Deleted User' : $ticket->user?->name }}
+                        </p>
                     </div>
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Email</label>
-                        <p class="text-base-content">{{ $ticket->user->email }}</p>
+                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
+                            {{ $userDeleted ? 'N/A' : $ticket->user?->email }}
+                        </p>
                     </div>
 
                     <div>
@@ -309,7 +310,7 @@
                                     {{-- Timeline Dot --}}
                                     <div
                                         class="absolute left-2 top-1 w-4 h-4 rounded-full {{ $dotColor }} ring-4 ring-base-100 flex items-center justify-center">
-                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white"/>
+                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white" />
                                     </div>
 
                                     {{-- Content Card --}}
@@ -373,7 +374,7 @@
                     </div>
                 @else
                     <div class="text-center py-12">
-                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3"/>
+                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
                         <p class="text-base-content/70 font-medium">No approval actions yet</p>
                         <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting initial review by OSA</p>
                     </div>
@@ -472,8 +473,9 @@
                         <div class="space-y-3">
                             @if (in_array('approve', $allowedActions))
                                 @can('approve', $ticket)
-                                    <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                            @click="showApproval = true">
+                                    <button
+                                        class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
+                                        @click="showApproval = true">
                                         Approve Ticket
                                     </button>
                                 @endcan
@@ -482,7 +484,7 @@
                     @else
                         @if ($officeDecisionDetails)
                             <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0"/>
+                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
                                 <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                             </div>
                         @endif
@@ -490,8 +492,9 @@
                         <div class="space-y-3">
                             @if (in_array('final_approve', $allowedActions))
                                 @can('finalApprove', $ticket)
-                                    <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                            @click="showFinalApproval = true">
+                                    <button
+                                        class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
+                                        @click="showFinalApproval = true">
                                         Final Approval
                                     </button>
                                 @endcan
@@ -499,8 +502,9 @@
 
                             @if (in_array('for_revision', $allowedActions))
                                 @can('requestRevision', $ticket)
-                                    <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                            @click="showRevision = true">
+                                    <button
+                                        class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
+                                        @click="showRevision = true">
                                         Request Revision
                                     </button>
                                 @endcan
@@ -513,7 +517,7 @@
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
                                 <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showApproval = true">
+                                    @click="showApproval = true">
                                     Approve Ticket
                                 </button>
                             @endcan
@@ -522,20 +526,19 @@
                         @if (in_array('for_revision', $allowedActions))
                             @can('requestRevision', $ticket)
                                 <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showRevision = true">
+                                    @click="showRevision = true">
                                     Request Revision
                                 </button>
                             @endcan
                         @endif
                     </div>
-
                 @elseif (in_array($ticket->status, ['received', 'amended']))
                     {{-- Initial Review Actions --}}
                     <div class="space-y-3">
                         @if (in_array('approve', $allowedActions))
                             @can('approve', $ticket)
                                 <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showApproval = true">
+                                    @click="showApproval = true">
                                     Approve Ticket
                                 </button>
                             @endcan
@@ -544,7 +547,7 @@
                         @if (in_array('for_revision', $allowedActions))
                             @can('requestRevision', $ticket)
                                 <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showRevision = true">
+                                    @click="showRevision = true">
                                     Request Revision
                                 </button>
                             @endcan
@@ -553,7 +556,7 @@
                         @if (in_array('forward', $allowedActions))
                             @can('forwardToGso', $ticket)
                                 <button class="btn btn-info w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showForward = true">
+                                    @click="showForward = true">
                                     Forward to GSO
                                 </button>
                             @endcan
@@ -562,7 +565,7 @@
                 @else
                     @if ($officeDecisionDetails)
                         <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0"/>
+                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
                             <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                         </div>
                     @else
@@ -576,9 +579,10 @@
                                     'label' => 'This ticket has been approved.',
                                 ],
                                 'for_revision' => [
-                                     'wrapper' => 'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
-                                     'icon' => 'o-arrow-path',
-                                     'label' => 'This ticket has been put for revision.',
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                                    'icon' => 'o-arrow-path',
+                                    'label' => 'This ticket has been put for revision.',
                                 ],
                                 'gso_review' => [
                                     'wrapper' =>
@@ -593,12 +597,12 @@
 
                         @if ($statusDisplay)
                             <div class="{{ $statusDisplay['wrapper'] }}">
-                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0"/>
+                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
                                 <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
                             </div>
                         @else
                             <div class="alert alert-info">
-                                <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
+                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
                                 <span>No actions available for current ticket status.</span>
                             </div>
                         @endif
@@ -615,7 +619,7 @@
             <h3 class="text-lg font-bold mb-4">Confirm Ticket Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-circle" class="w-6 h-6"/>
+                    <x-mary-icon name="o-check-circle" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">You are about to approve this ticket</h3>
                         <p class="text-sm">This action will create an event and schedule it on the calendar.</p>
@@ -623,18 +627,18 @@
                 </div>
                 <label class="text-sm font-medium">Approval Remarks</label>
                 <textarea x-model="approvalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                          placeholder="Enter your remarks for approving this ticket..."></textarea>
+                    placeholder="Enter your remarks for approving this ticket..."></textarea>
                 <p class="text-xs text-base-content/60">Provide a brief explanation for this approval</p>
                 @error('approvalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+                    <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showApproval=false"/>
+                <x-mary-button label="Cancel" class="btn" @click="showApproval=false" />
                 <x-mary-button label="Confirm Approval" class="btn-success text-neutral-content"
-                               wire:click="approveTicket" spinner="approveTicket"
-                               x-bind:disabled="approvalRemarks.trim().length < 3"
-                               @click="$wire.set('approvalRemarks', approvalRemarks)"/>
+                    wire:click="approveTicket" spinner="approveTicket"
+                    x-bind:disabled="approvalRemarks.trim().length < 3"
+                    @click="$wire.set('approvalRemarks', approvalRemarks)" />
             </div>
         </div>
     </div>
@@ -646,7 +650,7 @@
             <h3 class="text-lg font-bold mb-4">Request Ticket Revision</h3>
             <div class="space-y-4">
                 <div class="alert alert-warning">
-                    <x-mary-icon name="o-arrow-path" class="w-6 h-6"/>
+                    <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Request changes to this ticket</h3>
                         <p class="text-sm">The student organization will need to revise and resubmit.</p>
@@ -654,19 +658,19 @@
                 </div>
                 <label class="text-sm font-medium">Revision Instructions</label>
                 <textarea x-model="revisionRemarks" class="textarea textarea-bordered w-full" rows="5"
-                          placeholder="Clearly explain what needs to be changed or added..."></textarea>
+                    placeholder="Clearly explain what needs to be changed or added..."></textarea>
                 <p class="text-xs text-base-content/60">Be specific about what needs to be revised (minimum 10
                     characters)</p>
                 @error('revisionRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+                    <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showRevision=false"/>
+                <x-mary-button label="Cancel" class="btn" @click="showRevision=false" />
                 <x-mary-button label="Request Revision" class="btn-warning text-neutral-content"
-                               wire:click="forRevision" spinner="forRevision"
-                               x-bind:disabled="revisionRemarks.trim().length < 10"
-                               @click="$wire.set('revisionRemarks', revisionRemarks)"/>
+                    wire:click="forRevision" spinner="forRevision"
+                    x-bind:disabled="revisionRemarks.trim().length < 10"
+                    @click="$wire.set('revisionRemarks', revisionRemarks)" />
             </div>
         </div>
     </div>
@@ -679,7 +683,7 @@
             <h3 class="text-lg font-bold mb-4">Forward to GSO</h3>
             <div class="space-y-4">
                 <div class="alert alert-info">
-                    <x-mary-icon name="o-arrow-right" class="w-6 h-6"/>
+                    <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Forward this ticket to GSO</h3>
                         <p class="text-sm">GSO will review and provide their decision. You'll make the final approval.
@@ -688,18 +692,18 @@
                 </div>
                 <label class="text-sm font-medium">Forwarding Remarks</label>
                 <textarea x-model="forwardRemarks" class="textarea textarea-bordered w-full" rows="4"
-                          placeholder="Enter remarks for GSO..."></textarea>
+                    placeholder="Enter remarks for GSO..."></textarea>
                 <p class="text-xs text-base-content/60">Explain why this needs GSO review or what specific approval is
                     needed</p>
                 @error('forwardRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+                    <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showForward=false"/>
+                <x-mary-button label="Cancel" class="btn" @click="showForward=false" />
                 <x-mary-button label="Forward to GSO" class="btn-info text-neutral-content" wire:click="forwardToGso"
-                               spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
-                               @click="$wire.set('forwardRemarks', forwardRemarks)"/>
+                    spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
+                    @click="$wire.set('forwardRemarks', forwardRemarks)" />
             </div>
         </div>
     </div>
@@ -711,7 +715,7 @@
             <h3 class="text-lg font-bold mb-4">Final Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-badge" class="w-6 h-6"/>
+                    <x-mary-icon name="o-check-badge" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Final approval after GSO review</h3>
                         <p class="text-sm">This will create the event and schedule it on the calendar.</p>
@@ -719,18 +723,18 @@
                 </div>
                 <label class="text-sm font-medium">Final Approval Remarks</label>
                 <textarea x-model="finalApprovalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                          placeholder="Enter your final approval remarks..."></textarea>
+                    placeholder="Enter your final approval remarks..."></textarea>
                 <p class="text-xs text-base-content/60">Document your final decision after considering GSO's input</p>
                 @error('finalApprovalRemarks')
-                <span class="text-error text-sm">{{ $message }}</span>
+                    <span class="text-error text-sm">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false"/>
+                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false" />
                 <x-mary-button label="Confirm Final Approval" class="btn-success text-neutral-content"
-                               wire:click="finalApproval" spinner="finalApproval"
-                               x-bind:disabled="finalApprovalRemarks.trim().length < 3"
-                               @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)"/>
+                    wire:click="finalApproval" spinner="finalApproval"
+                    x-bind:disabled="finalApprovalRemarks.trim().length < 3"
+                    @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />
             </div>
         </div>
     </div>
@@ -763,8 +767,8 @@
             });
 
             Livewire.on('open-attachment-preview', ({
-                                                        url
-                                                    }) => {
+                url
+            }) => {
                 if (url) {
                     window.open(url, '_blank');
                 }
@@ -772,8 +776,8 @@
 
             // Add this download listener
             Livewire.on('download-attachment', ({
-                                                    url
-                                                }) => {
+                url
+            }) => {
                 if (url) {
                     const link = document.createElement('a');
                     link.href = url;

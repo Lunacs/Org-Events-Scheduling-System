@@ -43,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'org_id',
         'office_id',
+        'position_id',
         'avatar',
         'avatar_style',
         'avatar_seed',
@@ -170,10 +171,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Relationship to Student Organization
+     * Note: withTrashed() ensures soft-deleted organizations are still loaded
+     * so user data remains visible even after the organization is deleted
      */
     public function studentOrganization()
     {
-        return $this->belongsTo(Student_Organization::class, 'org_id');
+        return $this->belongsTo(Student_Organization::class, 'org_id')->withTrashed();
     }
 
     public function role()

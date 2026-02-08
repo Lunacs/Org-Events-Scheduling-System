@@ -138,6 +138,7 @@
                         <div class="relative">
                             <select wire:model.live="typeFilter" class="select select-bordered w-full">
                                 <option value="">All Types</option>
+                                <option value="announcement">Announcements</option>
                                 <option value="ticket_status_approved">Ticket Approved</option>
                                 <option value="ticket_status_for_revision">Ticket For Revision</option>
                                 <option value="ticket_status_gso_review">Under GSO Review</option>
@@ -263,6 +264,13 @@
                                             <p class="text-sm text-base-content/70 mt-1">
                                                 {{ $data['message'] ?? 'No message' }}
                                             </p>
+
+                                            @if (($data['type'] ?? '') === 'announcement' && isset($data['content']) && is_string($data['content']))
+                                                <div
+                                                    class="mt-2 p-3 bg-base-200/50 rounded-lg text-sm text-base-content/80">
+                                                    {{ $data['content'] }}
+                                                </div>
+                                            @endif
 
                                             @if (isset($data['ticket_number']))
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">

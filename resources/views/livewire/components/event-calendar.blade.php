@@ -33,10 +33,21 @@
                     {{-- Calendar Navigation --}}
                     <div class="flex items-center justify-center sm:justify-start gap-2">
                         <x-mary-button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
-                        <h2 class="text-base sm:text-lg font-semibold min-w-40 sm:min-w-[200px] text-center"
-                            id="calendar-title" wire:ignore>
-                            Loading...
-                        </h2>
+                        <div class="relative">
+                            {{-- Clickable title that triggers date picker --}}
+                            <h2 class="text-base sm:text-lg font-semibold min-w-40 sm:min-w-[200px] text-center cursor-pointer
+                                    hover:text-primary transition-colors duration-200 flex items-center justify-center gap-1 group"
+                                id="calendar-title" wire:ignore @click="$refs.datePicker.showPicker()">
+                                <span>Loading...</span>
+                                <x-mary-icon name="o-calendar"
+                                    class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </h2>
+                            {{-- Hidden date picker input --}}
+                            <input type="date" x-ref="datePicker"
+                                class="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                @change="if($event.target.value) { calendar.gotoDate(new Date($event.target.value)); updateTitle(); }"
+                                :value="calendar ? calendar.getDate().toISOString().split('T')[0] : ''" />
+                        </div>
                         <x-mary-button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
                     </div>
 
@@ -50,8 +61,25 @@
 
                 {{-- View Mode & Filters Section --}}
                 <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+                    {{-- Quick Search --}}
+                    <div class="relative order-1 md:order-1" x-data="{ searchQuery: '' }">
+                        <div class="relative">
+                            <x-mary-icon name="o-magnifying-glass"
+                                class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" />
+                            <input type="text" x-model="searchQuery"
+                                @input.debounce.300ms="$dispatch('calendar-search', { query: searchQuery })"
+                                placeholder="Search events..."
+                                class="input input-bordered input-sm w-full md:w-48 pl-9 pr-8 focus:w-full md:focus:w-64 transition-all duration-300" />
+                            <button type="button" x-show="searchQuery.length > 0"
+                                @click="searchQuery = ''; $dispatch('calendar-search', { query: '' })"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-base-content">
+                                <x-mary-icon name="o-x-mark" class="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
                     {{-- View Mode Buttons --}}
-                    <div class="flex gap-1 order-2 md:order-1 flex-1" id="view-mode-buttons">
+                    <div class="flex gap-1 order-2 md:order-2 flex-1" id="view-mode-buttons">
                         <x-mary-button @click="changeView('dayGridMonth')" data-view="dayGridMonth"
                             class="btn-sm view-mode-btn flex-1"
                             x-bind:class="currentView === 'dayGridMonth' ? 'btn-primary' : 'btn-ghost'">
@@ -75,16 +103,23 @@
                     </div>
 
                     {{-- Toggle Past Events & Filter Button --}}
-                    <div class="flex sm:justify-end justify-center md:justify-end order-1 md:order-2 shrink-0 gap-2">
+                    <div class="flex sm:justify-end justify-center md:justify-end order-3 md:order-3 shrink-0 gap-2">
                         {{-- Filter Button with Notification Badge --}}
-                        <div x-data x-init="if (window.Alpine && !Alpine.store('filters')) { Alpine.store('filters', { status: 'approved', org: '', etype: '' }) }" class="relative">
+                        <div x-data="{
+                            get filterCount() {
+                                let count = 0;
+                                if ($store.filters?.status && $store.filters?.status !== 'all') count++;
+                                if ($store.filters?.org) count++;
+                                if ($store.filters?.etype) count++;
+                                count += {{ $showPastEvents ? '1' : '0' }};
+                                return count;
+                            }
+                        }" x-init="if (window.Alpine && !Alpine.store('filters')) { Alpine.store('filters', { status: '{{ $statusFilter }}', org: '{{ $organizationFilter }}', etype: '{{ $eventTypeFilter }}' }) }" class="relative">
                             {{-- Notification Badge - includes past events indicator --}}
-                            <div x-show="[$store.filters?.status && $store.filters?.status !== 'all' ? $store.filters.status : '', $store.filters?.org, $store.filters?.etype].filter(v => v).length > 0 || {{ $showPastEvents ? 'true' : 'false' }}"
-                                class="absolute -top-2 -right-2 z-10">
+                            <div x-show="filterCount > 0" class="absolute -top-2 -right-2 z-10">
                                 <div
                                     class="badge {{ $showPastEvents ? 'badge-warning' : 'badge-primary' }} badge-sm h-5 w-5 p-0 flex items-center justify-center text-neutral-content text-xs font-bold">
-                                    <span
-                                        x-text="[$store.filters?.status && $store.filters?.status !== 'all' ? $store.filters.status : '', $store.filters?.org, $store.filters?.etype].filter(v => v).length + {{ $showPastEvents ? '1' : '0' }}"></span>
+                                    <span x-text="filterCount"></span>
                                 </div>
                             </div>
 
@@ -107,9 +142,19 @@
             initialType: '{{ $eventTypeFilter }}'
         })" x-init="init()" x-on:open-filters.window="$nextTick(() => open = true)"
             x-cloak x-on:clear-filters.window="clearAll()">
-            <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
-                <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
-                <div
+            <div x-show="open" class="fixed inset-0 z-50">
+                {{-- Backdrop --}}
+                <div x-show="open" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="absolute inset-0 bg-black/40" @click="open = false">
+                </div>
+
+                {{-- Drawer Panel --}}
+                <div x-show="open" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0"
+                    x-transition:leave-end="translate-x-full"
                     class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
                     <div class="px-6 py-4 border-b border-base-300">
                         <h3 class="text-base font-semibold">Filter Events</h3>
@@ -159,8 +204,8 @@
                             {{-- Past Events Toggle --}}
                             <div class="form-control">
                                 <label class="label cursor-pointer justify-start gap-3">
-                                    <input type="checkbox" class="toggle toggle-warning" wire:click="togglePastEvents"
-                                        {{ $showPastEvents ? 'checked' : '' }} />
+                                    <input type="checkbox" class="toggle toggle-warning"
+                                        wire:click="togglePastEvents" {{ $showPastEvents ? 'checked' : '' }} />
                                     <div>
                                         <span class="label-text font-semibold">Show Past Events</span>
                                         <p class="text-xs text-base-content/60">Include events from last year and older
@@ -244,12 +289,43 @@
 
         {{-- Upcoming Events This Month --}}
         <x-mary-card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
-            subtitle="Detailed list of scheduled events" class="mt-6">
+            subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
             @if (count($this->upcomingEventsThisMonth) > 0)
+                {{-- Event Count Summary --}}
+                <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-200 dark:border-base-700">
+                    <x-mary-badge
+                        value="{{ count($this->upcomingEventsThisMonth) }} event{{ count($this->upcomingEventsThisMonth) > 1 ? 's' : '' }}"
+                        class="badge-primary/90 badge-outline" />
+                    <span class="text-xs text-base-content/60">scheduled this month</span>
+                </div>
+
                 <div class="space-y-4">
                     @foreach ($this->upcomingEventsThisMonth as $index => $event)
                         @php
                             $color = $event['color'];
+
+                            // Calculate days until event for countdown badge
+                            $eventDate = \Carbon\Carbon::parse($event['start_date']);
+                            $today = \Carbon\Carbon::today();
+                            $daysUntil = $today->diffInDays($eventDate, false);
+
+                            // Countdown badge text and style
+                            $countdownText = match (true) {
+                                $daysUntil < 0 => 'Past',
+                                $daysUntil === 0 => 'Today',
+                                $daysUntil === 1 => 'Tomorrow',
+                                $daysUntil <= 7 => "In {$daysUntil} days",
+                                default => $eventDate->format('M d'),
+                            };
+
+                            $countdownClass = match (true) {
+                                $daysUntil < 0 => 'badge-ghost opacity-60',
+                                $daysUntil === 0 => 'badge-error animate-pulse',
+                                $daysUntil === 1 => 'badge-warning',
+                                $daysUntil <= 3 => 'badge-info',
+                                default => 'badge-ghost',
+                            };
+
                             // Dark mode compatible background colors
                             $bgColor = match ($color) {
                                 'blue' => 'bg-blue-50 dark:bg-blue-950/30',
@@ -353,55 +429,101 @@
                                 border border-base-300 dark:border-base-700"
                             wire:key="upcoming-{{ $index }}"
                             onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
-                            <div class="shrink-0">
+                            {{-- Left side: Icon with organization logo overlay --}}
+                            <div class="shrink-0 relative">
                                 <div
                                     class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
                                         group-hover:scale-110 transition-transform duration-300
                                         shadow-sm dark:shadow-md">
                                     <x-mary-icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
                                 </div>
+                                {{-- Organization logo thumbnail --}}
+                                <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
+                                    class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full object-cover border-2 border-white dark:border-base-800 shadow-sm"
+                                    onerror="this.style.display='none'" />
                             </div>
+
+                            {{-- Content area --}}
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-semibold text-base {{ $titleColor }} mb-1.5 line-clamp-1">
-                                    {{ $event['title'] }}
-                                </h4>
+                                {{-- Title row with countdown badge --}}
+                                <div class="flex items-start justify-between gap-2 mb-1.5">
+                                    <h4 class="font-semibold text-base {{ $titleColor }} line-clamp-1 flex-1">
+                                        {{ $event['title'] }}
+                                    </h4>
+                                    {{-- Countdown badge --}}
+                                    <span class="badge {{ $countdownClass }} badge-sm shrink-0 font-semibold">
+                                        {{ $countdownText }}
+                                    </span>
+                                </div>
+
                                 @if ($event['description'])
-                                    <p class="text-sm {{ $textColor }} mt-1.5 mb-3 line-clamp-2 leading-relaxed">
-                                        {{ Str::limit($event['description'], 100) }}
-                                    </p>
+                                    <div>
+                                        <p
+                                            class="text-sm {{ $textColor }} mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
+                                            {{ Str::limit($event['description'], 100) }}
+                                        </p>
+                                    </div>
                                 @endif
+
+                                {{-- Meta info row --}}
                                 <div
                                     class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-mary-icon name="o-calendar" class="w-4 h-4 shrink-0" />
-                                        <span class="truncate">{{ $event['datetime'] }}</span>
+                                        <x-mary-icon name="o-clock" class="w-4 h-4 shrink-0" />
+                                        <span class="truncate">{{ $event['time'] }}</span>
                                     </span>
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
                                         <x-mary-icon name="o-map-pin" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </span>
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        {{-- <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" /> --}}
-                                        <img src="{{ $event['organizationLogo'] }}" alt=""
-                                            class="w-4 h-4 rounded-full object-cover">
+                                        <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </span>
                                 </div>
+
+                                {{-- Tags row --}}
                                 <div class="flex items-center gap-2 mt-3">
                                     <x-mary-badge value="{{ $event['eventType'] }}"
                                         class="{{ $badgeClass }} text-xs font-medium text-neutral-content whitespace-normal h-auto" />
+                                    <x-mary-badge value="{{ $event['date'] }}"
+                                        class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-16">
-                    <x-mary-icon name="o-calendar-days"
-                        class="w-20 h-20 mx-auto mb-4 text-base-300 dark:text-base-600" />
-                    <p class="text-sm text-base-content/60 dark:text-base-content/50 font-medium">
-                        No upcoming events scheduled for this month
+                {{-- Enhanced Empty State --}}
+                <div class="text-center py-16 px-4">
+                    <div class="relative inline-block mb-6">
+                        <div
+                            class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
+                            <x-mary-icon name="o-calendar-days"
+                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
+                        </div>
+                        <div
+                            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <x-mary-icon name="o-sparkles" class="w-4 h-4 text-primary" />
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-base-content mb-2">
+                        No events this month
+                    </h3>
+                    <p class="text-sm text-base-content/60 dark:text-base-content/50 max-w-sm mx-auto mb-6">
+                        There are no upcoming events scheduled for {{ ucfirst($currentDate->format('F Y')) }}.
+                        Check other months using the calendar above.
                     </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+                        <x-mary-button icon="o-chevron-left" class="btn-sm btn-ghost"
+                            @click="if(window.osaCalendarInstance) { window.osaCalendarInstance.prev(); }">
+                            Previous Month
+                        </x-mary-button>
+                        <x-mary-button icon="o-chevron-right" icon-right class="btn-sm btn-ghost"
+                            @click="if(window.osaCalendarInstance) { window.osaCalendarInstance.next(); }">
+                            Next Month
+                        </x-mary-button>
+                    </div>
                 </div>
             @endif
         </x-mary-card>
@@ -563,12 +685,19 @@
                         currentView: '{{ $viewMode }}',
                         suppressUrlUpdate: true,
                         allEvents: @json($events), // Store events in component state for dynamic updates
+                        searchQuery: '', // For filtering events by search
                         init() {
                             if (typeof window.FullCalendar === 'undefined' || typeof window.FullCalendarPlugins ===
                                 'undefined') {
                                 console.error('FullCalendar not loaded. Run your asset build.');
                                 return;
                             }
+
+                            // Listen for search events
+                            window.addEventListener('calendar-search', (e) => {
+                                this.searchQuery = e.detail?.query || '';
+                                this.calendar.refetchEvents();
+                            });
 
                             // Responsive height calculation helper
                             const getHeight = () => {
@@ -625,7 +754,7 @@
                                         // Filter events based on view type
                                         // Use component's allEvents which gets updated when filters change
                                         const eventsToFilter = component.allEvents || [];
-                                        const filteredEvents = eventsToFilter.filter(event => {
+                                        let filteredEvents = eventsToFilter.filter(event => {
                                             const props = event.extendedProps || {};
                                             const isMultiDay = props.forMonthView || props.forTimeView;
 
@@ -642,6 +771,22 @@
                                             // Week/Day/List views: Only show recurring events
                                             return props.forTimeView === true;
                                         });
+
+                                        // Apply search filter if active
+                                        if (component.searchQuery && component.searchQuery.trim()) {
+                                            const query = component.searchQuery.toLowerCase().trim();
+                                            filteredEvents = filteredEvents.filter(event => {
+                                                const title = (event.title || '').toLowerCase();
+                                                const props = event.extendedProps || {};
+                                                const org = (props.organization || '').toLowerCase();
+                                                const venue = (props.venue || '').toLowerCase();
+                                                const eventType = (props.eventType || '').toLowerCase();
+                                                return title.includes(query) ||
+                                                    org.includes(query) ||
+                                                    venue.includes(query) ||
+                                                    eventType.includes(query);
+                                            });
+                                        }
 
                                         successCallback(filteredEvents);
                                     };
@@ -673,6 +818,73 @@
                                     }
 
                                     return eventData;
+                                },
+
+                                // Custom event content to show time in month view
+                                eventContent: function(arg) {
+                                    const viewType = arg.view.type;
+                                    const event = arg.event;
+                                    const props = event.extendedProps || {};
+
+                                    // Only customize for month view - add time prefix
+                                    if (viewType === 'dayGridMonth') {
+                                        // Get raw time from extendedProps (database value)
+                                        const rawStartTime = props.rawStartTime || '';
+
+                                        // Format time to short format (e.g., "9AM", "2PM")
+                                        let timeStr = '';
+                                        if (rawStartTime) {
+                                            try {
+                                                const [hours, minutes] = rawStartTime.split(':');
+                                                const h = parseInt(hours, 10);
+                                                const period = h >= 12 ? 'PM' : 'AM';
+                                                const hour12 = h % 12 || 12;
+                                                // Show minutes only if not :00
+                                                const m = parseInt(minutes, 10);
+                                                timeStr = m > 0 ?
+                                                    `${hour12}:${m.toString().padStart(2, '0')}${period}` :
+                                                    `${hour12}${period}`;
+                                            } catch (e) {
+                                                timeStr = '';
+                                            }
+                                        }
+
+                                        // Create custom HTML with time badge
+                                        return {
+                                            html: `<div class="fc-event-main-frame">
+                                                <div class="fc-event-title-container">
+                                                    <div class="fc-event-title fc-sticky flex items-center gap-1 overflow-hidden">
+                                                        ${timeStr ? `<span class="text-[10px] opacity-80 font-medium shrink-0">${timeStr}</span>` : ''}
+                                                        <span class="truncate">${event.title}</span>
+                                                    </div>
+                                                </div>
+                                            </div>`
+                                        };
+                                    }
+
+                                    // For timeGrid views (week/day) - show title with proper structure
+                                    if (viewType === 'timeGridWeek' || viewType === 'timeGridDay') {
+                                        return {
+                                            html: `<div class="fc-event-main-frame">
+                                                <div class="fc-event-title-container">
+                                                    <div class="fc-event-title fc-sticky">${event.title}</div>
+                                                </div>
+                                            </div>`
+                                        };
+                                    }
+
+                                    // For list view - show title
+                                    if (viewType === 'listWeek' || viewType === 'listMonth' || viewType ===
+                                        'listDay') {
+                                        return {
+                                            html: `<a class="fc-list-event-title">${event.title}</a>`
+                                        };
+                                    }
+
+                                    // Default: let FullCalendar handle it
+                                    return {
+                                        domNodes: arg.domNodes
+                                    };
                                 },
 
                                 // View-specific options
@@ -1067,6 +1279,10 @@
                             if (this.etype) {
                                 parts.push('Selected Type');
                             }
+                            // Include past events toggle if it's on (server-side rendered check)
+                            @if ($showPastEvents)
+                                parts.push('Past Events');
+                            @endif
                             // Return message only if there are active filters
                             return parts.length > 0 ? `Filters applied: ${parts.join(' · ')}` : 'No filters applied';
                         },

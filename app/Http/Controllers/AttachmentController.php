@@ -3,64 +3,51 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
-use App\Http\Requests\StoreAttachmentRequest;
-use App\Http\Requests\UpdateAttachmentRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Serve a file for preview (inline disposition) via signed URL.
+     * This endpoint requires a valid signature to access.
      */
-    public function index()
+    public function preview(Request $request, Attachment $attachment): StreamedResponse
     {
-        //
+        return $this->serveFile($attachment, false);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Serve a file for download (attachment disposition) via signed URL.
+     * This endpoint requires a valid signature to access.
      */
-    public function create()
+    public function download(Request $request, Attachment $attachment): StreamedResponse
     {
-        //
+        return $this->serveFile($attachment, true);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Stream the file from storage with proper headers.
      */
-    public function store(StoreAttachmentRequest $request)
+    private function serveFile(Attachment $attachment, bool $forceDownload): StreamedResponse
     {
-        //
-    }
+        $disk = Storage::disk(config('filesystems.default'));
+        $path = $attachment->file_path;
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Attachment $attachment)
-    {
-        //
-    }
+        // Check if file exists
+        if (!$disk->exists($path)) {
+            abort(404, 'File not found.');
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Attachment $attachment)
-    {
-        //
-    }
+        $filename = $attachment->file_name;
+        $mimeType = $attachment->file_type ?? $disk->mimeType($path) ?? 'application/octet-stream';
+        $disposition = $forceDownload ? 'attachment' : 'inline';
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAttachmentRequest $request, Attachment $attachment)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Attachment $attachment)
-    {
-        //
+        return $disk->response($path, $filename, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => $disposition . '; filename="' . addslashes($filename) . '"',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
     }
 }

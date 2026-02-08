@@ -1,7 +1,7 @@
 <div x-data="{
     firstLoad: true,
     showFilters: true,
-    hasActiveFilters: @entangle('search').live || @entangle('statusFilter').live
+    hasActiveFilters: @entangle('search').live || @entangle('statusFilter').live || @entangle('organizationFilter').live
 }" x-init="$nextTick(() => firstLoad = false)">
 
     {{-- Skeleton Loading State (First Load Only) --}}
@@ -23,9 +23,10 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="badge badge-primary">
-                            <span wire:loading.remove wire:target="search,statusFilter">{{ $tickets->total() }}
+                            <span wire:loading.remove
+                                wire:target="search,statusFilter,organizationFilter">{{ $tickets->total() }}
                                 Tickets</span>
-                            <span wire:loading wire:target="search,statusFilter"
+                            <span wire:loading wire:target="search,statusFilter,organizationFilter"
                                 class="loading loading-spinner loading-xs"></span>
                         </span>
                     </div>
@@ -35,7 +36,7 @@
 
         {{-- Search Filter --}}
         <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div class="relative">
                     <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search tickets..."
                         class="input input-bordered w-full pr-10" />
@@ -67,10 +68,26 @@
                     </div>
                 </div>
 
+                {{-- Organization Filter --}}
+                <div class="relative">
+                    <select wire:model.live="organizationFilter" class="select select-bordered w-full">
+                        <option value="">All Organizations</option>
+                        @foreach ($this->organizations as $org)
+                            <option value="{{ $org->org_id }}" {{ $org->deleted_at ? 'class=italic' : '' }}>
+                                {{ $org->org_name }}{{ $org->deleted_at ? ' (Deleted)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">
+                        <span wire:loading wire:target="organizationFilter"
+                            class="loading loading-spinner loading-sm"></span>
+                    </div>
+                </div>
+
                 <div class="flex gap-2">
                     <button wire:click="clearFilters" type="button" class="btn btn-ghost flex-1"
-                        x-show="$wire.search || $wire.statusFilter" x-transition wire:loading.attr="disabled"
-                        wire:target="clearFilters">
+                        x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter" x-transition
+                        wire:loading.attr="disabled" wire:target="clearFilters">
                         <svg wire:loading.remove wire:target="clearFilters" class="w-4 h-4" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -87,11 +104,11 @@
         {{-- Tickets Grid --}}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative min-h-[400px]">
             {{-- Skeleton Loader (Filtering/Searching) --}}
-            <div wire:loading wire:target="search,statusFilter,clearFilters" class="col-span-full">
+            <div wire:loading wire:target="search,statusFilter,organizationFilter,clearFilters" class="col-span-full">
                 @include('livewire.osa.placeholders.ticket-cards')
             </div>
 
-            <div wire:loading.remove wire:target="search,statusFilter,clearFilters"
+            <div wire:loading.remove wire:target="search,statusFilter,organizationFilter,clearFilters"
                 class="col-span-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 @forelse($tickets as $ticket)
                     <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
@@ -102,8 +119,10 @@
                                 <div class="flex-1 min-h-18">
                                     <h3 class="font-bold text-lg text-base-content line-clamp-2">{{ $ticket->title }}
                                     </h3>
-                                    <p class="text-sm text-base-content/70 mt-1">
-                                        {{ $ticket->user->studentOrganization->org_name ?? 'No Organization' }}</p>
+                                    @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
+                                    <p class="text-sm text-base-content/70 mt-1 {{ $orgDeleted ? 'italic' : '' }}">
+                                        {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
+                                    </p>
                                 </div>
                                 @php
                                     $statusClasses = [
@@ -238,8 +257,10 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-base-content/70">No tickets found</h3>
                                 <p class="text-sm text-base-content/50 mt-1">
-                                    <span x-show="$wire.search || $wire.statusFilter">Try adjusting your filters</span>
-                                    <span x-show="!$wire.search && !$wire.statusFilter">No tickets have been submitted
+                                    <span x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter">Try
+                                        adjusting your filters</span>
+                                    <span x-show="!$wire.search && !$wire.statusFilter && !$wire.organizationFilter">No
+                                        tickets have been submitted
                                         yet</span>
                                 </p>
                             </div>

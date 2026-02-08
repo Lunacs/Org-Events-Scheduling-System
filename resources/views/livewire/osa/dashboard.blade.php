@@ -6,6 +6,8 @@
         $recentTickets = $this->recentTickets;
         $pendingApprovals = $this->pendingApprovals;
         $upcomingEvents = $this->upcomingEvents;
+        $recentActivity = $this->recentActivity;
+        $todaysSummary = $this->todaysSummary;
     @endphp
 
     <div class="p-6 space-y-6">
@@ -13,11 +15,11 @@
         @persist('dashboard-header')
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold font-heading text-primary flex items-center gap-2">
+                    <h1 class="text-3xl font-bold font-heading text-primary dark:text-primary flex items-center gap-2">
                         <x-mary-icon name="o-squares-2x2" class="w-8 h-8" />
                         Dashboard Overview
                     </h1>
-                    <p class="text-sm text-gray-600 mt-1">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Welcome back! Here's what's happening with event requests.
                     </p>
                 </div>
@@ -39,211 +41,191 @@
             </div>
         @endpersist
 
-        <!-- Statistics Cards with Progress Indicators -->
+        <!-- Modern Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
             wire:loading.class="opacity-50 pointer-events-none" wire:target="refreshData">
 
-            <!-- Pending Requests with Badge -->
-            <x-mary-card class="hover:shadow-lg transition-all duration-200 border-l-4 border-l-warning">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1">
-                            <x-mary-icon name="o-clock" class="w-5 h-5 text-warning" />
-                            <p class="text-sm font-medium text-gray-600">Pending Requests</p>
-                        </div>
-                        <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['pending']) }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">Awaiting your review</p>
+            <!-- Pending Requests -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Pending Requests</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['pending']) }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Awaiting your review</p>
                     </div>
-                    <div class="avatar placeholder">
-                        <div class="bg-warning/10 text-warning rounded-full w-12 h-12 flex items-center justify-center">
-                            <span class="text-xl">{{ $stats['pending'] }}</span>
-                        </div>
+                    <div
+                        class="w-14 h-14 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-clock" class="w-7 h-7 text-amber-600 dark:text-amber-500" />
                     </div>
                 </div>
-                @if ($stats['pending'] > 0)
-                    <div class="mt-3 pt-3 border-t">
-                        <x-mary-button label="Review Now" icon-right="o-arrow-right"
-                            class="btn-warning btn-sm btn-block" link="/admin/tickets?status=pending" wire:navigate />
+                {{-- @if ($stats['pending'] > 0)
+                    <div class="mt-4 pt-3 border-t border-gray-100">
+                        <a href="{{ route('osa.ticket-review.index') }}" wire:navigate
+                            class="text-sm font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1">
+                            Review Now
+                            <x-mary-icon name="o-arrow-right" class="w-4 h-4" />
+                        </a>
                     </div>
-                @endif
-            </x-mary-card>
+                @endif --}}
+            </div>
 
             <!-- Forwarded to Offices -->
-            <x-mary-card class="hover:shadow-lg transition-all duration-200 border-l-4 border-l-info">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1">
-                            <x-mary-icon name="o-paper-airplane" class="w-5 h-5 text-info" />
-                            <p class="text-sm font-medium text-gray-600">Forwarded</p>
-                        </div>
-                        <p class="text-3xl font-bold text-gray-900">
-                            {{ number_format($stats['forwarded']) }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">Sent to other offices</p>
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Forwarded</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['forwarded']) }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Sent to other offices</p>
                     </div>
-                    <div class="radial-progress text-info bg-info/10"
-                        style="--value:{{ min(100, ($stats['forwarded'] / max(1, $stats['pending'] + $stats['forwarded'])) * 100) }}; --size:3rem; --thickness: 4px;">
-                        <span
-                            class="text-xs">{{ round(($stats['forwarded'] / max(1, $stats['pending'] + $stats['forwarded'])) * 100) }}%</span>
+                    <div class="w-14 h-14 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-paper-airplane" class="w-7 h-7 text-sky-600 dark:text-sky-500" />
                     </div>
                 </div>
-            </x-mary-card>
+            </div>
 
-            <!-- Approved Events with Trend -->
-            <x-mary-card class="hover:shadow-lg transition-all duration-200 border-l-4 border-l-success">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1">
-                            <x-mary-icon name="o-check-circle" class="w-5 h-5 text-success" />
-                            <p class="text-sm font-medium text-gray-600">Approved</p>
-                        </div>
-                        <p class="text-3xl font-bold text-gray-900">
-                            {{ number_format($stats['approved']) }}
-                        </p>
+            <!-- Approved Events -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Approved</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['approved']) }}</p>
                         <div class="flex items-center gap-1 mt-1">
-                            <x-mary-icon name="o-arrow-trending-up" class="w-3 h-3 text-success" />
-                            <p class="text-xs text-success">All time</p>
+                            <x-mary-icon name="o-arrow-trending-up" class="w-3 h-3 text-emerald-500" />
+                            <p class="text-xs text-emerald-500 dark:text-emerald-400">All time</p>
                         </div>
                     </div>
-                    <div class="avatar placeholder">
-                        <div class="bg-success/10 text-success rounded-full w-12 h-12 flex items-center justify-center">
-                            <x-mary-icon name="o-check-badge" class="w-6 h-6" />
-                        </div>
+                    <div
+                        class="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-check-circle" class="w-7 h-7 text-emerald-600 dark:text-emerald-500" />
                     </div>
                 </div>
-            </x-mary-card>
+            </div>
 
-            <!-- This Month with Calendar -->
-            <x-mary-card class="hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1">
-                            <x-mary-icon name="o-calendar-days" class="w-5 h-5 text-primary" />
-                            <p class="text-sm font-medium text-gray-600">This Month</p>
-                        </div>
-                        <p class="text-3xl font-bold text-gray-900">
-                            {{ number_format($stats['thisMonthTickets']) }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">{{ now()->format('F Y') }}</p>
+            <!-- This Month -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">This Month</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['thisMonthTickets']) }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ now()->format('F Y') }}</p>
                     </div>
-                    <div class="text-center">
-                        <div class="text-4xl font-bold text-primary/20">{{ now()->format('d') }}</div>
-                        <div class="text-xs text-gray-500">{{ now()->format('M') }}</div>
+                    <div
+                        class="w-14 h-14 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-calendar-days" class="w-7 h-7 text-violet-600 dark:text-violet-500" />
                     </div>
                 </div>
-            </x-mary-card>
+            </div>
         </div>
 
-        <!-- Secondary Stats with Better Visualization -->
+        <!-- Secondary Stats with Modern Design -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <x-mary-card class="hover:shadow-lg transition-all duration-200">
+            <!-- For Revision -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">For Revision Requests</p>
-                        <p class="text-2xl font-bold text-error">{{ number_format($stats['for_revision']) }}
-                        </p>
-                        <progress class="progress progress-error w-full h-1 mt-2" value="{{ $stats['for_revision'] }}"
-                            max="{{ max(1, $stats['for_revision'] + $stats['approved']) }}"></progress>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">For Revision</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['for_revision']) }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Needs correction</p>
                     </div>
-                    <div class="avatar placeholder">
-                        <div class="bg-error/10 text-error rounded-lg w-12 h-12 flex items-center justify-center">
-                            <x-mary-icon name="o-x-circle" class="w-6 h-6" />
-                        </div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-x-circle" class="w-6 h-6 text-rose-600 dark:text-rose-500" />
                     </div>
                 </div>
-            </x-mary-card>
 
-            <x-mary-card class="hover:shadow-lg transition-all duration-200">
+                @if ($stats['for_revision'] > 0)
+                    <div class="mt-4 pt-3 border-t border-gray-100">
+                        <a href="{{ route('osa.ticket-review.index', ['statusFilter' => 'for_revision']) }}"
+                            wire:navigate
+                            class="text-sm font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1">
+                            View
+                            <x-mary-icon name="o-arrow-right" class="w-4 h-4" />
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Active Organizations -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Active Organizations</p>
-                        <p class="text-2xl font-bold text-secondary">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Organizations</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ number_format($stats['totalOrganizations']) }}
                         </p>
-                        <div class="flex items-center gap-1 mt-2">
-                            <div class="badge badge-secondary badge-sm">Active</div>
-                        </div>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Active accounts</p>
                     </div>
-                    <div class="avatar placeholder">
-                        <div
-                            class="bg-secondary/10 text-secondary rounded-lg w-12 h-12 flex items-center justify-center">
-                            <x-mary-icon name="o-user-group" class="w-6 h-6 text-secondary" />
-                        </div>
+                    <div
+                        class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-user-group" class="w-6 h-6 text-indigo-600" />
                     </div>
                 </div>
-            </x-mary-card>
+            </div>
 
-            <!-- Average Processing Time -->
-            <x-mary-card class="hover:shadow-lg transition-all duration-200">
+            <!-- Total Tickets -->
+            <div
+                class="bg-white dark:bg-base-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Avg. Processing Time</p>
-                        <p class="text-2xl font-bold text-accent">2.3 days</p>
-                        <div class="flex items-center gap-1 mt-2">
-                            <x-mary-icon name="o-arrow-trending-down" class="w-3 h-3 text-success" />
-                            <span class="text-xs text-success">15% faster</span>
-                        </div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tickets</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ number_format($stats['approved'] + $stats['pending'] + $stats['for_revision']) }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">All time</p>
                     </div>
-                    <div class="avatar placeholder">
-                        <div class="bg-accent/10 text-accent rounded-lg w-12 h-12 flex items-center justify-center">
-                            <x-mary-icon name="o-bolt" class="w-6 h-6" />
-                        </div>
+                    <div class="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                        <x-mary-icon name="o-ticket" class="w-6 h-6 text-teal-600 dark:text-teal-500" />
                     </div>
                 </div>
-            </x-mary-card>
+            </div>
         </div>
 
-        <!-- Tabbed Main Content Area -->
+        <!-- Main Content Area -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: Pending Approvals with Tabs -->
+            <!-- Left Column: Action Required -->
             <div class="col-span-1 lg:col-span-2">
-                <x-mary-card class="shadow-md" title="Action Required" subtitle="Review and process these requests">
-                    <!-- Desktop Menu (hidden on mobile) -->
-                    <x-slot:menu>
-                        <div class="hidden md:flex gap-2">
-                            <div role="tablist" class="tabs tabs-boxed tabs-sm">
-                                <a role="tab" class="tab tab-active">Pending</a>
-                                <a role="tab" class="tab">Urgent</a>
-                            </div>
-                            <x-mary-button icon="o-arrow-right" link="/admin/tickets" class="btn-sm btn-ghost"
-                                           label="View All" wire:navigate />
+                <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Action Required</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Review and process these requests</p>
                         </div>
-                    </x-slot:menu>
-
-                    <!-- Mobile Menu (below subtitle) -->
-                    <div class="flex flex-col gap-3 mb-4 md:hidden">
-                        <div role="tablist" class="tabs tabs-boxed tabs-sm">
-                            <a role="tab" class="tab tab-active">Pending</a>
-                            <a role="tab" class="tab">Urgent</a>
-                        </div>
-                        <x-mary-button icon="o-arrow-right" link="/admin/tickets" class="btn-sm btn-ghost btn-block"
-                                       label="View All" wire:navigate />
+                        <a href="{{ route('osa.ticket-review.index') }}" wire:navigate
+                            class="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1">
+                            View All
+                            <x-mary-icon name="o-arrow-right" class="w-4 h-4" />
+                        </a>
                     </div>
 
                     @if (count($pendingApprovals) > 0)
-                        <div class="space-y-2">
-                            @foreach ($pendingApprovals as $index => $approval)
-                                <div class="p-4 bg-base-100 hover:bg-base-200 rounded-lg border border-base-300 transition-colors cursor-pointer"
+                        <div class="space-y-3">
+                            @foreach ($pendingApprovals as $approval)
+                                <a href="/admin/ticket-review/{{ $approval['ticket_number'] }}" wire:navigate
                                     wire:key="pending-{{ $approval['id'] }}"
-                                    onclick="window.location.href='/admin/ticket-review?ticket={{ $approval['id'] }}'">
-                                    <div class="flex items-start justify-between gap-4">
+                                    class="block p-4 bg-gray-50 dark:bg-base-300 hover:bg-gray-100 dark:hover:bg-base-100 rounded-xl border border-gray-100 dark:border-gray-700 transition-all duration-200 hover:shadow-sm">
+                                    <div class="flex items-center justify-between gap-4">
                                         <div class="flex-1 min-w-0">
-                                            <!-- Priority Indicator -->
-                                            @if ($index < 3)
-                                                <div class="badge badge-error badge-xs mb-2">High Priority
-                                                </div>
-                                            @endif
-
                                             <div class="flex items-center gap-2 mb-2">
-                                                <x-mary-badge value="{{ $approval['ticket_number'] }}"
-                                                    class="badge-primary badge-sm" />
-                                                <h4 class="font-semibold text-sm truncate">
-                                                    {{ $approval['title'] }}
-                                                </h4>
+                                                <span class="badge {{ $approval['status_class'] }} badge-sm">
+                                                    {{ $approval['status_label'] }}
+                                                </span>
+                                                <span
+                                                    class="text-xs text-gray-400 dark:text-gray-500 font-mono">{{ $approval['ticket_number'] }}</span>
                                             </div>
-
-                                            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                                            <h4 class="font-semibold text-gray-900 dark:text-white truncate mb-1">
+                                                {{ $approval['title'] }}
+                                            </h4>
+                                            <div
+                                                class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                                                 <div class="flex items-center gap-1">
                                                     <x-mary-icon name="o-building-office" class="w-3 h-3" />
                                                     <span>{{ $approval['organization'] }}</span>
@@ -254,54 +236,64 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 text-gray-400" />
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-12">
+                            <div
+                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
+                                <x-mary-icon name="o-check-circle"
+                                    class="w-8 h-8 text-emerald-600 dark:text-emerald-500" />
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">All Caught Up!</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No pending approvals at the moment.</p>
+                        </div>
+                    @endif
+                </div>
 
-                                        <div class="flex items-center gap-2">
-                                            <x-mary-button icon="o-eye" class="btn-sm btn-primary" />
+                <!-- Recent Activity Timeline -->
+                <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6 mt-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Latest updates and changes</p>
+                        </div>
+                    </div>
+                    @if (count($recentActivity) > 0)
+                        <div class="space-y-4">
+                            @foreach ($recentActivity as $index => $activity)
+                                <div class="flex gap-3" wire:key="activity-{{ $activity['id'] }}">
+                                    <div class="flex flex-col items-center">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                            <x-mary-icon :name="$activity['icon']"
+                                                class="w-4 h-4 {{ $activity['icon_class'] }}" />
                                         </div>
+                                        @if (!$loop->last)
+                                            <div class="w-px flex-1 bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 pb-4">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $activity['action'] }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $activity['details'] }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                            {{ $activity['time_ago'] }}</p>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-
-                        <!-- Pagination Indicator -->
-                        @if (count($pendingApprovals) > 5)
-                            <div class="text-center mt-4 pt-4 border-t">
-                                <p class="text-sm text-gray-500">
-                                    Showing 5 of {{ count($pendingApprovals) }} pending requests
-                                </p>
-                            </div>
-                        @endif
                     @else
-                        <div class="text-center py-16">
-                            <div
-                                class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/10 mb-4">
-                                <x-mary-icon name="o-check-circle" class="w-10 h-10 text-success" />
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">All Caught Up!</h3>
-                            <p class="text-sm text-gray-500">No pending approvals at the moment.</p>
+                        <div class="text-center py-8">
+                            <x-mary-icon name="o-clock" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                            <p class="text-sm text-gray-500">No recent activity</p>
                         </div>
                     @endif
-                </x-mary-card>
-
-                <!-- Recent Activity Timeline -->
-                <x-mary-card class="shadow-md mt-6" title="Recent Activity" subtitle="Latest updates and changes">
-                    <div class="space-y-4">
-                        <!-- Timeline items would go here -->
-                        <div class="flex gap-3">
-                            <div class="flex flex-col items-center">
-                                <div class="w-8 h-8 rounded-full bg-success flex items-center justify-center">
-                                    <x-mary-icon name="o-check" class="w-4 h-4 text-white" />
-                                </div>
-                                <div class="w-px h-full bg-base-300 mt-2"></div>
-                            </div>
-                            <div class="flex-1 pb-4">
-                                <p class="text-sm font-medium">Event Approved</p>
-                                <p class="text-xs text-gray-500">Annual Sports Fest 2024 was approved</p>
-                                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
-                            </div>
-                        </div>
-                    </div>
-                </x-mary-card>
+                </div>
             </div>
 
             <!-- Right Column: Upcoming Events -->
@@ -330,15 +322,17 @@
                                         </div>
 
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="font-semibold text-sm mb-1 truncate">
+                                            <h4 class="font-semibold text-sm dark:text-white mb-1 truncate">
                                                 {{ $event['title'] }}
                                             </h4>
                                             <div class="space-y-1">
-                                                <div class="flex items-center gap-1 text-xs text-gray-600">
+                                                <div
+                                                    class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                                                     <x-mary-icon name="o-user-group" class="w-3 h-3" />
                                                     <span class="truncate">{{ $event['organization'] }}</span>
                                                 </div>
-                                                <div class="flex items-center gap-1 text-xs text-gray-600">
+                                                <div
+                                                    class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                                                     <x-mary-icon name="o-map-pin" class="w-3 h-3" />
                                                     <span class="truncate">{{ $event['venue'] }}</span>
                                                 </div>
@@ -365,23 +359,27 @@
                     @endif
                 </x-mary-card>
 
-                <!-- Quick Stats Mini Card -->
-                <x-mary-card class="shadow-md mt-4" title="Today's Summary">
+                <!-- Today's Summary -->
+                <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-5 mt-4">
+                    <h3 class="text-md font-bold text-gray-900 dark:text-white mb-4">Today's Summary</h3>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">New Requests</span>
-                            <span class="font-bold">5</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">New Requests</span>
+                            <span
+                                class="font-bold text-gray-900 dark:text-white">{{ $todaysSummary['newRequests'] }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Processed</span>
-                            <span class="font-bold text-success">12</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Processed</span>
+                            <span
+                                class="font-bold text-emerald-600 dark:text-emerald-500">{{ $todaysSummary['processed'] }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Pending Review</span>
-                            <span class="font-bold text-warning">{{ $stats['pending'] }}</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Pending Review</span>
+                            <span
+                                class="font-bold text-amber-600 dark:text-amber-500">{{ $todaysSummary['pending'] }}</span>
                         </div>
                     </div>
-                </x-mary-card>
+                </div>
             </div>
         </div>
 
@@ -393,17 +391,17 @@
                     <p class="text-sm text-gray-500">Frequently used features</p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <!-- Review Tickets -->
-                    <a href="/admin/tickets" wire:navigate
-                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-200 cursor-pointer">
+                    <a href="{{ route('osa.ticket-review.index') }}" wire:navigate
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 hover:from-primary/10 hover:to-primary/20 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 group-hover:bg-primary group-hover:scale-110 transition-all mb-3">
                                 <x-mary-icon name="o-ticket" class="w-8 h-8 text-primary group-hover:text-white" />
                             </div>
-                            <h3 class="font-semibold text-gray-900 mb-1">Review Tickets</h3>
-                            <p class="text-xs text-gray-500">Manage event requests</p>
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Review Tickets</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Manage event requests</p>
                             @if ($stats['pending'] > 0)
                                 <div class="badge badge-warning badge-sm mt-2">{{ $stats['pending'] }}
                                     pending
@@ -412,44 +410,30 @@
                         </div>
                     </a>
 
-                    <!-- Approvals -->
-                    <a href="/admin/approvals" wire:navigate
-                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/20 rounded-xl border-2 border-transparent hover:border-secondary transition-all duration-200 cursor-pointer">
-                        <div class="text-center">
-                            <div
-                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 group-hover:bg-secondary group-hover:scale-110 transition-all mb-3">
-                                <x-mary-icon name="o-clipboard-document-check"
-                                    class="w-8 h-8 text-secondary group-hover:text-white" />
-                            </div>
-                            <h3 class="font-semibold text-gray-900 mb-1">Approvals</h3>
-                            <p class="text-xs text-gray-500">Process workflows</p>
-                        </div>
-                    </a>
-
                     <!-- Calendar -->
                     <a href="/admin/calendar" wire:navigate
-                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/20 rounded-xl border-2 border-transparent hover:border-accent transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-accent/5 to-accent/10 dark:from-accent/10 dark:to-accent/20 hover:from-accent/10 hover:to-accent/20 rounded-xl border-2 border-transparent hover:border-accent transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 group-hover:bg-accent group-hover:scale-110 transition-all mb-3">
                                 <x-mary-icon name="o-calendar-days" class="w-8 h-8 text-accent group-hover:text-white" />
                             </div>
-                            <h3 class="font-semibold text-gray-900 mb-1">Event Calendar</h3>
-                            <p class="text-xs text-gray-500">View schedule</p>
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Event Calendar</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">View schedule</p>
                         </div>
                     </a>
 
                     <!-- Reports -->
                     <a href="/admin/reports" wire:navigate
-                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-info/5 to-info/10 hover:from-info/10 hover:to-info/20 rounded-xl border-2 border-transparent hover:border-info transition-all duration-200 cursor-pointer">
+                        class="group max-md:pt-1 md:p-6 bg-gradient-to-br from-info/5 to-info/10 dark:from-info/10 dark:to-info/20 hover:from-info/10 hover:to-info/20 rounded-xl border-2 border-transparent hover:border-info transition-all duration-200 cursor-pointer">
                         <div class="text-center">
                             <div
                                 class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-info/10 group-hover:bg-info group-hover:scale-110 transition-all mb-3">
                                 <x-mary-icon name="o-document-chart-bar"
                                     class="w-8 h-8 text-info group-hover:text-white" />
                             </div>
-                            <h3 class="font-semibold text-gray-900 mb-1">Reports</h3>
-                            <p class="text-xs text-gray-500">Generate insights</p>
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Reports</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Generate insights</p>
                         </div>
                     </a>
                 </div>

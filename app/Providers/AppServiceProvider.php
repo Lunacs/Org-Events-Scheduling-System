@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\View\Html\Sanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +17,33 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register the HTML Sanitizer for XSS protection
+        $this->app->scoped(Sanitizer::class, function () {
+            return new Sanitizer(new HtmlSanitizer(
+                (new HtmlSanitizerConfig)
+                    ->allowSafeElements()
+                    // Explicitly allow elements used by Trix editor
+                    ->allowElement('div')
+                    ->allowElement('p')
+                    ->allowElement('br')
+                    ->allowElement('ul')
+                    ->allowElement('ol')
+                    ->allowElement('li')
+                    ->allowElement('strong')
+                    ->allowElement('em')
+                    ->allowElement('del')
+                    ->allowElement('a', ['href', 'target', 'rel'])
+                    ->allowElement('blockquote')
+                    ->allowElement('pre')
+                    ->allowElement('h1')
+                    ->allowElement('h2')
+                    ->allowElement('h3')
+                    ->allowElement('code')
+                    ->allowAttribute('class', '*')
+                    ->allowAttribute('style', '*')
+                    ->allowAttribute('id', '*')
+            ));
+        });
     }
 
     /**

@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Osa\TicketReview;
 
+use App\Models\Student_Organization;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -23,9 +25,12 @@ class Index extends Component
     #[Url(except: '')]
     public $statusFilter = '';
 
+    #[Url(except: '')]
+    public $organizationFilter = '';
+
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter']);
+        $this->reset(['search', 'statusFilter', 'organizationFilter']);
         $this->resetPage();
     }
 
@@ -37,6 +42,22 @@ class Index extends Component
     public function updatedStatusFilter()
     {
         $this->resetPage();
+    }
+
+    public function updatedOrganizationFilter()
+    {
+        $this->resetPage();
+    }
+
+    #[Computed(persist: true, seconds: 3600)]
+    public function organizations()
+    {
+        return Cache::remember('osa_ticket_review_organizations', 3600, function () {
+            return Student_Organization::withTrashed()
+                ->select(['org_id', 'org_name', 'deleted_at'])
+                ->orderBy('org_name')
+                ->get();
+        });
     }
 
     public function render()
@@ -88,6 +109,9 @@ class Index extends Component
                 // When a specific filter is selected, show only those tickets
                 $query->where('status', $this->statusFilter);
             })
+            ->when($this->organizationFilter, fn($query) => $query->whereHas('user', function ($q) {
+                $q->where('org_id', $this->organizationFilter);
+            }))
             ->orderBy('created_at', 'desc')
             ->paginate(10); // Reduced from 12 to 10 for faster loads
     }

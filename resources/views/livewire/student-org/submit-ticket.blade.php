@@ -18,15 +18,16 @@
                     </div>
                 </div>
             </div>
-
-            <x-mary-form wire:submit="save">
-                {{-- Progress Indicator --}}
-                <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
-                    <div class="flex justify-between items-center min-w-max md:min-w-0">
-                        @for ($i = 1; $i <= $totalSteps; $i++)
-                            <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0 snap-center" id="step-{{ $i }}">
-                                <button type="button" wire:click="goToStep({{ $i }})"
-                                        aria-label="Step {{ $i }}:
+                <x-mary-form wire:submit="save">
+                    {{-- Progress Indicator --}}
+                    <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory"
+                         id="progress-container">
+                        <div class="flex justify-between items-center min-w-max md:min-w-0">
+                            @for ($i = 1; $i <= $totalSteps; $i++)
+                                <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0 snap-center"
+                                     id="step-{{ $i }}">
+                                    <button type="button" wire:click="goToStep({{ $i }})"
+                                            aria-label="Step {{ $i }}:
                                         @switch($i)
                                             @case(1) Organization
                                             @case(2) Event Details
@@ -35,130 +36,140 @@
                                             @case(5) Attachments
                                             @case(6) Review
                                         @endswitch"
-                                        aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
-                                        class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0
+                                            aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
+                                            class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0
                                         {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
                                         {{ $currentStep > $i ? 'bg-success text-white' : '' }}
                                         {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}"
-                                        @if($i > $currentStep + 1) disabled @endif>
+                                            @if ($i > $currentStep + 1) disabled @endif>
                                         {{ $currentStep > $i ? '✓' : $i }}
-                                </button>
+                                    </button>
 
-                                <span class="text-xs text-center whitespace-nowrap px-1">
-                                @switch($i)
-                                        @case(1)
-                                            Organization
-                                            @break
+                                    <span class="text-xs text-center whitespace-nowrap px-1">
+                                    @switch($i)
+                                            @case(1)
+                                                Organization
+                                                @break
 
-                                        @case(2)
-                                            Event Details
-                                            @break
+                                            @case(2)
+                                                Event Details
+                                                @break
 
-                                        @case(3)
-                                            Schedule
-                                            @break
+                                            @case(3)
+                                                Schedule
+                                                @break
 
-                                        @case(4)
-                                            Budget
-                                            @break
+                                            @case(4)
+                                                Budget
+                                                @break
 
-                                        @case(5)
-                                            Attachments
-                                            @break
+                                            @case(5)
+                                                Attachments
+                                                @break
 
-                                        @case(6)
-                                            Review
-                                            @break
-                                @endswitch
+                                            @case(6)
+                                                Review
+                                                @break
+                                        @endswitch
                                 </span>
-                            </div>
-                            @if ($i < $totalSteps)
-                                <div
-                                    class="flex-1 h-1 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-1 md:mx-2 min-w-[20px]">
                                 </div>
-                            @endif
-                        @endfor
-                    </div>
-                </div>
-
-
-                {{-- Step 1: Organization Information --}}
-                @if ($currentStep === 1)
-                    {{-- Instructions Card --}}
-                    <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
-                                 class="mb-1">
-                        <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
-                            <div class="flex items-start space-x-2">
-                                <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5"/>
-                                <div class="text-sm">
-                                    <p class="font-medium mb-2">Important Guidelines:</p>
-                                    <ul class="list-disc list-inside space-y-1 text-gray-600">
-                                        <li>Submit your request at least 14 days before your event date</li>
-                                        <li>All required fields must be completed</li>
-                                        <li>Upload all necessary attachments (permit forms, venue reservations, etc.)
-                                        </li>
-                                        <li>Events must comply with university policies and guidelines</li>
-                                        <li>You will receive notifications about approval status via email</li>
-                                    </ul>
-                                </div>
-                            </div>
+                                @if ($i < $totalSteps)
+                                    <div
+                                        class="flex-1 h-1 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-1 md:mx-2 min-w-[20px]">
+                                    </div>
+                                @endif
+                            @endfor
                         </div>
-                    </x-mary-card>
-                    <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning mb-4">
-                        <x-mary-checkbox label="Check this box if the proposal is amended from a previous submission."
-                                         wire:model.live="is_amended"/>
                     </div>
 
-                    <x-mary-card title="Organization Information" subtitle="Details about your student organization">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input label="Organization Name" wire:model="organizationName" readonly/>
-                            <x-mary-input label="Organization Course" wire:model="organizationCourse" readonly/>
-                            <x-mary-input label="Name of Proponent" wire:model="proponentName" readonly/>
-                            <x-mary-input label="Contact Email" type="email" wire:model="contactEmail" readonly/>
-                            <x-mary-input label="Proponent Position" wire:model="proponentPosition" readonly/>
-                            <x-mary-input label="Organization Adviser" wire:model="adviser" readonly/>
-                            <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
-                                          placeholder="0999 999 9999" readonly/>
-                            <x-mary-input label="Contact of Adviser" wire:model.blur="adviser_contact" required/>
-                        </div>
-                    </x-mary-card>
-                @endif
 
-                {{-- Step 2: Event Details --}}
-                @if ($currentStep === 2)
-                    <x-mary-card title="Event Details" subtitle="Information about your proposed event">
-                        <div class="space-y-4">
-                            <x-mary-input label="Event Title" wire:model.blur="eventTitle"
-                                          placeholder="Enter your event title" required/>
-                            <x-mary-textarea label="Event Description" wire:model.blur="eventDescription" rows="4"
-                                             required/>
-                            <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
-                                           option-value="event_type_id" option-label="type_name" required/>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <x-mary-input label="PLV Participants" type="number"
-                                              wire:model.live="expectedPLVParticipants" required/>
-                                <x-mary-input label="Non-PLV Participants" type="number"
-                                              wire:model.live="expectedNonPLVParticipants"/>
-                                <x-mary-input label="Total" type="number" value="{{ $this->expectedParticipants }}"
-                                              readonly/>
+                    {{-- Step 1: Organization Information --}}
+                    @if ($currentStep === 1)
+                        {{-- Instructions Card --}}
+                        <x-mary-card title="Event Request Guidelines"
+                                     subtitle="Please read before submitting your proposal"
+                                     class="mb-1">
+                            <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
+                                <div class="flex items-start space-x-2">
+                                    <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5"/>
+                                    <div class="text-sm">
+                                        <p class="font-medium mb-2">Important Guidelines:</p>
+                                        <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                            <li>Submit your request at least 14 days before your event date</li>
+                                            <li>All required fields must be completed</li>
+                                            <li>Upload all necessary attachments (permit forms, venue reservations,
+                                                etc.)
+                                            </li>
+                                            <li>Events must comply with university policies and guidelines</li>
+                                            <li>You will receive notifications about approval status via email</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
+                        </x-mary-card>
+                        <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning mb-4">
+                            <x-mary-checkbox
+                                label="Check this box if the proposal is amended from a previous submission."
+                                wire:model.live="is_amended"/>
                         </div>
-                    </x-mary-card>
-                @endif
 
-                {{-- Step 3: Schedule & Venue --}}
-                @if ($currentStep === 3)
-                    <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-datetime label="Event Start Date" wire:model.blur="eventStartDate" required/>
+                        <x-mary-card title="Organization Information"
+                                     subtitle="Details about your student organization">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <x-mary-input label="Organization Name" wire:model="organizationName" readonly/>
+                                <x-mary-input label="Organization Course" wire:model="organizationCourse" readonly/>
+                                <x-mary-input label="Name of Proponent" wire:model="proponentName" readonly/>
+                                <x-mary-input label="Contact Email" type="email" wire:model="contactEmail" readonly/>
+                                <x-mary-input label="Proponent Position" wire:model="proponentPosition" readonly/>
+                                <x-mary-input label="Organization Adviser" wire:model="adviser" readonly/>
+                                <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
+                                              placeholder="0999 999 9999" readonly/>
+                                <x-mary-input label="Contact of Adviser"
+                                              wire:model.live.debounce.300ms="adviser_contact"
+                                              required/>
+                            </div>
+                        </x-mary-card>
+                    @endif
 
-                            <x-mary-datetime label="Event End Date" wire:model.blur="eventEndDate" required/>
+                    {{-- Step 2: Event Details --}}
+                    @if ($currentStep === 2)
+                        <x-mary-card title="Event Details" subtitle="Information about your proposed event">
+                            <div class="space-y-4">
+                                <x-mary-input label="Event Title" wire:model.live.debounce.300ms="eventTitle"
+                                              placeholder="Enter your event title" required/>
+                                <x-mary-textarea label="Event Description"
+                                                 wire:model.live.debounce.300ms="eventDescription"
+                                                 rows="4" required/>
+                                <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
+                                               option-value="event_type_id" option-label="type_name" required/>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <x-mary-input label="PLV Participants" type="number"
+                                                  wire:model.live="expectedPLVParticipants" required/>
+                                    <x-mary-input label="Non-PLV Participants" type="number"
+                                                  wire:model.live="expectedNonPLVParticipants"/>
+                                    <x-mary-input label="Total" type="number" value="{{ $this->expectedParticipants }}"
+                                                  readonly/>
+                                </div>
+                            </div>
+                        </x-mary-card>
+                    @endif
 
-                            <x-mary-datetime label="Event Start Time" wire:model.blur="eventStartTime" type="time"
-                                             required/>
+                    {{-- Step 3: Schedule & Venue --}}
+                    @if ($currentStep === 3)
+                        <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <x-mary-datetime label="Event Start Date"
+                                                 wire:model.live.debounce.300ms="eventStartDate"
+                                                 required/>
 
-                            <x-mary-datetime label="Event End Time" wire:model.blur="eventEndTime" type="time"
-                                             required/>
+                                <x-mary-datetime label="Event End Date" wire:model.live.debounce.300ms="eventEndDate"
+                                                 required/>
+
+                                <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
+                                                 required/>
+
+                                <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
+                                                 required/>
 
                             <div x-data="{
                                 preferredVenue: @entangle('preferredVenue').live,
@@ -181,7 +192,7 @@
                                      class="mt-4">
                                     <x-mary-input
                                         label="Please specify preferred venue"
-                                        wire:model.blur="preferredVenueOther"
+                                        wire:model.live="preferredVenueOther"
                                         placeholder="Enter venue name" required
                                     />
                                 </div>
@@ -214,88 +225,93 @@
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <x-mary-textarea label="Special Requirements" wire:model.blur="specialRequirements"
-                                             placeholder="Audio/visual equipment, seating arrangement, catering, etc."
-                                             rows="3"/>
-                        </div>
-
-                        <div x-data="{ open: @entangle('is_oc') }">
                             <div class="mt-4">
-                                <x-mary-checkbox label="Check this box if the activity is off-campus"
-                                                 wire:model.live="is_oc"/>
+                                <x-mary-textarea label="Special Requirements"
+                                                 wire:model.live.debounce.300ms="specialRequirements"
+                                                 placeholder="Audio/visual equipment, seating arrangement, catering, etc."
+                                                 rows="3"/>
                             </div>
 
-                            <div x-show="open" x-collapse x-cloak>
+                            <div x-data="{ open: @entangle('is_oc') }">
                                 <div class="mt-4">
-                                    <x-mary-textarea label="Accommodation Provider (if any)"
-                                                     wire:model.blur="oc_accommodation"
-                                                     placeholder="Accommodation Provider Details" rows="2"/>
+                                    <x-mary-checkbox label="Check this box if the activity is off-campus"
+                                                     wire:model.live="is_oc"/>
                                 </div>
 
-                                <div x-data="{ tsp: @entangle('oc_tsp') }">
-                                    <div class="mb-4">
-                                        <x-mary-radio label="Transportation Service Provider" wire:model.live="oc_tsp"
-                                                      :options="[
+                                <div x-show="open" x-collapse x-cloak>
+                                    <div class="mt-4">
+                                        <x-mary-textarea label="Accommodation Provider (if any)"
+                                                         wire:model.live.debounce.300ms="oc_accommodation"
+                                                         placeholder="Accommodation Provider Details" rows="2"/>
+                                    </div>
+
+                                    <div x-data="{ tsp: @entangle('oc_tsp') }">
+                                        <div class="mb-4">
+                                            <x-mary-radio label="Transportation Service Provider"
+                                                          wire:model.live="oc_tsp"
+                                                          :options="[
                                                 ['id' => 'in-house', 'name' => 'In-house'],
                                                 ['id' => 'outsourced', 'name' => 'Outsourced'],
                                             ]" inline/>
-                                    </div>
+                                        </div>
 
-                                    <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <x-mary-input label="Name of Driver" wire:model.blur="oc_driver_name"
-                                                          placeholder="Enter the driver name"/>
+                                        <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <x-mary-input label="Name of Driver"
+                                                              wire:model.live.debounce.300ms="oc_driver_name"
+                                                              placeholder="Enter the driver name"/>
 
-                                            <x-mary-input label="Contact Details"
-                                                          wire:model.blur="oc_driver_contact_number"
-                                                          placeholder="Enter the driver's contact"/>
+                                                <x-mary-input label="Contact Details"
+                                                              wire:model.live.debounce.300ms="oc_driver_contact_number"
+                                                              placeholder="Enter the driver's contact"/>
 
-                                            <x-mary-input label="Type of Transportation"
-                                                          wire:model.blur="oc_transportation_type"
-                                                          placeholder="Enter the type of transportation"/>
+                                                <x-mary-input label="Type of Transportation"
+                                                              wire:model.live.debounce.300ms="oc_transportation_type"
+                                                              placeholder="Enter the type of transportation"/>
 
-                                            <x-mary-input label="Plate Number" wire:model.blur="oc_vehicle_plate_number"
-                                                          placeholder="Enter the plate number"/>
+                                                <x-mary-input label="Plate Number"
+                                                              wire:model.live.debounce.300ms="oc_vehicle_plate_number"
+                                                              placeholder="Enter the plate number"/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </x-mary-card>
-                @endif
+                        </x-mary-card>
+                    @endif
 
-                {{-- Step 4: Budget Information --}}
-                @if ($currentStep === 4)
-                    <x-mary-card title="Budget Information" subtitle="Financial details of your event">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                          wire:model.live="totalBudget" placeholder="0.00" prefix="₱"/>
+                    {{-- Step 4: Budget Information --}}
+                    @if ($currentStep === 4)
+                        <x-mary-card title="Budget Information" subtitle="Financial details of your event">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
+                                              wire:model.live="totalBudget" placeholder="0.00" prefix="₱"/>
 
-                            <x-mary-select label="Funding Source" wire:model.live="fundingSource"
-                                           :options="$fundSources"
-                                           option-value="source_id" option-label="source_name"
-                                           placeholder="Select funding source" required/>
-                        </div>
+                                <x-mary-select label="Funding Source" wire:model.live="fundingSource"
+                                               :options="$fundSources"
+                                               option-value="source_id" option-label="source_name"
+                                               placeholder="Select funding source" required/>
+                            </div>
 
-                        <div class="mt-4">
-                            <x-mary-textarea label="Budget Breakdown" wire:model.blur="budgetBreakdown"
-                                             placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
-                                             rows="4"/>
-                        </div>
+                            <div class="mt-4">
+                                <x-mary-textarea label="Budget Breakdown"
+                                                 wire:model.live.debounce.300ms="budgetBreakdown"
+                                                 placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
+                                                 rows="4"/>
+                            </div>
 
                         <div x-data="{ igp: @entangle('igp_requested') }">
                             <div class="mt-4">
                                 <x-mary-radio label="IGP (Income Generated Project) Request" wire:model.live="igp_requested" :options="[
                                     ['id' => 'true', 'name' => 'Requested'],
                                     ['id' => 'false', 'name' => 'Not Requested'],
-                                ]" inline
-                                              required/>
-                            </div>
+                                ]"
+                                                  inline required/>
+                                </div>
 
                             <div x-show="igp === 'true'" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-mary-textarea label="IGP (Income Generated Project) Brief Description" wire:model.blur="igp_details"
+                                    <x-mary-textarea label="IGP (Income Generated Project) Brief Description" wire:model.live.debounce.300ms="igp_details"
                                                      placeholder="List all descriptions for IGP (Income Generated Project) requested items"
                                                      rows="4"/>
                                 </div>
@@ -304,139 +320,124 @@
                     </x-mary-card>
                 @endif
 
-                {{-- Step 5: Attachments --}}
-                @if ($currentStep === 5)
-                    {{-- File Attachments --}}
-                    <x-mary-card title="Attachments" subtitle="Upload required documents and supporting files">
-                        <div class="space-y-4">
-                            <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
-                                <div class="flex items-start space-x-2">
-                                    <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5"/>
-                                    <div class="text-sm">
-                                        <p class="font-medium mb-1">Required Documents:</p>
-                                        <ul class="list-disc list-inside space-y-1 text-gray-600">
-                                            <li>Document containing the Rationale</li>
-                                            @foreach ($this->getRequiredDocuments() as $document)
-                                                @if (is_array($document) && isset($document['nested']))
-                                                    <li>{{ $document[0] }}</li>
-                                                    <ul
-                                                        class="list-disc list-inside ml-8 mt-1 space-y-1 text-gray-600">
-                                                        @foreach ($document['nested'] as $nestedDoc)
-                                                            <li>{{ $nestedDoc }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    <li>{{ is_array($document) ? $document[0] : $document }}</li>
-                                                @endif
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                    {{-- Step 5: Attachments --}}
+                    @if ($currentStep === 5)
+                        {{-- File Attachments --}}
+                        <x-mary-card title="Attachments" subtitle="Upload required documents and supporting files">
+                            <div class="space-y-4">
+                                <x-documentary-requirements :event-type-id="$eventType"/>
 
-                            <div class="space-y-2">
-                                <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
-                                    @if ($errors->any())
-                                        {{ count($errors) }} validation errors found
-                                    @endif
-                                </div>
-                                <x-mary-file wire:model="newAttachments" multiple aria-label="Upload event documents"
-                                             aria-describedby="file-help-text"
-                                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
-                                    <x-slot:hint>
+                                <div class="space-y-2">
+                                    <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+                                        @if ($errors->any())
+                                            {{ count($errors) }} validation errors found
+                                        @endif
+                                    </div>
+                                    <x-mary-file wire:model="newAttachments" multiple
+                                                 aria-label="Upload event documents"
+                                                 aria-describedby="file-help-text"
+                                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                                        <x-slot:hint>
                                         <span id="file-help-text">
                                             Upload files up to 10MB. Accepted: PDF, DOC, images, Excel
                                         </span>
-                                    </x-slot:hint>
-                                </x-mary-file>
+                                        </x-slot:hint>
+                                    </x-mary-file>
 
-                                @if ($attachments)
-                                    <div class="mt-4 space-y-2">
-                                        <p class="text-sm font-medium">Attached Files:</p>
-                                        @foreach ($attachments as $index => $file)
-                                            <div class="flex items-center justify-between bg-base-200 p-2 rounded">
-                                                <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
-                                                <x-mary-button icon="o-x-mark"
-                                                               wire:click="removeAttachment({{ $index }})"
-                                                               class="btn-ghost btn-sm" spinner/>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                    @if ($attachments)
+                                        <div class="mt-4 space-y-2">
+                                            <p class="text-sm font-medium">Attached Files:</p>
+                                            @foreach ($attachments as $index => $file)
+                                                <div class="flex items-center justify-between bg-base-200 p-2 rounded">
+                                                    <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
+                                                    <x-mary-button icon="o-x-mark"
+                                                                   wire:click="removeAttachment({{ $index }})"
+                                                                   class="btn-ghost btn-sm" spinner/>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                    </x-mary-card>
+                        </x-mary-card>
 
-                    {{-- Additional Information --}}
-                    <x-mary-card title="Additional Information" subtitle="Any other relevant details">
-                        <div class="space-y-4">
-                            <x-mary-textarea label="Additional Notes" wire:model.blur="additionalNotes"
-                                             placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
-                                             rows="3"/>
-                        </div>
-                    </x-mary-card>
-                @endif
-
-                {{-- Step 6: Review & Submit --}}
-                @if ($currentStep === 6)
-                    <div class="overflow-x-hidden">
-                        <x-mary-card title="Review & Submit" subtitle="Please review your information"
-                                     class="overflow-hidden">
-                            {{-- Show summary of all entered data --}}
-                            <div class="overflow-hidden">
-                                <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+                        {{-- Additional Information --}}
+                        <x-mary-card title="Additional Information" subtitle="Any other relevant details">
+                            <div class="space-y-4">
+                                <x-mary-textarea label="Additional Notes"
+                                                 wire:model.live.debounce.300ms="additionalNotes"
+                                                 placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
+                                                 rows="3"/>
                             </div>
+                        </x-mary-card>
+                    @endif
 
-                            {{-- Agreement & Submission --}}
-                            <div class="mt-6">
-                                <x-mary-card title="Terms and Conditions"
-                                             subtitle="Please review and agree to the terms" class="overflow-hidden">
-                                    <x-terms_and_conditions/>
+                    {{-- Step 6: Review & Submit --}}
+                    @if ($currentStep === 6)
+                        <div class="overflow-x-hidden">
+                            <x-mary-card title="Review & Submit" subtitle="Please review your information"
+                                         class="overflow-hidden">
+                                {{-- Show summary of all entered data --}}
+                                <div class="overflow-hidden">
+                                    <x-tickets.ticket-preview :ticket="$this->previewTicket"/>
+                                </div>
 
-                                    {{-- Agreement Checkbox with Enhanced Styling --}}
-                                    <div class="mt-6 pt-4 border-t-2 border-base-content/10">
-                                        <div class="bg-success/5 border-l-4 border-success p-4 rounded-r-lg">
-                                            <x-mary-checkbox wire:model.live="agreeToTerms" required>
-                                                <x-slot:label>
+                                {{-- Agreement & Submission --}}
+                                <div class="mt-6">
+                                    <x-mary-card title="Terms and Conditions"
+                                                 subtitle="Please review and agree to the terms"
+                                                 class="overflow-hidden">
+                                        <x-terms_and_conditions/>
+
+                                        {{-- Agreement Checkbox with Enhanced Styling --}}
+                                        <div class="mt-6 pt-4 border-t-2 border-base-content/10">
+                                            <div class="bg-success/5 border-l-4 border-success p-4 rounded-r-lg">
+                                                <x-mary-checkbox wire:model.live="agreeToTerms" required>
+                                                    <x-slot:label>
                                                     <span class="text-sm md:text-base font-semibold text-base-content">
                                                         I have read, understood, and agree to all the terms and
                                                         conditions stated above
                                                     </span>
-                                                </x-slot:label>
-                                            </x-mary-checkbox>
-                                            <p class="text-xs text-base-content/60 mt-2 ml-6">
-                                                By checking this box, you acknowledge your responsibility to comply with
-                                                all university policies
-                                            </p>
+                                                    </x-slot:label>
+                                                </x-mary-checkbox>
+                                                <p class="text-xs text-base-content/60 mt-2 ml-6">
+                                                    By checking this box, you acknowledge your responsibility to comply
+                                                    with
+                                                    all university policies
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </x-mary-card>
-                            </div>
-                        </x-mary-card>
-                    </div>
-                @endif
-
-                {{-- Navigation Buttons --}}
-                <div class="flex justify-between items-center pt-6">
-                    <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                                   class="btn-outline" wire:loading.attr="disabled"
-                                   wire:loading.class="opacity-50 cursor-not-allowed" wire:target="previousStep" spinner
-                                   :disabled="$currentStep === 1 || $isProcessing"/>
-                    @if ($currentStep < $totalSteps)
-                        <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                                       x-on:click="isSubmitting = true" wire:loading.attr="disabled"
-                                       wire:loading.class="opacity-50 cursor-not-allowed"
-                                       class="btn-primary {{ $errors->any() ? '<opacity-75></opacity-75> cursor-not-allowed' : '' }}"
-                                       :disabled="$errors->any()"/>
-                    @else
-                        <x-mary-button label="Submit Ticket" icon="s-paper-airplane" type="submit"
-                                       x-on:click="isSubmitting = true" wire:loading.attr="disabled"
-                                       wire:loading.class="opacity-50 cursor-not-allowed"
-                                       class="btn-primary"/>
+                                    </x-mary-card>
+                                </div>
+                            </x-mary-card>
+                        </div>
                     @endif
-                </div>
-                <x-mary-toast/>
-            </x-mary-form>
+
+                    {{-- Navigation Buttons --}}
+                    <div class="flex justify-between items-center pt-6">
+                        <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
+                                       class="btn-outline" wire:loading.attr="disabled"
+                                       wire:loading.class="opacity-50 cursor-not-allowed" wire:target="previousStep"
+                                       spinner
+                                       :disabled="$currentStep === 1 || $isProcessing"/>
+                        @if ($currentStep < $totalSteps)
+                            <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
+                                           x-on:click="isSubmitting = true" wire:loading.attr="disabled"
+                                           wire:loading.class="opacity-50 cursor-not-allowed"
+                                           class="btn-primary {{ $errors->any() ? '<opacity-75></opacity-75> cursor-not-allowed' : '' }}"
+                                           :disabled="$errors->any()"/>
+                        @else
+                            <x-mary-button label="Submit Ticket" icon="s-paper-airplane"
+                                           wire:click="save"
+                                           wire:loading.attr="disabled"
+                                           wire:loading.class="opacity-50 cursor-not-allowed"
+                                           wire:target="save"
+                                           class="btn-primary"
+                                           :disabled="!$agreeToTerms || $isProcessing"/>
+                        @endif
+                    </div>
+                    <x-mary-toast/>
+                </x-mary-form>
         </div>
     </div>
 
@@ -444,16 +445,9 @@
     <script>
         $wire.on('step-changed', () => {
             setTimeout(() => {
-                // Scroll page to top
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-
-                // Scroll progress container to show current step
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 const container = document.getElementById('progress-container');
                 const currentStepElement = document.getElementById(`step-${$wire.currentStep}`);
-
                 if (container && currentStepElement && window.innerWidth < 768) {
                     currentStepElement.scrollIntoView({
                         behavior: 'smooth',
@@ -462,12 +456,6 @@
                     });
                 }
             }, 100);
-        });
-
-        // Prevent form resubmission
-        let isSubmitting = false;
-        $wire.on('form-submitted', () => {
-            isSubmitting = true;
         });
     </script>
     @endscript
@@ -859,26 +847,3 @@
         </span>
     </div>
 </div>
-
-<?php if (($this->currentStep === 3 || $this->currentStep === $this->totalSteps) && $this->eventStartTime && $this->eventEndTime) {
-    try {
-        $startTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventStartTime);
-        $endTime = \Carbon\Carbon::createFromFormat('H:i', $this->eventEndTime);
-        $minTime = \Carbon\Carbon::createFromFormat('H:i', '00:01');
-        $maxTime = \Carbon\Carbon::createFromFormat('H:i', '21:00');
-
-        if ($startTime->lt($minTime)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'eventStartTime' => 'Event start time must be at or after 12:01 AM.',
-            ]);
-        }
-
-        if ($endTime->gt($maxTime)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'eventEndTime' => 'Event end time must be at or before 9:00 PM.',
-            ]);
-        }
-    } catch (\Carbon\Exceptions\InvalidFormatException $e) {
-        // Invalid time format - let the regular validation handle it
-    }
-}

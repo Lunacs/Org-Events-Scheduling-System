@@ -38,8 +38,7 @@
         <x-mary-main full-width>
             @persist('superadmin-sidebar')
                 {{-- SIDEBAR --}}
-                <x-slot:sidebar collapsible withNav drawer="main-drawer"
-                    class="bg-base-100 lg:bg-inherit rounded-r-xl">
+                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
 
                     {{-- BRAND --}}
                     <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
@@ -86,10 +85,28 @@
 
                         <x-mary-menu-separator />
 
+                        {{-- Content Management --}}
+                        <x-mary-menu-item title="FAQ Management" icon="o-question-mark-circle"
+                            link="{{ route('superadmin.faqs') }}" wire:navigate.hover />
+
+                        {{-- <x-mary-menu-sub title="System Settings" icon="o-cog-6-tooth" :active="false">
+                            <x-mary-menu-item title="Student Organizations" icon="o-building-office-2"
+                                link="{{ route('superadmin.system-settings', ['activeTab' => 'organizations']) }}"
+                                :active="request('activeTab') == 'organizations' ||
+                                    (request()->routeIs('superadmin.system-settings') && !request('activeTab'))" wire:navigate.hover />
+                            <x-mary-menu-item title="Courses" icon="o-academic-cap"
+                                link="{{ route('superadmin.system-settings', ['activeTab' => 'courses']) }}"
+                                :active="request('activeTab') == 'courses'" wire:navigate.hover />
+                            <x-mary-menu-item title="Event Types" icon="o-calendar-days"
+                                link="{{ route('superadmin.system-settings', ['activeTab' => 'event-types']) }}"
+                                :active="request('activeTab') == 'event-types'" wire:navigate.hover />
+                            <x-mary-menu-item title="Content Section" icon="o-document-text"
+                                link="{{ route('superadmin.system-settings', ['activeTab' => 'content']) }}"
+                                :active="request('activeTab') == 'content'" wire:navigate.hover />
+                        </x-mary-menu-sub> --}}
+
                         <x-mary-menu-item title="System Settings" icon="o-cog-6-tooth"
                             link="{{ route('superadmin.system-settings') }}" wire:navigate.hover />
-                        {{-- <x-mary-menu-item title="Admin Tools" icon="o-wrench-screwdriver"
-                            link="{{ route('superadmin.admin-tools') }}" wire:navigate.hover /> --}}
 
                         <x-mary-menu-separator />
                     </x-mary-menu>
@@ -110,10 +127,14 @@
                     @persist('superadmin-navigation')
                         <livewire:layout.navigation />
                     @endpersist
+
+                    {{-- Announcements Banner --}}
+                    <x-announcement-banner />
                 </div>
 
                 {{-- Page Content --}}
                 {{ $slot }}
+                <x-rich-text::styles theme="richtextlaravel" />
             </x-slot:content>
         </x-mary-main>
 

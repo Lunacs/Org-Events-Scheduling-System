@@ -52,6 +52,9 @@ COPY --from=node-build /app/public/build ./public/build
 # Copy application code
 COPY . .
 
+# Ensure vendor icons are available
+RUN php artisan vendor:publish --tag=mary-ui --force || true
+
 # Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
@@ -62,7 +65,7 @@ COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
 ENV APP_ENV=production
-ENV APP_DEBUG=false
+ENV APP_DEBUG=true
 ENV LOG_CHANNEL=stderr
 
 EXPOSE 80

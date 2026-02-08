@@ -1,7 +1,8 @@
 <?php
 
-//About us
+// Public Pages
 use App\Livewire\AboutUs;
+use App\Livewire\Faq;
 
 // OSA/admin Imports
 use App\Livewire\Osa\Archive;
@@ -42,7 +43,7 @@ use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 
-// If user is logged in, redirect to their role-specific dashboard
+// Redirect to login page, or to user's dashboard if already authenticated
 Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
@@ -50,12 +51,15 @@ Route::get('/', function () {
         return redirect()->route($user->getDashboardRoute());
     }
 
-    // Otherwise, show the welcome page
-    return view('osa.welcome');
+    // Redirect to login page
+    return redirect()->route('login');
 });
 
 // About Us - Public route
 Route::get('/about-us', AboutUs::class)->name('about-us');
+
+// FAQ - Public route
+Route::get('/faq', Faq::class)->name('faq');
 
 // Profile route (accessible by all authenticated users)
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -95,6 +99,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'timestamp' => now()->toDateTimeString(),
         ]);
     })->name('keep-alive');
+
+    // Signed URL routes for attachment access (private storage)
+    Route::get('/attachments/{attachment}/preview', [\App\Http\Controllers\AttachmentController::class, 'preview'])
+        ->name('attachments.preview')
+        ->middleware('signed');
+    Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
+        ->name('attachments.download')
+        ->middleware('signed');
 });
 
 // OSA routes
@@ -125,6 +137,15 @@ Route::prefix('superadmin')
         Route::get('/reports', \App\Livewire\Superadmin\Reports\Index::class)->name('superadmin.reports');
         Route::get('/notifications', \App\Livewire\Superadmin\Notifications::class)->name('superadmin.notifications');
         Route::get('/system-settings', SystemSettingsIndex::class)->name('superadmin.system-settings');
+        Route::get('/system-settings/content/create', \App\Livewire\Superadmin\SystemSettings\ContentSectionEditor::class)->name('superadmin.content-section.create');
+        Route::get('/system-settings/content/{id}/edit', \App\Livewire\Superadmin\SystemSettings\ContentSectionEditor::class)->name('superadmin.content-section.edit');
+        Route::get('/system-settings/event-types/create', \App\Livewire\Superadmin\SystemSettings\EventTypeEditor::class)->name('superadmin.event-type.create');
+        Route::get('/system-settings/event-types/{id}/edit', \App\Livewire\Superadmin\SystemSettings\EventTypeEditor::class)->name('superadmin.event-type.edit');
+        Route::get('/system-settings/venues/create', \App\Livewire\Superadmin\SystemSettings\VenueEditor::class)->name('superadmin.venue.create');
+        Route::get('/system-settings/venues/{id}/edit', \App\Livewire\Superadmin\SystemSettings\VenueEditor::class)->name('superadmin.venue.edit');
+        Route::get('/faqs', \App\Livewire\Superadmin\FaqManager::class)->name('superadmin.faqs');
+        Route::get('/faqs/create', \App\Livewire\Superadmin\FaqEditor::class)->name('superadmin.faq.create');
+        Route::get('/faqs/{id}/edit', \App\Livewire\Superadmin\FaqEditor::class)->name('superadmin.faq.edit');
         Route::get('/admin-tools', \App\Livewire\Superadmin\AdminTools\Index::class)->name('superadmin.admin-tools');
         Route::get('/logs', Logs::class)->name('superadmin.logs');
         Route::get('/profile', SuperadminProfile::class)->name('superadmin.profile');

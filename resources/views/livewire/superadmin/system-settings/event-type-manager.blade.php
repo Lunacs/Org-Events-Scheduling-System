@@ -1,78 +1,68 @@
 <div>
-    <x-mary-card progressIndicator shadow>
-        <div class="flex justify-between mb-5">
-            <h2 class="font-bold text-xl">Event Types</h2>
-            <x-mary-button icon="o-plus" class="btn-accent"
-                wire:click="$set('addEventTypeModalOpen', true)">Add</x-mary-button>
+    <x-mary-card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">Event Classifications</h2>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Categorize and label system
+                    events</p>
+            </div>
+            <x-mary-button icon="o-plus" label="New Classification" class="btn-primary btn-sm shadow-sm w-full sm:w-auto"
+                link="{{ route('superadmin.event-type.create') }}" wire:navigate />
         </div>
 
         @if (count($eventTypes) > 0)
-            <ul class="space-y-2">
+            <div class="space-y-3">
                 @foreach ($eventTypes as $eventType)
-                    <li class="flex items-center justify-between p-2 border rounded-lg">
-                        <p>{{ $eventType->type_name }}</p>
-                        <div class="flex gap-1">
-                            <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                                wire:click="openEditModal({{ $eventType->event_type_id }})"
-                                wire:loading.attr="disabled">
+                    <div
+                        class="group flex items-center justify-between p-3 sm:p-4 bg-white dark:bg-base-200 border border-slate-200 dark:border-base-300 rounded-xl hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all duration-200 gap-3">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div
+                                class="w-10 h-10 shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                                <x-mary-icon name="o-tag" class="w-5 h-5 sm:w-6 sm:h-6" />
+                            </div>
+                            <div class="min-w-0">
+                                <p
+                                    class="font-semibold text-slate-900 dark:text-white line-clamp-1 text-sm sm:text-base">
+                                    {{ $eventType->type_name }}</p>
+                                @if ($eventType->description)
+                                    <p
+                                        class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                                        {{ $eventType->description }}
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                        <div
+                            class="flex gap-1 sm:gap-2 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                            <x-mary-button size="xs" icon="o-pencil-square"
+                                class="btn-ghost btn-sm text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400"
+                                link="{{ route('superadmin.event-type.edit', $eventType->event_type_id) }}"
+                                wire:navigate title="Edit Event Type">
                             </x-mary-button>
-                            <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                            <x-mary-button size="xs" icon="o-trash"
+                                class="btn-ghost btn-sm text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400"
                                 wire:click="openDeleteModal({{ $eventType->event_type_id }})"
-                                wire:loading.attr="disabled">
+                                wire:loading.attr="disabled" title="Delete Event Type">
                             </x-mary-button>
                         </div>
-                    </li>
+                    </div>
                 @endforeach
-            </ul>
+            </div>
         @else
-            <div class="text-center py-4 text-gray-500">
-                <x-mary-icon name="o-tag" class="w-8 h-8 mx-auto mb-2" />
-                <p>No event types found</p>
+            <div
+                class="text-center py-12 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
+                <x-mary-icon name="o-tag" class="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                <p class="text-slate-500 dark:text-slate-400 font-medium">No event types defined</p>
+                <p class="text-slate-400 dark:text-slate-500 text-sm mt-1">Define event categories to help structure
+                    your scheduling.</p>
             </div>
         @endif
     </x-mary-card>
 
-    {{-- Add Event Type Modal --}}
-    <x-mary-modal wire:model="addEventTypeModalOpen" title="Add Event Type" subtitle="Create a new event type"
-        separator with-close-button close-on-escape>
-        <form wire:submit.prevent="addEventType" class="space-y-4">
-            <x-mary-input wire:model="newEventTypeName" label="Event Type Name" placeholder="e.g., Workshop"
-                icon="o-tag" />
-            <x-mary-textarea wire:model="newEventTypeDescription" label="Description (Optional)" rows="3"
-                placeholder="Brief description of the event type" />
-        </form>
-
-        <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.addEventTypeModalOpen = false; $wire.resetAddEventTypeForm()" />
-            <x-mary-button label="Create Event Type" wire:click="addEventType" class="btn-primary"
-                spinner="addEventType" />
-        </x-slot:actions>
-    </x-mary-modal>
-
-    {{-- Edit Event Type Modal --}}
-    @if ($editingEventTypeId)
-        <x-mary-modal wire:model="editEventTypeModalOpen" title="Edit Event Type"
-            subtitle="Update event type information" separator with-close-button close-on-escape>
-            <form wire:submit.prevent="editEventType" class="space-y-4">
-                <x-mary-input wire:model="eventTypeName" label="Event Type Name" placeholder="e.g., Workshop"
-                    icon="o-tag" />
-                <x-mary-textarea wire:model="eventTypeDescription" label="Description (Optional)" rows="3"
-                    placeholder="Brief description of the event type" />
-            </form>
-
-            <x-slot:actions>
-                <x-mary-button label="Cancel"
-                    @click="$wire.editEventTypeModalOpen = false; $wire.resetEventTypeForm()" />
-                <x-mary-button label="Update Event Type" wire:click="editEventType" class="btn-primary"
-                    spinner="editEventType" />
-            </x-slot:actions>
-        </x-mary-modal>
-    @endif
-
     {{-- Delete Event Type Modal --}}
     @if ($deletingEventTypeId)
-        <x-mary-modal wire:model="deleteModalOpen" title="Delete Event Type" subtitle="Confirm deletion"
-            separator with-close-button close-on-escape>
+        <x-mary-modal wire:model="deleteModalOpen" title="Delete Event Type" subtitle="Confirm deletion" separator
+            with-close-button close-on-escape>
             <div class="space-y-4">
                 <div class="alert alert-warning">
                     <x-mary-icon name="o-exclamation-triangle" class="w-6 h-6" />
@@ -93,10 +83,9 @@
 
             <x-slot:actions>
                 <x-mary-button label="Cancel" @click="$wire.deleteModalOpen = false; $wire.resetDeleteModal()" />
-                <x-mary-button label="Delete" wire:click="confirmDelete" class="btn-error"
-                    :disabled="$hasAssociatedEvents" spinner="confirmDelete" />
+                <x-mary-button label="Delete" wire:click="confirmDelete" class="btn-error" :disabled="$hasAssociatedEvents"
+                    spinner="confirmDelete" />
             </x-slot:actions>
         </x-mary-modal>
     @endif
 </div>
-
