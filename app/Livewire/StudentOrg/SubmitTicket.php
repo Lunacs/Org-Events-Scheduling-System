@@ -243,8 +243,8 @@ class SubmitTicket extends Component
                 'is_amended' => 'required|boolean',
             ],
             2 => [
-                'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
-                'eventDescription' => 'required|string|max:2000|min:20|regex:/^[^0-9][a-z0-9\\s]*$/i',
+                'eventTitle' => 'required|string|max:255|min:5',
+                'eventDescription' => 'required|string|max:2000|min:20',
                 'eventType' => 'required|integer|exists:event__types,event_type_id',
                 'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
                 'expectedNonPLVParticipants' => 'nullable|integer|min:0|max:100000',
@@ -252,8 +252,6 @@ class SubmitTicket extends Component
             3 => [
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-                'eventStartTime' => ['required', 'date_format:H:i'],
-                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
                 'preferredVenue' => ['required', function ($attribute, $value, $fail) {
                     if ($value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected venue is invalid.');
@@ -268,10 +266,6 @@ class SubmitTicket extends Component
                 'alternativeVenueOther' => $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
                 'eventStartTime' => 'required|date_format:H:i|after_or_equal:00:01',
                 'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
-                'preferredVenue' => 'required|integer|exists:venues,venue_id',
-                'preferredVenueOther' => $this->isOthersVenue($this->preferredVenue) ? 'required|string|max:255|min:3' : 'nullable',
-                'alternativeVenue' => 'nullable|integer|exists:venues,venue_id',
-                'alternativeVenueOther' => $this->isOthersVenue($this->alternativeVenue) ? 'required|string|max:255|min:3' : 'nullable',
                 'specialRequirements' => 'nullable|string|max:2000',
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
@@ -415,10 +409,15 @@ class SubmitTicket extends Component
         $ticket->date_to = $this->eventEndDate;
         $ticket->time_from = $this->eventStartTime;
         $ticket->time_to = $this->eventEndTime;
-        $ticket->venue_requested = $this->preferredVenue;
+
+        // Handle preferred venue - set to null if "other" is selected
+        $ticket->venue_requested = $this->preferredVenue === 'other' ? null : $this->preferredVenue;
         $ticket->venue_other = $this->preferredVenueOther;
-        $ticket->alternate_venue = $this->alternativeVenue;
+
+        // Handle alternate venue - set to null if "other" is selected
+        $ticket->alternate_venue = $this->alternativeVenue === 'other' ? null : $this->alternativeVenue;
         $ticket->alternate_venue_other = $this->alternativeVenueOther;
+
         $ticket->special_requirements = $this->specialRequirements;
         $ticket->estimated_budget = $this->totalBudget;
         $ticket->budget_breakdown = $this->budgetBreakdown;
@@ -437,7 +436,7 @@ class SubmitTicket extends Component
             $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
-            $attachment->file_path = null; // Not stored yet
+            $attachment->file_path = null;
 
             return $attachment;
         });
@@ -447,17 +446,16 @@ class SubmitTicket extends Component
         $ticket->setRelation('fundSource', Fund_Sources::find($this->fundingSource));
         $ticket->setRelation('attachments', $previewAttachments);
 
-        // Load venue relationships
-        if ($this->preferredVenue) {
-            $ticket->setRelation('preferredVenueRelation', \App\Models\Venue::find($this->preferredVenue));
+        // Load venue relationships only if not "other"
+        if ($this->preferredVenue && $this->preferredVenue !== 'other') {
+            $ticket->setRelation('venue', \App\Models\Venue::find($this->preferredVenue));
         }
-        if ($this->alternativeVenue) {
-            $ticket->setRelation('alternativeVenueRelation', \App\Models\Venue::find($this->alternativeVenue));
+        if ($this->alternativeVenue && $this->alternativeVenue !== 'other') {
+            $ticket->setRelation('alternateVenue', \App\Models\Venue::find($this->alternativeVenue));
         }
 
         return $ticket;
     }
-
 
     public function mount()
     {

@@ -26,6 +26,7 @@ class Reschedule extends Component
     #[Title('Reschedule Request - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
 
+    public $venues = [];
     // Step tracking
     public $currentStep = 1;
     public $totalSteps = 4;
@@ -40,8 +41,10 @@ class Reschedule extends Component
     public $newEndDate = '';
     public $newStartTime = '';
     public $newEndTime = '';
-    public $newVenue = '';
-    public $alternativeVenue = '';
+    public $newVenue;
+    public $newVenueOther;
+    public $alternativeVenue;
+    public $alternativeVenueOther;
     public $agreeToTerms = false;
 
     #[Validate('nullable|array|max:10')]
@@ -60,6 +63,8 @@ class Reschedule extends Component
         if (!auth()->check()) {
             abort(401, 'Unauthorized access');
         }
+
+        $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
         // Pre-fill from query parameter
         if (request()->has('ticket')) {
@@ -210,8 +215,19 @@ class Reschedule extends Component
         }
 
         if ($this->changeVenue) {
-            $rules['newVenue'] = 'required|string|max:255|min:3';
-            $rules['alternativeVenue'] = 'nullable|string|max:255|min:3|different:newVenue';
+            $rules['newVenue'] = ['required', function ($attribute, $value, $fail) {
+                if ($value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
+                    $fail('The selected venue is invalid.');
+                }
+            }];
+            $rules['newVenueOther'] = $this->newVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable';
+            $rules['alternativeVenue'] = ['nullable', function ($attribute, $value, $fail) {
+                if ($value && $value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
+                    $fail('The selected alternative venue is invalid.');
+                }
+            }];
+            $rules['alternativeVenueOther'] = $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable';
+
         }
 
         return $rules;
@@ -334,8 +350,10 @@ class Reschedule extends Component
         }
 
         if ($this->changeVenue) {
-            $previewTicket->venue_requested = $this->newVenue;
-            $previewTicket->alternate_venue = $this->alternativeVenue;
+            $previewTicket->venue_requested = $this->newVenue !== 'other' ? $this->newVenue : null;
+            $previewTicket->venue_other = $this->newVenueOther;
+            $previewTicket->alternate_venue = $this->alternativeVenue !== 'other' ? $this->alternativeVenue : null;
+            $previewTicket->alternate_venue_other = $this->alternativeVenueOther;
         }
 
         // Merge supporting documents
@@ -463,14 +481,41 @@ class Reschedule extends Component
         }
 
         if ($this->changeVenue) {
-            $changes['venue_requested'] = ['old' => $ticket->venue_requested, 'new' => $this->newVenue];
-            $ticket->venue_requested = $this->newVenue;
+            // Handle preferred venue
+            $oldVenue = $ticket->venue_requested;
+            $oldVenueOther = $ticket->venue_other;
 
+            if ($this->newVenue === 'other') {
+                $changes['venue_requested'] = ['old' => $oldVenue, 'new' => null];
+                $changes['venue_other'] = ['old' => $oldVenueOther, 'new' => $this->newVenueOther];
+                $ticket->venue_requested = null;
+                $ticket->venue_other = $this->newVenueOther;
+            } else {
+                $changes['venue_requested'] = ['old' => $oldVenue, 'new' => $this->newVenue];
+                $changes['venue_other'] = ['old' => $oldVenueOther, 'new' => null];
+                $ticket->venue_requested = $this->newVenue;
+                $ticket->venue_other = null;
+            }
+
+            // Handle alternative venue
             if ($this->alternativeVenue) {
-                $changes['alternate_venue'] = ['old' => $ticket->alternate_venue, 'new' => $this->alternativeVenue];
-                $ticket->alternate_venue = $this->alternativeVenue;
+                $oldAltVenue = $ticket->alternate_venue;
+                $oldAltVenueOther = $ticket->alternate_venue_other;
+
+                if ($this->alternativeVenue === 'other') {
+                    $changes['alternate_venue'] = ['old' => $oldAltVenue, 'new' => null];
+                    $changes['alternate_venue_other'] = ['old' => $oldAltVenueOther, 'new' => $this->alternativeVenueOther];
+                    $ticket->alternate_venue = null;
+                    $ticket->alternate_venue_other = $this->alternativeVenueOther;
+                } else {
+                    $changes['alternate_venue'] = ['old' => $oldAltVenue, 'new' => $this->alternativeVenue];
+                    $changes['alternate_venue_other'] = ['old' => $oldAltVenueOther, 'new' => null];
+                    $ticket->alternate_venue = $this->alternativeVenue;
+                    $ticket->alternate_venue_other = null;
+                }
             }
         }
+
 
         // Log changes for audit trail
         Log::info('Ticket rescheduled', [
