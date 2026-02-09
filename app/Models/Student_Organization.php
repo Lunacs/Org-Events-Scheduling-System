@@ -83,8 +83,13 @@ class Student_Organization extends Model
      */
     public function getLogoUrlAttribute(): string
     {
-        if ($this->logo && \Storage::disk('public')->exists($this->logo)) {
-            return asset('storage/' . $this->logo);
+        $disk = \Storage::disk(config('filesystems.default'));
+
+        if ($this->logo && $disk->exists($this->logo)) {
+            if (config('filesystems.default') === 's3') {
+                return $disk->temporaryUrl($this->logo, now()->addMinutes(30));
+            }
+            return $disk->url($this->logo);
         }
 
         return asset('images/default-org-logo.svg');

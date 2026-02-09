@@ -51,6 +51,8 @@ class OrganizationManager extends Component
 
     public $currentOrgLogo = null;
 
+    public $currentOrgLogoUrl = null;
+
     public $logoWasDeleted = false;
 
     public $editOrgModalOpen = false;
@@ -161,6 +163,7 @@ class OrganizationManager extends Component
             $this->adviserName = $organization->adviser_name;
             $this->orgStatus = $organization->status;
             $this->currentOrgLogo = $organization->logo;
+            $this->currentOrgLogoUrl = $organization->logo_url;
             $this->orgLogo = null;
             $this->logoWasDeleted = false;
             $this->editOrgModalOpen = true;
@@ -220,8 +223,8 @@ class OrganizationManager extends Component
             $newLogoPath = null;
             if ($this->orgLogo) {
                 // Delete old logo if exists
-                if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
-                    Storage::disk('public')->delete($organization->logo);
+                if ($organization->logo && Storage::disk(config('filesystems.default'))->exists($organization->logo)) {
+                    Storage::disk(config('filesystems.default'))->delete($organization->logo);
                 }
                 // Store new logo with compression
                 $newLogoPath = $this->compressAndStoreLogo($this->orgLogo);
@@ -250,7 +253,7 @@ class OrganizationManager extends Component
                 $this->info('Nothing updated!', position: 'toast-top');
             }
 
-            $this->reset(['editingOrgId', 'orgCode', 'orgName', 'courseId', 'adviserName', 'orgStatus', 'orgLogo', 'currentOrgLogo', 'logoWasDeleted']);
+            $this->reset(['editingOrgId', 'orgCode', 'orgName', 'courseId', 'adviserName', 'orgStatus', 'orgLogo', 'currentOrgLogo', 'currentOrgLogoUrl', 'logoWasDeleted']);
             $this->editOrgModalOpen = false;
             $this->resetErrorBag();
             $this->clearOrganizationsCache();
@@ -261,19 +264,20 @@ class OrganizationManager extends Component
     {
         $organization = Student_Organization::find($this->editingOrgId);
         if ($organization) {
-            if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
-                Storage::disk('public')->delete($organization->logo);
+            if ($organization->logo && Storage::disk(config('filesystems.default'))->exists($organization->logo)) {
+                Storage::disk(config('filesystems.default'))->delete($organization->logo);
             }
             $organization->logo = null;
             $organization->save();
             $this->logoWasDeleted = true;
         }
         $this->currentOrgLogo = null;
+        $this->currentOrgLogoUrl = null;
     }
 
     public function resetEditOrgForm()
     {
-        $this->reset(['editingOrgId', 'orgCode', 'orgName', 'courseId', 'adviserName', 'orgStatus', 'orgLogo', 'currentOrgLogo', 'logoWasDeleted']);
+        $this->reset(['editingOrgId', 'orgCode', 'orgName', 'courseId', 'adviserName', 'orgStatus', 'orgLogo', 'currentOrgLogo', 'currentOrgLogoUrl', 'logoWasDeleted']);
         $this->editOrgModalOpen = false;
         $this->resetErrorBag();
     }
@@ -359,7 +363,8 @@ class OrganizationManager extends Component
         $filename = 'organizations/logos/' . uniqid('org_') . '_' . time() . '.webp';
 
         // Read, resize, and compress the image
-        $image = Image::read($uploadedFile->getRealPath());
+        // Use get() instead of getRealPath() because S3 temp files aren't local
+        $image = Image::read($uploadedFile->get());
 
         // Resize to max 500x500 while maintaining aspect ratio
         $image->scaleDown(500, 500);
@@ -368,7 +373,7 @@ class OrganizationManager extends Component
         $encoded = $image->toWebp(80);
 
         // Store the compressed image
-        Storage::disk('public')->put($filename, (string) $encoded);
+        Storage::disk(config('filesystems.default'))->put($filename, (string) $encoded);
 
         return $filename;
     }

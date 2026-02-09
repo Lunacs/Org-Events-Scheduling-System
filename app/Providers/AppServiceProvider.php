@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Attachment;
+use App\Observers\AttachmentObserver;
 use App\View\Html\Sanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +53,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register observers
+        Attachment::observe(AttachmentObserver::class);
+
         // Automatically eager load relationships (Laravel 12.0.8+)
         Model::automaticallyEagerLoadRelationships();
 

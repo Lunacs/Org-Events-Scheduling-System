@@ -596,7 +596,8 @@ class SubmitTicket extends Component
                     $filename = time() . '_' . uniqid() . '_' . $originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
-                        $filename
+                        $filename,
+                        config('filesystems.default')
                     );
 
                     Attachment::create([
@@ -604,6 +605,7 @@ class SubmitTicket extends Component
                         'file_name' => $originalName,
                         'file_path' => $path,
                         'file_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
                     ]);
                 }
             }

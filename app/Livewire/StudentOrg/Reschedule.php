@@ -491,10 +491,11 @@ class Reschedule extends Component
             $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $originalName);
             $filename = time() . '_' . uniqid() . '_' . $safeName;
 
-            // Store file securely
+            // Store file securely using configured disk (R2/S3 in production)
             $path = $file->storeAs(
                 "tickets/{$ticket->ticket_id}/attachments",
-                $filename
+                $filename,
+                config('filesystems.default')
             );
 
             // Create attachment record
@@ -503,6 +504,7 @@ class Reschedule extends Component
                 'file_name' => $originalName,
                 'file_path' => $path,
                 'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
             ]);
         }
     }

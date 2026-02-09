@@ -253,9 +253,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Check if user prefers uploaded photo and has one
         if ($this->avatar_preference === 'uploaded' && $this->avatar) {
+            $disk = \Storage::disk(config('filesystems.default'));
+
             // Check if the file exists in storage
-            if (\Storage::disk('public')->exists($this->avatar)) {
-                return asset('storage/' . $this->avatar);
+            if ($disk->exists($this->avatar)) {
+                if (config('filesystems.default') === 's3') {
+                    return $disk->temporaryUrl($this->avatar, now()->addMinutes(30));
+                }
+                return $disk->url($this->avatar);
             }
         }
 

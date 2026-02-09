@@ -162,7 +162,7 @@
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-base-content/70">Current Logo</label>
                         <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
-                            <img src="{{ asset('storage/' . $currentOrgLogo) }}" alt="Current Logo"
+                            <img src="{{ $currentOrgLogoUrl }}" alt="Current Logo"
                                 class="w-16 h-16 object-cover rounded-lg border border-base-300" />
                             <div class="flex-1">
                                 <p class="text-sm font-medium">Organization Logo</p>
