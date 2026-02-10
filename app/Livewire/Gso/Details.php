@@ -182,7 +182,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                $this->approvalRemarks
+                "GSO has approved your ticket and it is now awaiting final OSA approval."
             ));
 
             $osaRoleId = User::getRoleId('osa');
@@ -286,7 +286,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has requested revisions: {$this->revisionRemarks}"
+                "GSO has reviewed your ticket and forwarded it to OSA for a final decision."
             ));
 
             $osaRoleId = User::getRoleId('osa');

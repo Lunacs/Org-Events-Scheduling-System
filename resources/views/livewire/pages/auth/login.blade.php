@@ -62,9 +62,11 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-10 text-center">
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Welcome Back</h1>
-        <p class="text-base text-gray-500 dark:text-gray-400">Please enter your credentials to access your account</p>
+    <div class="mb-6 sm:mb-10 text-center">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Welcome Back
+        </h1>
+        <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">Please enter your credentials to access your
+            account</p>
     </div>
 
     <!-- Session Status -->

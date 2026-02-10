@@ -252,8 +252,8 @@ class SubmitTicket extends Component
             3 => [
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-                'eventStartTime' => ['required', 'date_format:H:i'],
-                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime'],
+                'eventStartTime' => ['required', 'date_format:H:i', 'after_or_equal:00:01'],
+                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime', 'before_or_equal:21:00'],
                 'preferredVenue' => ['required', function ($attribute, $value, $fail) {
                     if ($value !== 'other' && !\App\Models\Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected venue is invalid.');
@@ -266,12 +266,6 @@ class SubmitTicket extends Component
                     }
                 }],
                 'alternativeVenueOther' => $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
-                'eventStartTime' => 'required|date_format:H:i|after_or_equal:00:01',
-                'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
-                'preferredVenue' => 'required|integer|exists:venues,venue_id',
-                'preferredVenueOther' => $this->isOthersVenue($this->preferredVenue) ? 'required|string|max:255|min:3' : 'nullable',
-                'alternativeVenue' => 'nullable|integer|exists:venues,venue_id',
-                'alternativeVenueOther' => $this->isOthersVenue($this->alternativeVenue) ? 'required|string|max:255|min:3' : 'nullable',
                 'specialRequirements' => 'nullable|string|max:2000',
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',

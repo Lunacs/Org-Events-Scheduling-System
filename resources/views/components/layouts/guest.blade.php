@@ -31,8 +31,8 @@
 
 </head>
 
-<body class="font-sans text-gray-900 antialiased bg-gray-50 dark:bg-gray-950 overflow-hidden">
-    <div class="flex h-screen w-full p-3 sm:p-4 lg:p-6 gap-4">
+<body class="font-sans text-gray-900 antialiased bg-gray-50 dark:bg-gray-950 lg:overflow-hidden">
+    <div class="flex min-h-screen lg:h-screen w-full p-3 sm:p-4 lg:p-6 gap-4">
         <!-- Left side - Image (Hidden on mobile) -->
         <div class="hidden lg:flex lg:w-[55%] relative overflow-hidden rounded-3xl shadow-2xl h-full">
             <div class="absolute inset-0">
@@ -50,9 +50,10 @@
         </div>
 
         <!-- Right side - Login Form -->
-        <div class="flex flex-col justify-center items-center w-full lg:w-[45%] p-4 lg:p-6 h-full">
+        <div
+            class="flex flex-col justify-start items-center w-full lg:w-[45%] px-2 pt-10 sm:pt-0 sm:p-4 sm:justify-center lg:p-6 lg:h-full lg:overflow-y-auto">
             <!-- Logo -->
-            <div class="mb-6 transform hover:scale-105 transition-transform duration-300 shrink-0">
+            <div class="mb-4 sm:mb-6 transform hover:scale-105 transition-transform duration-300 shrink-0">
                 <a href="/" wire:navigate class="block">
                     <div class="relative">
                         <div
@@ -68,7 +69,7 @@
             <!-- Login Form Container -->
             <div class="w-full max-w-lg shrink-0">
                 <div
-                    class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none max-sm:p-0 p-6 sm:p-8 border border-gray-100 dark:border-gray-800">
+                    class="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none px-5 py-6 sm:p-8 border border-gray-100 dark:border-gray-800">
                     {{ $slot }}
                 </div>
             </div>

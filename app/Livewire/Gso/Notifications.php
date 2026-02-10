@@ -134,6 +134,9 @@ class Notifications extends Component
                 // Clear cache to refresh counts
                 Cache::forget("gso_notifications_counts_{$user->user_id}");
                 $this->loadCounts();
+
+                // Sync with top bar dropdown
+                $this->dispatch('refresh-notifications');
             }
         } catch (\Exception $e) {
             Log::error('Failed to mark notification as read: ' . $e->getMessage());
@@ -149,6 +152,9 @@ class Notifications extends Component
             // Clear cache to refresh counts
             Cache::forget("gso_notifications_counts_{$user->user_id}");
             $this->loadCounts();
+
+            // Sync with top bar dropdown
+            $this->dispatch('refresh-notifications');
 
             $this->success('All notifications marked as read.', position: 'toast-top');
         } catch (\Exception $e) {
@@ -170,6 +176,9 @@ class Notifications extends Component
                 Cache::forget("gso_notifications_counts_{$user->user_id}");
                 $this->loadCounts();
                 $this->resetPage();
+
+                // Sync with top bar dropdown
+                $this->dispatch('refresh-notifications');
 
                 $this->success('Notification deleted.', position: 'toast-top');
             }
@@ -199,6 +208,9 @@ class Notifications extends Component
             } else {
                 $this->info('No read notifications to clear.', position: 'toast-top');
             }
+
+            // Sync with top bar dropdown
+            $this->dispatch('refresh-notifications');
         } catch (\Exception $e) {
             Log::error('Failed to clear read notifications: ' . $e->getMessage());
             $this->error('Failed to clear read notifications.', position: 'toast-top');

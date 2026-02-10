@@ -71,7 +71,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         return [
             'title' => $this->getStatusTitle(),
-            'message' => $this->getStatusMessage(),
+            'message' => $this->remarks ?? $this->getStatusMessage(),
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,
@@ -90,7 +90,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         return new BroadcastMessage([
             'title' => $this->getStatusTitle(),
-            'message' => $this->getStatusMessage(),
+            'message' => $this->remarks ?? $this->getStatusMessage(),
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,

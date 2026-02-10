@@ -34,16 +34,19 @@
                         @endif
 
                         {{-- DaisyUI Accordion --}}
-                        <div class="space-y-3">
+                        <div class="space-y-3" x-data="{ openIndex: null }">
                             @foreach ($faqGroup as $index => $faq)
-                                <div
-                                    class="collapse collapse-plus bg-base-100 border border-base-300 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                                    <input type="radio" name="faq-accordion-{{ Str::slug($category) }}"
-                                        @if ($index === 0) checked @endif />
-                                    <div class="collapse-title text-base font-semibold text-base-content pr-12">
+                                <div class="collapse collapse-plus bg-base-100 border border-base-300 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                                    :class="{
+                                        'collapse-open': openIndex ===
+                                            {{ $index }},
+                                        'collapse-close': openIndex !== {{ $index }}
+                                    }">
+                                    <div class="collapse-title text-base font-semibold text-base-content pr-12 cursor-pointer"
+                                        @click="openIndex = openIndex === {{ $index }} ? null : {{ $index }}">
                                         <span class="flex items-start gap-3">
                                             <x-mary-icon name="o-question-mark-circle"
-                                                class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                                class="w-5 h-5 text-primary shrink-0 mt-0.5" />
                                             {{ $faq->question }}
                                         </span>
                                     </div>
@@ -114,10 +117,7 @@
             opacity: 0;
         }
 
-        .collapse input[type="radio"]:checked~.collapse-content,
-        .collapse input[type="checkbox"]:checked~.collapse-content,
-        .collapse:focus:not(.collapse-close)>.collapse-content,
-        .collapse:not(.collapse-close)>input[type="radio"]:checked~.collapse-content {
+        .collapse-open>.collapse-content {
             opacity: 1;
         }
 
@@ -126,8 +126,7 @@
             transition: transform 0.3s ease-out;
         }
 
-        .collapse-plus input[type="radio"]:checked~.collapse-title::after,
-        .collapse-plus input[type="checkbox"]:checked~.collapse-title::after {
+        .collapse-open.collapse-plus>.collapse-title::after {
             transform: rotate(45deg);
         }
 
@@ -136,17 +135,8 @@
             transition: box-shadow 0.3s ease, transform 0.2s ease;
         }
 
-        .collapse:has(input:checked) {
+        .collapse-open {
             box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
         }
-
-        /* Smooth border color transition
-        .collapse {
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .collapse:has(input:checked) {
-            border-color: oklch(var(--p) / 0.3);
-        } */
     </style>
 </div>
