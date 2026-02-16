@@ -42,7 +42,17 @@ class TicketCommentNotification extends Notification implements ShouldQueue, Sho
      */
     public function via(object $notifiable): array
     {
-        return $this->channels ?? ['database', 'mail', 'broadcast'];
+        if ($this->channels) {
+            return $this->channels;
+        }
+
+        $channels = ['database', 'broadcast'];
+
+        if ($notifiable instanceof \App\Models\User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**

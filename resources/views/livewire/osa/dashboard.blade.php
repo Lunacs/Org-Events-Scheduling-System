@@ -24,26 +24,12 @@
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <!-- Last Updated Indicator -->
-                    <div class="text-xs text-gray-500 hidden md:block">
-                        Last updated: <span class="font-medium">{{ now()->format('h:i A') }}</span>
-                    </div>
 
-                    <x-mary-button icon="o-arrow-path" class="btn-primary btn-sm" wire:click="refreshData">
-                        <span wire:loading.remove wire:target="refreshData">Refresh</span>
-                        <span wire:loading wire:target="refreshData">
-                            <span class="loading loading-spinner loading-xs"></span>
-                            Refreshing...
-                        </span>
-                    </x-mary-button>
-                </div>
             </div>
         @endpersist
 
         <!-- Modern Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-            wire:loading.class="opacity-50 pointer-events-none" wire:target="refreshData">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
             <!-- Pending Requests -->
             <div

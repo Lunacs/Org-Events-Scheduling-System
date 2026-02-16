@@ -40,7 +40,7 @@ class History extends Component
     public function loadTicketDetails($ticketId)
     {
         $this->selectedTicket = \App\Models\Ticket::with([
-            'user' => function($query) {
+            'user' => function ($query) {
                 $query->withTrashed();
             },
             'user.studentOrganization.course',
@@ -136,8 +136,14 @@ class History extends Component
         }
 
         $colors = [
-            'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500',
-            'bg-pink-500', 'bg-indigo-500', 'bg-red-500', 'bg-orange-500',
+            'bg-blue-500',
+            'bg-green-500',
+            'bg-yellow-500',
+            'bg-purple-500',
+            'bg-pink-500',
+            'bg-indigo-500',
+            'bg-red-500',
+            'bg-orange-500',
         ];
 
         return $eventTypes->map(function ($item, $index) use ($total, $colors) {
@@ -190,13 +196,13 @@ class History extends Component
 
         $query = \App\Models\Ticket::query()
             ->with([
-                'user' => function($query) {
+                'user' => function ($query) {
                     $query->withTrashed();
                 },
                 'user.studentOrganization',
                 'events.eventType',
-                'events' => function($q) {
-                    $q->with(['eventSchedules' => function($sq) {
+                'events' => function ($q) {
+                    $q->with(['eventSchedules' => function ($sq) {
                         $sq->where('status', 'active')
                             ->select('event_id', 'venue', 'start_date', 'end_date', 'status');
                     }]);
@@ -205,19 +211,19 @@ class History extends Component
                 'latestOsaApproval',
                 'eventType'
             ])
-            ->whereHas('user', function($q) use ($orgId) {
+            ->whereHas('user', function ($q) use ($orgId) {
                 $q->withTrashed()->where('org_id', $orgId);
             })
-            ->whereIn('status', ['approved', 'for_revision', 'cancelled']);
+            ->whereIn('status', ['approved', 'completed', 'for_revision', 'cancelled']);
 
         if ($this->search) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
                     ->orWhere('description', 'like', "%{$this->search}%")
-                    ->orWhereHas('venue', function($vq) {
+                    ->orWhereHas('venue', function ($vq) {
                         $vq->where('venue_name', 'like', "%{$this->search}%");
                     })
-                    ->orWhereHas('events.schedules', function($sq) {
+                    ->orWhereHas('events.schedules', function ($sq) {
                         $sq->where('venue', 'like', "%{$this->search}%");
                     });
             });
@@ -228,15 +234,15 @@ class History extends Component
         }
 
         if ($this->typeFilter) {
-            $query->whereHas('eventType', function($q) {
+            $query->whereHas('eventType', function ($q) {
                 $q->where('type_name', $this->typeFilter);
             });
         }
 
         if ($this->yearFilter) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->whereYear('date_from', $this->yearFilter)
-                    ->orWhereHas('events.schedules', function($sq) {
+                    ->orWhereHas('events.schedules', function ($sq) {
                         $sq->whereYear('start_date', $this->yearFilter);
                     });
             });
@@ -283,7 +289,7 @@ class History extends Component
     {
         $ticket = \App\Models\Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
-            ->whereHas('user', function($q) {
+            ->whereHas('user', function ($q) {
                 $orgId = $this->getUserOrgId();
                 $q->withTrashed()->where('org_id', $orgId);
             })

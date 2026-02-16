@@ -101,8 +101,6 @@
         {{-- Toast --}}
         <x-mary-toast />
 
-        {{-- Session Timeout Warning --}}
-        <livewire:session-timeout />
     </div>
 
     {{-- Scripts Stack --}}

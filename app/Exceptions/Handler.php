@@ -85,9 +85,8 @@ class Handler extends ExceptionHandler
                 ], 401);
             }
 
-            return response()->view('errors.401', [
-                'exception' => $e
-            ], 401);
+            // Redirect to login so the remember-me cookie can re-authenticate
+            return redirect()->guest(route('login'));
         }
 
         // Handle 403 HTTP Exceptions

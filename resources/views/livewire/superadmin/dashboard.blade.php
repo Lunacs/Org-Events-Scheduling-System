@@ -1,5 +1,5 @@
 <div>
-    <div class="p-6 space-y-6" wire:loading.class="opacity-50 pointer-events-none" wire:target="refreshData">
+    <div class="p-6 space-y-6">
         {{-- Header --}}
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -7,13 +7,6 @@
                 <p class="text-sm text-base-content/60 mt-1">Overview of system activity and items requiring attention
                 </p>
             </div>
-            <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click="refreshData">
-                <span wire:loading.remove wire:target="refreshData">Refresh Data</span>
-                <span wire:loading wire:target="refreshData" class="flex items-center gap-2">
-                    <span class="loading loading-spinner loading-xs"></span>
-                    Refreshing...
-                </span>
-            </x-mary-button>
         </div>
 
         {{-- Attention Required Alert --}}

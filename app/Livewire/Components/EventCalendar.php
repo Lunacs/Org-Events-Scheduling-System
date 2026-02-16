@@ -500,7 +500,7 @@ class EventCalendar extends Component
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
                 if ($this->statusFilter && $this->statusFilter !== 'all')
-                $query->whereHas('user', fn($q) => $q->withTrashed());
+                    $query->whereHas('user', fn($q) => $q->withTrashed());
                 if ($this->statusFilter) {
                     $query->where('status', $this->statusFilter);
                 } else {
@@ -520,8 +520,18 @@ class EventCalendar extends Component
     #[Computed]
     public function upcomingEventsThisMonth()
     {
-        $startOfMonth = $this->currentDate->copy()->startOfMonth();
+        $today = Carbon::today();
         $endOfMonth = $this->currentDate->copy()->endOfMonth();
+
+        // If viewing a past month, return empty (no upcoming events)
+        if ($endOfMonth->lt($today)) {
+            return [];
+        }
+
+        // Start from today (or start of month if viewing a future month)
+        $startDate = $this->currentDate->copy()->startOfMonth()->gt($today)
+            ? $this->currentDate->copy()->startOfMonth()
+            : $today;
 
         $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
@@ -537,7 +547,7 @@ class EventCalendar extends Component
             ])
             ->where('status', 'approved')
             ->whereHas('event.ticket', fn($query) => $query->whereIn('status', ['approved', 'rescheduled']))
-            ->whereBetween('start_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('start_date', [$startDate, $endOfMonth])
             ->orderBy('start_date')
             ->orderBy('start_time')
             ->get();

@@ -108,6 +108,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
         ->name('attachments.download')
         ->middleware('signed');
+
+    // Email change verification routes (signed URLs)
+    Route::get('/email/verify-new/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'verify'])
+        ->name('email.verify-new')
+        ->middleware('signed');
+    Route::get('/email/cancel-change/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'cancel'])
+        ->name('email.cancel-change')
+        ->middleware('signed');
 });
 
 // OSA routes

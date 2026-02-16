@@ -25,6 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(at: '*');
 
+        // Auto-complete approved tickets (runs once per day via cache lock)
+        // Replaces cron-based scheduler for hosts without cron support (e.g., Render free tier)
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\AutoCompleteTickets::class,
+        ]);
+
         // Configure maintenance mode to allow SuperAdmin access
         $middleware->preventRequestsDuringMaintenance(except: [
             'superadmin*',  // Allow all SuperAdmin routes
@@ -42,10 +48,14 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (AuthenticationException $e, $request) {
-            if (! $request->expectsJson()) {
-                return response()->view('errors.401', ['exception' => $e], 401);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Unauthenticated',
+                    'message' => 'Authentication required.',
+                ], 401);
             }
 
-            return null;
+            // Redirect to login so the remember-me cookie can re-authenticate the user
+            return redirect()->guest(route('login'));
         });
     })->create();

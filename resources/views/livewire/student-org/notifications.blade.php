@@ -51,7 +51,8 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 class="text-3xl font-bold text-base-content">Notifications Center</h1>
-                            <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and university
+                            <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and
+                                university
                                 announcements</p>
                         </div>
                         <div class="flex flex-col md:flex-row items-center gap-2">
@@ -336,50 +337,7 @@
                     <x-tickets.ticket-pagination :notifications="$notifications" />
                 @endif
 
-                {{-- Notification Settings --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <div class="mb-4">
-                        <h3 class="text-xl font-bold text-base-content">Notification Preferences</h3>
-                        <p class="text-sm text-base-content/60 mt-1">Customize how you receive notifications</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-semibold mb-3 text-base-content">Email Notifications</h4>
-                            <div class="space-y-2">
-                                <x-mary-checkbox label="Event approvals and rejections" checked />
-                                <x-mary-checkbox label="Revision requests" checked />
-                                <x-mary-checkbox label="Event reminders" checked />
-                                <x-mary-checkbox label="Reschedule updates" checked />
-                                <x-mary-checkbox label="General announcements" />
-                                <x-mary-checkbox label="System maintenance" />
-                            </div>
-                        </div>
 
-                        <div>
-                            <h4 class="font-semibold mb-3 text-base-content">Reminder Settings</h4>
-                            <div class="space-y-3">
-                                <x-mary-select label="Event Reminders" :options="[
-                                    ['id' => '1', 'name' => '1 day before'],
-                                    ['id' => '3', 'name' => '3 days before'],
-                                    ['id' => '5', 'name' => '5 days before'],
-                                    ['id' => '7', 'name' => '1 week before'],
-                                    ['id' => 'none', 'name' => 'No reminders'],
-                                ]" value="5" />
-
-                                <x-mary-select label="Deadline Reminders" :options="[
-                                    ['id' => '1', 'name' => '1 day before deadline'],
-                                    ['id' => '2', 'name' => '2 days before deadline'],
-                                    ['id' => '3', 'name' => '3 days before deadline'],
-                                    ['id' => 'none', 'name' => 'No deadline reminders'],
-                                ]" value="2" />
-                            </div>
-
-                            <div class="mt-4">
-                                <x-mary-button label="Save Settings" icon="s-check" class="btn-primary btn-sm" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

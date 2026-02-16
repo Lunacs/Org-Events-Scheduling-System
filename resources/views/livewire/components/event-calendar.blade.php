@@ -291,15 +291,15 @@
         <x-mary-card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
             subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
             @if (count($this->upcomingEventsThisMonth) > 0)
+                @php $totalEvents = count($this->upcomingEventsThisMonth); @endphp
                 {{-- Event Count Summary --}}
                 <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-200 dark:border-base-700">
-                    <x-mary-badge
-                        value="{{ count($this->upcomingEventsThisMonth) }} event{{ count($this->upcomingEventsThisMonth) > 1 ? 's' : '' }}"
+                    <x-mary-badge value="{{ $totalEvents }} event{{ $totalEvents > 1 ? 's' : '' }}"
                         class="badge-primary/90 badge-outline" />
-                    <span class="text-xs text-base-content/60">scheduled this month</span>
+                    <span class="text-xs text-base-content/60">upcoming this month</span>
                 </div>
 
-                <div class="space-y-4">
+                <div x-data="{ showAll: {{ $totalEvents <= 6 ? 'true' : 'false' }} }" class="space-y-4">
                     @foreach ($this->upcomingEventsThisMonth as $index => $event)
                         @php
                             $color = $event['color'];
@@ -307,11 +307,10 @@
                             // Calculate days until event for countdown badge
                             $eventDate = \Carbon\Carbon::parse($event['start_date']);
                             $today = \Carbon\Carbon::today();
-                            $daysUntil = $today->diffInDays($eventDate, false);
+                            $daysUntil = (int) $today->diffInDays($eventDate, false);
 
                             // Countdown badge text and style
                             $countdownText = match (true) {
-                                $daysUntil < 0 => 'Past',
                                 $daysUntil === 0 => 'Today',
                                 $daysUntil === 1 => 'Tomorrow',
                                 $daysUntil <= 7 => "In {$daysUntil} days",
@@ -319,11 +318,10 @@
                             };
 
                             $countdownClass = match (true) {
-                                $daysUntil < 0 => 'badge-ghost opacity-60',
-                                $daysUntil === 0 => 'badge-error animate-pulse',
-                                $daysUntil === 1 => 'badge-warning',
-                                $daysUntil <= 3 => 'badge-info',
-                                default => 'badge-ghost',
+                                $daysUntil === 0 => 'badge-primary text-white dark:text-white/80 animate-pulse',
+                                $daysUntil === 1 => 'badge-warning text-white dark:text-white/80 ',
+                                $daysUntil <= 3 => 'badge-info text-white dark:text-white/80',
+                                default => 'badge-ghost text-white dark:text-white/80',
                             };
 
                             // Dark mode compatible background colors
@@ -422,13 +420,22 @@
                                 default => 'badge-info',
                             };
                         @endphp
-                        <div class="group flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
+                        <div x-show="showAll || {{ $index }} < 6"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            class="group relative overflow-hidden flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
                                 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20
                                 hover:scale-[1.01] hover:-translate-y-0.5
                                 transition-all duration-300 ease-out cursor-pointer
                                 border border-base-300 dark:border-base-700"
                             wire:key="upcoming-{{ $index }}"
                             onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
+                            {{-- Radar ping ripple for Today's events --}}
+                            @if ($daysUntil === 0)
+                                <span
+                                    class="absolute inset-0 rounded-xl border-2 {{ $borderColor }} animate-ping opacity-20 pointer-events-none"></span>
+                            @endif
                             {{-- Left side: Icon with organization logo overlay --}}
                             <div class="shrink-0 relative">
                                 <div
@@ -492,6 +499,27 @@
                             </div>
                         </div>
                     @endforeach
+
+                    {{-- Show More / Show Less Button --}}
+                    @if ($totalEvents > 6)
+                        <div class="flex justify-center pt-2">
+                            <button type="button" @click="showAll = !showAll"
+                                class="btn btn-ghost btn-sm gap-2 text-primary hover:bg-primary/10">
+                                <template x-if="!showAll">
+                                    <span class="flex items-center gap-1.5">
+                                        <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
+                                        Show {{ $totalEvents - 6 }} more event{{ $totalEvents - 6 > 1 ? 's' : '' }}
+                                    </span>
+                                </template>
+                                <template x-if="showAll">
+                                    <span class="flex items-center gap-1.5">
+                                        <x-mary-icon name="o-chevron-up" class="w-4 h-4" />
+                                        Show less
+                                    </span>
+                                </template>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             @else
                 {{-- Enhanced Empty State --}}
@@ -508,22 +536,13 @@
                         </div>
                     </div>
                     <h3 class="text-lg font-semibold text-base-content mb-2">
-                        No events this month
+                        No upcoming events
                     </h3>
                     <p class="text-sm text-base-content/60 dark:text-base-content/50 max-w-sm mx-auto mb-6">
-                        There are no upcoming events scheduled for {{ ucfirst($currentDate->format('F Y')) }}.
+                        There are no upcoming events scheduled for the rest of
+                        {{ ucfirst($currentDate->format('F Y')) }}.
                         Check other months using the calendar above.
                     </p>
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
-                        <x-mary-button icon="o-chevron-left" class="btn-sm btn-ghost"
-                            @click="if(window.osaCalendarInstance) { window.osaCalendarInstance.prev(); }">
-                            Previous Month
-                        </x-mary-button>
-                        <x-mary-button icon="o-chevron-right" icon-right class="btn-sm btn-ghost"
-                            @click="if(window.osaCalendarInstance) { window.osaCalendarInstance.next(); }">
-                            Next Month
-                        </x-mary-button>
-                    </div>
                 </div>
             @endif
         </x-mary-card>

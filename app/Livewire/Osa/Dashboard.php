@@ -192,28 +192,7 @@ class Dashboard extends Component
         });
     }
 
-    public function refreshData()
-    {
-        // Clear cache to force refresh
-        Cache::forget('osa_dashboard_stats');
-        Cache::forget('osa_dashboard_recent_tickets');
-        Cache::forget('osa_dashboard_pending_approvals');
-        Cache::forget('osa_dashboard_upcoming_events');
-        Cache::forget('osa_dashboard_recent_activity');
-        Cache::forget('osa_dashboard_todays_summary');
 
-        // Unset computed properties to force re-render
-        unset(
-            $this->stats,
-            $this->recentTickets,
-            $this->pendingApprovals,
-            $this->upcomingEvents,
-            $this->recentActivity,
-            $this->todaysSummary
-        );
-
-        $this->success('Dashboard data refreshed!', position: 'toast-top', noProgress: true);
-    }
 
     /**
      * Warm up cache with frequently accessed data to prevent N+1 queries

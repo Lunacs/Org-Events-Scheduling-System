@@ -20,7 +20,7 @@ class Dashboard extends Component
     #[Title('Dashboard - GSO')]
     #[Layout('components.layouts.gso-layout')]
 
-    public int $refreshTicker = 0;
+
 
     public function render()
     {
@@ -100,17 +100,12 @@ class Dashboard extends Component
         ]);
     }
 
-    public function refreshData(): void
-    {
-        $this->refreshTicker++;
-    $this->success('Dashboard data refreshed!', position: 'toast-top');
-    }
 
     protected function formatPendingApproval(Office_Approval $approval): array
     {
         $ticket = $approval->ticket;
 
-    $rawDate = $ticket?->getAttribute('date_from');
+        $rawDate = $ticket?->getAttribute('date_from');
         $eventDate = $this->parseDate($rawDate);
 
         if (! $eventDate && $ticket?->created_at) {
