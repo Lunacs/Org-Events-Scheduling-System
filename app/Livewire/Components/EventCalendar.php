@@ -275,7 +275,7 @@ class EventCalendar extends Component
                     $query->where('status', $this->statusFilter);
                 } else {
                     // Show both approved and rescheduled when 'all' or no specific filter
-                    $query->whereIn('status', ['approved', 'rescheduled']);
+                    $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
                 }
             })
             // Apply organization filter if set
@@ -349,7 +349,7 @@ class EventCalendar extends Component
                         'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
                         'description' => $event->ticket->description,
                         'ticketNumber' => $event->ticket->ticket_number,
-                        'status' => $event->ticket->status ?? 'approved',
+                        'status' => $event->ticket->status ?? 'N/A',
                         'rawStartTime' => $startTime,
                         'rawEndTime' => $endTime,
                         'rawStartDate' => $startDate,
@@ -497,15 +497,18 @@ class EventCalendar extends Component
     {
         // Count unique events that match the current filters
         $query = Event_Schedule::query()
+            // Mirror the calendar query: only count approved schedules
+            ->where('status', 'approved')
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
-                if ($this->statusFilter && $this->statusFilter !== 'all')
-                    $query->whereHas('user', fn($q) => $q->withTrashed());
-                if ($this->statusFilter) {
+                // Always include soft-deleted users (matches calendar fetch)
+                $query->whereHas('user', fn($q) => $q->withTrashed());
+
+                if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
                     // Show both approved and rescheduled when 'all' or no specific filter
-                    $query->whereIn('status', ['approved', 'rescheduled']);
+                    $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
                 }
             })
             ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))

@@ -16,9 +16,6 @@
                         <h1 class="text-3xl font-bold text-base-content font-heading">Event Calendar</h1>
                         <p class="text-base-content/70 mt-1">View all approved and scheduled events</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <x-mary-badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
-                    </div>
                 </div>
             </div>
         </div>
@@ -172,6 +169,7 @@
                                     <option value="all">All Events</option>
                                     <option value="approved">Approved</option>
                                     <option value="rescheduled">Rescheduled</option>
+                                    <option value="completed">Completed</option>
                                 </select>
                             </div>
 
@@ -222,6 +220,7 @@
                                         collect([
                                             ['id' => 'approved', 'name' => 'Approved'],
                                             ['id' => 'rescheduled', 'name' => 'Rescheduled'],
+                                            ['id' => 'completed', 'name' => 'Completed'],
                                         ])->firstWhere('id', $statusFilter)['name'] ?? $statusFilter;
                                 }
                                 if ($organizationFilter) {
@@ -568,6 +567,7 @@
                                 :class="{
                                     'badge-success text-white': (data?.status || '') === 'approved',
                                     'badge-warning text-white': (data?.status || '') === 'rescheduled',
+                                    'badge-info text-white': (data?.status || '') === 'completed',
                                     'badge-primary text-white': ['approved', 'rescheduled'].indexOf(data?.status ||
                                         '') === -1
                                 }"
