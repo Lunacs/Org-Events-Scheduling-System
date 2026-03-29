@@ -65,7 +65,7 @@
 {{-- Pagination --}}
 @if ($paginator !== null && $paginator->hasPages())
     <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
-        <div class="text-sm text-gray-600">
+        <div class="text-sm text-base-content/70">
             Showing {{ $paginator->firstItem() ?? 0 }} to {{ $paginator->lastItem() ?? 0 }}
             of {{ $paginator->total() }} {{ $label }}
         </div>
@@ -75,7 +75,7 @@
 
             @foreach ($pages as $page)
                 @if ($page === '...')
-                    <span class="px-2 py-1 text-gray-400 text-sm">...</span>
+                    <span class="px-2 py-1 text-base-content/40 text-sm">...</span>
                 @else
                     <x-mary-button :label="(string) $page"
                         class="btn-sm {{ $page == $currentPage ? 'btn-primary' : 'btn-ghost' }}"

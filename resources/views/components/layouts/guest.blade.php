@@ -42,7 +42,8 @@
             </div>
             <div class="absolute inset-0 bg-gradient-to-tr from-secondary/40 via-transparent to-black/20"></div>
             <div class="absolute bottom-10 left-10 right-10 text-white z-10">
-                <h2 class="text-3xl xl:text-4xl font-black mb-3 drop-shadow-lg">Org Events Scheduling System</h2>
+                <h2 class="text-3xl xl:text-4xl font-black mb-3 drop-shadow-lg">Organization Events Scheduling System
+                </h2>
                 <p class="text-base xl:text-lg font-medium opacity-90 drop-shadow-md max-w-lg">Streamlining event
                     management and
                     approvals for a more vibrant campus life.</p>

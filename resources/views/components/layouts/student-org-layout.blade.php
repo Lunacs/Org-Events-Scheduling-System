@@ -41,19 +41,25 @@
         <x-mary-main full-width>
             {{-- SIDEBAR --}}
             @persist('student-drawer')
-                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
+                <x-slot:sidebar collapsible withNav drawer="main-drawer"
+                    class="bg-base-100 lg:bg-inherit rounded-r-xl border-r border-base-300/60">
 
                     {{-- BRAND --}}
-                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
+                    <div class="ml-3 mr-5 pt-5 pb-2 flex items-center justify-between border-b border-base-300/60">
                         <div class="flex items-center">
                             <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
                                 fetchpriority="high">
-                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
+                            <div class="pl-3">
+                                <h2 class="text-lg font-semibold font-heading">Event Scheduling</h2>
+                                <p class="text-xs text-base-content/60">Student Organization Portal</p>
+                            </div>
                         </div>
                     </div>
 
                     {{-- MENU --}}
-                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
+                    <x-mary-menu separator activate-by-route
+                        active-bg-color="bg-neutral text-base-content dark:text-neutral-content"
+                        class="font-heading mt-2 [&_a]:rounded-lg [&_a]:transition-colors [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-2 [&_a]:focus-visible:ring-primary/50">
                         @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
                             <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
                         @endforeach
@@ -70,7 +76,7 @@
 
             {{-- The `$slot` goes here --}}
             <x-slot:content>
-                <div class="sticky top-0 z-15">
+                <div class="sticky top-0 z-15 bg-base-100">
                     {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
                     @persist('student-navigation')
                         <livewire:layout.navigation />

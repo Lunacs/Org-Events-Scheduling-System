@@ -14,25 +14,27 @@
     }
 }">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-base-content leading-tight">
             {{ __('Ticket Details') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-8 sm:py-10">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             {{-- Header --}}
-            <div class="mb-8">
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <section class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+                <div class="relative p-6 sm:p-8">
+                    <div class="flex items-center gap-2 text-sm text-base-content/60 mb-3">
+                        <a href="{{ route('student-org.my-tickets') }}" class="hover:text-primary transition-colors inline-flex items-center gap-1" wire:navigate>
+                            <x-mary-icon name="o-arrow-left" class="w-3.5 h-3.5" />
+                            My Tickets
+                        </a>
+                        <span>/</span>
+                        <span class="text-base-content/80">#{{ $ticket->ticket_number }}</span>
+                    </div>
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <div class="flex items-center gap-3 mb-2">
-                                <a href="{{ route('student-org.my-tickets') }}" class="btn btn-ghost btn-sm"
-                                    wire:navigate>
-                                    <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
-                                    Back to Tickets
-                                </a>
-                            </div>
                             <h1 class="text-3xl font-bold text-base-content font-heading">{{ $ticket->title }}</h1>
                             <p class="text-base-content/70 mt-1">Ticket #{{ $ticket->ticket_number }}</p>
                         </div>
@@ -50,15 +52,16 @@
                                 $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
                                 $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
                             @endphp
-                            <span class="badge {{ $ticketBadgeClass }} text-white">
+                            <span class="badge {{ $ticketBadgeClass }} badge-lg">
                                 {{ $ticketStatusLabel }}
                             </span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {{-- Main Content --}}
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Ticket Details --}}
                 <div class="lg:col-span-2 space-y-6">
@@ -89,8 +92,8 @@
                 {{-- Sidebar --}}
                 <div class="space-y-6">
                     {{-- Ticket Info --}}
-                    <div class="bg-base-100 rounded-box shadow-lg p-6">
-                        <h2 class="text-xl font-bold text-base-content mb-4">Ticket Details</h2>
+                    <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
+                        <h2 class="text-lg font-semibold text-base-content mb-4">Ticket Details</h2>
                         @php $userDeleted = $ticket->user?->trashed(); @endphp
                         <div class="space-y-3">
                             <div>
@@ -128,8 +131,8 @@
 
                     {{-- Event Status --}}
                     @if ($ticket->events->isNotEmpty())
-                        <div class="bg-base-100 rounded-box shadow-lg p-6">
-                            <h2 class="text-xl font-bold text-base-content mb-4">Event Created</h2>
+                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
+                            <h2 class="text-lg font-semibold text-base-content mb-4">Event Created</h2>
                             @php
                                 $event = $ticket->events->first();
                                 $schedule = $event->eventSchedules->first();
@@ -159,7 +162,7 @@
                                     <div>
                                         <label class="text-sm font-medium text-base-content/70">Status</label>
                                         <span
-                                            class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }} text-white">{{ ucfirst($schedule->status) }}</span>
+                                            class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}">{{ ucfirst($schedule->status) }}</span>
                                     </div>
                                 </div>
                             @else
@@ -169,9 +172,9 @@
                     @endif
 
                     {{-- Actions --}}
-                    @if (in_array($ticket->status, ['for_revision', 'needs_revision']))
-                        <div class="bg-base-100 rounded-box shadow-lg p-6">
-                            <h2 class="text-xl font-bold text-base-content mb-4">Actions</h2>
+                    @if ($ticket->status === 'for_revision')
+                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
+                            <h2 class="text-lg font-semibold text-base-content mb-4">Actions</h2>
                             <div class="space-y-3">
                                 <button class="btn btn-primary w-full" wire:click="openEditDrawer">
                                     <x-mary-icon name="s-pencil" class="w-4 h-4" />
@@ -182,9 +185,9 @@
                     @endif
 
                     {{-- Latest Remark --}}
-                    @if (in_array(strtolower($ticket->status), ['approved', 'for_rescheduling', 'needs_revision', 'for_revision']))
-                        <div class="bg-base-100 rounded-box shadow-lg p-6">
-                            <h2 class="text-xl font-bold text-base-content mb-4">Latest Decision</h2>
+                    @if (in_array(strtolower($ticket->status), ['approved', 'for_revision']))
+                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
+                            <h2 class="text-lg font-semibold text-base-content mb-4">Latest Decision</h2>
                             <x-tickets.latest-remark :status="$ticket->status" :ticket="$ticket" />
                         </div>
                     @endif
@@ -228,7 +231,7 @@
 
             <div x-show="!isLoading" x-cloak x-transition>
                 @if ($showEditDrawer)
-                    @livewire('student-org.edit-ticket', ['ticketId' => $ticket->ticket_id], key('edit-ticket-' . $ticket->ticket_id))
+                    <livewire:student-org.edit-ticket :ticketId="$ticket->ticket_id" :key="'edit-ticket-' . $ticket->ticket_id" />
                 @endif
             </div>
         </div>

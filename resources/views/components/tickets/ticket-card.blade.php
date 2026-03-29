@@ -25,9 +25,7 @@
                     'received' => 'border-info text-info',
                     'gso_review' => 'border-secondary text-secondary',
                     'pending_osa_approval' => 'border-warning text-warning',
-                    'for_rescheduling' => 'border-warning text-warning',
-                    'rescheduled' => 'border-success text-success',
-                    'needs_revision' => 'border-warning text-warning',
+                    'for_revision' => 'border-warning text-warning',
                     'amended' => 'border-info text-info',
                     'approved' => 'border-success text-success',
                     '' => 'border-error text-error',
@@ -44,7 +42,7 @@
         <p class="text-sm text-base-content/80 mb-4 line-clamp-3">{{ $ticket->description }}</p>
 
         {{-- Spacer to push bottom content down --}}
-        <div class="flex-grow"></div>
+        <div class="grow"></div>
 
         {{-- Event Details --}}
         <div class="space-y-2 mb-4">

@@ -2,7 +2,6 @@
 
 namespace App\Livewire\StudentOrg;
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -28,6 +27,7 @@ class MyTicket extends Component
     public $showEditDrawer = false;
 
     public $selectedTicketId;
+
     public $isLoadingTicket = false;
 
     private function getBaseTicketsQuery()
@@ -37,10 +37,10 @@ class MyTicket extends Component
             ->with([
                 'eventType',
                 'venue',
-                'user' => function($query) {
+                'user' => function ($query) {
                     $query->withTrashed();
                 },
-                'user.studentOrganization'
+                'user.studentOrganization',
             ]);
 
         // If user is President - see only their own tickets
@@ -49,7 +49,7 @@ class MyTicket extends Component
         }
         // If user is Chairperson or Adviser - see all tickets from their org
         elseif (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
-            $query->whereHas('user', function($q) use ($user) {
+            $query->whereHas('user', function ($q) {
                 $orgId = $this->getUserOrgId();
                 $q->withTrashed()->where('org_id', $orgId);
             });
@@ -68,7 +68,7 @@ class MyTicket extends Component
     {
         $ticket = \App\Models\Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
-            ->whereHas('user', function($q) {
+            ->whereHas('user', function ($q) {
                 $orgId = $this->getUserOrgId();
                 $q->withTrashed()->where('org_id', $orgId);
             })
@@ -105,10 +105,10 @@ class MyTicket extends Component
                 'fundingSource' => $ticket->fund_source_id,
                 'igp_requested' => $ticket->igp_requested ? 'true' : 'false',
                 'igp_details' => $ticket->igp_details,
-            ]
+            ],
         ]);
 
-        $this->js("localStorage.removeItem('ticket_draft_" . auth()->id() . "')");
+        $this->js("localStorage.removeItem('ticket_draft_".auth()->id()."')");
 
         return redirect()->route('student-org.submit-ticket');
     }
@@ -164,11 +164,27 @@ class MyTicket extends Component
         $this->search = '';
         $this->statusFilter = '';
         $this->dateFilter = '';
+        $this->resetPage();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateFilter(): void
+    {
+        $this->resetPage();
     }
 
     public function getSelectedTicketProperty()
     {
-        if (!$this->selectedTicketId) {
+        if (! $this->selectedTicketId) {
             return null;
         }
 
@@ -179,18 +195,18 @@ class MyTicket extends Component
                 'comments',
                 'attachments',
                 'fundSource',
-                'user' => function($query) {
+                'user' => function ($query) {
                     $query->withTrashed();
                 },
                 'user.studentOrganization.course',
-                'user.position'
+                'user.position',
             ]);
 
         // Apply same visibility logic
         if ($user->position->position_name === 'President') {
             $query->where('user_id', $user->user_id);
         } elseif (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
-            $query->whereHas('user', function($q) use ($user) {
+            $query->whereHas('user', function ($q) use ($user) {
                 $q->withTrashed()->where('org_id', $user->org_id);
             });
         }
@@ -298,14 +314,14 @@ class MyTicket extends Component
         $ticketsQuery = $this->getBaseTicketsQuery()
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
-                        ->orWhere('ticket_number', 'like', '%' . $this->search . '%')
-                        ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $q->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('ticket_number', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->statusFilter, function ($query) {
                 if ($this->statusFilter === 'under_review') {
-                    $query->whereIn('status', ['received', 'amended', 'rescheduled', 'gso_review', 'pending_osa_approval']);
+                    $query->whereIn('status', ['received', 'amended', 'gso_review', 'pending_osa_approval']);
                 } else {
                     $query->where('status', $this->statusFilter);
                 }

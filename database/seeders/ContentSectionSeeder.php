@@ -48,25 +48,6 @@ class ContentSectionSeeder extends Seeder
                 'display_order' => 1,
             ],
             [
-                'section_key' => 'documentary_requirements',
-                'section_type' => ContentSection::TYPE_DOCUMENTARY_REQUIREMENTS,
-                'title' => 'Documentary Requirements',
-                'content' => '<div class="space-y-3">
-                    <p>Please prepare the following documents before submitting your event request:</p>
-                    <ul>
-                        <li><strong>Letter of Request</strong> - Addressed to the OSA Director</li>
-                        <li><strong>Event Proposal</strong> - Detailed description of the event</li>
-                        <li><strong>Budget Proposal</strong> - Itemized budget breakdown</li>
-                        <li><strong>Program Flow</strong> - Timeline of activities</li>
-                        <li><strong>List of Participants</strong> - Expected attendees</li>
-                        <li><strong>Venue Layout</strong> - If applicable</li>
-                    </ul>
-                    <p><em>Note: Additional documents may be requested depending on the event type.</em></p>
-                </div>',
-                'is_active' => true,
-                'display_order' => 1,
-            ],
-            [
                 'section_key' => 'event_guidelines',
                 'section_type' => ContentSection::TYPE_PAGE_CONTENT,
                 'title' => 'Event Guidelines',
@@ -84,26 +65,36 @@ class ContentSectionSeeder extends Seeder
                 'display_order' => 2,
             ],
             [
-                'section_key' => 'faq',
-                'section_type' => ContentSection::TYPE_FAQ,
-                'title' => 'Frequently Asked Questions',
-                'content' => '<div class="space-y-4">
-                    <div>
-                        <p><strong>Q: How long does the approval process take?</strong></p>
-                        <p>A: The standard approval process takes 5-7 working days, depending on the complexity of the event.</p>
-                    </div>
-                    <div>
-                        <p><strong>Q: Can I edit my request after submission?</strong></p>
-                        <p>A: Yes, you can edit requests that are pending review. Once approved or rejected, changes cannot be made.</p>
-                    </div>
-                    <div>
-                        <p><strong>Q: Who can submit event requests?</strong></p>
-                        <p>A: Only registered officers of recognized student organizations can submit event requests.</p>
-                    </div>
-                    <div>
-                        <p><strong>Q: What happens if my event is rejected?</strong></p>
-                        <p>A: You will receive feedback on why the event was rejected and can resubmit with the necessary changes.</p>
-                    </div>
+                'section_key' => 'ticket_guidelines',
+                'section_type' => ContentSection::TYPE_TICKET_GUIDELINES,
+                'title' => 'Ticket Submission Guidelines',
+                'content' => '<div class="space-y-3">
+                    <p>Please review the following guidelines before submitting your event request:</p>
+                    <ul>
+                        <li>Submit your event request at least <strong>2 weeks</strong> before the scheduled date.</li>
+                        <li>Ensure all required information and documentary attachments are complete before submission.</li>
+                        <li>Events must comply with university policies and guidelines.</li>
+                        <li>The requesting organization is responsible for the conduct of the event.</li>
+                        <li>Any changes or cancellations must be communicated to OSA at least 48 hours in advance.</li>
+                        <li>Post-event reports must be submitted within 7 days after the event.</li>
+                    </ul>
+                    <p><em>For questions or assistance, please contact the OSA office.</em></p>
+                </div>',
+                'is_active' => true,
+                'display_order' => 1,
+            ],
+            [
+                'section_key' => 'reschedule_guidelines',
+                'section_type' => ContentSection::TYPE_RESCHEDULE_GUIDELINES,
+                'title' => 'Reschedule Request Guidelines',
+                'content' => '<div class="space-y-2">
+                    <ul>
+                        <li>Reschedule requests must be submitted at least <strong>2 days</strong> before the current event date</li>
+                        <li>All reschedule requests are subject to approval by OSA and GSO</li>
+                        <li>Venue availability will be checked for your new requested date</li>
+                        <li>You will be notified via email about the status of your request</li>
+                        <li>Frequent reschedule requests may affect future event approvals</li>
+                    </ul>
                 </div>',
                 'is_active' => true,
                 'display_order' => 1,

@@ -5,16 +5,21 @@ namespace App\Policies;
 use App\Models\Office;
 use App\Models\Ticket;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TicketPolicy
 {
+    private const OSA_ACTIONABLE_STATUSES = ['received', 'amended'];
+
+    private const PENDING_GSO_STATUS = 'gso_review';
+
+    private const PENDING_OSA_STATUS = 'pending_osa_approval';
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -22,7 +27,7 @@ class TicketPolicy
      */
     public function view(User $user, Ticket $ticket): bool
     {
-        return false;
+        return $user->isSuperAdmin() || $user->user_id === $ticket->user_id;
     }
 
     /**
@@ -30,15 +35,15 @@ class TicketPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isSuperAdmin();
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Ticket $ticket)
+    public function update(User $user, Ticket $ticket): bool
     {
-        return $user->user_id === $ticket->user_id;
+        return $user->isSuperAdmin() || $user->user_id === $ticket->user_id;
     }
 
     /**
@@ -46,7 +51,7 @@ class TicketPolicy
      */
     public function delete(User $user, Ticket $ticket): bool
     {
-        return false;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -54,7 +59,7 @@ class TicketPolicy
      */
     public function restore(User $user, Ticket $ticket): bool
     {
-        return false;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -62,7 +67,7 @@ class TicketPolicy
      */
     public function forceDelete(User $user, Ticket $ticket): bool
     {
-        return false;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -71,13 +76,13 @@ class TicketPolicy
     public function approve(User $user, Ticket $ticket): bool
     {
         // OSA can approve tickets in 'received' or 'amended' status
-        if ($user->isOSA() && in_array($ticket->status, ['received', 'amended'])) {
+        if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
         }
 
         // GSO can approve when ticket is in review or when their office decision is pending
         if ($user->isGSO()) {
-            if ($ticket->status === 'gso_review') {
+            if ($ticket->status === self::PENDING_GSO_STATUS) {
                 return true;
             }
 
@@ -95,13 +100,13 @@ class TicketPolicy
     public function reject(User $user, Ticket $ticket): bool
     {
         // OSA can reject tickets in 'received' or 'amended' status
-        if ($user->isOSA() && in_array($ticket->status, ['received', 'amended'])) {
+        if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
         }
 
         // GSO can reject when ticket is in review or when their office decision is pending
         if ($user->isGSO()) {
-            if ($ticket->status === 'gso_review') {
+            if ($ticket->status === self::PENDING_GSO_STATUS) {
                 return true;
             }
 
@@ -119,17 +124,17 @@ class TicketPolicy
     public function requestRevision(User $user, Ticket $ticket): bool
     {
         // OSA can request revisions in received/amended status
-        if ($user->isOSA() && in_array($ticket->status, ['received', 'amended'])) {
+        if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
         }
 
         // OSA can also request revisions after GSO review
-        if ($user->isOSA() && $ticket->status === 'pending_osa_approval') {
+        if ($user->isOSA() && $ticket->status === self::PENDING_OSA_STATUS) {
             return true;
         }
 
         // GSO can request revisions when ticket is in gso_review
-        if ($user->isGSO() && $ticket->status === 'gso_review') {
+        if ($user->isGSO() && $ticket->status === self::PENDING_GSO_STATUS) {
             $officeApproval = $ticket->officeApprovals()
                 ->where('office_id', $user->office_id)
                 ->first();
@@ -147,8 +152,7 @@ class TicketPolicy
      */
     public function forwardToGso(User $user, Ticket $ticket): bool
     {
-        // Only OSA can forward to GSO
-        return $user->isOSA() && in_array($ticket->status, ['received', 'amended']);
+        return $user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true);
     }
 
     /**
@@ -156,8 +160,7 @@ class TicketPolicy
      */
     public function finalApprove(User $user, Ticket $ticket): bool
     {
-        // Only OSA can make final approval after GSO review
-        return $user->isOSA() && $ticket->status === 'pending_osa_approval';
+        return $user->isOSA() && $ticket->status === self::PENDING_OSA_STATUS;
     }
 
     /**
@@ -194,7 +197,6 @@ class TicketPolicy
      */
     public function finalReject(User $user, Ticket $ticket): bool
     {
-        // Only OSA can make final rejection after GSO review
-        return $user->isOSA() && $ticket->status === 'pending_osa_approval';
+        return $user->isOSA() && $ticket->status === self::PENDING_OSA_STATUS;
     }
 }

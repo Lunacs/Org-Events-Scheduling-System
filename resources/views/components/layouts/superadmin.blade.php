@@ -66,10 +66,10 @@
 
                         <x-mary-menu-item title="Event Calendar" icon="o-calendar" link="{{ route('superadmin.calendar') }}"
                             wire:navigate.hover />
-                        {{-- <x-mary-menu-item title="Ticket Management" icon="o-ticket"
+                        <x-mary-menu-item title="Ticket Management" icon="o-ticket"
                             link="{{ route('superadmin.tickets') }}" wire:navigate.hover />
                         <x-mary-menu-item title="Archive Management" icon="o-archive-box"
-                            link="{{ route('superadmin.archive') }}" wire:navigate.hover /> --}}
+                            link="{{ route('superadmin.archive') }}" wire:navigate.hover />
 
                         <x-mary-menu-separator />
 

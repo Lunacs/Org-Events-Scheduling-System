@@ -4,7 +4,7 @@
     Usage:
     <x-content-section key="announcements" />
     <x-content-section key="terms_conditions" class="text-sm" />
-    <x-content-section key="documentary_requirements" :show-title="false" />
+    <x-content-section key="ticket_guidelines" :show-title="false" />
 --}}
 
 @props(['key', 'showTitle' => true, 'class' => ''])

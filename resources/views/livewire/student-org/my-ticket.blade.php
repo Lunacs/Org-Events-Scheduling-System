@@ -1,84 +1,144 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-base-content leading-tight">
             {{ __('My Tickets') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             {{-- Header --}}
-            <div class="mb-8">
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <section
+                class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+                <div class="relative p-6 sm:p-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
+                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
                             <h1 class="text-3xl font-heading font-bold text-base-content">All Event Requests</h1>
                             <p class="text-base-content/70 mt-1">Track the progress of your organization's tickets</p>
                         </div>
-                        <div class="hidden md:block">
-                            <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary"
-                                link="/student-org/submit-ticket" wire:navigate />
-                        </div>
+                        <x-mary-button label="Submit New Ticket" icon="s-document-plus"
+                            class="btn-primary w-full sm:w-auto" link="/student-org/submit-ticket" wire:navigate />
                     </div>
                 </div>
-            </div>
-
-            <div class="flex justify-center items-center">
-                <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary md:hidden"
-                    link="/student-org/submit-ticket" wire:navigate />
-            </div>
+            </section>
 
             {{-- Filter and Search --}}
             <x-mary-card>
-                <div class="grid grid-cols-1 md:flex md:flex-wrap gap-4 md:items-end md:justify-start">
-                    <x-mary-input label="Search Tickets" wire:model.live="search" x-data="{ placeholder: window.innerWidth < 768 ? 'Title, ID, or Description' : 'Search by title, ID, or description...' }"
-                        x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, ID, or description...' })" ::placeholder="placeholder" icon="s-magnifying-glass"
-                        class="flex-1 md:min-w-64 min-w-32" />
+                <div class="relative grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-12 md:items-end">
 
+                    <div class="min-w-0 md:col-span-12 lg:col-span-4">
+                        <x-mary-input label="Search Tickets" wire:model.live.debounce.300ms="search"
+                            wire:loading.class="opacity-70" wire:target="search"
+                            placeholder="Search by title, ID, or description..." icon="s-magnifying-glass"
+                            class="w-full" />
+                    </div>
 
-                    <x-mary-select label="Status Filter" wire:model.live="statusFilter" :options="[
-                        ['id' => '', 'name' => 'All Status'],
-                        ['id' => 'under_review', 'name' => 'Under Review'],
-                        ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'for_revision', 'name' => 'For Revision'],
-                        ['id' => 'rescheduled', 'name' => 'Rescheduled'],
-                    ]" />
+                    <div class="min-w-0 md:col-span-6 lg:col-span-3">
+                        <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
+                            ['id' => '', 'name' => 'All Status'],
+                            ['id' => 'under_review', 'name' => 'Under Review'],
+                            ['id' => 'approved', 'name' => 'Approved'],
+                            ['id' => 'for_revision', 'name' => 'For Revision'],
+                        ]"
+                            wire:loading.class="opacity-70" wire:target="statusFilter" class="w-full" />
+                    </div>
 
-                    <x-mary-select label="Date Range" wire:model.live="dateFilter" :options="[
-                        ['id' => '', 'name' => 'All Time'],
-                        ['id' => 'last_week', 'name' => 'Last Week'],
-                        ['id' => 'last_month', 'name' => 'Last Month'],
-                        ['id' => 'last_3_months', 'name' => 'Last 3 Months'],
-                        ['id' => 'this_year', 'name' => 'This Year'],
-                    ]" />
+                    <div class="min-w-0 md:col-span-6 lg:col-span-3">
+                        <x-mary-select label="Date range" wire:model.live="dateFilter" :options="[
+                            ['id' => '', 'name' => 'All Time'],
+                            ['id' => 'last_week', 'name' => 'Last Week'],
+                            ['id' => 'last_month', 'name' => 'Last Month'],
+                            ['id' => 'last_3_months', 'name' => 'Last 3 Months'],
+                            ['id' => 'this_year', 'name' => 'This Year'],
+                        ]"
+                            wire:loading.class="opacity-70" wire:target="dateFilter" class="w-full" />
+                    </div>
 
-                    <x-mary-button icon="s-funnel" class="btn-ghost hidden md:block" wire:click="clearFilters" />
-                    <x-mary-button label="Clear Filters" class="mt-6 md:hidden" wire:click="clearFilters" />
+                    @if ($search || $statusFilter || $dateFilter)
+                        <div class="min-w-0 md:col-span-12 lg:col-span-2 flex items-end">
+                            <x-mary-button label="Clear Filters" icon="s-funnel"
+                                class="btn-ghost w-full lg:w-auto whitespace-nowrap shrink-0 gap-2"
+                                wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters"
+                                tooltip="Clear filters" />
+                        </div>
+                    @endif
                 </div>
             </x-mary-card>
 
             {{-- Tickets List --}}
             <x-mary-card>
-                <div class="space-y-4">
-                    {{-- Ticket Item 1 --}}
+                {{-- Skeleton Loading State --}}
+                <div wire:loading.delay wire:target="search,statusFilter,dateFilter,clearFilters"
+                    class="space-y-4 w-full">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="rounded-xl border border-base-300 bg-base-100 p-5 sm:p-6 animate-pulse">
+                            {{-- Title + badge row --}}
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1 space-y-2 mr-4">
+                                    <div class="h-5 bg-base-200 rounded w-2/3"></div>
+                                    <div class="h-4 bg-base-200 rounded w-1/3"></div>
+                                </div>
+                                <div class="flex flex-col gap-2 items-end">
+                                    <div class="h-8 bg-base-200 rounded w-20"></div>
+                                    <div class="h-8 bg-base-200 rounded w-24"></div>
+                                </div>
+                            </div>
+                            {{-- Description --}}
+                            <div class="space-y-2 mb-4">
+                                <div class="h-3 bg-base-200 rounded w-full"></div>
+                                <div class="h-3 bg-base-200 rounded w-5/6"></div>
+                                <div class="h-3 bg-base-200 rounded w-2/3"></div>
+                            </div>
+                            {{-- 3-column details --}}
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-4 w-4 bg-base-200 rounded shrink-0"></div>
+                                    <div class="h-4 bg-base-200 rounded w-28"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="h-4 w-4 bg-base-200 rounded shrink-0"></div>
+                                    <div class="h-4 bg-base-200 rounded w-32"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="h-4 w-4 bg-base-200 rounded shrink-0"></div>
+                                    <div class="h-4 bg-base-200 rounded w-24"></div>
+                                </div>
+                            </div>
+                            {{-- Progress strip --}}
+                            <div class="hidden md:flex items-center gap-2 mb-4">
+                                <div class="h-3 bg-base-200 rounded w-full"></div>
+                            </div>
+                            {{-- Footer timestamp --}}
+                            <div class="mt-4 pt-4 border-t border-base-300/70">
+                                <div class="h-3 bg-base-200 rounded w-48"></div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+
+                {{-- Actual Content --}}
+                <div wire:loading.remove.delay wire:target="search,statusFilter,dateFilter,clearFilters"
+                    class="space-y-4">
                     @forelse ($tickets as $ticket)
                         <x-tickets.ticketinfo :tickets="$ticket" />
                     @empty
-                        <div class="flex flex-col items-center gap-2">
-                            <span class="text-base-content/70">No tickets found</span>
-                            <span class="text-sm text-base-content/50">Try adjusting your filters</span>
-                        </div>
+                        <x-ui.empty-state title="No tickets found"
+                            description="Try adjusting your search and filters or submit a new ticket to get started."
+                            icon="o-ticket" tone="primary" iconColor="text-primary" actionLabel="Submit New Ticket"
+                            actionLink="/student-org/submit-ticket" />
                     @endforelse
-                </div>
 
-                {{-- Pagination --}}
-                @if ($tickets->hasPages())
-                    <x-tickets.ticket-pagination :tickets="$tickets" />
-                @endif
+                    {{-- Pagination --}}
+                    @if ($tickets->hasPages())
+                        <x-tickets.ticket-pagination :tickets="$tickets" />
+                    @endif
+                </div>
             </x-mary-card>
 
             {{-- Quick Stats --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text"
                     color="text-primary" />
 
@@ -132,7 +192,7 @@
 
             <div x-show="!isLoading" x-cloak x-transition>
                 @if ($showEditDrawer && $selectedTicketId)
-                    @livewire('student-org.edit-ticket', ['ticketId' => $selectedTicketId], key('edit-ticket-' . $selectedTicketId))
+                    <livewire:student-org.edit-ticket :ticketId="$selectedTicketId" :key="'edit-ticket-' . $selectedTicketId" />
                 @endif
             </div>
         </div>

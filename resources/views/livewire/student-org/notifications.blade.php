@@ -47,19 +47,21 @@
             <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <div class="bg-base-100 rounded-box shadow-lg p-6 border border-base-300/60">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
+                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
                             <h1 class="text-3xl font-bold text-base-content">Notifications Center</h1>
                             <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and
                                 university
                                 announcements</p>
                         </div>
-                        <div class="flex flex-col md:flex-row items-center gap-2">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                             <x-mary-button label="Mark All as Read" icon="s-check"
-                                class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
+                                class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto" wire:click="markAllAsRead"
+                                :disabled="$unreadCount === 0" />
                             <x-mary-button label="Clear All Read" icon="s-trash"
-                                class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
+                                class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto {{ $readCount > 0 ? 'text-error' : '' }}"
                                 wire:click="clearAllRead" :disabled="$readCount === 0"
                                 wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
                         </div>
@@ -175,7 +177,7 @@
                 </div>
 
                 {{-- Notifications List --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 relative min-h-[400px]">
+                <div class="bg-base-100 rounded-box shadow-lg p-6 relative min-h-100">
                     {{-- Skeleton Loader (Filtering/Searching) --}}
                     <div wire:loading wire:target="search,typeFilter,statusFilter,clearFilters" class="mb-4 w-full">
                         @include('livewire.placeholders.notification-list')
@@ -301,7 +303,7 @@
                                         </div>
                                     </div>
                                 </a>
-                                <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button wire:click.prevent="deleteNotification('{{ $notification->id }}')"
                                         wire:confirm="Delete this notification? This action cannot be undone."
                                         class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
@@ -315,19 +317,10 @@
                                 <div class="divider my-0"></div>
                             @endif
                         @empty
-                            <div class="text-center py-12">
-                                <x-mary-icon name="s-bell-slash"
-                                    class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
-                                <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
-                                <p class="text-base-content/50 text-sm mt-2">
-                                    <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting
-                                        your
-                                        filters</span>
-                                    <span x-show="!$wire.search && !$wire.typeFilter && !$wire.statusFilter">You're all
-                                        caught
-                                        up!</span>
-                                </p>
-                            </div>
+                            <x-ui.empty-state title="No notifications found"
+                                description="Try adjusting your filters or check back later for ticket and announcement updates."
+                                icon="o-bell-slash" tone="secondary" iconColor="text-secondary"
+                                actionLabel="Go to My Tickets" actionLink="/student-org/my-tickets" />
                         @endforelse
                     </div>
                 </div>

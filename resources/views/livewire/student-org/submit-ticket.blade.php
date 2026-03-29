@@ -1,80 +1,86 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-base-content leading-tight">
             {{ __('Submit Event Ticket (Digital Proposal)') }}
         </h2>
     </x-slot>
 
-    <div class="py-6 md:py-12 overflow-x-hidden">
+    <div class="py-6 md:py-10 overflow-x-hidden">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             {{-- Header --}}
-            <div class="mb-8">
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+            <section
+                class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-info/10 shadow-sm">
+                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-info/15 blur-2xl"></div>
+                <div class="relative p-6 sm:p-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
+                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
                             <h1 class="text-3xl font-heading font-bold text-base-content">Submit Ticket</h1>
-                            <p class="text-base-content/70 mt-1">Submit a ticket of your event request</p>
+                            <p class="text-base-content/70 mt-1">Create a new event proposal request and track its
+                                approval progress.</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            @if ($errors->any())
+                <div class="mb-6 rounded-xl border border-error/30 bg-error/10 p-4">
+                    <div class="flex items-start gap-3">
+                        <x-mary-icon name="s-exclamation-circle" class="w-5 h-5 text-error mt-0.5" />
+                        <div>
+                            <p class="font-semibold text-error">Please review the required fields in this step.</p>
+                            <ul class="mt-2 list-disc list-inside text-sm text-base-content/80 space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <x-mary-form wire:submit="save">
                 {{-- Progress Indicator --}}
                 <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
                     <div class="flex justify-between items-center min-w-max md:min-w-0">
+                        @php
+                            $stepLabels = [
+                                1 => ['full' => 'Organization', 'short' => 'Org'],
+                                2 => ['full' => 'Event Details', 'short' => 'Event'],
+                                3 => ['full' => 'Schedule', 'short' => 'Schedule'],
+                                4 => ['full' => 'Budget', 'short' => 'Budget'],
+                                5 => ['full' => 'Attachments', 'short' => 'Files'],
+                                6 => ['full' => 'Review', 'short' => 'Review'],
+                            ];
+                        @endphp
                         @for ($i = 1; $i <= $totalSteps; $i++)
-                            <div class="flex flex-col items-center flex-1 min-w-[60px] md:min-w-0 snap-center"
+                            <div class="flex flex-col items-center flex-1 min-w-15 md:min-w-0 snap-center"
                                 id="step-{{ $i }}">
                                 <button type="button" wire:click="goToStep({{ $i }})"
-                                    aria-label="Step {{ $i }}:
-                                        @switch($i)
-                                            @case(1) Organization
-                                            @case(2) Event Details
-                                            @case(3) Schedule
-                                            @case(4) Budget
-                                            @case(5) Attachments
-                                            @case(6) Review
-                                        @endswitch"
+                                    aria-label="Step {{ $i }}: {{ $stepLabels[$i]['full'] }}"
                                     aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
-                                    class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors flex-shrink-0
-                                        {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
-                                        {{ $currentStep > $i ? 'bg-success text-white' : '' }}
-                                        {{ $currentStep < $i ? 'bg-base-300 text-base-content' : '' }}"
+                                    class="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-1.5 text-sm font-medium transition-all duration-200 shrink-0
+                                        {{ $currentStep === $i ? 'bg-primary text-primary-content shadow-sm ring-2 ring-primary/30' : '' }}
+                                        {{ $currentStep > $i ? 'bg-success text-success-content' : '' }}
+                                        {{ $currentStep < $i ? 'bg-base-300 text-base-content/50' : '' }}"
                                     @if ($i > $currentStep + 1) disabled @endif>
-                                    {{ $currentStep > $i ? '✓' : $i }}
+                                    @if ($currentStep > $i)
+                                        <x-mary-icon name="o-check" class="w-4 h-4" />
+                                    @else
+                                        {{ $i }}
+                                    @endif
                                 </button>
 
-                                <span class="text-xs text-center whitespace-nowrap px-1">
-                                    @switch($i)
-                                        @case(1)
-                                            Organization
-                                        @break
-
-                                        @case(2)
-                                            Event Details
-                                        @break
-
-                                        @case(3)
-                                            Schedule
-                                        @break
-
-                                        @case(4)
-                                            Budget
-                                        @break
-
-                                        @case(5)
-                                            Attachments
-                                        @break
-
-                                        @case(6)
-                                            Review
-                                        @break
-                                    @endswitch
+                                <span class="text-xs text-center whitespace-nowrap px-1 hidden md:block {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
+                                    {{ $stepLabels[$i]['full'] }}
+                                </span>
+                                <span class="text-xs text-center whitespace-nowrap px-1 md:hidden {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
+                                    {{ $stepLabels[$i]['short'] }}
                                 </span>
                             </div>
                             @if ($i < $totalSteps)
                                 <div
-                                    class="flex-1 h-1 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-1 md:mx-2 min-w-[20px]">
+                                    class="flex-1 h-0.5 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-1 md:mx-2 min-w-4 rounded-full transition-colors duration-200">
                                 </div>
                             @endif
                         @endfor
@@ -87,23 +93,7 @@
                     {{-- Instructions Card --}}
                     <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
                         class="mb-1">
-                        <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
-                            <div class="flex items-start space-x-2">
-                                <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
-                                <div class="text-sm">
-                                    <p class="font-medium mb-2">Important Guidelines:</p>
-                                    <ul class="list-disc list-inside space-y-1 text-gray-600">
-                                        <li>Submit your request at least 14 days before your event date</li>
-                                        <li>All required fields must be completed</li>
-                                        <li>Upload all necessary attachments (permit forms, venue reservations,
-                                            etc.)
-                                        </li>
-                                        <li>Events must comply with university policies and guidelines</li>
-                                        <li>You will receive notifications about approval status via email</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <x-submit_guidelines :guidelines="$ticketGuidelines" />
                     </x-mary-card>
                     <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning mb-4">
                         <x-mary-checkbox label="Check this box if the proposal is amended from a previous submission."
@@ -386,20 +376,22 @@
                 @endif
 
                 {{-- Navigation Buttons --}}
-                <div class="flex justify-between items-center pt-6">
-                    <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                        class="btn-outline" wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50 cursor-not-allowed" wire:target="previousStep" spinner
-                        :disabled="$currentStep === 1 || $isProcessing" />
+                <div class="flex justify-between items-center pt-6 border-t border-base-300/50 mt-2">
+                    @if ($currentStep > 1)
+                        <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
+                            class="btn-ghost" wire:loading.attr="disabled"
+                            wire:target="previousStep" spinner
+                            :disabled="$isProcessing" />
+                    @else
+                        <div></div>
+                    @endif
                     @if ($currentStep < $totalSteps)
                         <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                            x-on:click="isSubmitting = true" wire:loading.attr="disabled"
-                            wire:loading.class="opacity-50 cursor-not-allowed"
-                            class="btn-primary {{ $errors->any() ? '<opacity-75></opacity-75> cursor-not-allowed' : '' }}"
-                            :disabled="$errors->any()" />
+                            wire:loading.attr="disabled"
+                            wire:target="nextStep" class="btn-primary" :disabled="$isProcessing" spinner />
                     @else
                         <x-mary-button label="Submit Ticket" icon="s-paper-airplane" wire:click="save"
-                            wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-not-allowed"
+                            wire:loading.attr="disabled"
                             wire:target="save" class="btn-primary" :disabled="!$agreeToTerms || $isProcessing" />
                     @endif
                 </div>
@@ -630,6 +622,7 @@
                     const spinner = document.getElementById('draftLoadingSpinner');
                     if (spinner) {
                         spinner.classList.remove('hidden');
+                        spinner.classList.add('flex');
                         loadBtn.disabled = true;
                         discardBtn.disabled = true;
                     }
@@ -721,7 +714,7 @@
                     const spinnerWrapper = document.createElement('div');
                     spinnerWrapper.id = 'draftLoadingSpinner';
                     spinnerWrapper.className =
-                        'hidden absolute inset-0 bg-base-100 bg-opacity-90 flex items-center justify-center rounded-lg';
+                        'hidden absolute inset-0 bg-base-100 bg-opacity-90 items-center justify-center rounded-lg';
 
                     const spinnerContent = document.createElement('div');
                     spinnerContent.className = 'flex flex-col items-center gap-3';

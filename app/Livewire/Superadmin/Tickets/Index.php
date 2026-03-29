@@ -6,6 +6,7 @@ use App\Models\Office;
 use App\Models\Ticket;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -18,22 +19,16 @@ class Index extends Component
 {
     use Toast, WithPagination;
 
+    private const STATUS_REJECTED = 'rejected';
+
     #[Title('Ticket Management - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
 
-    // Filters with URL state
     #[Url(except: '')]
     public $search = '';
 
     #[Url(except: 'all')]
     public $statusFilter = 'all';
-
-    #[Url(except: '')]
-    public $officeFilter = '';
-
-    public $dateFrom;
-
-    public $dateTo;
 
     // Selected ticket details
     public $selectedTicket = null;
@@ -54,14 +49,14 @@ class Index extends Component
 
     public $bulkAction = '';
 
-    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
+    // Delete modal
+    public $showDeleteModal = false;
 
-    public function mount()
-    {
-        // Default to last 30 days
-        $this->dateTo = now()->format('Y-m-d');
-        $this->dateFrom = now()->subDays(30)->format('Y-m-d');
-    }
+    public $deletingTicketId = null;
+
+    public $deletingTicketTitle = '';
+
+    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
 
     #[Computed]
     public function tickets()
@@ -82,19 +77,17 @@ class Index extends Component
                 'events:event_id,ticket_id',
             ])
             ->when($this->search, function ($q) {
-                $q->where('title', 'like', "%{$this->search}%")
-                    ->orWhere('ticket_number', 'like', "%{$this->search}%")
-                    ->orWhereHas('user.studentOrganization', function ($q2) {
-                        $q2->where('org_name', 'like', "%{$this->search}%");
-                    });
+                $q->where(function ($q2) {
+                    $q2->where('title', 'like', "%{$this->search}%")
+                        ->orWhere('ticket_number', 'like', "%{$this->search}%")
+                        ->orWhereHas('user.studentOrganization', function ($q3) {
+                            $q3->where('org_name', 'like', "%{$this->search}%");
+                        });
+                });
             })
             ->when($this->statusFilter !== 'all', function ($q) {
                 $q->where('status', $this->statusFilter);
             })
-            ->when($this->officeFilter, function ($q) {
-                $q->where('office_id', $this->officeFilter);
-            })
-            ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
             ->orderBy(...array_values($this->sortBy))
             ->paginate(15);
     }
@@ -112,13 +105,18 @@ class Index extends Component
         ];
     }
 
-    public function viewTicketDetails($ticketId)
+    // ── View ─────────────────────────────────────────────────────────
+
+    public function viewTicketDetails(int $ticketId): void
     {
         $this->selectedTicket = Ticket::with([
             'user.studentOrganization',
             'events.eventSchedules',
             'eventType',
             'attachments',
+            'venue',
+            'alternateVenue',
+            'fundSource',
         ])->find($ticketId);
 
         if ($this->selectedTicket) {
@@ -126,20 +124,71 @@ class Index extends Component
         }
     }
 
-    public function closeDetailDrawer()
+    public function closeDetailDrawer(): void
     {
         $this->showDetailDrawer = false;
         $this->selectedTicket = null;
     }
 
-    public function openReassignModal($ticketId)
+    // ── Delete ───────────────────────────────────────────────────────
+
+    public function openDeleteModal(int $ticketId, string $ticketTitle): void
+    {
+        $this->deletingTicketId = $ticketId;
+        $this->deletingTicketTitle = $ticketTitle;
+        $this->showDeleteModal = true;
+    }
+
+    public function closeDeleteModal(): void
+    {
+        $this->showDeleteModal = false;
+        $this->reset(['deletingTicketId', 'deletingTicketTitle']);
+    }
+
+    public function confirmDelete(): void
+    {
+        $ticket = Ticket::find($this->deletingTicketId);
+
+        if (! $ticket) {
+            $this->error('Ticket not found!', position: 'toast-top');
+            $this->closeDeleteModal();
+
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            TransactionLogService::logTicketOperation('deleted', $ticket);
+
+            $ticket->delete();
+
+            DB::commit();
+
+            $this->closeDeleteModal();
+            $this->refreshTickets(resetPage: true);
+
+            $this->success('Ticket deleted successfully!', position: 'toast-top');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Ticket deletion failed', [
+                'ticket_id' => $this->deletingTicketId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->error('Failed to delete ticket: '.$e->getMessage(), position: 'toast-top');
+            $this->closeDeleteModal();
+        }
+    }
+
+    // ── Reassign ─────────────────────────────────────────────────────
+
+    public function openReassignModal(int $ticketId): void
     {
         $this->reassignTicketId = $ticketId;
         $this->newOfficeId = null;
         $this->showReassignModal = true;
     }
 
-    public function reassignTicket()
+    public function reassignTicket(): void
     {
         $this->validate([
             'newOfficeId' => 'required|exists:offices,office_id',
@@ -159,7 +208,6 @@ class Index extends Component
 
             $ticket->update(['office_id' => $this->newOfficeId]);
 
-            // Log action
             TransactionLogService::log(
                 'REASSIGN',
                 "SuperAdmin reassigned ticket {$ticket->ticket_number} from {$oldOffice} to {$newOffice}",
@@ -170,13 +218,15 @@ class Index extends Component
             $this->showReassignModal = false;
             $this->reassignTicketId = null;
             $this->newOfficeId = null;
-            unset($this->tickets);
+            $this->refreshTickets();
         } catch (\Exception $e) {
             $this->error('Failed to reassign ticket: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
-    public function openBulkModal($action)
+    // ── Bulk Actions ─────────────────────────────────────────────────
+
+    public function openBulkModal(string $action): void
     {
         if (empty($this->selectedTickets)) {
             $this->warning('Please select tickets first!', position: 'toast-top');
@@ -188,7 +238,7 @@ class Index extends Component
         $this->showBulkModal = true;
     }
 
-    public function executeBulkAction()
+    public function executeBulkAction(): void
     {
         if (empty($this->selectedTickets)) {
             $this->warning('No tickets selected!', position: 'toast-top');
@@ -208,8 +258,8 @@ class Index extends Component
 
                 case 'reject':
                     Ticket::whereIn('ticket_id', $this->selectedTickets)
-                        ->update(['status' => '']);
-                    $message = "Bulk  {$count} tickets";
+                        ->update(['status' => self::STATUS_REJECTED]);
+                    $message = "Bulk rejected {$count} tickets";
                     break;
 
                 case 'cancel':
@@ -224,7 +274,6 @@ class Index extends Component
                     return;
             }
 
-            // Log action
             TransactionLogService::log(
                 'BULK_ACTION',
                 $message,
@@ -235,29 +284,44 @@ class Index extends Component
             $this->selectedTickets = [];
             $this->showBulkModal = false;
             $this->bulkAction = '';
-            unset($this->tickets);
+            $this->refreshTickets();
         } catch (\Exception $e) {
             $this->error('Failed to execute bulk action: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
-    public function updatedSearch()
+    // ── Filter Hooks ─────────────────────────────────────────────────
+
+    public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->refreshTickets(resetPage: true);
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->refreshTickets(resetPage: true);
+    }
+
+    private function refreshTickets(bool $resetPage = false): void
+    {
+        if ($resetPage) {
+            $this->resetPage();
+        }
+
         unset($this->tickets);
     }
 
-    public function updatedStatusFilter()
+    // ── Computed Dropdown Data ───────────────────────────────────────
+
+    #[Computed(persist: true, seconds: 1800)]
+    public function offices()
     {
-        $this->resetPage();
-        unset($this->tickets);
+        return Office::select(['office_id', 'office_name', 'office_code'])
+            ->orderBy('office_name')
+            ->get();
     }
 
-    public function updatedOfficeFilter()
-    {
-        $this->resetPage();
-        unset($this->tickets);
-    }
+    // ── Render ───────────────────────────────────────────────────────
 
     public function render()
     {
@@ -266,13 +330,5 @@ class Index extends Component
             'headers' => $this->headers,
             'offices' => $this->offices,
         ]);
-    }
-
-    #[Computed(persist: true, seconds: 1800)] // Cache for 30 minutes
-    public function offices()
-    {
-        return Office::select(['office_id', 'office_name', 'office_code'])
-            ->orderBy('office_name')
-            ->get();
     }
 }
