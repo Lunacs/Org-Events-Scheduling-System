@@ -18,6 +18,14 @@ class Attachment extends Model
     protected $primaryKey = 'attachment_id';
 
     /**
+     * Get the route key name for Laravel route model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'attachment_id';
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array

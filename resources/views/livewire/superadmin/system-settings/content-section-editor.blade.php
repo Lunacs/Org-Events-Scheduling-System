@@ -1,22 +1,12 @@
 <div class="p-4 sm:p-6 max-w-4xl mx-auto">
     {{-- Header with Breadcrumb --}}
     <div class="mb-6">
-        {{-- Breadcrumb --}}
-        <nav class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
-            <a href="{{ route('superadmin.system-settings') }}" wire:navigate
-                class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                System Settings
-            </a>
-            <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
-            <a href="{{ route('superadmin.system-settings') }}?tab=content" wire:navigate
-                class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                Content Sections
-            </a>
-            <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
-            <span class="text-slate-700 dark:text-slate-200">
-                {{ $isEditing ? 'Edit Content' : 'Add New Content' }}
-            </span>
-        </nav>
+        {{-- Back Button --}}
+        <button type="button" wire:click="cancel"
+            class="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-4 group cursor-pointer">
+            <x-mary-icon name="o-arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Content Sections
+        </button>
 
         {{-- Page Title --}}
         <div class="flex items-center gap-4">
@@ -68,8 +58,8 @@
                                             name="{{ match ($type['id']) {
                                                 'announcement' => 'o-megaphone',
                                                 'terms_conditions' => 'o-document-check',
-                                                'documentary_requirements' => 'o-clipboard-document-list',
-                                                'faq' => 'o-question-mark-circle',
+                                                'ticket_guidelines' => 'o-clipboard-document-list',
+                                                'reschedule_guidelines' => 'o-arrow-path',
                                                 'page_content' => 'o-document-text',
                                                 default => 'o-document',
                                             } }}"

@@ -8,6 +8,7 @@ use App\Models\Office_Approval;
 use App\Models\Transaction_Logs;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -19,7 +20,7 @@ class Dashboard extends Component
     #[Title('Dashboard - GSO')]
     #[Layout('components.layouts.gso-layout')]
 
-    public int $refreshTicker = 0;
+
 
     public function render()
     {
@@ -49,7 +50,7 @@ class Dashboard extends Component
             ->where('decision', 'pending')
             ->with([
                 'ticket.eventType',
-                'ticket.user.studentOrganization',
+                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             ])
             ->orderByDesc('created_at')
             ->limit(5)
@@ -60,7 +61,7 @@ class Dashboard extends Component
         $approvalSnapshot = (clone $baseApprovalQuery)
             ->with([
                 'ticket.eventType',
-                'ticket.user.studentOrganization',
+                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             ])
             ->orderByDesc('created_at')
             ->limit(25)
@@ -72,8 +73,8 @@ class Dashboard extends Component
             ->values();
 
         $recentActivities = Transaction_Logs::query()
-            ->with('user')
-            ->whereHas('user', fn($userQuery) => $userQuery->where('office_id', $officeId))
+            ->with(['user' => fn($q) => $q->withTrashed()])
+            ->whereHas('user', fn($userQuery) => $userQuery->withTrashed()->where('office_id', $officeId))
             ->latest('created_at')
             ->limit(5)
             ->get()
@@ -99,17 +100,12 @@ class Dashboard extends Component
         ]);
     }
 
-    public function refreshData(): void
-    {
-        $this->refreshTicker++;
-    $this->success('Dashboard data refreshed!', position: 'toast-top');
-    }
 
     protected function formatPendingApproval(Office_Approval $approval): array
     {
         $ticket = $approval->ticket;
 
-    $rawDate = $ticket?->getAttribute('date_from');
+        $rawDate = $ticket?->getAttribute('date_from');
         $eventDate = $this->parseDate($rawDate);
 
         if (! $eventDate && $ticket?->created_at) {

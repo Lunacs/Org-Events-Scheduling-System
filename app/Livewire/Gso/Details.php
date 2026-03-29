@@ -30,13 +30,13 @@ class Details extends Component
     public function mount($ticketNumber)
     {
         $this->ticket = Ticket::with([
-            'user.studentOrganization',
+            'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             'events.eventSchedules',
             'attachments',
-            'osaApprovals.user',
+            'osaApprovals.user' => fn($q) => $q->withTrashed(),
             'officeApprovals.office',
-            'officeApprovals.user',
-            'approvalHistory.user',
+            'officeApprovals.user' => fn($q) => $q->withTrashed(),
+            'approvalHistory.user' => fn($q) => $q->withTrashed(),
             'approvalHistory.office',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }
@@ -88,7 +88,6 @@ class Details extends Component
             'status_label' => ucfirst(str_replace('_', ' ', $decision)),
             'status_badge' => match ($decision) {
                 'approved' => 'badge-success',
-                'for_revision' => 'badge-warning',
                 default => 'badge-warning',
             },
             'office_id' => $officeId,
@@ -141,7 +140,9 @@ class Details extends Component
         DB::beginTransaction();
         try {
             // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
+            $this->ticket = Ticket::with([
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+            ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
             $officeId = Auth::user()->office_id;
@@ -181,7 +182,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                $this->approvalRemarks
+                "GSO has approved your ticket and it is now awaiting final OSA approval."
             ));
 
             $osaRoleId = User::getRoleId('osa');
@@ -198,10 +199,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'osaApprovals.user',
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'events.eventSchedules',
+                'attachments',
+                'osaApprovals.user' => fn($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user',
-                'approvalHistory.user',
+                'officeApprovals.user' => fn($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 
@@ -240,7 +244,9 @@ class Details extends Component
         DB::beginTransaction();
         try {
             // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
+            $this->ticket = Ticket::with([
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+            ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
             $officeId = Auth::user()->office_id;
@@ -280,7 +286,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has requested revisions: {$this->revisionRemarks}"
+                "GSO has reviewed your ticket and forwarded it to OSA for a final decision."
             ));
 
             $osaRoleId = User::getRoleId('osa');
@@ -297,10 +303,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'osaApprovals.user',
+                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'events.eventSchedules',
+                'attachments',
+                'osaApprovals.user' => fn($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user',
-                'approvalHistory.user',
+                'officeApprovals.user' => fn($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 
@@ -323,5 +332,56 @@ class Details extends Component
             ]);
             $this->error('Failed to request revision: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate a temporary URL and open in a new tab for preview.
+     */
+    public function previewAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, false);
+
+        $this->dispatch('open-attachment-preview', url: $url);
+    }
+
+    /**
+     * Generate a temporary URL that forces download and dispatch to client.
+     */
+    public function downloadAttachment(int $attachmentId): void
+    {
+        $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
+
+        if (! $attachment) {
+            $this->warning('Attachment not found.');
+
+            return;
+        }
+
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, true);
+
+        $this->dispatch('download-attachment', url: $url);
+    }
+
+    /**
+     * Build a temporary URL from the configured filesystem.
+     * Uses S3 temporaryUrl for cloud storage, or signed routes for local storage.
+     */
+    private function makeTemporaryUrl(int $attachmentId, bool $forceDownload = false): string
+    {
+        $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
+
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            $routeName,
+            now()->addMinutes(5),
+            ['attachment' => $attachmentId]
+        );
     }
 }

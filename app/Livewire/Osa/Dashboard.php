@@ -68,7 +68,7 @@ class Dashboard extends Component
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                 ->with([
                     'eventType:event_type_id,type_name',
-                    'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                    'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->orderBy('created_at', 'desc')
@@ -95,7 +95,7 @@ class Dashboard extends Component
         return Cache::remember('osa_dashboard_pending_approvals', $this->cacheDuration, function () {
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id'])
                 ->with([
-                    'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                    'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->whereIn('status', $this->osaActionStatuses)
@@ -124,7 +124,7 @@ class Dashboard extends Component
         return Cache::remember('osa_dashboard_upcoming_events', $this->cacheDuration, function () {
             return Ticket::select(['ticket_id', 'title', 'date_from', 'venue_requested', 'venue_other', 'user_id'])
                 ->with([
-                    'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                    'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                         ->with('studentOrganization:org_id,org_name,logo')
                 ])
                 ->where('status', 'approved')
@@ -192,28 +192,7 @@ class Dashboard extends Component
         });
     }
 
-    public function refreshData()
-    {
-        // Clear cache to force refresh
-        Cache::forget('osa_dashboard_stats');
-        Cache::forget('osa_dashboard_recent_tickets');
-        Cache::forget('osa_dashboard_pending_approvals');
-        Cache::forget('osa_dashboard_upcoming_events');
-        Cache::forget('osa_dashboard_recent_activity');
-        Cache::forget('osa_dashboard_todays_summary');
 
-        // Unset computed properties to force re-render
-        unset(
-            $this->stats,
-            $this->recentTickets,
-            $this->pendingApprovals,
-            $this->upcomingEvents,
-            $this->recentActivity,
-            $this->todaysSummary
-        );
-
-        $this->success('Dashboard data refreshed!', position: 'toast-top', noProgress: true);
-    }
 
     /**
      * Warm up cache with frequently accessed data to prevent N+1 queries

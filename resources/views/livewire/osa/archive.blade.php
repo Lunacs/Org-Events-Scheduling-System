@@ -28,14 +28,7 @@
         <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <input wire:model.defer="search" type="text" placeholder="Search events..."
-                    class="input input-bordered w-full" />
-
-                <select wire:model.defer="statusFilter" class="select select-bordered w-full">
-                    <option value="">All Statuses</option>
-                    <option value="approved">Approved</option>
-                    <option value="for_revision">For Revision</option>
-                    <option value="completed">Completed</option>
-                </select>
+                    class="input input-bordered w-full col-span-2" />
 
                 <select wire:model.defer="organizationFilter" class="select select-bordered w-full">
                     <option value="">Organization</option>
@@ -60,31 +53,7 @@
         </div>
 
         {{-- Archive Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-base-100 rounded-box shadow-lg p-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-success/10 p-2 rounded-full"></div>
-                    <div>
-                        <div class="text-lg font-bold">
-                            {{ $archivedEvents->where('ticket.status', 'approved')->count() }}
-                        </div>
-                        <div class="text-sm text-base-content/70">Approved</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-base-100 rounded-box shadow-lg p-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-error/10 p-2 rounded-full"></div>
-                    <div>
-                        <div class="text-lg font-bold">
-                            {{ $archivedEvents->where('ticket.status', 'for_revision')->count() }}
-                        </div>
-                        <div class="text-sm text-base-content/70">For Revision</div>
-                    </div>
-                </div>
-            </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div class="bg-base-100 rounded-box shadow-lg p-4">
                 <div class="flex items-center gap-3">
                     <div class="bg-primary/10 p-2 rounded-full"></div>
@@ -191,7 +160,7 @@
                                     </td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <div class="avatar flex justify-center items-center">
+                                            <div class="w-8 h-8 shrink-0">
                                                 <img src="{{ $event->ticket->user->studentOrganization->logo_url }}"
                                                     alt="{{ $event->ticket->user->studentOrganization->org_name }} logo"
                                                     class="w-8 h-8 object-cover rounded-full bg-base-200">
@@ -260,12 +229,7 @@
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                @if ($archivedEvents->hasPages())
-                    <div class="p-4 border-t border-base-300">
-                        {{ $archivedEvents->links() }}
-                    </div>
-                @endif
+                <x-tickets.ticket-pagination :items="$archivedEvents" label="events" />
             </div>
         </div>
 

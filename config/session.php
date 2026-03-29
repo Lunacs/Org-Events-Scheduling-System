@@ -38,19 +38,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Session Timeout Warning
-    |--------------------------------------------------------------------------
-    |
-    | This value determines when to show a warning to the user that their
-    | session is about to expire. The warning will be shown this many
-    | minutes before the actual session expiration. Default is 5 minutes.
-    |
-    */
-
-    'warning_time' => (int) env('SESSION_WARNING_TIME', 5),
-
-    /*
-    |--------------------------------------------------------------------------
     | Session Encryption
     |--------------------------------------------------------------------------
     |
@@ -142,7 +129,7 @@ return [
 
     'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug(env('APP_NAME', 'laravel')).'-session'
+        Str::slug(env('APP_NAME', 'laravel')) . '-session'
     ),
 
     /*

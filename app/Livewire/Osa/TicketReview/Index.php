@@ -85,16 +85,17 @@ class Index extends Component
             'created_at',
         ])
             ->with([
-                'user' => fn($q) => $q->select(['user_id', 'org_id'])
+                'user' => fn ($q) => $q->withTrashed()
+                    ->select(['user_id', 'org_id'])
                     ->with('studentOrganization:org_id,org_name'),
-                'events' => fn($q) => $q->select(['event_id', 'ticket_id'])
+                'events' => fn ($q) => $q->select(['event_id', 'ticket_id'])
                     ->with('eventSchedules:schedule_id,event_id,start_date,start_time,venue'),
                 'attachments:attachment_id,ticket_id,file_path,file_name',
                 'eventType:event_type_id,type_name',
             ])
             ->when($this->search, function ($query) {
                 // Optimize search - use index-friendly queries
-                $searchTerm = '%' . $this->search . '%';
+                $searchTerm = '%'.$this->search.'%';
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('title', 'like', $searchTerm)
                         ->orWhere('ticket_number', 'like', $searchTerm);

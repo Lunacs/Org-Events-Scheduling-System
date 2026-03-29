@@ -3,6 +3,7 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Attachment;
+use App\Models\ContentSection;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
 use App\Models\Ticket;
@@ -59,7 +60,7 @@ class SubmitTicket extends Component
     #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
     public $eventTitle = '';
 
-    #[Validate('required|max:2000|min:20')]
+    #[Validate('required|max:5000|min:20')]
     public $eventDescription = '';
 
     #[Validate('required|integer|exists:event__types,event_type_id')]
@@ -100,9 +101,13 @@ class SubmitTicket extends Component
     public $eventEndTime = '';
 
     public $venues = [];
+
     public $preferredVenue;
+
     public $preferredVenueOther;
+
     public $alternativeVenue;
+
     public $alternativeVenueOther;
 
     #[Validate('nullable|string|max:2000')]
@@ -234,7 +239,6 @@ class SubmitTicket extends Component
         }
     }
 
-
     protected function getCurrentStepRules(): array
     {
         return match ($this->currentStep) {
@@ -244,7 +248,7 @@ class SubmitTicket extends Component
             ],
             2 => [
                 'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
-                'eventDescription' => 'required|string|max:2000|min:20|regex:/^[^0-9][a-z0-9\\s]*$/i',
+                'eventDescription' => 'required|string|max:2000|min:20',
                 'eventType' => 'required|integer|exists:event__types,event_type_id',
                 'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
                 'expectedNonPLVParticipants' => 'nullable|integer|min:0|max:100000',
@@ -252,12 +256,20 @@ class SubmitTicket extends Component
             3 => [
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-                'eventStartTime' => 'required|date_format:H:i|after_or_equal:00:01',
-                'eventEndTime' => 'required|date_format:H:i|after:eventStartTime|before_or_equal:21:00',
-                'preferredVenue' => 'required|integer|exists:venues,venue_id',
-                'preferredVenueOther' => $this->isOthersVenue($this->preferredVenue) ? 'required|string|max:255|min:3' : 'nullable',
-                'alternativeVenue' => 'nullable|integer|exists:venues,venue_id',
-                'alternativeVenueOther' => $this->isOthersVenue($this->alternativeVenue) ? 'required|string|max:255|min:3' : 'nullable',
+                'eventStartTime' => ['required', 'date_format:H:i', 'after_or_equal:00:01'],
+                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime', 'before_or_equal:21:00'],
+                'preferredVenue' => ['required', function ($attribute, $value, $fail) {
+                    if ($value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                        $fail('The selected venue is invalid.');
+                    }
+                }],
+                'preferredVenueOther' => $this->preferredVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
+                'alternativeVenue' => ['nullable', function ($attribute, $value, $fail) {
+                    if ($value && $value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                        $fail('The selected alternative venue is invalid.');
+                    }
+                }],
+                'alternativeVenueOther' => $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
                 'specialRequirements' => 'nullable|string|max:2000',
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
@@ -288,11 +300,12 @@ class SubmitTicket extends Component
 
     protected function isOthersVenue($venueId): bool
     {
-        if (!$venueId) {
+        if (! $venueId) {
             return false;
         }
 
         $venue = \App\Models\Venue::find($venueId);
+
         return $venue && $venue->venue_name === 'Others (Please Specify)';
     }
 
@@ -444,7 +457,6 @@ class SubmitTicket extends Component
         return $ticket;
     }
 
-
     public function mount()
     {
         $currentUser = auth()->user();
@@ -460,7 +472,17 @@ class SubmitTicket extends Component
         $this->proponent_contact = $currentUser->phone ?? '';
         $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
-        // Trigger validation for adviser_contact since it has a default value
+        // Load resubmit data if available
+        if (session()->has('resubmit_ticket')) {
+            $data = session()->pull('resubmit_ticket');
+            foreach ($data as $key => $value) {
+                if (property_exists($this, $key)) {
+                    $this->{$key} = $value;
+                }
+            }
+        }
+
+        // Trigger validation for adviser_contact
         try {
             $this->validateOnly('adviser_contact', [
                 'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
@@ -485,7 +507,7 @@ class SubmitTicket extends Component
         $ticketCode = null;
 
         // Rate limiting: max 3 ticket submissions per minute per user
-        $rateLimitKey = 'ticket-submit:' . $currentUser->user_id;
+        $rateLimitKey = 'ticket-submit:'.$currentUser->user_id;
         if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
             $seconds = RateLimiter::availableIn($rateLimitKey);
             $this->isProcessing = false;
@@ -499,6 +521,7 @@ class SubmitTicket extends Component
                 noProgress: true,
                 timeout: 5000,
             );
+
             return;
         }
         RateLimiter::hit($rateLimitKey, 60); // 60 second decay
@@ -524,11 +547,11 @@ class SubmitTicket extends Component
                 : 1;
 
             // Generate unique ticket number with locking
-            $ticketCode = "TKT-{$orgCode}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $ticketCode = "TKT-{$orgCode}-".str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
             // Helper function to convert empty strings to null for nullable fields
-            $nullIfEmpty = fn($value) => ($value === '' || $value === null) ? null : $value;
-            $nullIfEmptyInt = fn($value) => ($value === '' || $value === null) ? null : (int) $value;
+            $nullIfEmpty = fn ($value) => ($value === '' || $value === null) ? null : $value;
+            $nullIfEmptyInt = fn ($value) => ($value === '' || $value === null) ? null : (int) $value;
 
             $ticket = Ticket::create([
                 'user_id' => $currentUser->user_id,
@@ -550,10 +573,10 @@ class SubmitTicket extends Component
                 'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
                 'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
-                'venue_requested' => $nullIfEmptyInt($this->preferredVenue),
-                'venue_other' => $nullIfEmpty($this->preferredVenueOther),
-                'alternate_venue' => $nullIfEmptyInt($this->alternativeVenue),
-                'alternate_venue_other' => $nullIfEmpty($this->alternativeVenueOther),
+                'venue_requested' => $this->preferredVenue === 'other' ? null : $nullIfEmptyInt($this->preferredVenue),
+                'venue_other' => $this->preferredVenue === 'other' ? $this->preferredVenueOther : $nullIfEmpty($this->preferredVenueOther),
+                'alternate_venue' => $this->alternativeVenue === 'other' ? null : $nullIfEmptyInt($this->alternativeVenue),
+                'alternate_venue_other' => $this->alternativeVenue === 'other' ? $this->alternativeVenueOther : $nullIfEmpty($this->alternativeVenueOther),
                 'special_requirements' => $nullIfEmpty($this->specialRequirements),
                 'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
                 'fund_source_id' => (int) $this->fundingSource,
@@ -569,10 +592,11 @@ class SubmitTicket extends Component
             if (! empty($this->attachments)) {
                 foreach ($this->attachments as $file) {
                     $originalName = $file->getClientOriginalName();
-                    $filename = time() . '_' . uniqid() . '_' . $originalName;
+                    $filename = time().'_'.uniqid().'_'.$originalName;
                     $path = $file->storeAs(
                         "tickets/{$ticket->ticket_id}/attachments",
-                        $filename
+                        $filename,
+                        config('filesystems.default')
                     );
 
                     Attachment::create([
@@ -580,6 +604,7 @@ class SubmitTicket extends Component
                         'file_name' => $originalName,
                         'file_path' => $path,
                         'file_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
                     ]);
                 }
             }
@@ -669,7 +694,6 @@ class SubmitTicket extends Component
         }
     }
 
-
     public function loadDraft($draftData)
     {
         foreach ($draftData as $key => $value) {
@@ -698,43 +722,32 @@ class SubmitTicket extends Component
 
     public function updatedNewAttachments()
     {
+        // Handle single file upload (S3 driver doesn't support multiple)
+        // Wrap single file in array for consistent processing
+        $files = $this->newAttachments;
+        if (! is_array($files)) {
+            $files = $files ? [$files] : [];
+        }
+
+        // If no files, return early
+        if (empty($files)) {
+            return;
+        }
+
+        // Temporarily set as array for validation
+        $this->newAttachments = $files;
+
+        // Note: Using Laravel's built-in mimes validation instead of finfo_file
+        // because temp files are stored on S3 and not accessible locally
         $this->validate([
             'newAttachments.*' => [
                 'file',
                 'max:10240',
                 'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
-                function ($attribute, $value, $fail) {
-                    // Check actual file content, not just extension
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $mimeType = finfo_file($finfo, $value->getRealPath());
-                    finfo_close($finfo);
-
-                    $allowedMimes = [
-                        'application/pdf',
-                        'application/msword',
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'image/jpeg',
-                        'image/png',
-                        'application/vnd.ms-excel',
-                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    ];
-
-                    if (! in_array($mimeType, $allowedMimes)) {
-                        $fail('Invalid file type detected.');
-                    }
-                },
             ],
         ]);
 
-        // Check available disk space
-        $totalSize = collect($this->newAttachments)->sum(fn($file) => $file->getSize());
-        if (disk_free_space(storage_path()) < ($totalSize * 2)) {
-            throw ValidationException::withMessages([
-                'newAttachments' => 'Insufficient storage space.',
-            ]);
-        }
-
-        $this->attachments = array_merge($this->attachments, $this->newAttachments);
+        $this->attachments = array_merge($this->attachments, $files);
         $this->reset('newAttachments');
     }
 
@@ -757,28 +770,28 @@ class SubmitTicket extends Component
     public function getIsCurrentStepCompleteProperty(): bool
     {
         return match ($this->currentStep) {
-            1 => !empty($this->adviser_contact) && strlen($this->adviser_contact) === 11,
-            2 => !empty($this->eventTitle)
-                && !empty($this->eventDescription)
-                && !empty($this->eventType)
-                && !empty($this->expectedPLVParticipants)
+            1 => ! empty($this->adviser_contact) && strlen($this->adviser_contact) === 11,
+            2 => ! empty($this->eventTitle)
+                && ! empty($this->eventDescription)
+                && ! empty($this->eventType)
+                && ! empty($this->expectedPLVParticipants)
                 && $this->expectedPLVParticipants > 0,
-            3 => !empty($this->eventStartDate)
-                && !empty($this->eventEndDate)
-                && !empty($this->eventStartTime)
-                && !empty($this->eventEndTime)
-                && !empty($this->preferredVenue)
-                && (!$this->is_oc || !empty($this->oc_tsp))
-                && (!($this->is_oc && $this->oc_tsp === 'outsourced') || (
-                    !empty($this->oc_driver_name)
-                    && !empty($this->oc_driver_contact_number)
-                    && !empty($this->oc_transportation_type)
-                    && !empty($this->oc_vehicle_plate_number)
+            3 => ! empty($this->eventStartDate)
+                && ! empty($this->eventEndDate)
+                && ! empty($this->eventStartTime)
+                && ! empty($this->eventEndTime)
+                && ! empty($this->preferredVenue)
+                && (! $this->is_oc || ! empty($this->oc_tsp))
+                && (! ($this->is_oc && $this->oc_tsp === 'outsourced') || (
+                    ! empty($this->oc_driver_name)
+                    && ! empty($this->oc_driver_contact_number)
+                    && ! empty($this->oc_transportation_type)
+                    && ! empty($this->oc_vehicle_plate_number)
                 )),
-            4 => !empty($this->totalBudget)
-                && !empty($this->fundingSource)
-                && !empty($this->igp_requested)
-                && ($this->igp_requested !== 'true' || !empty($this->igp_details)),
+            4 => ! empty($this->totalBudget)
+                && ! empty($this->fundingSource)
+                && ! empty($this->igp_requested)
+                && ($this->igp_requested !== 'true' || ! empty($this->igp_details)),
             5 => true, // No strictly required fields in step 5
             6 => $this->agreeToTerms === true,
             default => false,
@@ -800,9 +813,12 @@ class SubmitTicket extends Component
 
     public function render()
     {
+        $ticketGuidelines = ContentSection::getActiveByType(ContentSection::TYPE_TICKET_GUIDELINES)->first();
+
         return view('livewire.student-org.submit-ticket', [
             'eventTypes' => Event_Type::all(),
             'fundSources' => Fund_Sources::all(),
+            'ticketGuidelines' => $ticketGuidelines,
         ]);
     }
 }

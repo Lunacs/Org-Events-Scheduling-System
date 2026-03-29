@@ -36,25 +36,15 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'role_id' => User::getRoleId('osa'),
             'org_id' => null,
-            'office_id' => null,
+            'office_id' => Office::where('office_code', 'OSA')->first()?->office_id,
         ]);
 
         // Create GSO Admin users (assuming you have offices)
-        $gsoOffice = Office::where('office_name', 'like', '%GSO%')->first();
+        $gsoOffice = Office::where('office_code', 'like', '%GSO%')->first();
 
         User::create([
             'name' => 'GSO Administrator',
             'email' => 'gso@plv.edu.ph',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            'role_id' => User::getRoleId('gso'),
-            'org_id' => null,
-            'office_id' => $gsoOffice?->office_id,
-        ]);
-
-        User::create([
-            'name' => 'Carlos Rodriguez',
-            'email' => 'carlos.rodriguez@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'role_id' => User::getRoleId('gso'),
@@ -157,10 +147,10 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Lanoira Cutie',
             'email' => 'lexerichsontalavera@plv.edu.ph',
-            'email_verified_at' => null,
+            'email_verified_at' => now(),
             'password' => Hash::make('Lanoira1'),
             'role_id' => User::getRoleId('student-org'),
-            'org_id' => $studentOrgs->first()?->org_id,
+            'org_id' => Student_Organization::where('org_code', 'VITS')->first()?->org_id,
             'office_id' => null,
             'position_id' => $positions->where('position_name', 'President')->first()?->position_id,
         ]);

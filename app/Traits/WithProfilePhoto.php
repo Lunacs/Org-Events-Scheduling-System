@@ -66,15 +66,16 @@ trait WithProfilePhoto
         $user = Auth::user();
 
         // Delete old photo if exists
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-            Storage::disk('public')->delete($user->avatar);
+        if ($user->avatar && Storage::disk(config('filesystems.default'))->exists($user->avatar)) {
+            Storage::disk(config('filesystems.default'))->delete($user->avatar);
         }
 
         // Generate unique filename
         $filename = 'profile-photos/' . $user->user_id . '_' . time() . '.webp';
 
         // Read, resize, and compress the image
-        $image = Image::read($this->photo->getRealPath());
+        // Use get() instead of getRealPath() because S3 temp files aren't local
+        $image = Image::read($this->photo->get());
 
         // Resize to max 500x500 while maintaining aspect ratio
         $image->scaleDown(500, 500);
@@ -83,7 +84,7 @@ trait WithProfilePhoto
         $encoded = $image->toWebp(80);
 
         // Store the compressed image
-        Storage::disk('public')->put($filename, (string) $encoded);
+        Storage::disk(config('filesystems.default'))->put($filename, (string) $encoded);
 
         // Update user avatar and set preference to uploaded
         $user->update([
@@ -107,8 +108,8 @@ trait WithProfilePhoto
         $user = Auth::user();
 
         // Actually delete the file
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-            Storage::disk('public')->delete($user->avatar);
+        if ($user->avatar && Storage::disk(config('filesystems.default'))->exists($user->avatar)) {
+            Storage::disk(config('filesystems.default'))->delete($user->avatar);
         }
 
         // Clear avatar and set preference to dicebear
@@ -127,9 +128,13 @@ trait WithProfilePhoto
     public function getProfilePhotoUrl(): ?string
     {
         $user = Auth::user();
+        $disk = Storage::disk(config('filesystems.default'));
 
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-            return Storage::url($user->avatar);
+        if ($user->avatar && $disk->exists($user->avatar)) {
+            if (config('filesystems.default') === 's3') {
+                return $disk->temporaryUrl($user->avatar, now()->addMinutes(30));
+            }
+            return $disk->url($user->avatar);
         }
 
         return null;

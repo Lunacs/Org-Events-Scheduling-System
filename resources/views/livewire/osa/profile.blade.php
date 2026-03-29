@@ -7,9 +7,9 @@
                     <x-ui.avatar :user="$user" size="2xl" class="ring-4 ring-base-100" nav="false"
                         wire:ignore />
                 </div>
-                <div>
-                    <h1 class="text-3xl font-bold">{{ $user->name }}</h1>
-                    <p class="text-primary-content/80 mt-1">{{ $user->email }}</p>
+                <div class="min-w-0">
+                    <h1 class="text-xl sm:text-3xl font-bold break-words">{{ $user->name }}</h1>
+                    <p class="text-primary-content/80 mt-1 text-sm sm:text-base break-words">{{ $user->email }}</p>
                     <div class="flex gap-2 mt-2">
                         <span class="badge badge-lg bg-base-100/20 text-primary-content border-0">
                             {{ $user->role_display }}
@@ -51,13 +51,24 @@
                     </x-slot:menu>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if ($pending_email)
+                            <div
+                                class="md:col-span-2 flex items-center gap-3 p-3 bg-info/10 border border-info/30 rounded-lg text-sm">
+                                <x-mary-icon name="o-envelope" class="w-5 h-5 text-info shrink-0" />
+                                <span class="flex-1 text-info-content dark:text-info">
+                                    Verification sent to <strong>{{ $pending_email }}</strong>. Check your inbox.
+                                </span>
+                                <x-mary-button wire:click="cancelEmailChange" icon="o-x-mark"
+                                    class="btn-ghost btn-xs text-error" tooltip="Cancel email change" />
+                            </div>
+                        @endif
                         <x-mary-input wire:model.live="name" label="Full Name" placeholder="Your name" icon="o-user"
                             required />
 
                         <x-mary-input wire:model.live="email" label="Email Address" type="email"
                             placeholder="you@example.com" icon="o-envelope" required />
 
-                        <x-mary-input wire:model.live="phone" label="Phone Number" placeholder="(+63) 900 000 0000"
+                        <x-mary-input wire:model.live="phone" label="Phone Number" placeholder="09123456789"
                             icon="o-phone" />
 
                         <x-mary-input wire:model="department" label="Department" placeholder="e.g. Student Affairs"
@@ -152,19 +163,16 @@
                 {{-- Notification Preferences --}}
                 <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates"
                     x-data="{
-                        initialEmailNotifications: {{ Js::from($email_notifications) }},
-                        initialTicketUpdates: {{ Js::from($ticket_updates) }},
-                        initialWeeklyReports: {{ Js::from($weekly_reports) }},
+                        initialEmailNotifications: Boolean({{ Js::from($email_notifications) }}),
+                        initialTicketUpdates: Boolean({{ Js::from($ticket_updates) }}),
                         get hasChanges() {
-                            return $wire.email_notifications !== this.initialEmailNotifications ||
-                                $wire.ticket_updates !== this.initialTicketUpdates ||
-                                $wire.weekly_reports !== this.initialWeeklyReports;
+                            return Boolean($wire.email_notifications) !== this.initialEmailNotifications ||
+                                Boolean($wire.ticket_updates) !== this.initialTicketUpdates;
                         }
                     }"
                     @preferences-updated.window="
-                        initialEmailNotifications = $wire.email_notifications;
-                        initialTicketUpdates = $wire.ticket_updates;
-                        initialWeeklyReports = $wire.weekly_reports;
+                        initialEmailNotifications = Boolean($wire.email_notifications);
+                        initialTicketUpdates = Boolean($wire.ticket_updates);
                     ">
                     <x-slot:menu>
                         <x-mary-icon name="o-bell" class="w-6 h-6 text-info" />
@@ -195,19 +203,6 @@
                                 </div>
                             </div>
                             <x-mary-toggle wire:model.live="ticket_updates" class="toggle-primary" />
-                        </div>
-
-                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-secondary/10 p-2 rounded-full">
-                                    <x-mary-icon name="o-document-chart-bar" class="w-5 h-5 text-secondary" />
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold">Weekly Reports</h4>
-                                    <p class="text-sm text-base-content/70">Receive weekly activity summary</p>
-                                </div>
-                            </div>
-                            <x-mary-toggle wire:model.live="weekly_reports" class="toggle-secondary" />
                         </div>
                     </div>
 

@@ -109,11 +109,13 @@ class TicketReview extends Component
         return Office_Approval::query()
             ->with([
                 'ticket.eventType',
-                'ticket.user.studentOrganization',
+                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
             ])
             ->where('office_id', $officeId)
             // Show tickets that GSO has interacted with, excluding completed by default
             ->whereHas('ticket', function ($query) {
+                $query->whereHas('user', fn($q) => $q->withTrashed());
+
                 // Exclude completed tickets unless specifically filtered
                 if ($this->filterStatus !== 'completed') {
                     $query->where('status', '!=', 'completed');
@@ -129,7 +131,10 @@ class TicketReview extends Component
                 $organization = $this->filterOrganization;
 
                 if ($organization) {
-                    $query->whereHas('ticket.user.studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_id', $organization));
+                    $query->whereHas('ticket.user', function (Builder $userQuery) use ($organization) {
+                        $userQuery->withTrashed()
+                            ->whereHas('studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_id', $organization));
+                    });
                 }
             })
             ->when($this->search !== '', function (Builder $query) {
@@ -139,7 +144,10 @@ class TicketReview extends Component
                     $ticketQuery
                         ->where('title', 'like', $term)
                         ->orWhere('ticket_number', 'like', $term)
-                        ->orWhereHas('user.studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
+                        ->orWhereHas('user', function (Builder $userQuery) use ($term) {
+                            $userQuery->withTrashed()
+                                ->whereHas('studentOrganization', fn (Builder $orgQuery) => $orgQuery->where('org_name', 'like', $term));
+                        });
                 });
             });
     }

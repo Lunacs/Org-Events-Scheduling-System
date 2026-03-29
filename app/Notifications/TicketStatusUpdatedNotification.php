@@ -37,7 +37,13 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        $channels = ['database', 'broadcast'];
+
+        if ($notifiable instanceof \App\Models\User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**
@@ -71,7 +77,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         return [
             'title' => $this->getStatusTitle(),
-            'message' => $this->getStatusMessage(),
+            'message' => $this->remarks ?? $this->getStatusMessage(),
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,
@@ -90,7 +96,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         return new BroadcastMessage([
             'title' => $this->getStatusTitle(),
-            'message' => $this->getStatusMessage(),
+            'message' => $this->remarks ?? $this->getStatusMessage(),
             'ticket_id' => $this->ticket->ticket_id,
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,

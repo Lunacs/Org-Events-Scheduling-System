@@ -1,47 +1,47 @@
 <?php
 
 // Public Pages
+use App\Http\Controllers\Gso\ReportsExportController;
 use App\Livewire\AboutUs;
-use App\Livewire\Faq;
-
 // OSA/admin Imports
-use App\Livewire\Osa\Archive;
-use App\Livewire\Osa\Reports;
-use App\Livewire\Superadmin\Logs;
-use App\Livewire\Osa\EventCalendar;
-use App\Livewire\StudentOrg\History;
-use Illuminate\Support\Facades\Auth;
-use App\Livewire\StudentOrg\Calendar;
-use App\Livewire\StudentOrg\MyTicket;
-// Superadmin Imports
-use Illuminate\Support\Facades\Route;
-use App\Livewire\Osa\TicketManagement;
-use App\Livewire\Superadmin\Dashboard;
-use App\Livewire\StudentOrg\Reschedule;
-use App\Livewire\StudentOrg\SubmitTicket;
-use App\Livewire\StudentOrg\Notifications;
-// Gso/Offices Imports
-use App\Livewire\Gso\Details as GsoDetails;
-use App\Livewire\Gso\Profile as GsoProfile;
-use App\Livewire\Gso\Reports as GsoReports;
-use App\Livewire\Osa\Profile as OsaProfile;
+use App\Livewire\Faq;
 use App\Livewire\Gso\Calendar as GsoCalendar;
 use App\Livewire\Gso\Dashboard as GsoDashboard;
-use App\Livewire\Osa\Dashboard as OsaDashboard;
-use App\Http\Controllers\Gso\ReportsExportController;
-// Student Org Imports
-use App\Livewire\Gso\TicketReview as GsoTicketReview;
-use App\Livewire\Superadmin\Roles\Index as RolesIndex;
-use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use App\Livewire\Gso\Details as GsoDetails;
 use App\Livewire\Gso\Notifications as GsoNotifications;
+use App\Livewire\Gso\Profile as GsoProfile;
+use App\Livewire\Gso\Reports as GsoReports;
+use App\Livewire\Gso\TicketReview as GsoTicketReview;
+// Superadmin Imports
+use App\Livewire\Osa\Archive;
+use App\Livewire\Osa\Dashboard as OsaDashboard;
+use App\Livewire\Osa\EventCalendar;
 use App\Livewire\Osa\Notifications as OsaNotifications;
-use App\Livewire\StudentOrg\Profile as StudentOrgProfile;
-use App\Livewire\Superadmin\Profile as SuperadminProfile;
-use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
-// Other Imports
+use App\Livewire\Osa\Profile as OsaProfile;
+use App\Livewire\Osa\Reports;
+use App\Livewire\Osa\TicketManagement;
+// Gso/Offices Imports
 use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
+use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
+use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
+use App\Livewire\StudentOrg\History;
+use App\Livewire\StudentOrg\MyTicket;
+use App\Livewire\StudentOrg\Notifications;
+use App\Livewire\StudentOrg\Profile as StudentOrgProfile;
+// Student Org Imports
+use App\Livewire\StudentOrg\Reschedule;
+use App\Livewire\StudentOrg\SubmitTicket;
+use App\Livewire\StudentOrg\TicketDetails;
+use App\Livewire\Superadmin\Dashboard;
+use App\Livewire\Superadmin\Logs;
+use App\Livewire\Superadmin\Profile as SuperadminProfile;
+use App\Livewire\Superadmin\Roles\Index as RolesIndex;
 use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
+// Other Imports
+use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // Redirect to login page, or to user's dashboard if already authenticated
 Route::get('/', function () {
@@ -99,6 +99,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'timestamp' => now()->toDateTimeString(),
         ]);
     })->name('keep-alive');
+
+    // Signed URL routes for attachment access (private storage)
+    Route::get('/attachments/{attachment}/preview', [\App\Http\Controllers\AttachmentController::class, 'preview'])
+        ->name('attachments.preview')
+        ->middleware('signed');
+    Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
+        ->name('attachments.download')
+        ->middleware('signed');
+
+    // Email change verification routes (signed URLs)
+    Route::get('/email/verify-new/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'verify'])
+        ->name('email.verify-new')
+        ->middleware('signed');
+    Route::get('/email/cancel-change/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'cancel'])
+        ->name('email.cancel-change')
+        ->middleware('signed');
 });
 
 // OSA routes
@@ -125,6 +141,8 @@ Route::prefix('superadmin')
         Route::get('/roles', RolesIndex::class)->name('superadmin.roles');
         Route::get('/calendar', \App\Livewire\Superadmin\Calendar\Index::class)->name('superadmin.calendar');
         Route::get('/tickets', \App\Livewire\Superadmin\Tickets\Index::class)->name('superadmin.tickets');
+        Route::get('/tickets/create', \App\Livewire\Superadmin\Tickets\TicketEditor::class)->name('superadmin.ticket.create');
+        Route::get('/tickets/{id}/edit', \App\Livewire\Superadmin\Tickets\TicketEditor::class)->name('superadmin.ticket.edit');
         Route::get('/archive', \App\Livewire\Superadmin\Archive\Index::class)->name('superadmin.archive');
         Route::get('/reports', \App\Livewire\Superadmin\Reports\Index::class)->name('superadmin.reports');
         Route::get('/notifications', \App\Livewire\Superadmin\Notifications::class)->name('superadmin.notifications');
@@ -168,6 +186,7 @@ Route::prefix('student-org')
         Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
         Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
         Route::get('/my-tickets', MyTicket::class)->name('student-org.my-tickets');
+        Route::get('/tickets/{ticketNumber}', TicketDetails::class)->name('student-org.ticket-details');
         Route::get('/calendar', Calendar::class)->name('student-org.calendar');
         Route::get('/reschedule', Reschedule::class)->name('student-org.reschedule');
         Route::get('/notifications', Notifications::class)->name('student-org.notifications');
@@ -175,4 +194,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

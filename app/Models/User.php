@@ -4,6 +4,9 @@ namespace App\Models;
 
 use App\Notifications\CustomResetPassword;
 use App\Notifications\CustomVerifyEmail;
+use App\Notifications\EmailChangeRequested;
+use App\Notifications\VerifyNewEmail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'pending_email',
         'password',
         'role_id',
         'phone',
@@ -48,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar_style',
         'avatar_seed',
         'avatar_preference',
+        'notification_preferences',
     ];
 
     /**
@@ -70,7 +75,36 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Get a specific notification preference with a default fallback.
+     */
+    public function getNotificationPreference(string $key, bool $default = true): bool
+    {
+        return $this->notification_preferences[$key] ?? $default;
+    }
+
+    /**
+     * Check if user should receive email for a given notification type.
+     * First checks the master email_notifications toggle, then the specific preference.
+     */
+    public function shouldReceiveEmailNotification(string $preferenceKey = 'email_notifications'): bool
+    {
+        // Master email toggle must be on
+        if (! $this->getNotificationPreference('email_notifications', true)) {
+            return false;
+        }
+
+        // If checking master toggle itself, it already passed
+        if ($preferenceKey === 'email_notifications') {
+            return true;
+        }
+
+        // Check specific sub-preference
+        return $this->getNotificationPreference($preferenceKey, true);
     }
 
     /**
@@ -253,9 +287,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Check if user prefers uploaded photo and has one
         if ($this->avatar_preference === 'uploaded' && $this->avatar) {
+            $disk = \Storage::disk(config('filesystems.default'));
+
             // Check if the file exists in storage
-            if (\Storage::disk('public')->exists($this->avatar)) {
-                return asset('storage/' . $this->avatar);
+            if ($disk->exists($this->avatar)) {
+                if (config('filesystems.default') === 's3') {
+                    return $disk->temporaryUrl($this->avatar, now()->addMinutes(30));
+                }
+                return $disk->url($this->avatar);
             }
         }
 
@@ -284,6 +323,46 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleDisplayName(string $role): string
     {
         return ucfirst(str_replace('-', ' ', $role));
+    }
+
+    /**
+     * Request an email change. Stores the new email as pending and sends
+     * a verification link to the new address + a security alert to the old.
+     */
+    public function requestEmailChange(string $newEmail): void
+    {
+        $this->update(['pending_email' => $newEmail]);
+
+        // Send verification link to the NEW email
+        Notification::route('mail', $newEmail)
+            ->notify(new VerifyNewEmail($this));
+
+        // Send security alert to the CURRENT email
+        $this->notify(new EmailChangeRequested($newEmail));
+    }
+
+    /**
+     * Confirm the pending email change after user clicks the verification link.
+     */
+    public function confirmEmailChange(): void
+    {
+        if (!$this->pending_email) {
+            return;
+        }
+
+        $this->update([
+            'email' => $this->pending_email,
+            'pending_email' => null,
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    /**
+     * Cancel a pending email change.
+     */
+    public function cancelEmailChange(): void
+    {
+        $this->update(['pending_email' => null]);
     }
 
     /**

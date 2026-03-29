@@ -338,49 +338,7 @@
                     <x-tickets.ticket-pagination :tickets="$notifications" />
                 @endif
 
-                {{-- Notification Settings --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <div class="mb-4">
-                        <h3 class="text-xl font-bold text-base-content">Notification Preferences</h3>
-                        <p class="text-sm text-base-content/60 mt-1">Customize how you receive notifications</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-semibold mb-3 text-base-content">Email Notifications</h4>
-                            <div class="space-y-2">
-                                <x-mary-checkbox label="Forwarded tickets" checked />
-                                <x-mary-checkbox label="Approval requests" checked />
-                                <x-mary-checkbox label="Ticket updates" checked />
-                                <x-mary-checkbox label="OSA decisions" checked />
-                                <x-mary-checkbox label="System announcements" />
-                                <x-mary-checkbox label="Weekly summary reports" />
-                            </div>
-                        </div>
 
-                        <div>
-                            <h4 class="font-semibold mb-3 text-base-content">Reminder Settings</h4>
-                            <div class="space-y-3">
-                                <x-mary-select label="Review Reminders" :options="[
-                                    ['id' => '24', 'name' => 'After 24 hours'],
-                                    ['id' => '48', 'name' => 'After 48 hours'],
-                                    ['id' => '72', 'name' => 'After 72 hours'],
-                                    ['id' => 'none', 'name' => 'No reminders'],
-                                ]" value="48" />
-
-                                <x-mary-select label="Daily Digest" :options="[
-                                    ['id' => '8', 'name' => '8:00 AM'],
-                                    ['id' => '9', 'name' => '9:00 AM'],
-                                    ['id' => '10', 'name' => '10:00 AM'],
-                                    ['id' => 'none', 'name' => 'No daily digest'],
-                                ]" value="9" />
-                            </div>
-
-                            <div class="mt-4">
-                                <x-mary-button label="Save Settings" icon="s-check" class="btn-primary btn-sm" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

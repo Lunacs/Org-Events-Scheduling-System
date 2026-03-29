@@ -118,9 +118,9 @@
                     <x-documentary-requirements :event-type-id="$eventType" />
 
                     <div class="space-y-2">
-                        <x-mary-file wire:model="form.newAttachments" multiple
+                        <x-mary-file wire:model="form.newAttachments"
                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
-                            hint="Upload multiple files (PDF, DOC, JPG, PNG, XLS). Max 10MB per file." />
+                            hint="Upload one file at a time (PDF, DOC, JPG, PNG, XLS). Max 10MB per file." />
 
                         @if ($attachments)
                             <div class="mt-4 space-y-2">

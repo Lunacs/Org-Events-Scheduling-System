@@ -1,6 +1,6 @@
 <div>
     <div class="p-6 space-y-6" wire:loading.class="opacity-50 pointer-events-none"
-        wire:target="refreshData, dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
+        wire:target="dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
 
         {{-- Header --}}
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -9,13 +9,6 @@
                 <p class="text-sm text-base-content/60 mt-1">Generate and export system reports</p>
             </div>
             <div class="flex gap-2">
-                <button class="btn btn-outline gap-2" wire:click="refreshData">
-                    <x-mary-icon name="o-arrow-path" class="w-4 h-4" wire:loading.class="animate-spin"
-                        wire:target="refreshData" />
-                    <span wire:loading.remove wire:target="refreshData">Refresh</span>
-                    <span wire:loading wire:target="refreshData">Loading...</span>
-                </button>
-
                 {{-- Filter Toggle Button --}}
                 <button class="btn btn-outline gap-2 border-base-300" wire:click="$toggle('showFilterDrawer')">
                     <x-mary-icon name="o-adjustments-horizontal" class="w-4 h-4" />

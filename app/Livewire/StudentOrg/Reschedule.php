@@ -3,6 +3,7 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Attachment;
+use App\Models\ContentSection;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketSubmittedNotification;
@@ -10,38 +11,54 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
 
 class Reschedule extends Component
 {
-    use WithFileUploads, Toast, AuthorizesRequests;
+    use AuthorizesRequests, Toast, WithFileUploads;
 
     #[Title('Reschedule Request - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
+    public $venues = [];
 
     // Step tracking
     public $currentStep = 1;
+
     public $totalSteps = 4;
+
     public $isProcessing = false;
 
     // Form fields
     public $selectedEventId = '';
+
     public $changeDate = false;
+
     public $changeTime = false;
+
     public $changeVenue = false;
+
     public $newStartDate = '';
+
     public $newEndDate = '';
+
     public $newStartTime = '';
+
     public $newEndTime = '';
-    public $newVenue = '';
-    public $alternativeVenue = '';
+
+    public $newVenue;
+
+    public $newVenueOther;
+
+    public $alternativeVenue;
+
+    public $alternativeVenueOther;
+
     public $agreeToTerms = false;
 
     #[Validate('nullable|array|max:10')]
@@ -49,17 +66,23 @@ class Reschedule extends Component
 
     // Constants
     private const MIN_RESCHEDULE_DAYS = 1;
+
     private const MAX_FILE_SIZE = 10240; // 10MB in KB
+
     private const ALLOWED_MIMES = 'pdf,doc,docx,jpg,jpeg,png,xls,xlsx';
+
     private const BUSINESS_HOURS_START = '08:00';
+
     private const BUSINESS_HOURS_END = '21:00';
 
     public function mount()
     {
         // Ensure user is authenticated
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             abort(401, 'Unauthorized access');
         }
+
+        $this->venues = \App\Models\Venue::where('is_active', true)->get();
 
         // Pre-fill from query parameter
         if (request()->has('ticket')) {
@@ -71,14 +94,13 @@ class Reschedule extends Component
     {
         $ticketNumber = request()->get('ticket');
 
-        // Sanitize input
-        if (!preg_match('/^TKT-[A-Z]+-\d{4}$/', $ticketNumber)) {
+        if (! preg_match('/^TKT-[A-Z]+-\d{4}$/', $ticketNumber)) {
             return;
         }
 
-        $ticket = auth()->user()->tickets()
+        $ticket = $this->getBaseTicketsQuery()
             ->where('ticket_number', $ticketNumber)
-            ->whereIn('status', ['approved', 'for_rescheduling'])
+            ->where('status', 'approved')
             ->first();
 
         if ($ticket) {
@@ -121,7 +143,7 @@ class Reschedule extends Component
     public function goToStep($step)
     {
         // Validate step number
-        if (!is_numeric($step) || $step < 1 || $step > $this->totalSteps) {
+        if (! is_numeric($step) || $step < 1 || $step > $this->totalSteps) {
             return;
         }
 
@@ -145,7 +167,6 @@ class Reschedule extends Component
         }
     }
 
-
     protected function getCurrentStepRules(): array
     {
         return match ($this->currentStep) {
@@ -160,8 +181,8 @@ class Reschedule extends Component
                 'supportingDocuments' => 'nullable|array|max:10',
                 'supportingDocuments.*' => [
                     'file',
-                    'max:' . self::MAX_FILE_SIZE,
-                    'mimes:' . self::ALLOWED_MIMES,
+                    'max:'.self::MAX_FILE_SIZE,
+                    'mimes:'.self::ALLOWED_MIMES,
                 ],
             ],
             4 => [
@@ -191,7 +212,7 @@ class Reschedule extends Component
                     $end = Carbon::createFromFormat('H:i', self::BUSINESS_HOURS_END);
 
                     if ($time->lt($start) || $time->gte($end)) {
-                        $fail('Event must be scheduled between ' . self::BUSINESS_HOURS_START . ' and ' . self::BUSINESS_HOURS_END);
+                        $fail('Event must be scheduled between '.self::BUSINESS_HOURS_START.' and '.self::BUSINESS_HOURS_END);
                     }
                 },
             ];
@@ -204,15 +225,25 @@ class Reschedule extends Component
                     $end = Carbon::createFromFormat('H:i', self::BUSINESS_HOURS_END);
 
                     if ($time->gt($end)) {
-                        $fail('Event must end by ' . self::BUSINESS_HOURS_END);
+                        $fail('Event must end by '.self::BUSINESS_HOURS_END);
                     }
                 },
             ];
         }
 
         if ($this->changeVenue) {
-            $rules['newVenue'] = 'required|string|max:255|min:3';
-            $rules['alternativeVenue'] = 'nullable|string|max:255|min:3|different:newVenue';
+            $rules['newVenue'] = ['required', function ($attribute, $value, $fail) {
+                if ($value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                    $fail('The selected venue is invalid.');
+                }
+            }];
+            $rules['newVenueOther'] = $this->newVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable';
+            $rules['alternativeVenue'] = ['nullable', function ($attribute, $value, $fail) {
+                if ($value && $value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                    $fail('The selected alternative venue is invalid.');
+                }
+            }];
+            $rules['alternativeVenueOther'] = $this->alternativeVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable';
         }
 
         return $rules;
@@ -222,7 +253,7 @@ class Reschedule extends Component
     {
         $rules = $this->getCurrentStepRules();
 
-        if (!empty($rules)) {
+        if (! empty($rules)) {
             $this->validate($rules);
         }
 
@@ -234,15 +265,33 @@ class Reschedule extends Component
 
     private function authorizeSelectedTicket(): void
     {
-        $ticket = Ticket::find($this->selectedEventId);
+        $user = auth()->user();
+        $ticket = \App\Models\Ticket::find($this->selectedEventId);
 
-        if (!$ticket || $ticket->user_id !== auth()->id()) {
+        if (! $ticket) {
+            throw ValidationException::withMessages([
+                'selectedEventId' => 'Ticket not found.',
+            ]);
+        }
+
+        // President can only reschedule their own tickets
+        if ($user->position->position_name === 'President' && $ticket->user_id !== $user->user_id) {
             throw ValidationException::withMessages([
                 'selectedEventId' => 'You are not authorized to reschedule this event.',
             ]);
         }
 
-        if (!in_array($ticket->status, ['approved', 'for_rescheduling'])) {
+        // Chairperson/Adviser can reschedule any ticket in their org
+        if (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
+            $ticketOrgId = $ticket->user->org_id ?? null;
+            if ($ticketOrgId !== $user->org_id) {
+                throw ValidationException::withMessages([
+                    'selectedEventId' => 'You are not authorized to reschedule this event.',
+                ]);
+            }
+        }
+
+        if ($ticket->status !== 'approved') {
             throw ValidationException::withMessages([
                 'selectedEventId' => 'This event cannot be rescheduled in its current status.',
             ]);
@@ -251,19 +300,40 @@ class Reschedule extends Component
 
     public function updatedSupportingDocuments()
     {
+        // Handle single file upload (S3 driver doesn't support multiple)
+        // Wrap single file in array for consistent processing
+        $files = $this->supportingDocuments;
+        if (! is_array($files)) {
+            $files = $files ? [$files] : [];
+        }
+
+        // If no files, return early
+        if (empty($files)) {
+            return;
+        }
+
+        // Get existing documents that are already validated
+        $existingDocs = collect($this->supportingDocuments)->filter(fn ($doc) => is_object($doc) && $doc !== $files[0] ?? null)->values()->all();
+
+        // Temporarily set as array for validation
+        $this->supportingDocuments = $files;
+
         $this->validate([
             'supportingDocuments' => 'array|max:10',
             'supportingDocuments.*' => [
                 'file',
-                'max:' . self::MAX_FILE_SIZE,
-                'mimes:' . self::ALLOWED_MIMES,
+                'max:'.self::MAX_FILE_SIZE,
+                'mimes:'.self::ALLOWED_MIMES,
             ],
         ]);
+
+        // Append new files to existing documents
+        $this->supportingDocuments = array_merge($existingDocs, $files);
     }
 
     public function removeAttachment($index)
     {
-        if (!is_numeric($index) || $index < 0 || $index >= count($this->supportingDocuments)) {
+        if (! is_numeric($index) || $index < 0 || $index >= count($this->supportingDocuments)) {
             return;
         }
 
@@ -272,12 +342,12 @@ class Reschedule extends Component
 
     public function getPreviewTicketProperty()
     {
-        if (!$this->selectedEventId) {
+        if (! $this->selectedEventId) {
             return null;
         }
 
-        $ticket = auth()->user()->tickets()->find($this->selectedEventId);
-        if (!$ticket) {
+        $ticket = $this->getBaseTicketsQuery()->find($this->selectedEventId);
+        if (! $ticket) {
             return null;
         }
 
@@ -296,12 +366,14 @@ class Reschedule extends Component
         }
 
         if ($this->changeVenue) {
-            $previewTicket->venue_requested = $this->newVenue;
-            $previewTicket->alternate_venue = $this->alternativeVenue;
+            $previewTicket->venue_requested = $this->newVenue !== 'other' ? $this->newVenue : null;
+            $previewTicket->venue_other = $this->newVenueOther;
+            $previewTicket->alternate_venue = $this->alternativeVenue !== 'other' ? $this->alternativeVenue : null;
+            $previewTicket->alternate_venue_other = $this->alternativeVenueOther;
         }
 
         // Merge supporting documents
-        if (!empty($this->supportingDocuments)) {
+        if (! empty($this->supportingDocuments)) {
             $previewAttachments = $this->createPreviewAttachments();
             $existingAttachments = $ticket->attachments ?? collect();
             $previewTicket->setRelation('attachments', $existingAttachments->merge($previewAttachments));
@@ -313,10 +385,11 @@ class Reschedule extends Component
     private function createPreviewAttachments()
     {
         return collect($this->supportingDocuments)->map(function ($file) {
-            $attachment = new Attachment();
+            $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
             $attachment->file_path = null;
+
             return $attachment;
         });
     }
@@ -346,7 +419,7 @@ class Reschedule extends Component
             $changes = $this->applyScheduleChanges($ticket);
 
             // Store supporting documents
-            if (!empty($this->supportingDocuments)) {
+            if (! empty($this->supportingDocuments)) {
                 $this->storeSupportingDocuments($ticket);
             }
 
@@ -368,7 +441,6 @@ class Reschedule extends Component
                 timeout: 3000,
                 redirectTo: route('student-org.dashboard')
             );
-
         } catch (ValidationException $e) {
             DB::rollBack();
             $this->isProcessing = false;
@@ -402,7 +474,7 @@ class Reschedule extends Component
 
         if ($daysUntilEvent < self::MIN_RESCHEDULE_DAYS) {
             throw ValidationException::withMessages([
-                'general' => 'Reschedule requests must be submitted at least ' . self::MIN_RESCHEDULE_DAYS . ' days before the event date.',
+                'general' => 'Reschedule requests must be submitted at least '.self::MIN_RESCHEDULE_DAYS.' days before the event date.',
             ]);
         }
     }
@@ -426,12 +498,38 @@ class Reschedule extends Component
         }
 
         if ($this->changeVenue) {
-            $changes['venue_requested'] = ['old' => $ticket->venue_requested, 'new' => $this->newVenue];
-            $ticket->venue_requested = $this->newVenue;
+            // Handle preferred venue
+            $oldVenue = $ticket->venue_requested;
+            $oldVenueOther = $ticket->venue_other;
 
+            if ($this->newVenue === 'other') {
+                $changes['venue_requested'] = ['old' => $oldVenue, 'new' => null];
+                $changes['venue_other'] = ['old' => $oldVenueOther, 'new' => $this->newVenueOther];
+                $ticket->venue_requested = null;
+                $ticket->venue_other = $this->newVenueOther;
+            } else {
+                $changes['venue_requested'] = ['old' => $oldVenue, 'new' => $this->newVenue];
+                $changes['venue_other'] = ['old' => $oldVenueOther, 'new' => null];
+                $ticket->venue_requested = $this->newVenue;
+                $ticket->venue_other = null;
+            }
+
+            // Handle alternative venue
             if ($this->alternativeVenue) {
-                $changes['alternate_venue'] = ['old' => $ticket->alternate_venue, 'new' => $this->alternativeVenue];
-                $ticket->alternate_venue = $this->alternativeVenue;
+                $oldAltVenue = $ticket->alternate_venue;
+                $oldAltVenueOther = $ticket->alternate_venue_other;
+
+                if ($this->alternativeVenue === 'other') {
+                    $changes['alternate_venue'] = ['old' => $oldAltVenue, 'new' => null];
+                    $changes['alternate_venue_other'] = ['old' => $oldAltVenueOther, 'new' => $this->alternativeVenueOther];
+                    $ticket->alternate_venue = null;
+                    $ticket->alternate_venue_other = $this->alternativeVenueOther;
+                } else {
+                    $changes['alternate_venue'] = ['old' => $oldAltVenue, 'new' => $this->alternativeVenue];
+                    $changes['alternate_venue_other'] = ['old' => $oldAltVenueOther, 'new' => null];
+                    $ticket->alternate_venue = $this->alternativeVenue;
+                    $ticket->alternate_venue_other = null;
+                }
             }
         }
 
@@ -452,12 +550,13 @@ class Reschedule extends Component
 
             // Sanitize filename
             $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $originalName);
-            $filename = time() . '_' . uniqid() . '_' . $safeName;
+            $filename = time().'_'.uniqid().'_'.$safeName;
 
-            // Store file securely
+            // Store file securely using configured disk (R2/S3 in production)
             $path = $file->storeAs(
                 "tickets/{$ticket->ticket_id}/attachments",
-                $filename
+                $filename,
+                config('filesystems.default')
             );
 
             // Create attachment record
@@ -466,6 +565,7 @@ class Reschedule extends Component
                 'file_name' => $originalName,
                 'file_path' => $path,
                 'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
             ]);
         }
     }
@@ -488,25 +588,44 @@ class Reschedule extends Component
         }
     }
 
+    private function getBaseTicketsQuery()
+    {
+        $user = auth()->user();
+        $query = \App\Models\Ticket::query();
+
+        if ($user->position->position_name === 'President') {
+            $query->where('user_id', $user->user_id);
+        } elseif (in_array($user->position->position_name, ['Chairperson', 'Adviser'])) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->withTrashed()->where('org_id', $user->org_id);
+            });
+        }
+
+        return $query;
+    }
+
     public function render()
     {
-        $approvedEvents = auth()->user()->tickets()
-            ->whereIn('status', ['approved', 'for_rescheduling'])
+        $approvedEvents = $this->getBaseTicketsQuery()
+            ->where('status', 'approved')
             ->where('date_from', '>=', now()->addDays(self::MIN_RESCHEDULE_DAYS))
             ->get()
-            ->map(fn($ticket) => [
+            ->map(fn ($ticket) => [
                 'id' => $ticket->ticket_id,
-                'name' => "{$ticket->ticket_number} - {$ticket->title} (" .
-                    Carbon::parse($ticket->date_from)->format('M d, Y') . ")",
+                'name' => "{$ticket->ticket_number} - {$ticket->title} (".
+                    Carbon::parse($ticket->date_from)->format('M d, Y').')',
             ]);
 
         $selectedEvent = $this->selectedEventId
-            ? auth()->user()->tickets()->find($this->selectedEventId)
+            ? $this->getBaseTicketsQuery()->find($this->selectedEventId)
             : null;
+
+        $rescheduleGuidelines = ContentSection::getActiveByType(ContentSection::TYPE_RESCHEDULE_GUIDELINES)->first();
 
         return view('livewire.student-org.reschedule', [
             'approvedEvents' => $approvedEvents,
             'selectedEvent' => $selectedEvent,
+            'rescheduleGuidelines' => $rescheduleGuidelines,
         ]);
     }
 }

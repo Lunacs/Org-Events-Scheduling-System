@@ -31,6 +31,8 @@ class Profile extends Component
 
     public $office;
 
+    public $pending_email;
+
     // Password Change
     public $current_password;
 
@@ -43,8 +45,6 @@ class Profile extends Component
 
     public $ticket_updates = true;
 
-    public $approval_alerts = true;
-
     public function mount()
     {
         $this->user = Auth::user();
@@ -52,6 +52,11 @@ class Profile extends Component
         $this->email = $this->user->email;
         $this->phone = $this->user->phone ?? '';
         $this->office = $this->user->office->office_name ?? 'N/A';
+        $this->pending_email = $this->user->pending_email;
+
+        // Load notification preferences
+        $this->email_notifications = $this->user->getNotificationPreference('email_notifications', true);
+        $this->ticket_updates = $this->user->getNotificationPreference('ticket_updates', true);
     }
 
     /**
@@ -97,13 +102,24 @@ class Profile extends Component
             ]);
 
             $user = Auth::user();
+            $emailChanged = $this->email !== $user->email;
+
+            // Update name and phone immediately
             $user->update([
                 'name' => $this->name,
-                'email' => $this->email,
                 'phone' => $this->phone,
             ]);
 
-            $this->success('Profile updated successfully!', position: 'toast-top');
+            // Handle email change separately with verification
+            if ($emailChanged) {
+                $user->requestEmailChange($this->email);
+                $this->email = $user->email; // Revert to current email
+                $this->pending_email = $user->fresh()->pending_email;
+                $this->success('A verification link has been sent to your new email address.', position: 'toast-top');
+            } else {
+                $this->success('Profile updated successfully!', position: 'toast-top');
+            }
+
             $this->dispatch('avatar-updated');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -111,6 +127,14 @@ class Profile extends Component
             Log::error('Failed to update profile: ' . $e->getMessage());
             $this->error('Failed to update profile. Please try again.', position: 'toast-top');
         }
+    }
+
+    public function cancelEmailChange()
+    {
+        $user = Auth::user();
+        $user->cancelEmailChange();
+        $this->pending_email = null;
+        $this->success('Email change has been cancelled.', position: 'toast-top');
     }
 
     public function updatePassword()
@@ -158,7 +182,15 @@ class Profile extends Component
 
     public function updatePreferences()
     {
-        // In a real app, you'd save these to a preferences table
+        $user = Auth::user();
+        $user->update([
+            'notification_preferences' => [
+                'email_notifications' => (bool) $this->email_notifications,
+                'ticket_updates' => (bool) $this->ticket_updates,
+            ],
+        ]);
+
+        $this->dispatch('preferences-updated');
         $this->success('Preferences updated successfully!', position: 'toast-top');
     }
 

@@ -517,11 +517,7 @@ class Index extends Component
         }
     }
 
-    public function refreshData()
-    {
-        $this->loadChartData();
-        $this->success('Data refreshed!', position: 'toast-top');
-    }
+
 
     public function render()
     {

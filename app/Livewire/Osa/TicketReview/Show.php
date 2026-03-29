@@ -76,7 +76,8 @@ class Show extends Component
             'created_at',
             'updated_at',
         ])->with([
-            'user:user_id,name,email,role_id,org_id,position_id,avatar_style,avatar_seed',
+            'user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'email', 'role_id', 'org_id', 'position_id', 'avatar_style', 'avatar_seed']),
             'user.role:role_id,role_name',
             'user.studentOrganization:org_id,org_name,org_code,course_id,adviser_name,logo',
             'user.studentOrganization.course:course_id,course_name',
@@ -87,14 +88,17 @@ class Show extends Component
             'eventType:event_type_id,type_name',
             'fundSource:source_id,source_name',
             'comments:id,ticket_id,user_id,content,created_at',
-            'comments.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'comments.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'comments.user.role:role_id,role_name',
             'osaApprovals:osa_approval_id,ticket_id,user_id,decision,remarks,created_at',
-            'osaApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'osaApprovals.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'osaApprovals.user.role:role_id,role_name',
             'officeApprovals:id,ticket_id,office_id,user_id,decision,remarks,created_at',
             'officeApprovals.office:office_id,office_name',
-            'officeApprovals.user:user_id,name,role_id,avatar_style,avatar_seed',
+            'officeApprovals.user' => fn ($q) => $q->withTrashed()
+                ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'officeApprovals.user.role:role_id,role_name',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }
@@ -460,7 +464,7 @@ class Show extends Component
             return;
         }
 
-        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, false);
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, false);
 
         $this->dispatch('open-attachment-preview', url: $url);
     }
@@ -478,31 +482,24 @@ class Show extends Component
             return;
         }
 
-        $url = $this->makeTemporaryUrl($attachment->file_path, $attachment->file_name, true);
+        $url = $this->makeTemporaryUrl($attachment->attachment_id, true);
 
         $this->dispatch('download-attachment', url: $url);
     }
 
     /**
-     * Build a temporary URL from the configured filesystem. Falls back to public URL if unsupported.
+     * Build a temporary URL from the configured filesystem.
+     * Uses S3 temporaryUrl for cloud storage, or signed routes for local storage.
      */
-    private function makeTemporaryUrl(string $path, string $filename, bool $forceDownload = false): string
+    private function makeTemporaryUrl(int $attachmentId, bool $forceDownload = false): string
     {
-        $disk = Storage::disk(config('filesystems.default'));
+        $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
 
-        try {
-            if (method_exists($disk, 'temporaryUrl')) {
-                $options = [
-                    'ResponseContentDisposition' => ($forceDownload ? 'attachment' : 'inline') . '; filename="' . addslashes($filename) . '"',
-                ];
-
-                return $disk->temporaryUrl($path, now()->addMinutes(5), $options);
-            }
-        } catch (\Throwable $e) {
-            // Fallback below if temporary URLs are unavailable for the disk
-        }
-
-        return Storage::url($path);
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            $routeName,
+            now()->addMinutes(5),
+            ['attachment' => $attachmentId]
+        );
     }
 
     public function render()

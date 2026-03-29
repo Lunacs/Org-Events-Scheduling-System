@@ -238,26 +238,7 @@ class Dashboard extends Component
         });
     }
 
-    public function refreshData()
-    {
-        // Clear computed properties and cache
-        unset(
-            $this->stats,
-            $this->todaySnapshot,
-            $this->attentionRequired,
-            $this->pendingApprovals,
-            $this->recentActivity,
-            $this->upcomingEvents
-        );
-        Cache::forget('superadmin_dashboard_stats');
-        Cache::forget('superadmin_dashboard_today_snapshot');
-        Cache::forget('superadmin_dashboard_attention');
-        Cache::forget('superadmin_dashboard_pending_approvals');
-        Cache::forget('superadmin_dashboard_recent_activity');
-        Cache::forget('superadmin_dashboard_upcoming_events');
 
-        $this->success('Dashboard data refreshed!', position: 'toast-top');
-    }
 
     #[Computed]
     public function headers(): array

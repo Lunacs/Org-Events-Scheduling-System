@@ -42,7 +42,17 @@ class TicketCommentNotification extends Notification implements ShouldQueue, Sho
      */
     public function via(object $notifiable): array
     {
-        return $this->channels ?? ['database', 'mail', 'broadcast'];
+        if ($this->channels) {
+            return $this->channels;
+        }
+
+        $channels = ['database', 'broadcast'];
+
+        if ($notifiable instanceof \App\Models\User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**
@@ -113,9 +123,9 @@ class TicketCommentNotification extends Notification implements ShouldQueue, Sho
      */
     private function getActionUrl(object $notifiable): string
     {
-        // Student Org users go to their tickets page
+        // Student Org users go to their ticket details page with comments anchor
         if ($notifiable->isStudentOrg()) {
-            return route('student-org.my-tickets');
+            return route('student-org.ticket-details', $this->ticket->ticket_number) . '#comments';
         }
 
         // OSA users go to ticket review

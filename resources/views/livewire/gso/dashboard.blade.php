@@ -72,26 +72,10 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">General Services Office - Event Management
                     System</p>
             </div>
-            <div class="hidden md:block">
-                <x-mary-button icon="o-arrow-path" class="btn-primary" wire:click="refreshData">
-                    <span wire:loading.remove wire:target="refreshData">Refresh Data</span>
-                    <span wire:loading wire:target="refreshData">Refreshing...</span>
-                </x-mary-button>
-            </div>
-        </div>
-
-        <div class="flex items-center justify-center mb-6">
-            <div class="md:hidden">
-                <x-mary-button icon="o-arrow-path" class="btn-primary" wire:click="refreshData">
-                    <span wire:loading.remove wire:target="refreshData">Refresh Data</span>
-                    <span wire:loading wire:target="refreshData">Refreshing...</span>
-                </x-mary-button>
-            </div>
         </div>
 
         <!-- Modern Statistics Cards -->
-        <div id="overview-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-            wire:loading.class="opacity-50" wire:target="refreshData">
+        <div id="overview-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
             <!-- Pending Approvals -->
             <div
@@ -163,8 +147,7 @@
         </div>
 
         <!-- Secondary Stats with Modern Design -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" wire:loading.class="opacity-50"
-            wire:target="refreshData">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
             <!-- High Priority Items -->
             <div
@@ -203,8 +186,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" wire:loading.class="opacity-50"
-            wire:target="refreshData">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <x-mary-card id="ticket-review-section" title="Pending Ticket Review"
                 subtitle="Requests requiring your attention" class="col-span-1 lg:col-span-2 shadow-md">
                 <x-slot:menu>
@@ -278,8 +260,8 @@
                 @endif
             </x-mary-card>
 
-            <x-mary-card id="recent-activity-section" title="Recent Activity"
-                subtitle="Latest actions from your team" class="shadow-md">
+            <x-mary-card id="recent-activity-section" title="Recent Activity" subtitle="Latest actions from your team"
+                class="shadow-md">
 
                 @if ($recentActivityItems->count() > 0)
                     <div class="space-y-3">
@@ -329,7 +311,7 @@
         </div>
 
         <x-mary-card id="approval-snapshot-section" title="Approval Snapshot" subtitle="Quick view of recent tickets"
-            class="shadow-md" wire:loading.class="opacity-50" wire:target="refreshData">
+            class="shadow-md">
 
             @if ($approvalSnapshotRows->count() > 0)
                 <!-- Mobile Layout (Card-based) -->
@@ -426,7 +408,7 @@
         </x-mary-card>
 
         <!-- Modern Quick Actions -->
-        <div class="mt-6" wire:loading.class="opacity-50" wire:target="refreshData">
+        <div class="mt-6">
             <div class="mb-4">
                 <h2 class="text-xl font-bold font-heading dark:text-white">Quick Actions</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Frequently used features</p>

@@ -34,7 +34,13 @@ class TicketForRevisionNotification extends Notification implements ShouldBroadc
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast', 'mail'];
+        $channels = ['database', 'broadcast'];
+
+        if ($notifiable instanceof \App\Models\User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**

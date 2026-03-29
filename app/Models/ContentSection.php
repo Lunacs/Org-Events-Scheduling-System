@@ -10,6 +10,45 @@ class ContentSection extends Model
 {
     use HasRichText;
 
+    // Section type constants
+    const TYPE_ANNOUNCEMENT = 'announcement';
+
+    const TYPE_TERMS_CONDITIONS = 'terms_conditions';
+
+    const TYPE_TICKET_GUIDELINES = 'ticket_guidelines';
+
+    const TYPE_RESCHEDULE_GUIDELINES = 'reschedule_guidelines';
+
+    const TYPE_PAGE_CONTENT = 'page_content';
+
+    private const TYPE_CONFIG = [
+        self::TYPE_ANNOUNCEMENT => [
+            'name' => 'Announcement',
+            'icon' => 'o-megaphone',
+            'color' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        ],
+        self::TYPE_TERMS_CONDITIONS => [
+            'name' => 'Terms & Conditions',
+            'icon' => 'o-document-check',
+            'color' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+        ],
+        self::TYPE_TICKET_GUIDELINES => [
+            'name' => 'Ticket Guidelines',
+            'icon' => 'o-clipboard-document-list',
+            'color' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        ],
+        self::TYPE_RESCHEDULE_GUIDELINES => [
+            'name' => 'Reschedule Request Guidelines',
+            'icon' => 'o-arrow-path',
+            'color' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        ],
+        self::TYPE_PAGE_CONTENT => [
+            'name' => 'Page Content',
+            'icon' => 'o-document-text',
+            'color' => 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
+        ],
+    ];
+
     /**
      * The rich text attributes that should be treated as rich text.
      *
@@ -34,25 +73,15 @@ class ContentSection extends Model
         'target_roles' => 'array',
     ];
 
-    // Section type constants
-    const TYPE_ANNOUNCEMENT = 'announcement';
-    const TYPE_TERMS_CONDITIONS = 'terms_conditions';
-    const TYPE_DOCUMENTARY_REQUIREMENTS = 'documentary_requirements';
-    const TYPE_FAQ = 'faq';
-    const TYPE_PAGE_CONTENT = 'page_content';
-
     /**
      * Get all available section types with user-friendly labels
      */
     public static function getSectionTypes(): array
     {
-        return [
-            ['id' => self::TYPE_ANNOUNCEMENT, 'name' => 'Announcement'],
-            ['id' => self::TYPE_TERMS_CONDITIONS, 'name' => 'Terms & Conditions'],
-            ['id' => self::TYPE_DOCUMENTARY_REQUIREMENTS, 'name' => 'Documentary Requirements'],
-            ['id' => self::TYPE_FAQ, 'name' => 'FAQ'],
-            ['id' => self::TYPE_PAGE_CONTENT, 'name' => 'Page Content'],
-        ];
+        return collect(self::TYPE_CONFIG)
+            ->map(fn (array $config, string $type) => ['id' => $type, 'name' => $config['name']])
+            ->values()
+            ->all();
     }
 
     /**
@@ -60,9 +89,8 @@ class ContentSection extends Model
      */
     public function getTypeLabelAttribute(): string
     {
-        $types = collect(self::getSectionTypes());
-        $type = $types->firstWhere('id', $this->section_type);
-        return $type ? $type['name'] : ucfirst(str_replace('_', ' ', $this->section_type));
+        return self::TYPE_CONFIG[$this->section_type]['name']
+            ?? ucfirst(str_replace('_', ' ', $this->section_type));
     }
 
     /**
@@ -70,14 +98,7 @@ class ContentSection extends Model
      */
     public function getTypeIconAttribute(): string
     {
-        return match ($this->section_type) {
-            self::TYPE_ANNOUNCEMENT => 'o-megaphone',
-            self::TYPE_TERMS_CONDITIONS => 'o-document-check',
-            self::TYPE_DOCUMENTARY_REQUIREMENTS => 'o-clipboard-document-list',
-            self::TYPE_FAQ => 'o-question-mark-circle',
-            self::TYPE_PAGE_CONTENT => 'o-document-text',
-            default => 'o-document',
-        };
+        return self::TYPE_CONFIG[$this->section_type]['icon'] ?? 'o-document';
     }
 
     /**
@@ -85,39 +106,55 @@ class ContentSection extends Model
      */
     public function getTypeColorAttribute(): string
     {
-        return match ($this->section_type) {
-            self::TYPE_ANNOUNCEMENT => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            self::TYPE_TERMS_CONDITIONS => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-            self::TYPE_DOCUMENTARY_REQUIREMENTS => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-            self::TYPE_FAQ => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-            self::TYPE_PAGE_CONTENT => 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
-            default => 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-        };
+        return self::TYPE_CONFIG[$this->section_type]['color']
+            ?? 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
     }
 
     /**
-     * Cached retrieval by section key
+     * Cached retrieval by section key.
+     * Null results are never cached so a newly created record is always visible immediately.
      */
     public static function getByKey(string $key): ?self
     {
-        return Cache::remember("content_section_{$key}", 300, function () use ($key) {
-            return static::where('section_key', $key)
-                ->where('is_active', true)
-                ->first();
-        });
+        $cacheKey = "content_section_{$key}";
+
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $section = static::where('section_key', $key)
+            ->where('is_active', true)
+            ->first();
+
+        if ($section) {
+            Cache::put($cacheKey, $section, 300);
+        }
+
+        return $section;
     }
 
     /**
-     * Get all active sections of a specific type
+     * Get all active sections of a specific type.
+     * Empty collections are never cached so newly created records are always visible immediately.
      */
     public static function getActiveByType(string $type): \Illuminate\Database\Eloquent\Collection
     {
-        return Cache::remember("content_sections_type_{$type}", 300, function () use ($type) {
-            return static::where('section_type', $type)
-                ->where('is_active', true)
-                ->orderBy('display_order')
-                ->get();
-        });
+        $cacheKey = "content_sections_type_{$type}";
+
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $sections = static::where('section_type', $type)
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
+
+        if ($sections->isNotEmpty()) {
+            Cache::put($cacheKey, $sections, 300);
+        }
+
+        return $sections;
     }
 
     /**
@@ -148,12 +185,12 @@ class ContentSection extends Model
         }
 
         // If user is not logged in, don't show role-targeted announcements
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         // Load role if not already loaded
-        if (!$user->relationLoaded('role')) {
+        if (! $user->relationLoaded('role')) {
             $user->load('role');
         }
 
@@ -176,7 +213,7 @@ class ContentSection extends Model
     /**
      * Clear cache when updated
      */
-    protected static function booted()
+    protected static function booted(): void
     {
         static::saved(function ($section) {
             Cache::forget("content_section_{$section->section_key}");

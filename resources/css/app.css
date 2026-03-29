@@ -1567,7 +1567,9 @@ trix-editor.trix-content {
 
 .sortable-chosen {
     transform: scale(1.02);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    box-shadow:
+        0 20px 25px -5px rgb(0 0 0 / 0.1),
+        0 8px 10px -6px rgb(0 0 0 / 0.1);
     border-color: oklch(var(--color-primary)) !important;
     z-index: 9999;
 }
@@ -1586,5 +1588,8 @@ trix-editor.trix-content {
 }
 
 .faq-item {
-    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+    transition:
+        transform 150ms ease,
+        box-shadow 150ms ease,
+        border-color 150ms ease;
 }

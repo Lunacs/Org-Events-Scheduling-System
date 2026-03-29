@@ -1,59 +1,59 @@
 @props(['tickets'])
 
 {{-- Ticket Item --}}
-<div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+<div class="rounded-xl border border-base-300 bg-base-100 p-5 sm:p-6 hover:shadow-md transition-shadow">
     <div class="flex items-start justify-between">
         <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-3 mb-2">
                 <div class="md:hidden">
-                    <x-tickets.progress-badge :status="$tickets->status"/>
+                    <x-tickets.progress-badge :status="$tickets->status" />
                 </div>
             </div>
             <div class="flex items-center space-x-3 mb-2">
-                <span class="md:hidden text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
+                <span class="md:hidden text-sm text-base-content/60">#{{ $tickets->ticket_number }}</span>
             </div>
             <div class="flex items-center space-x-3 mb-2">
-                <h4 class="text-lg font-semibold">{{ $tickets->title }}</h4>
+                <h4 class="text-lg font-semibold text-base-content">{{ $tickets->title }}</h4>
                 <div class="hidden md:block">
-                    <x-tickets.progress-badge :status="$tickets->status"/>
+                    <x-tickets.progress-badge :status="$tickets->status" />
                 </div>
-                <span class="hidden md:block text-sm text-gray-500">#{{ $tickets->ticket_number }}</span>
+                <span class="hidden md:block text-sm text-base-content/60">#{{ $tickets->ticket_number }}</span>
             </div>
-            <p class="text-gray-600 mb-3 break-words">{{ $tickets->description }}</p>
+            <p class="text-base-content/70 mb-3 break-words">{{ $tickets->description }}</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-calendar" class="w-4 h-4 text-gray-400"/>
-                    <span
-                        class="text-sm">{{ \Carbon\Carbon::parse($tickets->date_from)->format('M j, Y') }} • {{ \Carbon\Carbon::parse($tickets->time_from)->format('h:i A') }}</span>
+                    <x-mary-icon name="s-calendar" class="w-4 h-4 text-base-content/40" />
+                    <span class="text-sm">{{ \Carbon\Carbon::parse($tickets->date_from)->format('M j, Y') }} •
+                        {{ \Carbon\Carbon::parse($tickets->time_from)->format('h:i A') }}</span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-map-pin" class="w-4 h-4 text-gray-400"/>
+                    <x-mary-icon name="s-map-pin" class="w-4 h-4 text-base-content/40" />
                     <span class="text-sm">
                         {{ $tickets->venue_display_name ?? 'Venue TBD' }}
                     </span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-users" class="w-4 h-4 text-gray-400"/>
+                    <x-mary-icon name="s-users" class="w-4 h-4 text-base-content/40" />
                     <span class="text-sm">{{ $tickets->total_participants }} attendees expected</span>
                 </div>
             </div>
 
             {{-- Progress Steps --}}
             <div class="hidden md:block">
-                <x-tickets.progress-section :status="$tickets->status"/>
+                <x-tickets.progress-section :status="$tickets->status" />
             </div>
         </div>
 
-        <x-tickets.ticket-actions :status="$tickets->status" :ticket="$tickets"/>
+        <x-tickets.ticket-actions :status="$tickets->status" :ticket="$tickets" />
     </div>
 
-    <div class="mt-4 pt-4 border-t border-gray-100">
+    <div class="mt-4 pt-4 border-t border-base-300/70">
         {{-- Latest Comment/Remark --}}
-        <x-tickets.latest-remark :status="$tickets->status" :ticket="$tickets"/>
+        <x-tickets.latest-remark :status="$tickets->status" :ticket="$tickets" />
     </div>
 
-    <div class="mt-3 text-sm text-gray-500">
+    <div class="mt-3 text-sm text-base-content/60">
         Submitted on {{ \Carbon\Carbon::parse($tickets->created_at)->format('F j, Y') }} • Last
         updated {{ \Carbon\Carbon::parse($tickets->updated_at)->format('F j, Y') }}
     </div>
