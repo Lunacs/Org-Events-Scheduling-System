@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Support\AttachmentMimeType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -36,18 +37,25 @@ class AttachmentController extends Controller
         $path = $attachment->file_path;
 
         // Check if file exists
-        if (!$disk->exists($path)) {
+        if (! $disk->exists($path)) {
             abort(404, 'File not found.');
         }
 
         $filename = $attachment->file_name;
-        $mimeType = $attachment->file_type ?? $disk->mimeType($path) ?? 'application/octet-stream';
-        $disposition = $forceDownload ? 'attachment' : 'inline';
+
+        $diskMime = null;
+        try {
+            $detected = $disk->mimeType($path);
+            $diskMime = is_string($detected) ? $detected : null;
+        } catch (\Throwable) {
+            $diskMime = null;
+        }
+
+        $mimeType = AttachmentMimeType::resolve($filename, $attachment->file_type, $diskMime);
 
         return $disk->response($path, $filename, [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => $disposition . '; filename="' . addslashes($filename) . '"',
             'Cache-Control' => 'private, max-age=300',
-        ]);
+        ], $forceDownload ? 'attachment' : 'inline');
     }
 }

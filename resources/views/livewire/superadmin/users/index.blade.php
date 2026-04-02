@@ -157,7 +157,7 @@
                         <x-mary-input label="Full Name" wire:model.live.debounce.300ms="createForm.name"
                             placeholder="John Dela Cruz" icon="o-user" required />
 
-                        <x-mary-input label="Email Address" wire:model.blur="createForm.email" type="email"
+                        <x-mary-input label="Email Address" wire:model.live.blur="createForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
                         {{-- Password Field with Strength Indicator --}}
@@ -246,7 +246,7 @@
                         <x-mary-input label="Full Name" wire:model.live.debounce.300ms="editForm.name"
                             placeholder="John Dela Cruz" icon="o-user" required />
 
-                        <x-mary-input label="Email Address" wire:model.blur="editForm.email" type="email"
+                        <x-mary-input label="Email Address" wire:model.live.blur="editForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
                         {{-- Password Field with Strength Indicator --}}
@@ -257,7 +257,7 @@
                         {{-- In Edit User Form - Confirm Password Field --}}
                         <div x-data="{ showEditConfirmPassword: false }" class="relative">
                             <x-mary-input label="Confirm New Password"
-                                wire:model.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
+                                wire:model.live.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm new password" icon="o-lock-closed" />
                             <button type="button" @click="showEditConfirmPassword = !showEditConfirmPassword"
                                 class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -299,7 +299,7 @@
                             @endif
                         @endif
 
-                        <x-mary-input label="Contact Number" type="text" wire:model.blur="editForm.phone"
+                        <x-mary-input label="Contact Number" type="text" wire:model.live.blur="editForm.phone"
                             placeholder="09123456789" icon="o-phone" required />
                     </form>
                 </div>

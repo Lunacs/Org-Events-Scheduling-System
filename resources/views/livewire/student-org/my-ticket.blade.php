@@ -139,17 +139,16 @@
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <x-mary-stat title="Total Submitted" value="{{ $allTickets->count() }}" icon="s-document-text"
+                <x-mary-stat title="Total Submitted" value="{{ $ticketStats['total'] }}" icon="s-document-text"
                     color="text-primary" />
 
-                <x-mary-stat title="Under Review"
-                    value="{{ $allTickets->whereNotIn('status', ['approved', 'for_revision'])->count() }}"
+                <x-mary-stat title="Under Review" value="{{ $ticketStats['under_review'] }}"
                     icon="s-clock" color="text-warning" />
 
-                <x-mary-stat title="Approved" value="{{ $allTickets->where('status', 'approved')->count() }}"
+                <x-mary-stat title="Approved" value="{{ $ticketStats['approved'] }}"
                     icon="s-check-circle" color="text-success" />
 
-                <x-mary-stat title="Need Action" value="{{ $allTickets->whereIn('status', ['for_revision'])->count() }}"
+                <x-mary-stat title="Need Action" value="{{ $ticketStats['need_action'] }}"
                     icon="s-exclamation-triangle" color="text-error" />
             </div>
         </div>

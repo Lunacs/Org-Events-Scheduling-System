@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\User;
 use App\Services\TransactionLogService;
 use App\Notifications\PasswordChangedNotification;

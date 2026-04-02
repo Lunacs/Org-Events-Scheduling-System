@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Async;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -28,6 +29,7 @@ class NotificationDropdown extends Component
         HTML;
     }
 
+    #[Async]
     public function loadNotifications()
     {
         $user = auth()->user();
@@ -43,6 +45,7 @@ class NotificationDropdown extends Component
         $this->unreadCount = $user->unreadNotifications()->count();
     }
 
+    #[Async]
     public function markAsRead($notificationId)
     {
         $user = auth()->user();

@@ -4,8 +4,9 @@ namespace App\Livewire\Superadmin;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Async;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -20,7 +21,6 @@ class Notifications extends Component
 
     #[Title('Notifications - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
-
     public function placeholder()
     {
         return view('livewire.superadmin.placeholders.notifications');
@@ -129,6 +129,7 @@ class Notifications extends Component
         return $query->paginate(15);
     }
 
+    #[Async]
     public function markAsRead($notificationId)
     {
         try {
@@ -145,7 +146,7 @@ class Notifications extends Component
                 $this->dispatch('refresh-notifications');
             }
         } catch (\Exception $e) {
-            Log::error('Failed to mark notification as read: ' . $e->getMessage());
+            Log::error('Failed to mark notification as read: '.$e->getMessage());
             $this->error('Failed to mark notification as read.', position: 'toast-top');
         }
     }
@@ -170,7 +171,7 @@ class Notifications extends Component
 
             $this->success('All notifications marked as read.', position: 'toast-top');
         } catch (\Exception $e) {
-            Log::error('Failed to mark all notifications as read: ' . $e->getMessage());
+            Log::error('Failed to mark all notifications as read: '.$e->getMessage());
             $this->error('Failed to mark all notifications as read.', position: 'toast-top');
         }
     }
@@ -195,7 +196,7 @@ class Notifications extends Component
                 $this->success('Notification deleted.', position: 'toast-top');
             }
         } catch (\Exception $e) {
-            Log::error('Failed to delete notification: ' . $e->getMessage());
+            Log::error('Failed to delete notification: '.$e->getMessage());
             $this->error('Failed to delete notification.', position: 'toast-top');
         }
     }
@@ -225,7 +226,7 @@ class Notifications extends Component
             // Sync with top bar dropdown
             $this->dispatch('refresh-notifications');
         } catch (\Exception $e) {
-            Log::error('Failed to clear read notifications: ' . $e->getMessage());
+            Log::error('Failed to clear read notifications: '.$e->getMessage());
             $this->error('Failed to clear read notifications.', position: 'toast-top');
         }
     }

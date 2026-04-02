@@ -2,12 +2,14 @@
 
 namespace App\Livewire\StudentOrg;
 
+use App\Livewire\Concerns\HandlesDraftAttachmentPreviews;
 use App\Models\Attachment;
 use App\Models\ContentSection;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
 use Exception;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -23,6 +26,8 @@ use Mary\Traits\Toast;
 
 class SubmitTicket extends Component
 {
+    use HandlesDraftAttachmentPreviews;
+
     #[Title('Submit Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
     // Step tracking
@@ -259,13 +264,13 @@ class SubmitTicket extends Component
                 'eventStartTime' => ['required', 'date_format:H:i', 'after_or_equal:00:01'],
                 'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime', 'before_or_equal:21:00'],
                 'preferredVenue' => ['required', function ($attribute, $value, $fail) {
-                    if ($value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                    if ($value !== 'other' && ! Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected venue is invalid.');
                     }
                 }],
                 'preferredVenueOther' => $this->preferredVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable',
                 'alternativeVenue' => ['nullable', function ($attribute, $value, $fail) {
-                    if ($value && $value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                    if ($value && $value !== 'other' && ! Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected alternative venue is invalid.');
                     }
                 }],
@@ -304,7 +309,7 @@ class SubmitTicket extends Component
             return false;
         }
 
-        $venue = \App\Models\Venue::find($venueId);
+        $venue = Venue::find($venueId);
 
         return $venue && $venue->venue_name === 'Others (Please Specify)';
     }
@@ -432,11 +437,12 @@ class SubmitTicket extends Component
         $ticket->additional_notes = $this->additionalNotes;
 
         // Create temporary attachment objects for preview
-        $previewAttachments = collect($this->attachments)->map(function ($file) {
+        $previewAttachments = collect($this->attachments)->map(function ($file, int $index) {
             $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
-            $attachment->file_path = null; // Not stored yet
+            $attachment->file_path = null;
+            $attachment->setAttribute('preview_upload_index', $index);
 
             return $attachment;
         });
@@ -448,10 +454,10 @@ class SubmitTicket extends Component
 
         // Load venue relationships
         if ($this->preferredVenue) {
-            $ticket->setRelation('preferredVenueRelation', \App\Models\Venue::find($this->preferredVenue));
+            $ticket->setRelation('preferredVenueRelation', Venue::find($this->preferredVenue));
         }
         if ($this->alternativeVenue) {
-            $ticket->setRelation('alternativeVenueRelation', \App\Models\Venue::find($this->alternativeVenue));
+            $ticket->setRelation('alternativeVenueRelation', Venue::find($this->alternativeVenue));
         }
 
         return $ticket;
@@ -470,7 +476,7 @@ class SubmitTicket extends Component
         $this->organizationCourse = $currentUserinfo->course->course_name ?? 'Non Academic Org';
         $this->proponentPosition = $currentUserPosition->position_name ?? '';
         $this->proponent_contact = $currentUser->phone ?? '';
-        $this->venues = \App\Models\Venue::where('is_active', true)->get();
+        $this->venues = Venue::where('is_active', true)->get();
 
         // Load resubmit data if available
         if (session()->has('resubmit_ticket')) {
@@ -532,7 +538,7 @@ class SubmitTicket extends Component
 
             // Check for required organization data
             if (! $currentUserinfo || ! $currentUserinfo->org_code) {
-                throw new \Exception('Organization information is missing. Please contact support.');
+                throw new Exception('Organization information is missing. Please contact support.');
             }
 
             \DB::beginTransaction();
@@ -705,6 +711,7 @@ class SubmitTicket extends Component
         $this->dispatch('draft-loaded');
     }
 
+    #[Renderless]
     public function discardDraft()
     {
         $this->dispatch('clear-draft');
@@ -796,6 +803,14 @@ class SubmitTicket extends Component
             6 => $this->agreeToTerms === true,
             default => false,
         };
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function draftAttachmentFileList(): array
+    {
+        return $this->attachments;
     }
 
     public function getRequiredDocuments()

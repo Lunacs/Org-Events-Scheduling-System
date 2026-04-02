@@ -1,40 +1,39 @@
 <?php
 
-use Livewire\Volt\Volt;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     // Unified Login Page
-    Volt::route('login', 'pages.auth.login')
+    Route::livewire('login', 'pages.auth.login')
         ->name('login');
 
     // Keep old routes for backward compatibility, but point to the unified login
-    Volt::route('admin/login', 'pages.auth.login')
+    Route::livewire('admin/login', 'pages.auth.login')
         ->name('admin.login');
 
-    Volt::route('student-org/login', 'pages.auth.login')
+    Route::livewire('student-org/login', 'pages.auth.login')
         ->name('student-org.login');
 
-    Volt::route('gso/login', 'pages.auth.login')
+    Route::livewire('gso/login', 'pages.auth.login')
         ->name('gso.login');
 
-    Volt::route('superadmin/login', 'pages.auth.login')
+    Route::livewire('superadmin/login', 'pages.auth.login')
         ->name('superadmin.login');
 
-    Volt::route('register', 'pages.auth.register')
+    Route::livewire('register', 'pages.auth.register')
         ->name('register');
 
-    Volt::route('forgot-password', 'pages.auth.forgot-password')
+    Route::livewire('forgot-password', 'pages.auth.forgot-password')
         ->name('password.request');
 
-    Volt::route('reset-password/{token}', 'pages.auth.reset-password')
+    Route::livewire('reset-password/{token}', 'pages.auth.reset-password')
         ->name('password.reset');
 });
 
 Route::middleware('auth')->group(function () {
-    Volt::route('verify-email', 'pages.auth.verify-email')
+    Route::livewire('verify-email', 'pages.auth.verify-email')
         ->middleware('throttle:6,1')
         ->name('verification.notice');
 
@@ -42,7 +41,7 @@ Route::middleware('auth')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
 
-    Volt::route('confirm-password', 'pages.auth.confirm-password')
+    Route::livewire('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])

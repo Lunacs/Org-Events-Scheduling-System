@@ -37,13 +37,10 @@
                                     Last updated: <span class="font-medium">{{ now()->format('h:i A') }}</span>
                                 </div>
 
-                                <x-mary-button icon="o-arrow-path" class="btn-primary btn-sm" wire:click="$refresh"
-                                    wire:loading.attr="disabled" wire:target="$refresh">
-                                    <span wire:loading.remove wire:target="$refresh">Refresh</span>
-                                    <span wire:loading wire:target="$refresh" class="inline-flex items-center gap-2">
-                                        <span class="loading loading-spinner loading-xs"></span>
-                                        Refreshing...
-                                    </span>
+                                <x-mary-button icon="o-arrow-path"
+                                    class="btn-primary btn-sm data-loading:opacity-50 data-loading:pointer-events-none"
+                                    wire:click.async="$refresh" spinner>
+                                    Refresh
                                 </x-mary-button>
                             </div>
                         </div>
@@ -64,7 +61,7 @@
                     value="{{ $tickets->where('status', 'approved')->count() }}" icon="s-check-circle"
                     color="text-success" />
 
-                <x-mary-stat title="Upcoming Events" description="Next 30 days" value="{{ count($upcomingEvents) }}"
+                <x-mary-stat title="Upcoming Events" description="Next 30 days" value="{{ $upcomingEventsCount }}"
                     icon="s-calendar-days" color="text-info" />
             </div>
 
@@ -137,24 +134,8 @@
                 </div>
             </x-mary-card>
 
-            {{-- Upcoming Events --}}
-            <x-mary-card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
-                <x-slot:menu>
-                    <x-mary-button label="View Calendar" link="/student-org/calendar" icon="s-calendar"
-                        class="btn-sm btn-ghost" wire:navigate />
-                </x-slot:menu>
-
-                <div class="space-y-4">
-                    @forelse($upcomingEvents as $event)
-                        <x-tickets.upc-events-card :ticket="$event" />
-                    @empty
-                        <x-ui.empty-state title="No upcoming approved events"
-                            description="Approved events within the next 30 days will be listed here."
-                            icon="o-calendar-days" tone="info" iconColor="text-info" actionLabel="Open Calendar"
-                            actionLink="/student-org/calendar" />
-                    @endforelse
-                </div>
-            </x-mary-card>
+            {{-- Upcoming Events (deferred child component) --}}
+            <livewire:student-org.dashboard.upcoming-events defer.bundle />
 
             {{-- Quick Actions --}}
             <x-mary-card title="Quick Actions" subtitle="Frequently used actions">
@@ -170,66 +151,8 @@
                 </div>
             </x-mary-card>
 
-            {{-- Recent Notifications --}}
-            <x-mary-card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
-                <x-slot:menu>
-                    <x-mary-button label="View All" link="/student-org/notifications" icon="s-bell"
-                        class="btn-sm btn-ghost" wire:navigate />
-                </x-slot:menu>
-
-                <div class="space-y-3">
-                    @forelse($recentNotifications as $notification)
-                        @php
-                            $data = $notification->data;
-                            $createdAt = \Illuminate\Support\Carbon::parse($notification->created_at);
-                            $timeAgo = $createdAt->diffForHumans();
-
-                            $color = $data['color'] ?? 'info';
-
-                            $bgMap = [
-                                'primary' => 'bg-primary/10 border-primary',
-                                'success' => 'bg-success/10 border-success',
-                                'error' => 'bg-error/10 border-error',
-                                'warning' => 'bg-warning/10 border-warning',
-                                'info' => 'bg-info/10 border-info',
-                                'secondary' => 'bg-secondary/10 border-secondary',
-                            ];
-                            $iconColorMap = [
-                                'primary' => 'text-primary',
-                                'success' => 'text-success',
-                                'error' => 'text-error',
-                                'warning' => 'text-warning',
-                                'info' => 'text-info',
-                                'secondary' => 'text-secondary',
-                            ];
-                            $iconMap = [
-                                'success' => 's-check-circle',
-                                'warning' => 's-exclamation-triangle',
-                                'error' => 's-x-circle',
-                                'info' => 's-information-circle',
-                            ];
-
-                            $containerClass = $bgMap[$color] ?? 'bg-info/10 border-info';
-                            $iconColorClass = $iconColorMap[$color] ?? 'text-info';
-                            $icon = $iconMap[$color] ?? 's-bell';
-                        @endphp
-
-                        <div class="flex items-start gap-3 p-3 {{ $containerClass }} rounded-lg border-l-4">
-                            <x-mary-icon :name="$icon" class="w-5 h-5 {{ $iconColorClass }} mt-0.5" />
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-base-content">{{ $data['title'] ?? 'Notification' }}</p>
-                                <p class="text-sm text-base-content/70">{{ $data['message'] ?? 'No message' }}</p>
-                                <p class="text-xs text-base-content/50 mt-1">{{ $timeAgo }}</p>
-                            </div>
-                        </div>
-                    @empty
-                        <x-ui.empty-state title="No recent notifications"
-                            description="System updates and ticket feedback will appear here." icon="o-bell-slash"
-                            tone="secondary" iconColor="text-secondary" actionLabel="View Notification Center"
-                            actionLink="/student-org/notifications" />
-                    @endforelse
-                </div>
-            </x-mary-card>
+            {{-- Recent Notifications (deferred child component) --}}
+            <livewire:student-org.dashboard.recent-notifications defer.bundle />
         </div>
     </div>
 

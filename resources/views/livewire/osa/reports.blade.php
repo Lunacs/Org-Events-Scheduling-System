@@ -8,7 +8,8 @@
                     <p class="text-base-content/70 mt-1">Generate comprehensive reports on events, approvals, and
                         organization participation</p>
                 </div>
-                <x-mary-button wire:click="generateReport" class="btn-primary" icon="o-document-arrow-down">
+                <x-mary-button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
+                    spinner>
                     Generate Report
                 </x-mary-button>
             </div>
@@ -16,6 +17,7 @@
     </div>
 
     {{-- Analytics Charts Section (Now at top) --}}
+    @island(name: 'charts')
     <div class="mb-8" x-data="{
         chartData: {{ Js::from($chartData) }},
         charts: {},
@@ -200,6 +202,7 @@
             </div>
         </div>
     </div>
+    @endisland
 
     {{-- Report Configuration + Quick Stats --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -256,7 +259,8 @@
                         option-label="name" />
 
                     <div class="flex-row gap-2 sm:flex-col">
-                        <x-mary-button wire:click="generateReport" class="btn-primary" icon="o-document-arrow-down">
+                        <x-mary-button wire:click.async="generateReport" class="btn-primary"
+                            icon="o-document-arrow-down" spinner>
                             Generate & Download
                         </x-mary-button>
                         <x-mary-button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark">

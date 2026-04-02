@@ -9,7 +9,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <x-mary-badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
-                    <x-mary-button icon="o-arrow-path" class="btn-outline btn-sm" wire:click="$refresh">
+                    <x-mary-button icon="o-arrow-path" class="btn-outline btn-sm" wire:click.async="$refresh">
                         Refresh
                     </x-mary-button>
                 </div>

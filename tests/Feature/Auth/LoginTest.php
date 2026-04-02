@@ -4,7 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -47,7 +47,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.osa-login')
+        Livewire::test('pages.auth.osa-login')
             ->set('form.email', 'osa@example.com')
             ->set('form.password', 'password')
             ->call('login')
@@ -65,7 +65,7 @@ class LoginTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        Volt::test('pages.auth.student-org-login')
+        Livewire::test('pages.auth.student-org-login')
             ->set('form.email', 'student@plv.edu.ph')
             ->set('form.password', 'password')
             ->call('login')
@@ -82,7 +82,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.gso-login')
+        Livewire::test('pages.auth.gso-login')
             ->set('form.email', 'gso@example.com')
             ->set('form.password', 'password')
             ->call('login')
@@ -99,7 +99,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.superadmin-login')
+        Livewire::test('pages.auth.superadmin-login')
             ->set('form.email', 'superadmin@example.com')
             ->set('form.password', 'password')
             ->call('login')
@@ -116,7 +116,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.student-org-login')
+        Livewire::test('pages.auth.student-org-login')
             ->set('form.email', 'student@gmail.com')
             ->set('form.password', 'password')
             ->call('login')
@@ -133,7 +133,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.gso-login')
+        Livewire::test('pages.auth.gso-login')
             ->set('form.email', 'osa@example.com')
             ->set('form.password', 'password')
             ->call('login')
@@ -150,7 +150,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.osa-login')
+        Livewire::test('pages.auth.osa-login')
             ->set('form.email', 'student@plv.edu.ph')
             ->set('form.password', 'password')
             ->call('login')
@@ -167,7 +167,7 @@ class LoginTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.osa-login')
+        Livewire::test('pages.auth.osa-login')
             ->set('form.email', 'osa@example.com')
             ->set('form.password', 'wrong-password')
             ->call('login')
@@ -186,7 +186,7 @@ class LoginTest extends TestCase
 
         // Attempt login 6 times with wrong password
         for ($i = 0; $i < 6; $i++) {
-            Volt::test('pages.auth.osa-login')
+            Livewire::test('pages.auth.osa-login')
                 ->set('form.email', 'osa@example.com')
                 ->set('form.password', 'wrong-password')
                 ->call('login')
@@ -205,7 +205,7 @@ class LoginTest extends TestCase
             'email_verified_at' => null,
         ]);
 
-        Volt::test('pages.auth.student-org-login')
+        Livewire::test('pages.auth.student-org-login')
             ->set('form.email', 'student@plv.edu.ph')
             ->set('form.password', 'password')
             ->call('login')

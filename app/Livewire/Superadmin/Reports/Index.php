@@ -2,22 +2,22 @@
 
 namespace App\Livewire\Superadmin\Reports;
 
-use App\Models\Event;
-use App\Models\Ticket;
-use App\Models\User;
 use App\Models\Event_Type;
 use App\Models\Office;
 use App\Models\Student_Organization;
+use App\Models\Ticket;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Url;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Session;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Mary\Traits\Toast;
-use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Lazy]
 class Index extends Component
@@ -26,7 +26,6 @@ class Index extends Component
 
     #[Title('Reports & Analytics - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
-
     public function placeholder()
     {
         return view('livewire.superadmin.placeholders.reports');
@@ -39,7 +38,10 @@ class Index extends Component
     #[Url(except: '')]
     public $dateTo;
 
+    #[Session]
     public $selectedOffices = [];
+
+    #[Session]
     public $selectedEventTypes = [];
 
     // Filter drawer visibility
@@ -97,9 +99,13 @@ class Index extends Component
 
     // MaryUI Chart configurations
     public array $eventsByMonthChart = [];
+
     public array $eventsByTypeChart = [];
+
     public array $eventsByOfficeChart = [];
+
     public array $ticketStatusChart = [];
+
     public array $usersByRoleChart = [];
 
     public function loadChartData()
@@ -307,7 +313,7 @@ class Index extends Component
             ->get();
 
         return [
-            'labels' => $tickets->pluck('month')->map(fn($m) => Carbon::parse($m)->format('M Y'))->toArray(),
+            'labels' => $tickets->pluck('month')->map(fn ($m) => Carbon::parse($m)->format('M Y'))->toArray(),
             'data' => $tickets->pluck('count')->toArray(),
         ];
     }
@@ -350,7 +356,7 @@ class Index extends Component
             ->get();
 
         return [
-            'labels' => $tickets->pluck('status')->map(fn($s) => ucfirst(str_replace('_', ' ', $s)))->toArray(),
+            'labels' => $tickets->pluck('status')->map(fn ($s) => ucfirst(str_replace('_', ' ', $s)))->toArray(),
             'data' => $tickets->pluck('count')->toArray(),
         ];
     }
@@ -363,7 +369,7 @@ class Index extends Component
             ->get();
 
         return [
-            'labels' => $users->pluck('role_name')->map(fn($r) => ucfirst(str_replace('_', ' ', $r)))->toArray(),
+            'labels' => $users->pluck('role_name')->map(fn ($r) => ucfirst(str_replace('_', ' ', $r)))->toArray(),
             'data' => $users->pluck('count')->toArray(),
         ];
     }
@@ -374,12 +380,12 @@ class Index extends Component
             ->where('date_from', '<=', $this->dateTo)
             ->where('date_to', '>=', $this->dateFrom);
 
-        if (!empty($this->selectedEventTypes)) {
+        if (! empty($this->selectedEventTypes)) {
             $query->whereIn('tickets.event_type_id', $this->selectedEventTypes);
         }
 
         // Filter by organization if offices are selected (treating them as orgs)
-        if (!empty($this->selectedOffices)) {
+        if (! empty($this->selectedOffices)) {
             $query->whereHas('user', function ($q) {
                 $q->whereIn('org_id', $this->selectedOffices);
             });
@@ -387,8 +393,8 @@ class Index extends Component
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
-                $q->where('tickets.ticket_number', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('tickets.title', 'like', '%' . $this->searchTerm . '%');
+                $q->where('tickets.ticket_number', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('tickets.title', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -425,7 +431,7 @@ class Index extends Component
         try {
             $data = $this->getDetailedReportData();
 
-            $filename = "report_{$this->reportType}_" . now()->format('Y-m-d_His') . ".{$format}";
+            $filename = "report_{$this->reportType}_".now()->format('Y-m-d_His').".{$format}";
 
             if ($format === 'csv') {
                 return $this->exportToCsv($data, $filename);
@@ -435,7 +441,7 @@ class Index extends Component
 
             $this->success('Report exported successfully!', position: 'toast-top');
         } catch (\Exception $e) {
-            $this->error('Failed to export report: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to export report: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -447,6 +453,7 @@ class Index extends Component
             ->get()
             ->map(function ($ticket) {
                 $orgDeleted = $ticket->user?->studentOrganization?->trashed();
+
                 return [
                     'Ticket Number' => $ticket->ticket_number,
                     'Event Title' => $ticket->title,
@@ -472,7 +479,7 @@ class Index extends Component
         $callback = function () use ($data) {
             $file = fopen('php://output', 'w');
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 fputcsv($file, array_keys($data[0]));
 
                 foreach ($data as $row) {
@@ -512,12 +519,11 @@ class Index extends Component
                 'Content-Type' => 'application/pdf',
             ]);
         } catch (\Exception $e) {
-            $this->error('Failed to generate PDF: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to generate PDF: '.$e->getMessage(), position: 'toast-top');
+
             return null;
         }
     }
-
-
 
     public function render()
     {

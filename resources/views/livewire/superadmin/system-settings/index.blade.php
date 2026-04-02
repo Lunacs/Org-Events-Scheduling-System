@@ -31,7 +31,7 @@
             <div class="p-2 sm:p-4 max-w-4xl mx-auto" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                 {{-- Courses Manager Component --}}
-                <livewire:superadmin.system-settings.course-manager />
+                <livewire:superadmin.system-settings.course-manager defer.bundle />
             </div>
         </x-mary-tab>
 
@@ -39,7 +39,7 @@
             <div class="p-2 sm:p-4 max-w-4xl mx-auto" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                 {{-- Event Types Manager Component --}}
-                <livewire:superadmin.system-settings.event-type-manager />
+                <livewire:superadmin.system-settings.event-type-manager defer.bundle />
             </div>
         </x-mary-tab>
 
@@ -47,7 +47,7 @@
             <div class="p-2 sm:p-4 max-w-4xl mx-auto" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                 {{-- Venues Manager Component --}}
-                <livewire:superadmin.system-settings.venue-manager />
+                <livewire:superadmin.system-settings.venue-manager defer.bundle />
             </div>
         </x-mary-tab>
 
@@ -55,7 +55,7 @@
             <div class="p-2 sm:p-4 w-full mx-auto" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                 {{-- Content Sections Manager Component --}}
-                <livewire:superadmin.system-settings.content-section-manager />
+                <livewire:superadmin.system-settings.content-section-manager defer.bundle />
             </div>
         </x-mary-tab>
 

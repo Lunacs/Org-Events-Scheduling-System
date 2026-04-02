@@ -11,19 +11,35 @@
                 <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                     <div class="flex items-center gap-3">
                         <div>
-                            <button type="button" class="link link-neutral font-medium"
-                                wire:click="previewAttachment({{ $attachment->attachment_id }})">
-                                {{ $attachment->file_name }}
-                            </button>
+                            @if ($attachment->exists && $attachment->file_path)
+                                <button type="button" class="link link-neutral font-medium"
+                                    wire:click.renderless="previewAttachment({{ $attachment->attachment_id }})">
+                                    {{ $attachment->file_name }}
+                                </button>
+                            @elseif ($attachment->getAttribute('preview_upload_index') !== null)
+                                <button type="button" class="link link-neutral font-medium"
+                                    wire:click.renderless="previewDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})">
+                                    {{ $attachment->file_name }}
+                                </button>
+                            @else
+                                <span class="font-medium text-base-content">{{ $attachment->file_name }}</span>
+                            @endif
                             <p class="text-sm text-base-content/70">
                                 {{ $attachment->file_type ? strtoupper($attachment->file_type) : (strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) ?: 'FILE') }}
                             </p>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm"
-                        wire:click="downloadAttachment({{ $attachment->attachment_id }})">
-                        Download
-                    </button>
+                    @if ($attachment->exists && $attachment->file_path)
+                        <button type="button" class="btn btn-primary btn-sm"
+                            wire:click.renderless="downloadAttachment({{ $attachment->attachment_id }})">
+                            Download
+                        </button>
+                    @elseif ($attachment->getAttribute('preview_upload_index') !== null)
+                        <button type="button" class="btn btn-primary btn-sm"
+                            wire:click.renderless="downloadDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})">
+                            Download
+                        </button>
+                    @endif
                 </div>
             @endforeach
         </div>

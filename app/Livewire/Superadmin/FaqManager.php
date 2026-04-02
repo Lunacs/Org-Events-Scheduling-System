@@ -31,7 +31,9 @@ class FaqManager extends Component
 
     // Delete modal state
     public $deletingFaqId = null;
+
     public $deletingFaqQuestion = '';
+
     public bool $deleteModalOpen = false;
 
     // Cache duration
@@ -52,9 +54,9 @@ class FaqManager extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('question', 'like', '%' . $this->search . '%')
-                    ->orWhere('answer', 'like', '%' . $this->search . '%')
-                    ->orWhere('category', 'like', '%' . $this->search . '%');
+                $q->where('question', 'like', '%'.$this->search.'%')
+                    ->orWhere('answer', 'like', '%'.$this->search.'%')
+                    ->orWhere('category', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -135,8 +137,9 @@ class FaqManager extends Component
     {
         $faq = Faq::find($this->deletingFaqId);
 
-        if (!$faq) {
+        if (! $faq) {
             $this->error('FAQ not found!', position: 'toast-top');
+
             return;
         }
 
@@ -158,7 +161,7 @@ class FaqManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('FAQ deletion failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to delete FAQ: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete FAQ: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -169,15 +172,16 @@ class FaqManager extends Component
     {
         $faq = Faq::find($faqId);
 
-        if (!$faq) {
+        if (! $faq) {
             $this->error('FAQ not found!', position: 'toast-top');
+
             return;
         }
 
         DB::beginTransaction();
         try {
             $previousStatus = $faq->is_active ? 'active' : 'inactive';
-            $faq->is_active = !$faq->is_active;
+            $faq->is_active = ! $faq->is_active;
             $faq->save();
 
             $newStatus = $faq->is_active ? 'active' : 'inactive';
@@ -194,29 +198,47 @@ class FaqManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('FAQ status toggle failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to update FAQ status: ' . $e->getMessage(), position: 'toast-bottom');
+            $this->error('Failed to update FAQ status: '.$e->getMessage(), position: 'toast-bottom');
         }
     }
 
     /**
-     * Update FAQ order after drag and drop
+     * Handle FAQ reorder via wire:sort (Livewire v4).
+     * Receives the moved item's ID and its new zero-based position.
      */
-    public function updateOrder(array $orderedIds): void
+    public function handleSort(int $id, int $position): void
     {
         DB::beginTransaction();
         try {
-            foreach ($orderedIds as $index => $faqId) {
-                Faq::where('id', $faqId)->update(['display_order' => $index + 1]);
+            $faq = Faq::findOrFail($id);
+            $oldPosition = $faq->display_order;
+            $newPosition = $position + 1;
+
+            if ($oldPosition === $newPosition) {
+                DB::rollBack();
+
+                return;
             }
+
+            if ($oldPosition < $newPosition) {
+                Faq::where('display_order', '>', $oldPosition)
+                    ->where('display_order', '<=', $newPosition)
+                    ->decrement('display_order');
+            } else {
+                Faq::where('display_order', '>=', $newPosition)
+                    ->where('display_order', '<', $oldPosition)
+                    ->increment('display_order');
+            }
+
+            $faq->update(['display_order' => $newPosition]);
 
             TransactionLogService::log(
                 'faq_reordered',
-                "FAQ display order updated via drag and drop"
+                'FAQ display order updated via drag and drop'
             );
 
             DB::commit();
             Faq::clearCache();
-            // $this->success('FAQ order updated!', position: 'toast-bottom');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('FAQ reorder failed', ['error' => $e->getMessage()]);

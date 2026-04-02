@@ -6,7 +6,7 @@
                 <h1 class="text-2xl font-bold font-heading">Archive Management</h1>
                 <p class="text-sm text-base-content/60 mt-1">View and manage archived events and tickets</p>
             </div>
-            <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click="$refresh">
+            <x-mary-button icon="o-arrow-path" class="btn-outline" wire:click.async="$refresh">
                 Refresh
             </x-mary-button>
         </div>

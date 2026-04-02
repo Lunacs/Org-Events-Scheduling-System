@@ -167,6 +167,7 @@
         @endif
 
         {{-- Overview Stats --}}
+        @island(name: 'charts')
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="stats shadow-lg border-primary border-2 bg-primary/10 text-primary-content">
                 <div class="stat">
@@ -281,6 +282,7 @@
             @endif
         </x-mary-card>
     </div>
+    @endisland
 
     {{-- Export Modal --}}
     <dialog id="exportModal" class="modal">
@@ -290,14 +292,14 @@
                 Choose a format to export the current report data.
             </p>
             <div class="flex flex-col gap-3">
-                <button class="btn btn-outline gap-3 justify-start h-14" wire:click="exportReport('csv')">
+                <button class="btn btn-outline gap-3 justify-start h-14" wire:click.async="exportReport('csv')">
                     <x-mary-icon name="o-document-text" class="w-5 h-5 text-primary" />
                     <div class="text-left">
                         <div class="font-bold">Export as CSV</div>
                         <div class="text-xs opacity-50 text-base-content">Spreadsheet compatible format</div>
                     </div>
                 </button>
-                <button class="btn btn-outline gap-3 justify-start h-14" wire:click="exportReport('pdf')">
+                <button class="btn btn-outline gap-3 justify-start h-14" wire:click.async="exportReport('pdf')">
                     <x-mary-icon name="o-document" class="w-5 h-5 text-secondary" />
                     <div class="text-left">
                         <div class="font-bold">Export as PDF</div>

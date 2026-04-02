@@ -107,58 +107,8 @@
 
         {{-- Main Content Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {{-- Pending Approvals --}}
-            <x-mary-card title="Pending Approvals" subtitle="Tickets awaiting review" class="lg:col-span-2" shadow>
-                <x-slot:menu>
-                    <a href="{{ route('superadmin.tickets') }}" class="btn btn-ghost btn-sm">View All</a>
-                </x-slot:menu>
-                @if (count($pendingApprovals) > 0)
-                    <div class="overflow-x-auto">
-                        <table class="table table-zebra">
-                            <thead>
-                                <tr>
-                                    <th>Request</th>
-                                    <th>Type</th>
-                                    <th>Submitted</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($pendingApprovals as $approval)
-                                    <tr class="hover cursor-pointer"
-                                        onclick="window.location='{{ route('superadmin.tickets') }}'">
-                                        <td>
-                                            <div class="font-medium">{{ Str::limit($approval['request'], 30) }}</div>
-                                            <div class="text-xs text-base-content/60">{{ $approval['user'] }}</div>
-                                        </td>
-                                        <td class="text-sm">{{ $approval['type'] }}</td>
-                                        <td class="text-sm">{{ $approval['submitted'] }}</td>
-                                        <td>
-                                            <span
-                                                class="badge badge-sm {{ match ($approval['raw_status']) {
-                                                    'pending' => 'badge-warning',
-                                                    'gso_review' => 'badge-info',
-                                                    'pending_osa_approval' => 'badge-secondary',
-                                                    default => 'badge-ghost',
-                                                } }}">
-                                                {{ $approval['status'] }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-center py-12">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10 mb-4">
-                            <x-mary-icon name="o-check-circle" class="w-8 h-8 text-success" />
-                        </div>
-                        <h3 class="text-lg font-semibold text-base-content mb-1">All Caught Up!</h3>
-                        <p class="text-sm text-base-content/60">No pending approvals at the moment.</p>
-                    </div>
-                @endif
-            </x-mary-card>
+            {{-- Pending Approvals (deferred child component) --}}
+            <livewire:superadmin.dashboard.pending-approvals defer.bundle class="lg:col-span-2" />
 
             {{-- Upcoming Events --}}
             <x-mary-card title="Upcoming Events" subtitle="Next 7 days" shadow>
@@ -208,37 +158,8 @@
 
         {{-- Bottom Row --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {{-- Recent Activity Feed --}}
-            <x-mary-card title="Recent Activity" subtitle="Latest system activity" shadow>
-                @if (count($recentActivity) > 0)
-                    <div class="space-y-1">
-                        @foreach ($recentActivity as $activity)
-                            <div class="flex items-start gap-3 p-3 hover:bg-base-200/50 rounded-lg transition-colors">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <x-mary-icon name="o-user" class="w-4 h-4 text-primary" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm">
-                                        <span class="font-medium">{{ $activity['user'] }}</span>
-                                        <span class="text-base-content/70">{{ $activity['action'] }}</span>
-                                    </div>
-                                    <div class="text-xs text-base-content/50 truncate">{{ $activity['details'] }}
-                                    </div>
-                                    <div class="text-xs text-base-content/40 mt-1">{{ $activity['time_ago'] }}</div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-12">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                            <x-mary-icon name="o-document-text" class="w-8 h-8 text-base-content/40" />
-                        </div>
-                        <p class="text-sm text-base-content/60 font-medium">No recent activity</p>
-                    </div>
-                @endif
-            </x-mary-card>
+            {{-- Recent Activity Feed (deferred child component) --}}
+            <livewire:superadmin.dashboard.recent-activity defer.bundle />
 
             {{-- Items Needing Attention --}}
             <x-mary-card title="Items Needing Attention" subtitle="Tickets requiring follow-up" shadow>
