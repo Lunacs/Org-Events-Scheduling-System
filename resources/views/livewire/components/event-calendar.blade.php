@@ -287,6 +287,7 @@
         </div>
 
         {{-- Upcoming Events This Month --}}
+        @island(name: 'upcomingEvents', defer: true)
         <x-mary-card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
             subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
             @if (count($this->upcomingEventsThisMonth) > 0)
@@ -545,6 +546,25 @@
                 </div>
             @endif
         </x-mary-card>
+        @placeholder
+            <x-mary-card class="mt-6 max-sm:p-0!">
+                <div class="space-y-4 animate-pulse">
+                    <div class="h-6 bg-base-200 dark:bg-base-700 rounded w-2/3"></div>
+                    <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="flex items-start gap-4 p-5 bg-base-200/50 dark:bg-base-700/30 rounded-xl">
+                            <div class="w-14 h-14 bg-base-300 dark:bg-base-600 rounded-xl shrink-0"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-base-300 dark:bg-base-600 rounded w-3/4"></div>
+                                <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-1/2"></div>
+                                <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </x-mary-card>
+        @endplaceholder
+        @endisland
 
         {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
         <div x-data="eventDetailsModal()" x-on:open-event.window="openById($event.detail.id)">

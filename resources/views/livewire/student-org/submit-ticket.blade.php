@@ -39,7 +39,7 @@
                 </div>
             @endif
 
-            <x-mary-form wire:submit="save">
+            <x-mary-form wire:submit="save" wire:ref="submitForm">
                 {{-- Progress Indicator --}}
                 <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
                     <div class="flex justify-between items-center min-w-max md:min-w-0">
@@ -187,7 +187,7 @@
 
                                 <div x-show="alternativeVenue === 'other'" x-collapse x-cloak class="mt-4">
                                     <x-mary-input label="Please specify alternative venue"
-                                        wire:model.blur="alternativeVenueOther" placeholder="Enter venue name" />
+                                        wire:model.live.blur="alternativeVenueOther" placeholder="Enter venue name" />
                                 </div>
                             </div>
                         </div>
@@ -379,26 +379,51 @@
                 <div class="flex justify-between items-center pt-6 border-t border-base-300/50 mt-2">
                     @if ($currentStep > 1)
                         <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                            class="btn-ghost" wire:loading.attr="disabled"
-                            wire:target="previousStep" spinner
-                            :disabled="$isProcessing" />
+                            class="btn-ghost data-loading:opacity-50 data-loading:pointer-events-none"
+                            spinner :disabled="$isProcessing" />
                     @else
                         <div></div>
                     @endif
                     @if ($currentStep < $totalSteps)
                         <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                            wire:loading.attr="disabled"
-                            wire:target="nextStep" class="btn-primary" :disabled="$isProcessing" spinner />
+                            class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
+                            :disabled="$isProcessing" spinner />
                     @else
                         <x-mary-button label="Submit Ticket" icon="s-paper-airplane" wire:click="save"
-                            wire:loading.attr="disabled"
-                            wire:target="save" class="btn-primary" :disabled="!$agreeToTerms || $isProcessing" />
+                            class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
+                            :disabled="!$agreeToTerms || $isProcessing" spinner />
                     @endif
                 </div>
                 <x-mary-toast />
             </x-mary-form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('open-attachment-preview', ({
+                url
+            }) => {
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            });
+            Livewire.on('download-attachment', ({
+                url,
+                filename
+            }) => {
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename || 'download';
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        });
+    </script>
 
     @script
         <script>
@@ -781,8 +806,7 @@
                 cleanupExistingModal();
 
                 setTimeout(() => {
-                    const ticketForm = document.querySelector('[wire\\:submit="save"]');
-                    if (ticketForm) {
+                    if (this.$refs.submitForm) {
                         console.log('Navigated to ticket submission page, checking for draft');
                         checkAndShowDraftModal();
                     } else {

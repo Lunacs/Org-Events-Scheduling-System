@@ -12,7 +12,7 @@
 
 <div x-data="passwordStrength(@entangle($model), '{{ $showVar }}')" class="space-y-2">
     <div class="relative">
-        <x-mary-input :label="$label" wire:model.blur="{{ $model }}" x-bind:type="show ? 'text' : 'password'"
+        <x-mary-input :label="$label" wire:model.live.blur="{{ $model }}" x-bind:type="show ? 'text' : 'password'"
             :placeholder="$placeholder" icon="o-lock-closed" :hint="$hint" :required="$required" />
         <button type="button" x-on:click="show = !show"
             class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"

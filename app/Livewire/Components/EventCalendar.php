@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -76,9 +77,9 @@ class EventCalendar extends Component
 
         $event = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'venue_other', 'user_id', 'status'])
+                'ticket' => fn ($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'venue_other', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
+                        'user' => fn ($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time,venue',
@@ -152,16 +153,19 @@ class EventCalendar extends Component
         $this->dispatch('calendar-refetch');
     }
 
+    #[Renderless]
     public function previousPeriod()
     {
         $this->dispatch('calendar-prev');
     }
 
+    #[Renderless]
     public function nextPeriod()
     {
         $this->dispatch('calendar-next');
     }
 
+    #[Renderless]
     public function today()
     {
         $this->dispatch('calendar-today');
@@ -169,7 +173,7 @@ class EventCalendar extends Component
 
     public function viewEvent($eventId)
     {
-        Log::info('ViewEvent called with ID: ' . $eventId);
+        Log::info('ViewEvent called with ID: '.$eventId);
 
         // Reset modal state first
         $this->showModal = false;
@@ -177,9 +181,9 @@ class EventCalendar extends Component
 
         $this->selectedEvent = Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes'])
             ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
+                'ticket' => fn ($q) => $q->select(['ticket_id', 'ticket_number', 'title', 'description', 'venue_requested', 'user_id', 'status'])
                     ->with([
-                        'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
+                        'user' => fn ($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                             ->with('studentOrganization:org_id,org_name,logo'),
                     ]),
                 'eventSchedules:schedule_id,event_id,start_date,end_date,start_time,end_time',
@@ -187,10 +191,10 @@ class EventCalendar extends Component
             ])
             ->find($eventId);
 
-        Log::info('Selected Event: ' . ($this->selectedEvent ? 'Found' : 'Not Found'));
+        Log::info('Selected Event: '.($this->selectedEvent ? 'Found' : 'Not Found'));
 
         if (! $this->selectedEvent) {
-            Log::error('Event not found with ID: ' . $eventId);
+            Log::error('Event not found with ID: '.$eventId);
             $this->dispatch('toast-error', message: 'Event not found');
 
             return;
@@ -253,11 +257,11 @@ class EventCalendar extends Component
         // Fetch only approved event schedules (from Event_Schedules table)
         $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->withTrashed()
+                                'user' => fn ($q) => $q->withTrashed()
                                     ->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
@@ -269,7 +273,7 @@ class EventCalendar extends Component
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
                 // Include soft-deleted users when checking ticket status
-                $query->whereHas('user', fn($q) => $q->withTrashed());
+                $query->whereHas('user', fn ($q) => $q->withTrashed());
 
                 if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
@@ -279,11 +283,11 @@ class EventCalendar extends Component
                 }
             })
             // Apply organization filter if set
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
+            ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
             // Apply event type filter if set
-            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
+            ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
-            ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
+            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
             ->get();
 
         $allEvents = [];
@@ -331,8 +335,8 @@ class EventCalendar extends Component
 
             if ($startDate === $endDate) {
                 // Single-day event: Use standard start/end format
-                $startISO = $startDate . 'T' . $startTime . '+08:00';
-                $endISO = $endDate . 'T' . $endTime . '+08:00';
+                $startISO = $startDate.'T'.$startTime.'+08:00';
+                $endISO = $endDate.'T'.$endTime.'+08:00';
 
                 $allEvents[] = [
                     'id' => $event->event_id,
@@ -412,10 +416,10 @@ class EventCalendar extends Component
 
                 // 1. Spanning event for month view (single bar across days)
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id . '_span',
+                    'id' => $event->event_id.'_span',
                     'groupId' => $event->event_id,
-                    'start' => $startDate . 'T' . $startTime . '+08:00',
-                    'end' => $endDate . 'T' . $endTime . '+08:00',
+                    'start' => $startDate.'T'.$startTime.'+08:00',
+                    'end' => $endDate.'T'.$endTime.'+08:00',
                     'allDay' => false,
                     'display' => 'block', // Spanning bar in month view
                     'extendedProps' => array_merge($commonProps['extendedProps'], [
@@ -425,7 +429,7 @@ class EventCalendar extends Component
 
                 // 2. Recurring event for week/day views (proper height blocks)
                 $allEvents[] = array_merge($commonProps, [
-                    'id' => $event->event_id . '_recur',
+                    'id' => $event->event_id.'_recur',
                     'groupId' => $event->event_id,
                     'startTime' => $startTime, // Time portion only (HH:MM:SS)
                     'endTime' => $endTime,     // Time portion only (HH:MM:SS)
@@ -502,7 +506,7 @@ class EventCalendar extends Component
             // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
                 // Always include soft-deleted users (matches calendar fetch)
-                $query->whereHas('user', fn($q) => $q->withTrashed());
+                $query->whereHas('user', fn ($q) => $q->withTrashed());
 
                 if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
@@ -511,10 +515,10 @@ class EventCalendar extends Component
                     $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
                 }
             })
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('event.ticket.user', fn($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
-            ->when($this->eventTypeFilter, fn($query) => $query->whereHas('event', fn($q) => $q->where('event__type_id', $this->eventTypeFilter)))
+            ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
+            ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
             // Hide past events (older than current year) by default unless toggle is on
-            ->when(! $this->showPastEvents, fn($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
+            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
 
         // Count distinct event_ids to get unique events (MySQL compatible)
         return (int) $query->selectRaw('COUNT(DISTINCT event_id) as count')->value('count');
@@ -538,18 +542,18 @@ class EventCalendar extends Component
 
         $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
-                'event' => fn($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
+                'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
-                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
+                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'venue_requested', 'user_id', 'status', 'ticket_number'])
                             ->with([
-                                'user' => fn($q) => $q->withTrashed()->select(['user_id', 'org_id'])
+                                'user' => fn ($q) => $q->withTrashed()->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ]),
                         'eventType:event_type_id,type_name',
                     ]),
             ])
             ->where('status', 'approved')
-            ->whereHas('event.ticket', fn($query) => $query->whereIn('status', ['approved', 'rescheduled']))
+            ->whereHas('event.ticket', fn ($query) => $query->whereIn('status', ['approved', 'rescheduled']))
             ->whereBetween('start_date', [$startDate, $endOfMonth])
             ->orderBy('start_date')
             ->orderBy('start_time')
@@ -591,7 +595,7 @@ class EventCalendar extends Component
             // Date range formatting
             $dateDisplay = $startDate->format('M d, Y');
             if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
-                $dateDisplay = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
+                $dateDisplay = $startDate->format('M d').' - '.$endDate->format('M d, Y');
             }
 
             // Get event color using the same method as calendar

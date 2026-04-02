@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\ContentSection;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -82,7 +83,7 @@ class Reschedule extends Component
             abort(401, 'Unauthorized access');
         }
 
-        $this->venues = \App\Models\Venue::where('is_active', true)->get();
+        $this->venues = Venue::where('is_active', true)->get();
 
         // Pre-fill from query parameter
         if (request()->has('ticket')) {
@@ -233,13 +234,13 @@ class Reschedule extends Component
 
         if ($this->changeVenue) {
             $rules['newVenue'] = ['required', function ($attribute, $value, $fail) {
-                if ($value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                if ($value !== 'other' && ! Venue::where('venue_id', $value)->exists()) {
                     $fail('The selected venue is invalid.');
                 }
             }];
             $rules['newVenueOther'] = $this->newVenue === 'other' ? 'required|string|max:255|min:3' : 'nullable';
             $rules['alternativeVenue'] = ['nullable', function ($attribute, $value, $fail) {
-                if ($value && $value !== 'other' && ! \App\Models\Venue::where('venue_id', $value)->exists()) {
+                if ($value && $value !== 'other' && ! Venue::where('venue_id', $value)->exists()) {
                     $fail('The selected alternative venue is invalid.');
                 }
             }];
@@ -266,7 +267,7 @@ class Reschedule extends Component
     private function authorizeSelectedTicket(): void
     {
         $user = auth()->user();
-        $ticket = \App\Models\Ticket::find($this->selectedEventId);
+        $ticket = Ticket::find($this->selectedEventId);
 
         if (! $ticket) {
             throw ValidationException::withMessages([
@@ -384,14 +385,23 @@ class Reschedule extends Component
 
     private function createPreviewAttachments()
     {
-        return collect($this->supportingDocuments)->map(function ($file) {
+        return collect($this->supportingDocuments)->map(function ($file, int $index) {
             $attachment = new Attachment;
             $attachment->file_name = $file->getClientOriginalName();
             $attachment->file_type = $file->getMimeType();
             $attachment->file_path = null;
+            $attachment->setAttribute('preview_upload_index', $index);
 
             return $attachment;
         });
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function draftAttachmentFileList(): array
+    {
+        return $this->supportingDocuments;
     }
 
     public function submitReschedule()
@@ -591,7 +601,7 @@ class Reschedule extends Component
     private function getBaseTicketsQuery()
     {
         $user = auth()->user();
-        $query = \App\Models\Ticket::query();
+        $query = Ticket::query();
 
         if ($user->position->position_name === 'President') {
             $query->where('user_id', $user->user_id);

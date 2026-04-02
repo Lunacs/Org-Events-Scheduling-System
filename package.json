@@ -28,7 +28,6 @@
         "@fullcalendar/interaction": "^6.1.19",
         "@fullcalendar/list": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
-        "chart.js": "^4.5.1",
-        "sortablejs": "^1.15.6"
+        "chart.js": "^4.5.1"
     }
 }

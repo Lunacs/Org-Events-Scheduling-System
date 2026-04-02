@@ -71,7 +71,7 @@
         </div>
 
         <div class="flex items-center space-x-1">
-            <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click="previousPage" :disabled="!$paginator->previousPageUrl()" />
+            <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click.preserve-scroll="previousPage" :disabled="!$paginator->previousPageUrl()" />
 
             @foreach ($pages as $page)
                 @if ($page === '...')
@@ -79,11 +79,11 @@
                 @else
                     <x-mary-button :label="(string) $page"
                         class="btn-sm {{ $page == $currentPage ? 'btn-primary' : 'btn-ghost' }}"
-                        wire:click="gotoPage({{ $page }})" />
+                        wire:click.preserve-scroll="gotoPage({{ $page }})" />
                 @endif
             @endforeach
 
-            <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click="nextPage" :disabled="!$paginator->nextPageUrl()" />
+            <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click.preserve-scroll="nextPage" :disabled="!$paginator->nextPageUrl()" />
         </div>
     </div>
 @endif

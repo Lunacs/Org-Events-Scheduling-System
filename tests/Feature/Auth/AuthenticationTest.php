@@ -4,7 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -58,7 +58,7 @@ class AuthenticationTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        Volt::test('pages.auth.osa-login')
+        Livewire::test('pages.auth.osa-login')
             ->set('form.email', 'osa@example.com')
             ->set('form.password', 'password')
             ->set('form.remember', true)

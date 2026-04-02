@@ -5,9 +5,7 @@
         $stats = $this->stats;
         $recentTickets = $this->recentTickets;
         $pendingApprovals = $this->pendingApprovals;
-        $upcomingEvents = $this->upcomingEvents;
-        $recentActivity = $this->recentActivity;
-        $todaysSummary = $this->todaysSummary;
+        
     @endphp
 
     <div class="p-6 space-y-6">
@@ -240,133 +238,11 @@
                     @endif
                 </div>
 
-                <!-- Recent Activity Timeline -->
-                <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6 mt-6">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Latest updates and changes</p>
-                        </div>
-                    </div>
-                    @if (count($recentActivity) > 0)
-                        <div class="space-y-4">
-                            @foreach ($recentActivity as $index => $activity)
-                                <div class="flex gap-3" wire:key="activity-{{ $activity['id'] }}">
-                                    <div class="flex flex-col items-center">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                            <x-mary-icon :name="$activity['icon']"
-                                                class="w-4 h-4 {{ $activity['icon_class'] }}" />
-                                        </div>
-                                        @if (!$loop->last)
-                                            <div class="w-px flex-1 bg-gray-200 dark:bg-gray-700 mt-2"></div>
-                                        @endif
-                                    </div>
-                                    <div class="flex-1 pb-4">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $activity['action'] }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $activity['details'] }}
-                                        </p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                            {{ $activity['time_ago'] }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <x-mary-icon name="o-clock" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                            <p class="text-sm text-gray-500">No recent activity</p>
-                        </div>
-                    @endif
-                </div>
+                <livewire:osa.dashboard.recent-activity defer.bundle />
             </div>
 
-            <!-- Right Column: Upcoming Events -->
-            <div class="col-span-1">
-                <x-mary-card class="shadow-md md:sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
-                    <x-slot:menu>
-                        <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost"
-                            wire:navigate />
-                    </x-slot:menu>
-
-                    @if (count($upcomingEvents) > 0)
-                        <div class="space-y-3">
-                            @foreach ($upcomingEvents as $index => $event)
-                                <div class="group p-3 bg-gradient-to-br from-base-200 to-base-100 rounded-lg border border-base-300 hover:shadow-md transition-all"
-                                    wire:key="upcoming-{{ $index }}">
-                                    <!-- Date Badge -->
-                                    <div class="flex items-start gap-3">
-                                        <div
-                                            class="text-center bg-primary text-primary-content rounded-lg p-2 min-w-[48px]">
-                                            <div class="text-xs font-medium">
-                                                {{ \Carbon\Carbon::parse($event['date'])->format('M') }}
-                                            </div>
-                                            <div class="text-xl font-bold">
-                                                {{ \Carbon\Carbon::parse($event['date'])->format('d') }}
-                                            </div>
-                                        </div>
-
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="font-semibold text-sm dark:text-white mb-1 truncate">
-                                                {{ $event['title'] }}
-                                            </h4>
-                                            <div class="space-y-1">
-                                                <div
-                                                    class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                                    <x-mary-icon name="o-user-group" class="w-3 h-3" />
-                                                    <span class="truncate">{{ $event['organization'] }}</span>
-                                                </div>
-                                                <div
-                                                    class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                                    <x-mary-icon name="o-map-pin" class="w-3 h-3" />
-                                                    <span class="truncate">{{ $event['venue'] }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        <div class="mt-4 pt-4 border-t">
-                            <x-mary-button label="View Full Calendar" icon-right="o-arrow-right"
-                                class="btn-sm btn-block btn-outline" link="/admin/calendar" wire:navigate />
-                        </div>
-                    @else
-                        <div class="text-center py-12">
-                            <div
-                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                                <x-mary-icon name="o-calendar-days" class="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p class="text-sm text-gray-500 font-medium">No upcoming events</p>
-                            <p class="text-xs text-gray-400 mt-1">Approved events will appear here</p>
-                        </div>
-                    @endif
-                </x-mary-card>
-
-                <!-- Today's Summary -->
-                <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-5 mt-4">
-                    <h3 class="text-md font-bold text-gray-900 dark:text-white mb-4">Today's Summary</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500 dark:text-gray-400">New Requests</span>
-                            <span
-                                class="font-bold text-gray-900 dark:text-white">{{ $todaysSummary['newRequests'] }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Processed</span>
-                            <span
-                                class="font-bold text-emerald-600 dark:text-emerald-500">{{ $todaysSummary['processed'] }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Pending Review</span>
-                            <span
-                                class="font-bold text-amber-600 dark:text-amber-500">{{ $todaysSummary['pending'] }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Right Column: Upcoming Events + Today's Summary (deferred) -->
+            <livewire:osa.dashboard.sidebar defer.bundle />
         </div>
 
         <!-- Enhanced Quick Actions with Categories -->

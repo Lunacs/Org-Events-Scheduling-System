@@ -2,29 +2,26 @@
 
 namespace App\Livewire\Superadmin;
 
-use App\Models\User;
 use App\Models\Event;
-use App\Models\Ticket;
-use App\Models\Transaction_Logs;
 use App\Models\Event_Schedule;
-use App\Services\TransactionLogService;
+use App\Models\Ticket;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\Lazy;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use Mary\Traits\Toast;
 
 #[Lazy]
 class Dashboard extends Component
 {
     use Toast;
+
     #[Title('Superadmin - Dashboard')]
     #[Layout('components.layouts.superadmin')]
-
     public function placeholder()
     {
         return view('livewire.superadmin.placeholders.dashboard');
@@ -36,10 +33,7 @@ class Dashboard extends Component
             'stats' => $this->stats,
             'todaySnapshot' => $this->todaySnapshot,
             'attentionRequired' => $this->attentionRequired,
-            'pendingApprovals' => $this->pendingApprovals,
-            'recentActivity' => $this->recentActivity,
             'upcomingEvents' => $this->upcomingEvents,
-            'headers' => $this->headers,
         ]);
     }
 
@@ -151,59 +145,6 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 180)] // 3 minutes cache
-    public function pendingApprovals(): array
-    {
-        return Cache::remember('superadmin_dashboard_pending_approvals', 180, function () {
-            return Ticket::select(['ticket_id', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                ->with([
-                    'eventType:event_type_id,type_name',
-                    'user:user_id,name'
-                ])
-                ->whereIn('status', ['pending', 'gso_review', 'pending_osa_approval'])
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get()
-                ->map(function ($ticket) {
-                    $userDeleted = $ticket->user?->trashed();
-                    return [
-                        'id' => $ticket->ticket_id,
-                        'request' => $ticket->title,
-                        'type' => $ticket->eventType ? $ticket->eventType->type_name : 'N/A',
-                        'submitted' => $ticket->created_at->setTimezone('Asia/Manila')->format('M d, Y g:i A'),
-                        'status' => ucfirst(str_replace('_', ' ', $ticket->status)),
-                        'raw_status' => $ticket->status,
-                        'user' => $userDeleted ? 'Deleted User' : ($ticket->user ? $ticket->user->name : 'Unknown'),
-                    ];
-                })
-                ->toArray();
-        });
-    }
-
-    #[Computed(persist: true, seconds: 120)] // 2 minutes cache
-    public function recentActivity(): array
-    {
-        return Cache::remember('superadmin_dashboard_recent_activity', 120, function () {
-            return Transaction_Logs::select(['log_id', 'action', 'details', 'created_at', 'user_id'])
-                ->with('user:user_id,email,name')
-                ->orderBy('created_at', 'desc')
-                ->limit(8)
-                ->get()
-                ->map(function ($log) {
-                    return [
-                        'id' => $log->log_id,
-                        'user' => $log->user ? $log->user->name : 'System',
-                        'email' => $log->user ? $log->user->email : 'system@app',
-                        'action' => $log->action,
-                        'details' => $log->details,
-                        'timestamp' => $log->created_at->setTimezone('Asia/Manila')->format('M d, Y g:i A'),
-                        'time_ago' => $log->created_at->diffForHumans(),
-                    ];
-                })
-                ->toArray();
-        });
-    }
-
     #[Computed(persist: true, seconds: 300)] // 5 minutes cache
     public function upcomingEvents(): array
     {
@@ -236,18 +177,5 @@ class Dashboard extends Component
                 })
                 ->toArray();
         });
-    }
-
-
-
-    #[Computed]
-    public function headers(): array
-    {
-        return [
-            ['key' => 'request', 'label' => 'Request'],
-            ['key' => 'type', 'label' => 'Type'],
-            ['key' => 'submitted', 'label' => 'Submitted'],
-            ['key' => 'status', 'label' => 'Status'],
-        ];
     }
 }

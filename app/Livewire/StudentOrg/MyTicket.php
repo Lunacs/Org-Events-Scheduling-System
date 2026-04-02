@@ -2,6 +2,8 @@
 
 namespace App\Livewire\StudentOrg;
 
+use App\Models\Ticket;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -33,7 +35,7 @@ class MyTicket extends Component
     private function getBaseTicketsQuery()
     {
         $user = auth()->user();
-        $query = \App\Models\Ticket::query()
+        $query = Ticket::query()
             ->with([
                 'eventType',
                 'venue',
@@ -66,7 +68,7 @@ class MyTicket extends Component
     #[On('resubmit-ticket')]
     public function resubmitTicket($ticketId)
     {
-        $ticket = \App\Models\Ticket::query()
+        $ticket = Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
             ->whereHas('user', function ($q) {
                 $orgId = $this->getUserOrgId();
@@ -189,7 +191,7 @@ class MyTicket extends Component
         }
 
         $user = auth()->user();
-        $query = \App\Models\Ticket::query()
+        $query = Ticket::query()
             ->with([
                 'eventType',
                 'comments',
@@ -300,7 +302,7 @@ class MyTicket extends Component
     {
         $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
 
-        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             $routeName,
             now()->addMinutes(5),
             ['attachment' => $attachmentId]
@@ -309,7 +311,14 @@ class MyTicket extends Component
 
     public function render()
     {
-        $allTickets = $this->getBaseTicketsQuery()->get();
+        $baseQuery = $this->getBaseTicketsQuery();
+
+        $ticketStats = [
+            'total' => (clone $baseQuery)->count(),
+            'under_review' => (clone $baseQuery)->whereNotIn('status', ['approved', 'for_revision'])->count(),
+            'approved' => (clone $baseQuery)->where('status', 'approved')->count(),
+            'need_action' => (clone $baseQuery)->where('status', 'for_revision')->count(),
+        ];
 
         $ticketsQuery = $this->getBaseTicketsQuery()
             ->when($this->search, function ($query) {
@@ -346,7 +355,7 @@ class MyTicket extends Component
             ->orderBy('updated_at', 'desc');
 
         return view('livewire.student-org.my-ticket', [
-            'allTickets' => $allTickets,
+            'ticketStats' => $ticketStats,
             'tickets' => $ticketsQuery->paginate(10),
         ]);
     }

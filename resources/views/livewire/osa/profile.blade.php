@@ -76,10 +76,10 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updateProfile" icon="o-check" class="btn-primary"
-                            x-show="hasChanges">
-                            <span wire:loading.remove wire:target="updateProfile">Save Changes</span>
-                            <span wire:loading wire:target="updateProfile">Saving...</span>
+                        <x-mary-button wire:click="updateProfile" icon="o-check"
+                            class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
+                            x-show="hasChanges" spinner>
+                            Save Changes
                         </x-mary-button>
                     </x-slot:actions>
                 </x-mary-card>
@@ -152,10 +152,10 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePassword" icon="o-shield-check" class="btn-warning"
-                            x-show="hasPasswordInput">
-                            <span wire:loading.remove wire:target="updatePassword">Update Password</span>
-                            <span wire:loading wire:target="updatePassword">Updating...</span>
+                        <x-mary-button wire:click="updatePassword" icon="o-shield-check"
+                            class="btn-warning data-loading:opacity-50 data-loading:pointer-events-none"
+                            x-show="hasPasswordInput" spinner>
+                            Update Password
                         </x-mary-button>
                     </x-slot:actions>
                 </x-mary-card>
@@ -207,10 +207,10 @@
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePreferences" icon="o-check" class="btn-info"
-                            x-show="hasChanges">
-                            <span wire:loading.remove wire:target="updatePreferences">Save Preferences</span>
-                            <span wire:loading wire:target="updatePreferences">Saving...</span>
+                        <x-mary-button wire:click="updatePreferences" icon="o-check"
+                            class="btn-info data-loading:opacity-50 data-loading:pointer-events-none"
+                            x-show="hasChanges" spinner>
+                            Save Preferences
                         </x-mary-button>
                     </x-slot:actions>
                 </x-mary-card>

@@ -57,29 +57,16 @@
     {{-- FAQ List --}}
     <x-mary-card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
         @if ($faqs->count() > 0)
-            <div class="space-y-3" x-data x-init="if (typeof Sortable !== 'undefined') {
-                Sortable.create($el, {
-                    handle: '.drag-handle',
-                    animation: 150,
-                    easing: 'cubic-bezier(1, 0, 0, 1)',
-                    ghostClass: 'sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    dragClass: 'sortable-drag',
-                    onEnd: function(evt) {
-                        let items = [...evt.from.querySelectorAll('[data-faq-id]')];
-                        let orderedIds = items.map(el => parseInt(el.dataset.faqId));
-                        $wire.updateOrder(orderedIds);
-                    }
-                });
-            }">
+            <div class="space-y-3" wire:sort="handleSort">
                 @foreach ($faqs as $faq)
-                    <div data-faq-id="{{ $faq->id }}"
-                        class="faq-item group flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-white dark:bg-base-200 border border-slate-200 dark:border-base-300 rounded-xl hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all duration-200 gap-4">
+                    <div wire:key="faq-{{ $faq->id }}" wire:sort:item="{{ $faq->id }}"
+                        class="group flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-white dark:bg-base-200 border border-slate-200 dark:border-base-300 rounded-xl hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all duration-200 gap-4">
                         {{-- FAQ Content --}}
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start gap-3">
                                 {{-- Drag Handle --}}
-                                <div class="drag-handle cursor-grab active:cursor-grabbing w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-base-300 hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+                                <div wire:sort:handle
+                                    class="cursor-grab active:cursor-grabbing w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-base-300 hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
                                     title="Drag to reorder">
                                     <x-mary-icon name="o-bars-3" class="w-4 h-4 text-slate-400 dark:text-slate-500" />
                                 </div>

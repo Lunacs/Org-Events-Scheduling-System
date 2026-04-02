@@ -1,44 +1,54 @@
 <?php
 
 // Public Pages
-use App\Http\Controllers\Gso\ReportsExportController;
-use App\Livewire\AboutUs;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\DraftAttachmentController;
 // OSA/admin Imports
+use App\Http\Controllers\Gso\ReportsExportController;
+use App\Http\Controllers\VerifyNewEmailController;
+use App\Livewire\AboutUs;
 use App\Livewire\Faq;
 use App\Livewire\Gso\Calendar as GsoCalendar;
 use App\Livewire\Gso\Dashboard as GsoDashboard;
 use App\Livewire\Gso\Details as GsoDetails;
 use App\Livewire\Gso\Notifications as GsoNotifications;
+// Superadmin Imports
 use App\Livewire\Gso\Profile as GsoProfile;
 use App\Livewire\Gso\Reports as GsoReports;
 use App\Livewire\Gso\TicketReview as GsoTicketReview;
-// Superadmin Imports
 use App\Livewire\Osa\Archive;
 use App\Livewire\Osa\Dashboard as OsaDashboard;
 use App\Livewire\Osa\EventCalendar;
 use App\Livewire\Osa\Notifications as OsaNotifications;
+// Gso/Offices Imports
 use App\Livewire\Osa\Profile as OsaProfile;
 use App\Livewire\Osa\Reports;
 use App\Livewire\Osa\TicketManagement;
-// Gso/Offices Imports
 use App\Livewire\Osa\TicketReview\Index as TicketReviewIndex;
 use App\Livewire\Osa\TicketReview\Show as TicketReviewShow;
 use App\Livewire\StudentOrg\Calendar;
 use App\Livewire\StudentOrg\Dashboard as StudentOrgDashboard;
 use App\Livewire\StudentOrg\History;
+// Student Org Imports
 use App\Livewire\StudentOrg\MyTicket;
 use App\Livewire\StudentOrg\Notifications;
 use App\Livewire\StudentOrg\Profile as StudentOrgProfile;
-// Student Org Imports
 use App\Livewire\StudentOrg\Reschedule;
 use App\Livewire\StudentOrg\SubmitTicket;
 use App\Livewire\StudentOrg\TicketDetails;
+use App\Livewire\Superadmin\Calendar\Index;
 use App\Livewire\Superadmin\Dashboard;
+// Other Imports
+use App\Livewire\Superadmin\FaqEditor;
+use App\Livewire\Superadmin\FaqManager;
 use App\Livewire\Superadmin\Logs;
 use App\Livewire\Superadmin\Profile as SuperadminProfile;
 use App\Livewire\Superadmin\Roles\Index as RolesIndex;
+use App\Livewire\Superadmin\SystemSettings\ContentSectionEditor;
+use App\Livewire\Superadmin\SystemSettings\EventTypeEditor;
 use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
-// Other Imports
+use App\Livewire\Superadmin\SystemSettings\VenueEditor;
+use App\Livewire\Superadmin\Tickets\TicketEditor;
 use App\Livewire\Superadmin\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -101,18 +111,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('keep-alive');
 
     // Signed URL routes for attachment access (private storage)
-    Route::get('/attachments/{attachment}/preview', [\App\Http\Controllers\AttachmentController::class, 'preview'])
+    Route::get('/attachments/{attachment}/preview', [AttachmentController::class, 'preview'])
         ->name('attachments.preview')
         ->middleware('signed');
-    Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
+    Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])
         ->name('attachments.download')
         ->middleware('signed');
 
+    Route::get('/attachments/draft/{token}', [DraftAttachmentController::class, 'show'])
+        ->name('attachments.draft')
+        ->middleware('signed');
+
     // Email change verification routes (signed URLs)
-    Route::get('/email/verify-new/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'verify'])
+    Route::get('/email/verify-new/{id}/{hash}', [VerifyNewEmailController::class, 'verify'])
         ->name('email.verify-new')
         ->middleware('signed');
-    Route::get('/email/cancel-change/{id}/{hash}', [\App\Http\Controllers\VerifyNewEmailController::class, 'cancel'])
+    Route::get('/email/cancel-change/{id}/{hash}', [VerifyNewEmailController::class, 'cancel'])
         ->name('email.cancel-change')
         ->middleware('signed');
 });
@@ -139,24 +153,24 @@ Route::prefix('superadmin')
         Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
         Route::get('/users', UsersIndex::class)->name('superadmin.users');
         Route::get('/roles', RolesIndex::class)->name('superadmin.roles');
-        Route::get('/calendar', \App\Livewire\Superadmin\Calendar\Index::class)->name('superadmin.calendar');
-        Route::get('/tickets', \App\Livewire\Superadmin\Tickets\Index::class)->name('superadmin.tickets');
-        Route::get('/tickets/create', \App\Livewire\Superadmin\Tickets\TicketEditor::class)->name('superadmin.ticket.create');
-        Route::get('/tickets/{id}/edit', \App\Livewire\Superadmin\Tickets\TicketEditor::class)->name('superadmin.ticket.edit');
-        Route::get('/archive', \App\Livewire\Superadmin\Archive\Index::class)->name('superadmin.archive');
-        Route::get('/reports', \App\Livewire\Superadmin\Reports\Index::class)->name('superadmin.reports');
-        Route::get('/notifications', \App\Livewire\Superadmin\Notifications::class)->name('superadmin.notifications');
+        Route::get('/calendar', Index::class)->name('superadmin.calendar');
+        Route::get('/tickets', App\Livewire\Superadmin\Tickets\Index::class)->name('superadmin.tickets');
+        Route::get('/tickets/create', TicketEditor::class)->name('superadmin.ticket.create');
+        Route::get('/tickets/{id}/edit', TicketEditor::class)->name('superadmin.ticket.edit');
+        Route::get('/archive', App\Livewire\Superadmin\Archive\Index::class)->name('superadmin.archive');
+        Route::get('/reports', App\Livewire\Superadmin\Reports\Index::class)->name('superadmin.reports');
+        Route::get('/notifications', App\Livewire\Superadmin\Notifications::class)->name('superadmin.notifications');
         Route::get('/system-settings', SystemSettingsIndex::class)->name('superadmin.system-settings');
-        Route::get('/system-settings/content/create', \App\Livewire\Superadmin\SystemSettings\ContentSectionEditor::class)->name('superadmin.content-section.create');
-        Route::get('/system-settings/content/{id}/edit', \App\Livewire\Superadmin\SystemSettings\ContentSectionEditor::class)->name('superadmin.content-section.edit');
-        Route::get('/system-settings/event-types/create', \App\Livewire\Superadmin\SystemSettings\EventTypeEditor::class)->name('superadmin.event-type.create');
-        Route::get('/system-settings/event-types/{id}/edit', \App\Livewire\Superadmin\SystemSettings\EventTypeEditor::class)->name('superadmin.event-type.edit');
-        Route::get('/system-settings/venues/create', \App\Livewire\Superadmin\SystemSettings\VenueEditor::class)->name('superadmin.venue.create');
-        Route::get('/system-settings/venues/{id}/edit', \App\Livewire\Superadmin\SystemSettings\VenueEditor::class)->name('superadmin.venue.edit');
-        Route::get('/faqs', \App\Livewire\Superadmin\FaqManager::class)->name('superadmin.faqs');
-        Route::get('/faqs/create', \App\Livewire\Superadmin\FaqEditor::class)->name('superadmin.faq.create');
-        Route::get('/faqs/{id}/edit', \App\Livewire\Superadmin\FaqEditor::class)->name('superadmin.faq.edit');
-        Route::get('/admin-tools', \App\Livewire\Superadmin\AdminTools\Index::class)->name('superadmin.admin-tools');
+        Route::get('/system-settings/content/create', ContentSectionEditor::class)->name('superadmin.content-section.create');
+        Route::get('/system-settings/content/{id}/edit', ContentSectionEditor::class)->name('superadmin.content-section.edit');
+        Route::get('/system-settings/event-types/create', EventTypeEditor::class)->name('superadmin.event-type.create');
+        Route::get('/system-settings/event-types/{id}/edit', EventTypeEditor::class)->name('superadmin.event-type.edit');
+        Route::get('/system-settings/venues/create', VenueEditor::class)->name('superadmin.venue.create');
+        Route::get('/system-settings/venues/{id}/edit', VenueEditor::class)->name('superadmin.venue.edit');
+        Route::get('/faqs', FaqManager::class)->name('superadmin.faqs');
+        Route::get('/faqs/create', FaqEditor::class)->name('superadmin.faq.create');
+        Route::get('/faqs/{id}/edit', FaqEditor::class)->name('superadmin.faq.edit');
+        Route::get('/admin-tools', App\Livewire\Superadmin\AdminTools\Index::class)->name('superadmin.admin-tools');
         Route::get('/logs', Logs::class)->name('superadmin.logs');
         Route::get('/profile', SuperadminProfile::class)->name('superadmin.profile');
     });

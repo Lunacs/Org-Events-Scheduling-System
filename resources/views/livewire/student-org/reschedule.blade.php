@@ -47,8 +47,7 @@
                             @for ($i = 1; $i <= $totalSteps; $i++)
                                 <div class="flex flex-col items-center flex-1 min-w-20 gap-1">
                                     <button type="button" wire:click="goToStep({{ $i }})"
-                                        wire:loading.attr="disabled" wire:loading.class="opacity-60 cursor-not-allowed"
-                                        wire:target="goToStep" aria-label="Step {{ $i }}"
+                                        aria-label="Step {{ $i }}"
                                         aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
                                         class="w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-2 transition-colors shrink-0
                                     {{ $currentStep === $i ? 'bg-primary text-white' : '' }}
@@ -223,7 +222,7 @@
 
                                         <div x-show="alternativeVenue === 'other'" x-collapse x-cloak class="mt-4">
                                             <x-mary-input label="Please specify alternative venue"
-                                                wire:model.blur="alternativeVenueOther"
+                                                wire:model.live.blur="alternativeVenueOther"
                                                 placeholder="Enter venue name" />
                                         </div>
                                     </div>
@@ -319,20 +318,18 @@
                 {{-- Navigation Buttons --}}
                 <div class="flex flex-col-reverse sm:flex-row gap-3 sm:justify-between sm:items-center pt-6">
                     <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                        class="btn-outline w-full sm:w-auto" wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50 cursor-not-allowed" wire:target="previousStep" spinner
-                        :disabled="$currentStep === 1 || $isProcessing" />
+                        class="btn-outline w-full sm:w-auto data-loading:opacity-50 data-loading:pointer-events-none"
+                        spinner :disabled="$currentStep === 1 || $isProcessing" />
 
                     @if ($currentStep < $totalSteps)
                         <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                            class="btn-primary w-full sm:w-auto" wire:loading.attr="disabled"
-                            wire:loading.class="opacity-50 cursor-not-allowed" wire:target="nextStep" spinner
-                            :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />
+                            class="btn-primary w-full sm:w-auto data-loading:opacity-50 data-loading:pointer-events-none"
+                            spinner :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />
                     @else
                         <x-mary-button label="Submit Reschedule Request" icon="s-paper-airplane"
-                            wire:click="submitReschedule" class="btn-primary w-full sm:w-auto"
-                            wire:target="submitReschedule" wire:loading.attr="disabled"
-                            wire:loading.class="opacity-50 cursor-not-allowed" spinner :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />
+                            wire:click="submitReschedule"
+                            class="btn-primary w-full sm:w-auto data-loading:opacity-50 data-loading:pointer-events-none"
+                            spinner :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />
                     @endif
                 </div>
 
@@ -340,6 +337,32 @@
             </x-mary-form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('open-attachment-preview', ({
+                url
+            }) => {
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            });
+            Livewire.on('download-attachment', ({
+                url,
+                filename
+            }) => {
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename || 'download';
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        });
+    </script>
 
     @script
         <script>

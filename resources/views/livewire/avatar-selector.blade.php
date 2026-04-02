@@ -131,9 +131,10 @@
                 {{-- Upload hint or Preview actions --}}
                 @if ($photo)
                     <div class="flex gap-2 mt-3 justify-center">
-                        <x-mary-button wire:click="saveUploadedPhoto" icon="o-check" class="btn-success btn-sm">
-                            <span wire:loading.remove wire:target="saveUploadedPhoto">Save Photo</span>
-                            <span wire:loading wire:target="saveUploadedPhoto">Saving...</span>
+                        <x-mary-button wire:click="saveUploadedPhoto" icon="o-check"
+                            class="btn-success btn-sm data-loading:opacity-50 data-loading:pointer-events-none"
+                            spinner>
+                            Save Photo
                         </x-mary-button>
                         <x-mary-button wire:click="cancelPhotoUpload" icon="o-x-mark" class="btn-ghost btn-sm">
                             Cancel
@@ -233,10 +234,10 @@
 
 {{-- Save Button --}}
 <x-slot:actions>
-    <x-mary-button @click="saveAvatar()" class="btn-primary btn-block sm:btn-wide" icon="o-check"
-        x-bind:disabled="isUnchanged()">
-        <span wire:loading.remove wire:target="saveAvatar,useUploadedPhoto">Save Avatar</span>
-        <span wire:loading wire:target="saveAvatar,useUploadedPhoto">Saving...</span>
+    <x-mary-button @click="saveAvatar()"
+        class="btn-primary btn-block sm:btn-wide data-loading:opacity-50 data-loading:pointer-events-none"
+        icon="o-check" x-bind:disabled="isUnchanged()" spinner>
+        Save Avatar
     </x-mary-button>
 </x-slot:actions>
 </x-mary-card>
