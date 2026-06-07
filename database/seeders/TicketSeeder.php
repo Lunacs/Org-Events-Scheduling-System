@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
-use App\Models\User;
-use App\Models\Ticket;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
+use App\Models\Ticket;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class TicketSeeder extends Seeder
@@ -23,6 +23,7 @@ class TicketSeeder extends Seeder
 
         if ($users->isEmpty() || $eventTypes->isEmpty() || $fundSources->isEmpty()) {
             $this->command->warn('No users, event types, or fund sources found. Skipping ticket seeder.');
+
             return;
         }
 
@@ -85,7 +86,7 @@ class TicketSeeder extends Seeder
             [
                 'title' => 'Charity Fundraising Event',
                 'description' => 'Fundraising event to support scholarships for underprivileged students through various activities and donations.',
-                'venue_requested' => 6,
+                'venue_requested' => 5,
                 'status' => 'approved',
             ],
         ];
@@ -108,20 +109,20 @@ class TicketSeeder extends Seeder
             $dateTo = (clone $dateFrom)->addDays(rand(0, 2));
 
             Ticket::create([
-                'ticket_number' => 'TKT-' . date('Y') . '-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'ticket_number' => 'TKT-'.date('Y').'-'.str_pad($index + 1, 4, '0', STR_PAD_LEFT),
                 'user_id' => $user->user_id,
                 'event_type_id' => $eventType->event_type_id,
                 'title' => $data['title'],
                 'description' => $data['description'],
-                'proponent_contact' => '09' . rand(100000000, 999999999),
-                'adviser_contact' => '09' . rand(100000000, 999999999),
+                'proponent_contact' => '09'.rand(100000000, 999999999),
+                'adviser_contact' => '09'.rand(100000000, 999999999),
                 'plv_participants' => $plvParticipants,
                 'external_participants' => $externalParticipants,
                 'total_participants' => $plvParticipants + $externalParticipants,
                 'venue_requested' => $data['venue_requested'],
                 'alternate_venue' => null,
                 'special_requirements' => null,
-                'igp_requested' => (bool)rand(0, 1),
+                'igp_requested' => (bool) rand(0, 1),
                 'igp_details' => null,
                 'oc_accommodation' => null,
                 'oc_tsp' => rand(0, 1) ? 'in-house' : 'outsourced',
@@ -134,7 +135,7 @@ class TicketSeeder extends Seeder
                 'time_from' => '08:00',
                 'time_to' => '17:00',
                 'estimated_budget' => rand(5000, 50000),
-                'budget_breakdown' => 'Sample budget breakdown for ' . $data['title'],
+                'budget_breakdown' => 'Sample budget breakdown for '.$data['title'],
                 'additional_notes' => null,
                 'fund_source_id' => $fundSource->source_id,
                 'status' => $data['status'],

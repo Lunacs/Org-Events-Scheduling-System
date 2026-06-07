@@ -1,13 +1,11 @@
 {
     "agents": [
-        "copilot",
-        "cursor"
+        "cursor",
+        "antigravity"
     ],
-    "skills": [
-        "laravel-best-practices",
-        "livewire-development",
-        "volt-development",
-        "pest-testing",
-        "tailwindcss-development"
+    "cloud": false,
+    "guidelines": true,
+    "packages": [
+        "tonysm/rich-text-laravel"
     ]
 }

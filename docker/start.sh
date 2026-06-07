@@ -2,6 +2,10 @@
 echo "Starting application..."
 set -e
 
+if [ "${APP_ENV:-production}" = "production" ] && [ "${APP_DEBUG:-false}" = "true" ]; then
+  echo "WARNING: APP_DEBUG=true in production reduces performance and exposes sensitive data."
+fi
+
 # --- write Aiven CA if present ---
 CERT_PATH="/etc/ssl/certs/aiven-ca.pem"
 
@@ -24,12 +28,20 @@ if [ ! -f /var/www/html/public/build/manifest.json ]; then
     npm run build || true
 fi
 
-echo "Clearing old caches..."
+echo "Clearing framework caches (config, routes, views)..."
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
-php artisan cache:clear
 php artisan icons:clear
+
+# Application cache (Cache::remember, etc.) is preserved by default so Valkey/Redis
+# or database cache survives deploys. Set CLEAR_APP_CACHE_ON_DEPLOY=true to wipe it.
+if [ "${CLEAR_APP_CACHE_ON_DEPLOY:-false}" = "true" ]; then
+  echo "CLEAR_APP_CACHE_ON_DEPLOY=true — clearing application cache..."
+  php artisan cache:clear
+else
+  echo "Skipping application cache:clear (set CLEAR_APP_CACHE_ON_DEPLOY=true to force)."
+fi
 
 echo "Caching config..."
 php artisan config:cache

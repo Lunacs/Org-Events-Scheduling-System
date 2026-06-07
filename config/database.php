@@ -142,42 +142,61 @@ return [
     |
     */
 
-    'redis' => [
+    'redis' => (static function (): array {
+        $caPath = env('REDIS_SSL_CA', '/etc/ssl/certs/aiven-ca.pem');
+        $usesTls = filter_var(env('REDIS_SSL', false), FILTER_VALIDATE_BOOL)
+            || str_starts_with((string) env('REDIS_URL', ''), 'rediss://');
 
-        'client' => env('REDIS_CLIENT', 'phpredis'),
+        $tlsOptions = [];
+        if ($usesTls && is_string($caPath) && $caPath !== '' && file_exists($caPath)) {
+            $tlsOptions = [
+                'context' => [
+                    'ssl' => [
+                        'verify_peer' => true,
+                        'verify_peer_name' => true,
+                        'cafile' => $caPath,
+                    ],
+                ],
+            ];
+        }
 
-        'options' => [
-            'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
-            'persistent' => env('REDIS_PERSISTENT', false),
-        ],
-
-        'default' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
+        $connectionDefaults = [
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
+            ...$tlsOptions,
+        ];
 
-        'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
-        ],
+        return [
+            'client' => env('REDIS_CLIENT', 'phpredis'),
 
-    ],
+            'options' => [
+                'cluster' => env('REDIS_CLUSTER', 'redis'),
+                'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+                'persistent' => env('REDIS_PERSISTENT', false),
+            ],
+
+            'default' => [
+                'url' => env('REDIS_URL'),
+                'host' => env('REDIS_HOST', '127.0.0.1'),
+                'username' => env('REDIS_USERNAME'),
+                'password' => env('REDIS_PASSWORD'),
+                'port' => env('REDIS_PORT', '6379'),
+                'database' => env('REDIS_DB', '0'),
+                ...$connectionDefaults,
+            ],
+
+            'cache' => [
+                'url' => env('REDIS_URL'),
+                'host' => env('REDIS_HOST', '127.0.0.1'),
+                'username' => env('REDIS_USERNAME'),
+                'password' => env('REDIS_PASSWORD'),
+                'port' => env('REDIS_PORT', '6379'),
+                'database' => env('REDIS_CACHE_DB', '1'),
+                ...$connectionDefaults,
+            ],
+        ];
+    })(),
 
 ];

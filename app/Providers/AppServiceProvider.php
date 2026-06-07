@@ -3,14 +3,21 @@
 namespace App\Providers;
 
 use App\Models\Attachment;
+use App\Models\Office_Approval;
+use App\Models\Ticket;
 use App\Observers\AttachmentObserver;
+use App\Observers\OfficeApprovalObserver;
+use App\Observers\TicketObserver;
 use App\View\Html\Sanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,8 +60,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Mail::extend('brevo', function () {
+            return (new BrevoTransportFactory)->create(
+                new Dsn('brevo+api', 'default', config('services.brevo.key'))
+            );
+        });
+
         // Register observers
         Attachment::observe(AttachmentObserver::class);
+        Ticket::observe(TicketObserver::class);
+        Office_Approval::observe(OfficeApprovalObserver::class);
 
         // Automatically eager load relationships (Laravel 12.0.8+)
         Model::automaticallyEagerLoadRelationships();

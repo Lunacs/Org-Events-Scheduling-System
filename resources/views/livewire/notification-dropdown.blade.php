@@ -3,7 +3,7 @@ use Illuminate\Support\Carbon;
 use App\Models\User;
 @endphp
 
-<div wire:poll.30s="loadNotifications">
+<div wire:poll.60s.visible="loadNotifications">
     <!-- Notifications Dropdown -->
     <x-mary-dropdown right>
         {{-- Trigger Button --}}

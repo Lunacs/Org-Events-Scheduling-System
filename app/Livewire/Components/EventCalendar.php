@@ -7,6 +7,10 @@ use App\Models\Event_Schedule;
 use App\Models\Event_Type;
 use App\Models\Student_Organization;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
@@ -19,6 +23,8 @@ use Mary\Traits\Toast;
 class EventCalendar extends Component
 {
     use Toast;
+
+    private const CALENDAR_CACHE_TTL_SECONDS = 600;
 
     #[Url(except: 'dayGridMonth')]
     public $viewMode = 'dayGridMonth';
@@ -254,8 +260,30 @@ class EventCalendar extends Component
     #[Computed]
     public function eventsForCalendar()
     {
-        // Fetch only approved event schedules (from Event_Schedules table)
-        $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
+        return Cache::remember(
+            $this->calendarFiltersCacheKey('events'),
+            self::CALENDAR_CACHE_TTL_SECONDS,
+            fn () => $this->buildCalendarEventsFromSchedules($this->loadFilteredEventSchedules()),
+        );
+    }
+
+    protected function calendarFiltersCacheKey(string $suffix): string
+    {
+        return sprintf(
+            'event_calendar:%s:%s:%s:%s:%s:%s',
+            $suffix,
+            $this->statusFilter ?: 'all',
+            $this->organizationFilter ?: 'none',
+            $this->eventTypeFilter ?: 'none',
+            $this->showPastEvents ? 'past' : 'current_year',
+            Carbon::now()->format('Y'),
+        );
+    }
+
+    protected function baseCalendarSchedulesQuery(): Builder
+    {
+        return Event_Schedule::query()
+            ->select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
                 'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
@@ -268,28 +296,31 @@ class EventCalendar extends Component
                         'eventType:event_type_id,type_name',
                     ]),
             ])
-            // Always show only approved event schedules
             ->where('status', 'approved')
-            // Filter by ticket status - 'all' or empty means show both approved and rescheduled
             ->whereHas('event.ticket', function ($query) {
-                // Include soft-deleted users when checking ticket status
                 $query->whereHas('user', fn ($q) => $q->withTrashed());
 
                 if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
-                    // Show both approved and rescheduled when 'all' or no specific filter
                     $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
                 }
             })
-            // Apply organization filter if set
             ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
-            // Apply event type filter if set
             ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
-            // Hide past events (older than current year) by default unless toggle is on
-            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()))
-            ->get();
+            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
+    }
 
+    protected function loadFilteredEventSchedules(): Collection
+    {
+        return $this->baseCalendarSchedulesQuery()->get();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function buildCalendarEventsFromSchedules(Collection $eventSchedules): array
+    {
         $allEvents = [];
 
         foreach ($eventSchedules as $schedule) {
@@ -499,29 +530,15 @@ class EventCalendar extends Component
     #[Computed]
     public function uniqueEventsCount()
     {
-        // Count unique events that match the current filters
-        $query = Event_Schedule::query()
-            // Mirror the calendar query: only count approved schedules
-            ->where('status', 'approved')
-            // Filter by ticket status - 'all' or empty means show both approved and rescheduled
-            ->whereHas('event.ticket', function ($query) {
-                // Always include soft-deleted users (matches calendar fetch)
-                $query->whereHas('user', fn ($q) => $q->withTrashed());
-
-                if ($this->statusFilter && $this->statusFilter !== 'all') {
-                    $query->where('status', $this->statusFilter);
-                } else {
-                    // Show both approved and rescheduled when 'all' or no specific filter
-                    $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
-                }
-            })
-            ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
-            ->when($this->eventTypeFilter, fn ($query) => $query->whereHas('event', fn ($q) => $q->where('event__type_id', $this->eventTypeFilter)))
-            // Hide past events (older than current year) by default unless toggle is on
-            ->when(! $this->showPastEvents, fn ($query) => $query->where('start_date', '>=', Carbon::now()->startOfYear()));
-
-        // Count distinct event_ids to get unique events (MySQL compatible)
-        return (int) $query->selectRaw('COUNT(DISTINCT event_id) as count')->value('count');
+        return Cache::remember(
+            $this->calendarFiltersCacheKey('unique_count'),
+            self::CALENDAR_CACHE_TTL_SECONDS,
+            fn () => (int) $this->baseCalendarSchedulesQuery()
+                ->reorder()
+                ->withoutEagerLoads()
+                ->select(DB::raw('COUNT(DISTINCT event_id) as count'))
+                ->value('count'),
+        );
     }
 
     #[Computed]

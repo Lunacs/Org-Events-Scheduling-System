@@ -8,7 +8,8 @@ use App\Models\Office_Approval;
 use App\Models\Transaction_Logs;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -17,89 +18,134 @@ use Mary\Traits\Toast;
 class Dashboard extends Component
 {
     use ResolvesOfficeContext, Toast;
+
     #[Title('Dashboard - GSO')]
     #[Layout('components.layouts.gso-layout')]
 
-
+    // Cache duration in seconds
+    protected int $cacheDuration = 300; // 5 minutes
 
     public function render()
     {
         $user = Auth::user();
-        $officeId = $this->resolveOfficeId($user);
-
-        $baseApprovalQuery = Office_Approval::query()
-            ->where('office_id', $officeId);
-
-        $stats = [
-            'pending' => (clone $baseApprovalQuery)->where('decision', 'pending')->count(),
-            'approvedToday' => (clone $baseApprovalQuery)
-                ->where('decision', 'approved')
-                ->whereDate('updated_at', Carbon::today())
-                ->count(),
-            'for_revisionToday' => (clone $baseApprovalQuery)
-                ->where('decision', 'for_revision')
-                ->whereDate('updated_at', Carbon::today())
-                ->count(),
-            'upcomingEvents' => Event_Schedule::query()
-                ->where('status', 'approved')
-                ->where('start_date', '>=', Carbon::now())
-                ->count(),
-        ];
-
-        $pendingApprovals = (clone $baseApprovalQuery)
-            ->where('decision', 'pending')
-            ->with([
-                'ticket.eventType',
-                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
-            ])
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get()
-            ->map(fn(Office_Approval $approval) => $this->formatPendingApproval($approval))
-            ->values();
-
-        $approvalSnapshot = (clone $baseApprovalQuery)
-            ->with([
-                'ticket.eventType',
-                'ticket.user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
-            ])
-            ->orderByDesc('created_at')
-            ->limit(25)
-            ->get()
-            ->unique('ticket_id')
-            ->values()
-            ->take(5)
-            ->map(fn(Office_Approval $approval) => $this->formatPendingApproval($approval))
-            ->values();
-
-        $recentActivities = Transaction_Logs::query()
-            ->with(['user' => fn($q) => $q->withTrashed()])
-            ->whereHas('user', fn($userQuery) => $userQuery->withTrashed()->where('office_id', $officeId))
-            ->latest('created_at')
-            ->limit(5)
-            ->get()
-            ->map(function (Transaction_Logs $log) {
-                return [
-                    'id' => $log->log_id,
-                    'action' => $log->action,
-                    'details' => $log->details,
-                    'time_ago' => optional($log->created_at)->diffForHumans(),
-                ];
-            })
-            ->values();
-
-        $ticketsInQueue = $this->countUniqueTicketsInQueue($officeId);
 
         return view('livewire.gso.dashboard', [
-            'stats' => $stats,
-            'pendingApprovals' => $pendingApprovals,
-            'approvalSnapshot' => $approvalSnapshot,
-            'recentActivities' => $recentActivities,
+            'stats' => $this->stats,
+            'pendingApprovals' => $this->pendingApprovals,
+            'approvalSnapshot' => $this->approvalSnapshot,
+            'recentActivities' => $this->recentActivities,
             'user' => $user,
-            'ticketsInQueue' => $ticketsInQueue,
+            'ticketsInQueue' => $this->ticketsInQueue,
         ]);
     }
 
+    #[Computed(persist: true, seconds: 300)]
+    public function stats(): array
+    {
+        $officeId = $this->resolveOfficeId(Auth::user());
+
+        return Cache::remember("gso_dashboard_stats_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+            $baseApprovalQuery = Office_Approval::query()
+                ->where('office_id', $officeId);
+
+            return [
+                'pending' => (clone $baseApprovalQuery)->where('decision', 'pending')->count(),
+                'approvedToday' => (clone $baseApprovalQuery)
+                    ->where('decision', 'approved')
+                    ->whereDate('updated_at', Carbon::today())
+                    ->count(),
+                'for_revisionToday' => (clone $baseApprovalQuery)
+                    ->where('decision', 'for_revision')
+                    ->whereDate('updated_at', Carbon::today())
+                    ->count(),
+                'upcomingEvents' => Event_Schedule::query()
+                    ->where('status', 'approved')
+                    ->where('start_date', '>=', Carbon::now())
+                    ->count(),
+            ];
+        });
+    }
+
+    #[Computed(persist: true, seconds: 300)]
+    public function pendingApprovals(): array
+    {
+        $officeId = $this->resolveOfficeId(Auth::user());
+
+        return Cache::remember("gso_dashboard_pending_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+            return Office_Approval::query()
+                ->where('office_id', $officeId)
+                ->where('decision', 'pending')
+                ->with([
+                    'ticket.eventType',
+                    'ticket.user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
+                ])
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get()
+                ->map(fn (Office_Approval $approval) => $this->formatPendingApproval($approval))
+                ->values()
+                ->toArray();
+        });
+    }
+
+    #[Computed(persist: true, seconds: 300)]
+    public function approvalSnapshot(): array
+    {
+        $officeId = $this->resolveOfficeId(Auth::user());
+
+        return Cache::remember("gso_dashboard_snapshot_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+            return Office_Approval::query()
+                ->where('office_id', $officeId)
+                ->with([
+                    'ticket.eventType',
+                    'ticket.user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
+                ])
+                ->orderByDesc('created_at')
+                ->limit(25)
+                ->get()
+                ->unique('ticket_id')
+                ->values()
+                ->take(5)
+                ->map(fn (Office_Approval $approval) => $this->formatPendingApproval($approval))
+                ->values()
+                ->toArray();
+        });
+    }
+
+    #[Computed(persist: true, seconds: 180)]
+    public function recentActivities(): array
+    {
+        $officeId = $this->resolveOfficeId(Auth::user());
+
+        return Cache::remember("gso_dashboard_activities_{$officeId}", 180, function () use ($officeId) {
+            return Transaction_Logs::query()
+                ->with(['user' => fn ($q) => $q->withTrashed()])
+                ->whereHas('user', fn ($userQuery) => $userQuery->withTrashed()->where('office_id', $officeId))
+                ->latest('created_at')
+                ->limit(5)
+                ->get()
+                ->map(function (Transaction_Logs $log) {
+                    return [
+                        'id' => $log->log_id,
+                        'action' => $log->action,
+                        'details' => $log->details,
+                        'time_ago' => optional($log->created_at)->diffForHumans(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+        });
+    }
+
+    #[Computed(persist: true, seconds: 300)]
+    public function ticketsInQueue(): int
+    {
+        $officeId = $this->resolveOfficeId(Auth::user());
+
+        return Cache::remember("gso_dashboard_queue_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+            return $this->countUniqueTicketsInQueue($officeId);
+        });
+    }
 
     protected function formatPendingApproval(Office_Approval $approval): array
     {

@@ -39,8 +39,11 @@ FROM php:8.4-fpm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx supervisor libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
     libwebp-dev libonig-dev default-mysql-client ca-certificates \
+    $PHPIZE_DEPS \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd fileinfo \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
@@ -65,8 +68,17 @@ COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
 ENV APP_ENV=production
-ENV APP_DEBUG=true
+ENV APP_DEBUG=false
 ENV LOG_CHANNEL=stderr
+
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.enable_cli=0'; \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=16'; \
+    echo 'opcache.max_accelerated_files=10000'; \
+    echo 'opcache.validate_timestamps=0'; \
+    } > /usr/local/etc/php/conf.d/opcache.ini
 
 EXPOSE 80
 CMD ["/start.sh"]
