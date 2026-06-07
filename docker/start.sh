@@ -81,5 +81,10 @@ if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then
     php artisan db:seed --force
 fi
 
+# Fix permissions after all artisan commands (they run as root and create files owned by root)
+echo "Fixing storage permissions..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
