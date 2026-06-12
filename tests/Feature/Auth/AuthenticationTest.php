@@ -14,7 +14,7 @@ class AuthenticationTest extends TestCase
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create([
-            'role' => User::getRoleId('osa'),
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         $this->actingAs($user);
@@ -35,7 +35,7 @@ class AuthenticationTest extends TestCase
     public function test_authenticated_user_can_access_dashboard(): void
     {
         $user = User::factory()->create([
-            'role' => User::getRoleId('osa'),
+            'role_id' => User::getRoleId('osa'),
         ]);
 
         $response = $this->actingAs($user)->get('/admin/dashboard');
@@ -53,12 +53,12 @@ class AuthenticationTest extends TestCase
     public function test_remember_me_functionality_works(): void
     {
         $user = User::factory()->create([
-            'role' => User::getRoleId('osa'),
+            'role_id' => User::getRoleId('osa'),
             'email' => 'osa@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        Livewire::test('pages.auth.osa-login')
+        Livewire::test('pages.auth.login')
             ->set('form.email', 'osa@example.com')
             ->set('form.password', 'password')
             ->set('form.remember', true)

@@ -1,20 +1,25 @@
 <div>
     {{-- Header --}}
-    <div class="mb-8">
-        <div class="bg-base-100 rounded-box shadow-lg p-6">
+    {{-- Header --}}
+    <section
+        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
+        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+        <div class="relative p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-heading font-bold text-base-content">Reports</h1>
                     <p class="text-base-content/70 mt-1">Generate comprehensive reports on events, approvals, and
                         organization participation</p>
                 </div>
-                <x-mary-button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
-                    spinner>
-                    Generate Report
-                </x-mary-button>
+                <div class="flex items-center gap-2 relative z-10">
+                    <x-mary-button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
+                        spinner>
+                        Generate Report
+                    </x-mary-button>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     {{-- Analytics Charts Section (Now at top) --}}
     @island(name: 'charts')

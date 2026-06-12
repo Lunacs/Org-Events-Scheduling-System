@@ -2,15 +2,25 @@
 
 namespace App\Models;
 
+use Database\Factories\EventTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Tonysm\RichTextLaravel\Models\Traits\HasRichText;
 
 class Event_Type extends Model
 {
-    /** @use HasFactory<\Database\Factories\EventTypeFactory> */
+    /** @use HasFactory<EventTypeFactory> */
     use HasFactory;
+
     use HasRichText;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): EventTypeFactory
+    {
+        return EventTypeFactory::new();
+    }
 
     /**
      * The rich text attributes.

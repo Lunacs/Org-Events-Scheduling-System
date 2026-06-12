@@ -9,20 +9,16 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             {{-- Welcome Card --}}
             @persist('student-dashboard-header')
-                <x-mary-card class="shadow-md overflow-hidden border border-base-300/60">
-                    <div class="relative bg-linear-to-br from-primary/15 via-base-100 to-base-100 p-6">
-                        <div
-                            class="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-primary/15 blur-2xl">
-                        </div>
-
+                <section
+                    class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+                    <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+                    <div class="relative p-6 sm:p-8">
                         <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div class="flex items-start space-x-4">
                                 <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
                                     <x-mary-icon name="s-building-office" class="w-6 h-6 text-primary" />
                                 </span>
                                 <div>
-                                    <p class="text-xs uppercase tracking-[0.18em] text-base-content/60">Student Organization
-                                    </p>
                                     <h1 class="text-2xl md:text-3xl font-bold font-heading text-base-content">
                                         Welcome back, {{ auth()->user()->name ?? 'Student Organization' }}
                                     </h1>
@@ -45,7 +41,7 @@
                             </div>
                         </div>
                     </div>
-                </x-mary-card>
+                </section>
             @endpersist
 
             {{-- Stats Cards --}}

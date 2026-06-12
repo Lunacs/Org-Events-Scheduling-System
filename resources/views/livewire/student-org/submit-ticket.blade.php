@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-6 md:py-10 overflow-x-hidden">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             {{-- Header --}}
             <section
                 class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-info/10 shadow-sm">
@@ -14,7 +14,6 @@
                 <div class="relative p-6 sm:p-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
                             <h1 class="text-3xl font-heading font-bold text-base-content">Submit Ticket</h1>
                             <p class="text-base-content/70 mt-1">Create a new event proposal request and track its
                                 approval progress.</p>

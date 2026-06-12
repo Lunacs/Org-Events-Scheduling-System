@@ -58,7 +58,7 @@
                 </div>
 
                 {{-- Page Content --}}
-                <div class="flex-1">
+                <div class="flex-1 px-4">
                     {{ $slot }}
                 </div>
 

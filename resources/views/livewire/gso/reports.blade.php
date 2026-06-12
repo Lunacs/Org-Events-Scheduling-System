@@ -1,19 +1,20 @@
-﻿<div x-data="gsoReports()" x-ref="reportsContainer">
+<div x-data="gsoReports()" x-ref="reportsContainer">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <!-- Page Header -->
-        <div class="mb-6">
-            <div class="bg-base-100 rounded-lg shadow-lg p-6">
+        <section
+            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 class="text-3xl font-heading font-bold text-gray-900 dark:text-gray-100">Reports & Analytics
-                        </h1>
-                        <p class="text-md font-sans text-base-content/70 dark:text-base-content/50 mt-1">
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Reports & Analytics</h1>
+                        <p class="text-sm text-base-content/70 mt-1">
                             Generate comprehensive reports on event approvals and request trends
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
         <!-- Report Controls -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">

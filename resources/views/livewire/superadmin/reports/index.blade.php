@@ -3,28 +3,34 @@
         wire:target="dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
 
         {{-- Header --}}
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold font-heading text-base-content">Reports & Analytics</h1>
-                <p class="text-sm text-base-content/60 mt-1">Generate and export system reports</p>
-            </div>
-            <div class="flex gap-2">
-                {{-- Filter Toggle Button --}}
-                <button class="btn btn-outline gap-2 border-base-300" wire:click="$toggle('showFilterDrawer')">
-                    <x-mary-icon name="o-adjustments-horizontal" class="w-4 h-4" />
-                    Filter
-                    @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
-                        <span
-                            class="badge badge-primary badge-sm">{{ count($selectedOffices) + count($selectedEventTypes) }}</span>
-                    @endif
-                </button>
+        <section
+            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Reports & Analytics</h1>
+                        <p class="text-sm text-base-content/70 mt-1">Generate and export system reports</p>
+                    </div>
+                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+                        {{-- Filter Toggle Button --}}
+                        <button class="btn btn-outline bg-base-100 gap-2 border-base-300" wire:click="$toggle('showFilterDrawer')">
+                            <x-mary-icon name="o-adjustments-horizontal" class="w-4 h-4" />
+                            Filter
+                            @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
+                                <span
+                                    class="badge badge-primary badge-sm">{{ count($selectedOffices) + count($selectedEventTypes) }}</span>
+                            @endif
+                        </button>
 
-                <button class="btn btn-primary gap-2" onclick="document.getElementById('exportModal').showModal()">
-                    <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
-                    Export Report
-                </button>
+                        <button class="btn btn-primary gap-2" onclick="document.getElementById('exportModal').showModal()">
+                            <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
+                            Export Report
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
         {{-- Filter Drawer (Right Side) --}}
         <x-mary-drawer wire:model="showFilterDrawer" title="Filters" subtitle="Refine your report data" separator

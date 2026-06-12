@@ -1,20 +1,22 @@
 <div x-data="{}" class="p-4 sm:p-6 space-y-4 sm:space-y-6">
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-heading">
-                System
-                Settings</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage core system configurations, organizations,
-                and
-                workflows.</p>
+    <section
+        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
+        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+        <div class="relative p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-heading font-bold text-base-content">System Settings</h1>
+                    <p class="text-sm text-base-content/70 mt-1 font-sans">Manage core system configurations, organizations, and workflows.</p>
+                </div>
+                <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+                    <x-mary-button icon="o-arrow-path" label="Refresh System Cache"
+                        class="btn-outline btn-sm bg-base-100 w-full sm:w-auto"
+                        wire:click="refreshCache" spinner="refreshCache" />
+                </div>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <x-mary-button icon="o-arrow-path" label="Refresh System Cache"
-                class="btn-outline btn-sm dark:border-slate-600 dark:text-slate-300 w-full sm:w-auto"
-                wire:click="refreshCache" spinner="refreshCache" />
-        </div>
-    </div>
+    </section>
 
     {{-- Tabs Interface --}}
     <x-mary-tabs wire:model="activeTab"

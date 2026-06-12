@@ -66,13 +66,19 @@
             $recentActivityItems = collect($recentActivities)->map(fn($row) => is_array($row) ? $row : (array) $row);
         @endphp
 
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-3xl font-bold font-heading text-primary dark:text-primary">GSO Dashboard</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">General Services Office - Event Management
-                    System</p>
+        <section
+            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold font-heading text-base-content">GSO Dashboard</h1>
+                        <p class="text-sm text-base-content/70 mt-1">General Services Office - Event Management
+                            System</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
         <!-- Modern Statistics Cards -->
         <div id="overview-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

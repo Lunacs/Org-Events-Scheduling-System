@@ -1,20 +1,23 @@
 <div class="p-4 sm:p-6">
     {{-- Page Header --}}
-    <div class="mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-2xl sm:text-3xl font-extrabold font-heading tracking-tight text-slate-900 dark:text-white">
-                    FAQ Management
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Manage frequently asked questions displayed on the public FAQ page
-                </p>
+    <section
+        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
+        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+        <div class="relative p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-heading font-bold text-base-content">FAQ Management</h1>
+                    <p class="text-sm text-base-content/70 mt-1">
+                        Manage frequently asked questions displayed on the public FAQ page
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+                    <x-mary-button icon="o-plus" label="Add FAQ" class="btn-primary shadow-sm w-full sm:w-auto"
+                        link="{{ route('superadmin.faq.create') }}" wire:navigate />
+                </div>
             </div>
-            <x-mary-button icon="o-plus" label="Add FAQ" class="btn-primary shadow-sm w-full sm:w-auto"
-                link="{{ route('superadmin.faq.create') }}" wire:navigate />
         </div>
-    </div>
+    </section>
 
     {{-- Filters Card --}}
     <x-mary-card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50 mb-6">

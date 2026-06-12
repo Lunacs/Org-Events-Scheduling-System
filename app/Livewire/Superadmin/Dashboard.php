@@ -78,7 +78,7 @@ class Dashboard extends Component
                 'ticketsSubmittedToday' => Ticket::whereDate('created_at', $today)->count(),
                 'ticketsApprovedToday' => Ticket::where('status', 'approved')
                     ->whereDate('updated_at', $today)->count(),
-                'ticketsRejectedToday' => Ticket::where('status', 'rejected')
+                'ticketsRejectedToday' => Ticket::where('status', 'for_revision')
                     ->whereDate('updated_at', $today)->count(),
                 'newUsersToday' => User::whereDate('created_at', $today)->count(),
             ];

@@ -10,14 +10,12 @@
             {{-- Header --}}
             <section
                 class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                <div class="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-primary/10 blur-2xl"></div>
+                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
                 <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
-                            <h1 class="mt-1 text-3xl sm:text-4xl font-heading font-extrabold text-base-content">Event
-                                History</h1>
-                            <p class="mt-2 max-w-2xl text-sm sm:text-base text-base-content/70">
+                            <h1 class="text-3xl font-heading font-bold text-base-content">Event History</h1>
+                            <p class="text-base-content/70 mt-1">
                                 Track approved, revised, completed, and cancelled event requests in one place.
                             </p>
                         </div>

@@ -47,26 +47,29 @@
             <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 border border-base-300/60">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
-                            <h1 class="text-3xl font-bold text-base-content">Notifications Center</h1>
-                            <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and
-                                university
-                                announcements</p>
-                        </div>
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                            <x-mary-button label="Mark All as Read" icon="s-check"
-                                class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto" wire:click="markAllAsRead"
-                                :disabled="$unreadCount === 0" />
-                            <x-mary-button label="Clear All Read" icon="s-trash"
-                                class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto {{ $readCount > 0 ? 'text-error' : '' }}"
-                                wire:click="clearAllRead" :disabled="$readCount === 0"
-                                wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
+                <section
+                    class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+                    <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+                    <div class="relative p-6 sm:p-8">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 class="text-3xl font-heading font-bold text-base-content">Notifications Center</h1>
+                                <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and
+                                    university
+                                    announcements</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                                <x-mary-button label="Mark All as Read" icon="s-check"
+                                    class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto" wire:click="markAllAsRead"
+                                    :disabled="$unreadCount === 0" />
+                                <x-mary-button label="Clear All Read" icon="s-trash"
+                                    class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto {{ $readCount > 0 ? 'text-error' : '' }}"
+                                    wire:click="clearAllRead" :disabled="$readCount === 0"
+                                    wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 {{-- Notification Stats --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

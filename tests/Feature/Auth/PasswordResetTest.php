@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\CustomResetPassword as ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -71,8 +71,8 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             Livewire::test('pages.auth.reset-password', ['token' => $notification->token])
                 ->set('email', $user->email)
-                ->set('password', 'new-password')
-                ->set('password_confirmation', 'new-password')
+                ->set('password', 'Password123!')
+                ->set('password_confirmation', 'Password123!')
                 ->call('resetPassword')
                 ->assertHasNoErrors();
 
@@ -95,8 +95,8 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             Livewire::test('pages.auth.reset-password', ['token' => $notification->token])
                 ->set('email', $user->email)
-                ->set('password', 'new-password')
-                ->set('password_confirmation', 'new-password')
+                ->set('password', 'Password123!')
+                ->set('password_confirmation', 'Password123!')
                 ->call('resetPassword')
                 ->assertRedirect(route('admin.login'));
 
@@ -119,8 +119,8 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             Livewire::test('pages.auth.reset-password', ['token' => $notification->token])
                 ->set('email', $user->email)
-                ->set('password', 'new-password')
-                ->set('password_confirmation', 'new-password')
+                ->set('password', 'Password123!')
+                ->set('password_confirmation', 'Password123!')
                 ->call('resetPassword')
                 ->assertRedirect(route('student-org.login'));
 
@@ -143,8 +143,8 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             Livewire::test('pages.auth.reset-password', ['token' => $notification->token])
                 ->set('email', $user->email)
-                ->set('password', 'new-password')
-                ->set('password_confirmation', 'new-password')
+                ->set('password', 'Password123!')
+                ->set('password_confirmation', 'Password123!')
                 ->call('resetPassword')
                 ->assertRedirect(route('gso.login'));
 
@@ -167,8 +167,8 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             Livewire::test('pages.auth.reset-password', ['token' => $notification->token])
                 ->set('email', $user->email)
-                ->set('password', 'new-password')
-                ->set('password_confirmation', 'new-password')
+                ->set('password', 'Password123!')
+                ->set('password_confirmation', 'Password123!')
                 ->call('resetPassword')
                 ->assertRedirect(route('superadmin.login'));
 
