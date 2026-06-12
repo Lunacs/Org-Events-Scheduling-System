@@ -10,6 +10,7 @@ use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -617,6 +618,7 @@ class Reschedule extends Component
     public function render()
     {
         $approvedEvents = $this->getBaseTicketsQuery()
+            ->select(['ticket_id', 'ticket_number', 'title', 'date_from', 'user_id', 'status'])
             ->where('status', 'approved')
             ->where('date_from', '>=', now()->addDays(self::MIN_RESCHEDULE_DAYS))
             ->get()
@@ -630,7 +632,11 @@ class Reschedule extends Component
             ? $this->getBaseTicketsQuery()->find($this->selectedEventId)
             : null;
 
-        $rescheduleGuidelines = ContentSection::getActiveByType(ContentSection::TYPE_RESCHEDULE_GUIDELINES)->first();
+        $rescheduleGuidelines = Cache::remember(
+            'reschedule_guidelines',
+            3600, // 1 hour
+            fn () => ContentSection::getActiveByType(ContentSection::TYPE_RESCHEDULE_GUIDELINES)->first()
+        );
 
         return view('livewire.student-org.reschedule', [
             'approvedEvents' => $approvedEvents,

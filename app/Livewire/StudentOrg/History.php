@@ -2,23 +2,31 @@
 
 namespace App\Livewire\StudentOrg;
 
-use Livewire\Attributes\On;
-use Livewire\Component;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
+use App\Models\Event_Type;
+use App\Models\Ticket;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 class History extends Component
 {
     #[Title('Event History - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
-
     public $search = '';
+
     public $statusFilter = '';
+
     public $typeFilter = '';
+
     public $yearFilter = '';
+
     public $showDetailsModal = false;
+
     public $loadingDetails = false;
+
     public $selectedTicket = null;
 
     private function getUserOrgId()
@@ -39,7 +47,7 @@ class History extends Component
     #[On('modal-opened')]
     public function loadTicketDetails($ticketId)
     {
-        $this->selectedTicket = \App\Models\Ticket::with([
+        $this->selectedTicket = Ticket::with([
             'user' => function ($query) {
                 $query->withTrashed();
             },
@@ -47,7 +55,7 @@ class History extends Component
             'user.position',
             'eventType',
             'fundSource',
-            'attachments'
+            'attachments',
         ])->findOrFail($ticketId);
 
         $this->loadingDetails = false;
@@ -70,49 +78,41 @@ class History extends Component
     {
         $orgId = $this->getUserOrgId();
 
-        // Use LEFT JOIN to include soft-deleted users
-        $totalEvents = DB::table('tickets')
-            ->leftJoin('users', 'tickets.user_id', '=', 'users.user_id')
-            ->where('users.org_id', $orgId)
-            ->whereIn('tickets.status', ['approved', 'for_revision'])
-            ->count();
+        return Cache::remember(
+            "student_org_history_stats_{$orgId}",
+            120, // 2 minutes
+            function () use ($orgId) {
+                // Single query with conditional aggregation instead of 4 separate queries
+                $stats = DB::table('tickets')
+                    ->leftJoin('users', 'tickets.user_id', '=', 'users.user_id')
+                    ->where('users.org_id', $orgId)
+                    ->whereIn('tickets.status', ['approved', 'for_revision'])
+                    ->selectRaw("
+                        COUNT(*) as total,
+                        SUM(CASE WHEN tickets.status = 'approved' THEN 1 ELSE 0 END) as approved_count,
+                        SUM(CASE WHEN tickets.status = 'for_revision' THEN 1 ELSE 0 END) as for_revision_count,
+                        AVG(CASE WHEN tickets.status = 'approved' THEN DATEDIFF(tickets.updated_at, tickets.created_at) END) as avg_days
+                    ")
+                    ->first();
 
-        $approvedCount = DB::table('tickets')
-            ->leftJoin('users', 'tickets.user_id', '=', 'users.user_id')
-            ->where('users.org_id', $orgId)
-            ->where('tickets.status', 'approved')
-            ->count();
+                $total = (int) $stats->total;
+                $approvedCount = (int) $stats->approved_count;
+                $forRevisionCount = (int) $stats->for_revision_count;
 
-        $for_revisionCount = DB::table('tickets')
-            ->leftJoin('users', 'tickets.user_id', '=', 'users.user_id')
-            ->where('users.org_id', $orgId)
-            ->where('tickets.status', 'for_revision')
-            ->count();
-
-        $approvedPercentage = $totalEvents > 0 ? round(($approvedCount / $totalEvents) * 100) : 0;
-        $for_revisionPercentage = $totalEvents > 0 ? round(($for_revisionCount / $totalEvents) * 100) : 0;
-
-        $avgProcessingDays = DB::table('tickets')
-            ->leftJoin('users', 'tickets.user_id', '=', 'users.user_id')
-            ->where('users.org_id', $orgId)
-            ->where('tickets.status', 'approved')
-            ->selectRaw('AVG(DATEDIFF(tickets.updated_at, tickets.created_at)) as avg_days')
-            ->value('avg_days');
-
-        $avgProcessingDays = $avgProcessingDays ? round($avgProcessingDays, 1) : 0;
-
-        return [
-            'total' => $totalEvents,
-            'approved' => [
-                'count' => $approvedCount,
-                'percentage' => $approvedPercentage,
-            ],
-            'for_revision' => [
-                'count' => $for_revisionCount,
-                'percentage' => $for_revisionPercentage,
-            ],
-            'avgProcessingDays' => $avgProcessingDays,
-        ];
+                return [
+                    'total' => $total,
+                    'approved' => [
+                        'count' => $approvedCount,
+                        'percentage' => $total > 0 ? round(($approvedCount / $total) * 100) : 0,
+                    ],
+                    'for_revision' => [
+                        'count' => $forRevisionCount,
+                        'percentage' => $total > 0 ? round(($forRevisionCount / $total) * 100) : 0,
+                    ],
+                    'avgProcessingDays' => $stats->avg_days ? round($stats->avg_days, 1) : 0,
+                ];
+            }
+        );
     }
 
     public function getEventTypeDistributionProperty()
@@ -148,6 +148,7 @@ class History extends Component
 
         return $eventTypes->map(function ($item, $index) use ($total, $colors) {
             $percentage = round(($item->count / $total) * 100);
+
             return [
                 'name' => $item->type_name,
                 'count' => $item->count,
@@ -194,7 +195,7 @@ class History extends Component
     {
         $orgId = $this->getUserOrgId();
 
-        $query = \App\Models\Ticket::query()
+        $query = Ticket::query()
             ->with([
                 'user' => function ($query) {
                     $query->withTrashed();
@@ -209,7 +210,7 @@ class History extends Component
                 },
                 'venue',
                 'latestOsaApproval',
-                'eventType'
+                'eventType',
             ])
             ->whereHas('user', function ($q) use ($orgId) {
                 $q->withTrashed()->where('org_id', $orgId);
@@ -253,11 +254,11 @@ class History extends Component
 
     public function getEventTypesProperty()
     {
-        return \App\Models\Event_Type::orderBy('type_name')
+        return Event_Type::orderBy('type_name')
             ->get()
-            ->map(fn($type) => [
+            ->map(fn ($type) => [
                 'id' => $type->type_name,
-                'name' => $type->type_name
+                'name' => $type->type_name,
             ])
             ->prepend(['id' => '', 'name' => 'All Types']);
     }
@@ -276,9 +277,9 @@ class History extends Component
             ->whereNotNull(DB::raw('YEAR(COALESCE(event_schedules.start_date, tickets.date_from))'))
             ->orderByDesc('year')
             ->pluck('year')
-            ->map(fn($year) => [
+            ->map(fn ($year) => [
                 'id' => (string) $year,
-                'name' => (string) $year
+                'name' => (string) $year,
             ])
             ->prepend(['id' => '', 'name' => 'All Years']);
 
@@ -287,7 +288,7 @@ class History extends Component
 
     public function resubmitTicket($ticketId)
     {
-        $ticket = \App\Models\Ticket::query()
+        $ticket = Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
             ->whereHas('user', function ($q) {
                 $orgId = $this->getUserOrgId();
@@ -326,10 +327,10 @@ class History extends Component
                 'fundingSource' => $ticket->fund_source_id,
                 'igp_requested' => $ticket->igp_requested ? 'true' : 'false',
                 'igp_details' => $ticket->igp_details,
-            ]
+            ],
         ]);
 
-        $this->js("localStorage.removeItem('ticket_draft_" . auth()->id() . "')");
+        $this->js("localStorage.removeItem('ticket_draft_".auth()->id()."')");
 
         return redirect()->route('student-org.submit-ticket');
     }

@@ -311,13 +311,20 @@ class MyTicket extends Component
 
     public function render()
     {
-        $baseQuery = $this->getBaseTicketsQuery();
+        $statsQuery = $this->getBaseTicketsQuery()
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status NOT IN ('approved', 'for_revision') THEN 1 ELSE 0 END) as under_review,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'for_revision' THEN 1 ELSE 0 END) as need_action
+            ")
+            ->first();
 
         $ticketStats = [
-            'total' => (clone $baseQuery)->count(),
-            'under_review' => (clone $baseQuery)->whereNotIn('status', ['approved', 'for_revision'])->count(),
-            'approved' => (clone $baseQuery)->where('status', 'approved')->count(),
-            'need_action' => (clone $baseQuery)->where('status', 'for_revision')->count(),
+            'total' => (int) $statsQuery->total,
+            'under_review' => (int) $statsQuery->under_review,
+            'approved' => (int) $statsQuery->approved,
+            'need_action' => (int) $statsQuery->need_action,
         ];
 
         $ticketsQuery = $this->getBaseTicketsQuery()

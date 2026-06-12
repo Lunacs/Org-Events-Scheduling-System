@@ -13,6 +13,7 @@ use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -828,11 +829,15 @@ class SubmitTicket extends Component
 
     public function render()
     {
-        $ticketGuidelines = ContentSection::getActiveByType(ContentSection::TYPE_TICKET_GUIDELINES)->first();
+        $ticketGuidelines = Cache::remember(
+            'ticket_guidelines',
+            3600,
+            fn () => ContentSection::getActiveByType(ContentSection::TYPE_TICKET_GUIDELINES)->first()
+        );
 
         return view('livewire.student-org.submit-ticket', [
-            'eventTypes' => Event_Type::all(),
-            'fundSources' => Fund_Sources::all(),
+            'eventTypes' => Cache::remember('event_types_all', 3600, fn () => Event_Type::all()),
+            'fundSources' => Cache::remember('fund_sources_all', 3600, fn () => Fund_Sources::all()),
             'ticketGuidelines' => $ticketGuidelines,
         ]);
     }
