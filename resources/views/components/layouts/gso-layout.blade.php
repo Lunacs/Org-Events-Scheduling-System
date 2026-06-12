@@ -26,7 +26,6 @@
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,900|poppins:500i|roboto:400,500,900&display=swap"
         rel="stylesheet" />
 
-
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
@@ -34,73 +33,132 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        [x-cloak] {
-            display: none !important
-        }
-    </style>
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
     <div class="min-h-screen">
 
-        {{-- MAIN --}}
-        <x-mary-main full-width>
-            {{-- SIDEBAR - Persisted for SPA-like experience --}}
-            @persist('osa-sidebar')
-                {{-- SIDEBAR --}}
-                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
+        {{-- Announcements Banner --}}
+        <x-announcement-banner />
 
-                    {{-- BRAND --}}
-                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
-                                fetchpriority="high">
-                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
-                        </div>
+        {{-- MAIN: DaisyUI Drawer Sidebar --}}
+        <div class="drawer lg:drawer-open" x-data="{ sidebarExpanded: $persist(true).as('gso-sidebar-expanded') }">
+            <input id="main-drawer" type="checkbox" class="drawer-toggle" wire:ignore :checked="!sidebarExpanded"
+                @change="sidebarExpanded = !$event.target.checked" />
+            <script>
+                if (localStorage.getItem('gso-sidebar-expanded') === 'false') {
+                    document.getElementById('main-drawer').checked = true;
+                }
+            </script>
 
-                    </div>
-
-                    {{-- MENU --}}
-                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
-                        {{-- MENU --}}
-                        <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="{{ route('gso.dashboard') }}"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Ticket Review" icon="s-calendar-days"
-                            link="{{ route('gso.ticket-review') }}" wire:navigate.hover />
-                        <x-mary-menu-item title="Event Calendar" icon="s-archive-box" link="{{ route('gso.calendar') }}"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Notification" icon="s-bell" link="{{ route('gso.notifications') }}"
-                            wire:navigate.hover />
-                        {{-- <x-mary-menu-item title="Communication" icon="s-building-office"
-                            link="{{ route('gso.communication') }}" wire:navigate.hover /> --}}
-                        <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/gso/reports" wire:navigate.hover />
-                    </x-mary-menu>
-                </x-slot:sidebar>
-            @endpersist
-
-            @persist('gso-footer')
-                <x-slot:footer>
-                    <x-footer variant="gso" />
-                </x-slot:footer>
-            @endpersist
-
-            {{-- The `$slot` goes here --}}
-            <x-slot:content class="font-sans">
-                <div class="sticky top-0 z-15">
-                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+            {{-- DRAWER CONTENT (Navbar + Page) --}}
+            <div class="drawer-content flex flex-col">
+                {{-- Top Navigation Bar --}}
+                <div class="sticky top-0 z-15 bg-base-100">
                     @persist('gso-navigation')
                         <livewire:layout.navigation />
                     @endpersist
-
-                    {{-- Announcements Banner --}}
-                    <x-announcement-banner />
                 </div>
 
                 {{-- Page Content --}}
-                {{ $slot }}
-            </x-slot:content>
-        </x-mary-main>
+                <div class="flex-1">
+                    {{ $slot }}
+                </div>
+
+                {{-- Footer --}}
+                @persist('gso-footer')
+                    <x-footer variant="gso" />
+                @endpersist
+            </div>
+
+            {{-- DRAWER SIDEBAR --}}
+            <div class="drawer-side is-drawer-close:overflow-visible z-20">
+                <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+                <div
+                    class="flex min-h-full flex-col items-start bg-base-200 border-r border-base-300/60 is-drawer-close:w-16 is-drawer-open:w-64 transition-all duration-200">
+
+                    {{-- BRAND --}}
+                    <div class="w-full px-3 pt-5 pb-2 border-b border-base-300/60">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10 shrink-0"
+                                loading="eager" fetchpriority="high">
+                            <div class="is-drawer-close:hidden">
+                                <h2 class="text-lg font-semibold font-heading leading-tight">Event Scheduling</h2>
+                                <p class="text-xs text-base-content/60">GSO Portal</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {{-- MENU --}}
+                    @php
+                        $menuItems = [
+                            [
+                                'title' => 'Dashboard',
+                                'icon' => 'fa-solid fa-table-columns',
+                                'link' => route('gso.dashboard'),
+                                'pattern' => 'gso/dashboard*',
+                            ],
+                            [
+                                'title' => 'Ticket Review',
+                                'icon' => 'fa-solid fa-calendar-days',
+                                'link' => route('gso.ticket-review'),
+                                'pattern' => 'gso/ticket-review*',
+                            ],
+                            [
+                                'title' => 'Event Calendar',
+                                'icon' => 'fa-solid fa-calendar',
+                                'link' => route('gso.calendar'),
+                                'pattern' => 'gso/calendar*',
+                            ],
+                            [
+                                'title' => 'Notification',
+                                'icon' => 'fa-solid fa-bell',
+                                'link' => route('gso.notifications'),
+                                'pattern' => 'gso/notifications*',
+                            ],
+                            [
+                                'title' => 'Reports',
+                                'icon' => 'fa-solid fa-chart-bar',
+                                'link' => '/gso/reports',
+                                'pattern' => 'gso/reports*',
+                            ],
+                        ];
+                    @endphp
+
+                    <ul class="menu w-full grow font-heading mt-2 gap-2">
+                        @foreach ($menuItems as $item)
+                            <li>
+                                <a href="{{ $item['link'] }}" wire:navigate.hover
+                                    class="is-drawer-close:tooltip is-drawer-close:tooltip-right is-drawer-close:flex is-drawer-close:items-center is-drawer-close:justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 px-4 py-1.5 {{ request()->is($item['pattern']) ? 'bg-neutral text-neutral-content' : '' }}"
+                                    data-tip="{{ $item['title'] }}">
+                                    <i class="{{ $item['icon'] }} w-4 text-center shrink-0"></i>
+                                    <span class="is-drawer-close:hidden">{{ $item['title'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    {{-- SIDEBAR TOGGLE (visible on lg screens) --}}
+                    <div class="w-full px-2 py-4 hidden lg:block border-t border-base-300/60">
+                        <label for="main-drawer" aria-label="toggle sidebar"
+                            class="btn btn-ghost btn-sm w-full is-drawer-close:justify-center justify-start gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round"
+                                stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"
+                                class="size-4 shrink-0">
+                                <path
+                                    d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z">
+                                </path>
+                                <path d="M9 4v16"></path>
+                                <path d="M14 10l2 2l-2 2"></path>
+                            </svg>
+                            <span class="is-drawer-close:hidden text-xs">Collapse</span>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
 
         {{-- Toast --}}
         <x-mary-toast />

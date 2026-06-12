@@ -30,73 +30,144 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        [x-cloak] {
-            display: none !important
-        }
-    </style>
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
     <div class="min-h-screen">
 
-        {{-- MAIN --}}
-        <x-mary-main full-width>
-            {{-- SIDEBAR - Persisted for SPA-like experience --}}
-            @persist('osa-sidebar')
-                <x-slot:sidebar collapsible withNav drawer="main-drawer" class="bg-base-100 lg:bg-inherit rounded-r-xl">
+        {{-- Announcements Banner --}}
+        <x-announcement-banner />
 
-                    {{-- BRAND --}}
-                    <div class="ml-3 mr-5 pt-5 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10" loading="eager"
-                                fetchpriority="high">
-                            <h2 class="p-3 text-lg font-semibold font-heading ml-2">Event Scheduling</h2>
-                        </div>
+        {{-- MAIN: DaisyUI Drawer Sidebar --}}
+        <div class="drawer lg:drawer-open" x-data="{ sidebarExpanded: $persist(true).as('osa-sidebar-expanded') }">
+            <input id="main-drawer" type="checkbox" class="drawer-toggle" wire:ignore :checked="!sidebarExpanded"
+                @change="sidebarExpanded = !$event.target.checked" />
+            <script>
+                if (localStorage.getItem('osa-sidebar-expanded') === 'false') {
+                    document.getElementById('main-drawer').checked = true;
+                }
+            </script>
 
-                    </div>
-
-                    {{-- MENU --}}
-                    <x-mary-menu separator activate-by-route active-bg-color="bg-neutral" class="font-heading">
-                        {{-- MENU --}}
-                        <x-mary-menu-item title="Dashboard" icon="s-squares-2x2" link="/admin/dashboard"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Ticket Management" icon="s-ticket" link="/admin/tickets"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Ticket Review & Approvals" icon="s-clipboard-document-check"
-                            link="/admin/ticket-review" wire:navigate.hover />
-                        <x-mary-menu-item title="Event Calendar" icon="s-calendar-days" link="/admin/calendar"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Notifications" icon="s-bell" link="/admin/notifications"
-                            wire:navigate.hover />
-                        <x-mary-menu-item title="Reports" icon="s-chart-bar" link="/admin/reports" wire:navigate.hover />
-                        <x-mary-menu-item title="Archives" icon="s-archive-box" link="/admin/archive" wire:navigate.hover />
-                    </x-mary-menu>
-                </x-slot:sidebar>
-            @endpersist
-
-            @persist('osa-footer')
-                <x-slot:footer>
-                    <x-footer variant="osa" />
-                </x-slot:footer>
-            @endpersist
-
-            {{-- The `$slot` goes here --}}
-            <x-slot:content>
-                <div class="sticky top-0 z-15">
-                    {{-- Top Navigation Bar - Persisted for SPA-like experience --}}
+            {{-- DRAWER CONTENT (Navbar + Page) --}}
+            <div class="drawer-content flex flex-col">
+                {{-- Top Navigation Bar --}}
+                <div class="sticky top-0 z-15 bg-base-100">
                     @persist('osa-navigation')
                         <livewire:layout.navigation />
                     @endpersist
-
-                    {{-- Announcements Banner --}}
-                    <x-announcement-banner />
                 </div>
 
                 {{-- Page Content --}}
-                {{ $slot }}
-            </x-slot:content>
-        </x-mary-main>
+                <div class="flex-1">
+                    {{ $slot }}
+                </div>
+
+                {{-- Footer --}}
+                @persist('osa-footer')
+                    <x-footer variant="osa" />
+                @endpersist
+            </div>
+
+            {{-- DRAWER SIDEBAR --}}
+            <div class="drawer-side is-drawer-close:overflow-visible z-20">
+                <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+                <div
+                    class="flex min-h-full flex-col items-start bg-base-200 border-r border-base-300/60 is-drawer-close:w-16 is-drawer-open:w-64 transition-all duration-200">
+
+                    {{-- BRAND --}}
+                    <div class="w-full px-3 pt-5 pb-2 border-b border-base-300/60">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10 shrink-0"
+                                loading="eager" fetchpriority="high">
+                            <div class="is-drawer-close:hidden">
+                                <h2 class="text-lg font-semibold font-heading leading-tight">Event Scheduling</h2>
+                                <p class="text-xs text-base-content/60">OSA Admin Portal</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {{-- MENU --}}
+                    @php
+                        $menuItems = [
+                            [
+                                'title' => 'Dashboard',
+                                'icon' => 'fa-solid fa-table-columns',
+                                'link' => '/admin/dashboard',
+                                'pattern' => 'admin/dashboard*',
+                            ],
+                            [
+                                'title' => 'Ticket Management',
+                                'icon' => 'fa-solid fa-ticket',
+                                'link' => '/admin/tickets',
+                                'pattern' => 'admin/tickets*',
+                            ],
+                            [
+                                'title' => 'Ticket Review & Approvals',
+                                'icon' => 'fa-solid fa-clipboard-check',
+                                'link' => '/admin/ticket-review',
+                                'pattern' => 'admin/ticket-review*',
+                            ],
+                            [
+                                'title' => 'Event Calendar',
+                                'icon' => 'fa-solid fa-calendar-days',
+                                'link' => '/admin/calendar',
+                                'pattern' => 'admin/calendar*',
+                            ],
+                            [
+                                'title' => 'Notifications',
+                                'icon' => 'fa-solid fa-bell',
+                                'link' => '/admin/notifications',
+                                'pattern' => 'admin/notifications*',
+                            ],
+                            [
+                                'title' => 'Reports',
+                                'icon' => 'fa-solid fa-chart-bar',
+                                'link' => '/admin/reports',
+                                'pattern' => 'admin/reports*',
+                            ],
+                            [
+                                'title' => 'Archives',
+                                'icon' => 'fa-solid fa-box-archive',
+                                'link' => '/admin/archive',
+                                'pattern' => 'admin/archive*',
+                            ],
+                        ];
+                    @endphp
+
+                    <ul class="menu w-full grow font-heading mt-2 gap-2">
+                        @foreach ($menuItems as $item)
+                            <li>
+                                <a href="{{ $item['link'] }}" wire:navigate.hover
+                                    class="is-drawer-close:tooltip is-drawer-close:tooltip-right is-drawer-close:flex is-drawer-close:items-center is-drawer-close:justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 px-4 py-1.5 {{ request()->is($item['pattern']) ? 'bg-neutral text-neutral-content' : '' }}"
+                                    data-tip="{{ $item['title'] }}">
+                                    <i class="{{ $item['icon'] }} w-4 text-center shrink-0"></i>
+                                    <span class="is-drawer-close:hidden">{{ $item['title'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    {{-- SIDEBAR TOGGLE (visible on lg screens) --}}
+                    <div class="w-full px-2 py-4 hidden lg:block border-t border-base-300/60">
+                        <label for="main-drawer" aria-label="toggle sidebar"
+                            class="btn btn-ghost btn-sm w-full is-drawer-close:justify-center justify-start gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round"
+                                stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"
+                                class="size-4 shrink-0">
+                                <path
+                                    d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z">
+                                </path>
+                                <path d="M9 4v16"></path>
+                                <path d="M14 10l2 2l-2 2"></path>
+                            </svg>
+                            <span class="is-drawer-close:hidden text-xs">Collapse</span>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
 
         {{-- Toast --}}
         <x-mary-toast />

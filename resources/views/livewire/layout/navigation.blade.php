@@ -58,8 +58,7 @@ new class extends Component {
     }
 }" class="bg-base-100 border-base-300 transition-shadow duration-300"
     :class="{ 'shadow-lg': scrolled, 'shadow-xs': !scrolled }">
-    <!-- Primary Navigation Menu -->
-    <div class="mx-auto max-sm:px-0 sm:px-6 lg:px-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <!-- Left Side -->
             <div class="flex items-center gap-3">
