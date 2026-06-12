@@ -54,7 +54,7 @@ trait WithProfilePhoto
      */
     public function saveProfilePhoto(): ?string
     {
-        if (!$this->photo instanceof TemporaryUploadedFile) {
+        if (! $this->photo instanceof TemporaryUploadedFile) {
             return null;
         }
 
@@ -66,12 +66,13 @@ trait WithProfilePhoto
         $user = Auth::user();
 
         // Delete old photo if exists
-        if ($user->avatar && Storage::disk(config('filesystems.default'))->exists($user->avatar)) {
-            Storage::disk(config('filesystems.default'))->delete($user->avatar);
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        if ($user->avatar && Storage::disk($diskName)->exists($user->avatar)) {
+            Storage::disk($diskName)->delete($user->avatar);
         }
 
         // Generate unique filename
-        $filename = 'profile-photos/' . $user->user_id . '_' . time() . '.webp';
+        $filename = 'profile-photos/'.$user->user_id.'_'.time().'.webp';
 
         // Read, resize, and compress the image
         // Use get() instead of getRealPath() because S3 temp files aren't local
@@ -84,7 +85,8 @@ trait WithProfilePhoto
         $encoded = $image->toWebp(80);
 
         // Store the compressed image
-        Storage::disk(config('filesystems.default'))->put($filename, (string) $encoded);
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        Storage::disk($diskName)->put($filename, (string) $encoded);
 
         // Update user avatar and set preference to uploaded
         $user->update([
@@ -108,8 +110,9 @@ trait WithProfilePhoto
         $user = Auth::user();
 
         // Actually delete the file
-        if ($user->avatar && Storage::disk(config('filesystems.default'))->exists($user->avatar)) {
-            Storage::disk(config('filesystems.default'))->delete($user->avatar);
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        if ($user->avatar && Storage::disk($diskName)->exists($user->avatar)) {
+            Storage::disk($diskName)->delete($user->avatar);
         }
 
         // Clear avatar and set preference to dicebear
@@ -128,12 +131,14 @@ trait WithProfilePhoto
     public function getProfilePhotoUrl(): ?string
     {
         $user = Auth::user();
-        $disk = Storage::disk(config('filesystems.default'));
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        $disk = Storage::disk($diskName);
 
         if ($user->avatar && $disk->exists($user->avatar)) {
-            if (config('filesystems.default') === 's3') {
+            if ($diskName === 's3') {
                 return $disk->temporaryUrl($user->avatar, now()->addMinutes(30));
             }
+
             return $disk->url($user->avatar);
         }
 

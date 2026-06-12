@@ -5,6 +5,7 @@ namespace App\Livewire\Superadmin\SystemSettings;
 use App\Models\Course;
 use App\Models\Student_Organization;
 use App\Models\User;
+use App\Notifications\OrganizationCreatedNotification;
 use App\Services\TransactionLogService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -74,8 +75,8 @@ class OrganizationManager extends Component
         $organizations = $this->getOrganizations();
 
         return view('livewire.superadmin.system-settings.organization-manager', [
-            'academicOrgs' => $organizations->filter(fn($org) => $org->course_id !== null)->values(),
-            'nonAcademicOrgs' => $organizations->filter(fn($org) => $org->course_id === null)->values(),
+            'academicOrgs' => $organizations->filter(fn ($org) => $org->course_id !== null)->values(),
+            'nonAcademicOrgs' => $organizations->filter(fn ($org) => $org->course_id === null)->values(),
             'allCourses' => $this->getCourses(),
         ]);
     }
@@ -135,7 +136,7 @@ class OrganizationManager extends Component
         // Send notification to all superadmins
         $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
         foreach ($superadmins as $admin) {
-            $admin->notify(new \App\Notifications\OrganizationCreatedNotification($organization, auth()->user()));
+            $admin->notify(new OrganizationCreatedNotification($organization, auth()->user()));
         }
 
         $this->reset(['newOrgCode', 'newOrgName', 'newCourseId', 'newAdviserName', 'newOrgStatus', 'newOrgLogo']);
@@ -173,7 +174,7 @@ class OrganizationManager extends Component
     public function editOrganization()
     {
         $this->validate([
-            'orgCode' => 'required|string|max:50|unique:student__organizations,org_code,' . $this->editingOrgId . ',org_id',
+            'orgCode' => 'required|string|max:50|unique:student__organizations,org_code,'.$this->editingOrgId.',org_id',
             'orgName' => 'required|string|max:255',
             'courseId' => 'nullable|exists:courses,course_id',
             'adviserName' => 'required|string|max:255',
@@ -223,8 +224,9 @@ class OrganizationManager extends Component
             $newLogoPath = null;
             if ($this->orgLogo) {
                 // Delete old logo if exists
-                if ($organization->logo && Storage::disk(config('filesystems.default'))->exists($organization->logo)) {
-                    Storage::disk(config('filesystems.default'))->delete($organization->logo);
+                $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+                if ($organization->logo && Storage::disk($diskName)->exists($organization->logo)) {
+                    Storage::disk($diskName)->delete($organization->logo);
                 }
                 // Store new logo with compression
                 $newLogoPath = $this->compressAndStoreLogo($this->orgLogo);
@@ -264,8 +266,9 @@ class OrganizationManager extends Component
     {
         $organization = Student_Organization::find($this->editingOrgId);
         if ($organization) {
-            if ($organization->logo && Storage::disk(config('filesystems.default'))->exists($organization->logo)) {
-                Storage::disk(config('filesystems.default'))->delete($organization->logo);
+            $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+            if ($organization->logo && Storage::disk($diskName)->exists($organization->logo)) {
+                Storage::disk($diskName)->delete($organization->logo);
             }
             $organization->logo = null;
             $organization->save();
@@ -335,7 +338,7 @@ class OrganizationManager extends Component
                 'org_id' => $this->deletingOrgId,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to delete organization: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete organization: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -360,7 +363,7 @@ class OrganizationManager extends Component
     protected function compressAndStoreLogo($uploadedFile): string
     {
         // Generate unique filename
-        $filename = 'organizations/logos/' . uniqid('org_') . '_' . time() . '.webp';
+        $filename = 'organizations/logos/'.uniqid('org_').'_'.time().'.webp';
 
         // Read, resize, and compress the image
         // Use get() instead of getRealPath() because S3 temp files aren't local
@@ -373,7 +376,8 @@ class OrganizationManager extends Component
         $encoded = $image->toWebp(80);
 
         // Store the compressed image
-        Storage::disk(config('filesystems.default'))->put($filename, (string) $encoded);
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        Storage::disk($diskName)->put($filename, (string) $encoded);
 
         return $filename;
     }

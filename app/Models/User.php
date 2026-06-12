@@ -6,17 +6,19 @@ use App\Notifications\CustomResetPassword;
 use App\Notifications\CustomVerifyEmail;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyNewEmail;
-use Illuminate\Support\Facades\Notification;
+use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
     /**
@@ -266,7 +268,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the user's last login from transaction logs
      *
-     * @return \Illuminate\Support\Carbon|null
+     * @return Carbon|null
      */
     public function getLastLoginAttribute()
     {
@@ -287,13 +289,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Check if user prefers uploaded photo and has one
         if ($this->avatar_preference === 'uploaded' && $this->avatar) {
-            $disk = \Storage::disk(config('filesystems.default'));
+            $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+            $disk = \Storage::disk($diskName);
 
             // Check if the file exists in storage
             if ($disk->exists($this->avatar)) {
-                if (config('filesystems.default') === 's3') {
+                if ($diskName === 's3') {
                     return $disk->temporaryUrl($this->avatar, now()->addMinutes(30));
                 }
+
                 return $disk->url($this->avatar);
             }
         }
@@ -346,7 +350,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function confirmEmailChange(): void
     {
-        if (!$this->pending_email) {
+        if (! $this->pending_email) {
             return;
         }
 

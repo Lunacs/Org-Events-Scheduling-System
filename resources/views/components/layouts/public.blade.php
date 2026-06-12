@@ -58,81 +58,83 @@
                             class="btn btn-ghost btn-sm btn-circle" />
 
                         @auth
-                        @php $user = auth()->user(); @endphp
-                        {{-- User Profile Dropdown --}}
-                        <x-mary-dropdown right>
-                            {{-- Trigger Button --}}
-                            <x-slot:trigger>
-                                <div class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
-                                    <x-ui.avatar :user="$user" size="sm" nav="true" />
-                                    <span class="hidden md:inline-block max-w-[150px] truncate">{{ $user->name }}</span>
-                                    <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-                            </x-slot:trigger>
+                            @php $user = auth()->user(); @endphp
+                            {{-- User Profile Dropdown --}}
+                            <x-mary-dropdown right>
+                                {{-- Trigger Button --}}
+                                <x-slot:trigger>
+                                    <div class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
+                                        <x-ui.avatar :user="$user" size="sm" nav="true" />
+                                        <span
+                                            class="hidden md:inline-block max-w-[150px] truncate">{{ $user->name }}</span>
+                                        <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </x-slot:trigger>
 
-                            {{-- Dropdown Content --}}
-                            <div class="w-72 bg-base-100 rounded-box border border-base-300">
-                                {{-- User Info Header --}}
-                                <div class="px-4 py-3 bg-base-200 rounded-t-box border-b border-base-300">
-                                    <div class="flex items-center gap-3">
-                                        <x-ui.avatar :user="$user" size="lg" />
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="font-bold text-base text-base-content truncate">
-                                                {{ $user->name }}
-                                            </h4>
-                                            <p class="text-xs text-base-content/70 truncate">{{ $user->email }}</p>
-                                            @if ($user->role)
-                                            <div class="mt-1">
-                                                <span class="badge badge-primary badge-xs text-neutral-content dark:text-base-200">
-                                                    {{ $user->role_display }}
-                                                </span>
+                                {{-- Dropdown Content --}}
+                                <div class="w-72 bg-base-100 rounded-box border border-base-300">
+                                    {{-- User Info Header --}}
+                                    <div class="px-4 py-3 bg-base-200 rounded-t-box border-b border-base-300">
+                                        <div class="flex items-center gap-3">
+                                            <x-ui.avatar :user="$user" size="lg" />
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-bold text-base text-base-content truncate">
+                                                    {{ $user->name }}
+                                                </h4>
+                                                <p class="text-xs text-base-content/70 truncate">{{ $user->email }}</p>
+                                                @if ($user->role)
+                                                    <div class="mt-1">
+                                                        <span
+                                                            class="badge badge-primary badge-xs text-neutral-content dark:text-base-200">
+                                                            {{ $user->role_display }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             </div>
-                                            @endif
                                         </div>
                                     </div>
-                                </div>
 
-                                {{-- Menu Items --}}
-                                <div class="p-2">
-                                    {{-- Go to Dashboard --}}
-                                    <a href="{{ route($user->getDashboardRoute()) }}" wire:navigate
-                                        class="py-3 px-4 hover:bg-base-200 transition-colors flex items-center gap-3 rounded-lg">
-                                        <i class="fa-solid fa-gauge-high w-5"></i>
-                                        <span class="font-medium">Dashboard</span>
-                                    </a>
-                                    {{-- Profile --}}
-                                    <a href="{{ route('profile') }}" wire:navigate
-                                        class="py-3 px-4 hover:bg-base-200 transition-colors flex items-center gap-3 rounded-lg">
-                                        <i class="fa-solid fa-user-circle w-5"></i>
-                                        <span class="font-medium">Profile</span>
-                                    </a>
-                                </div>
+                                    {{-- Menu Items --}}
+                                    <div class="p-2">
+                                        {{-- Go to Dashboard --}}
+                                        <a href="{{ route($user->getDashboardRoute()) }}" wire:navigate
+                                            class="py-3 px-4 hover:bg-base-200 transition-colors flex items-center gap-3 rounded-lg">
+                                            <i class="fa-solid fa-gauge-high w-5"></i>
+                                            <span class="font-medium">Dashboard</span>
+                                        </a>
+                                        {{-- Profile --}}
+                                        <a href="{{ route('profile') }}" wire:navigate
+                                            class="py-3 px-4 hover:bg-base-200 transition-colors flex items-center gap-3 rounded-lg">
+                                            <i class="fa-solid fa-user-circle w-5"></i>
+                                            <span class="font-medium">Profile</span>
+                                        </a>
+                                    </div>
 
-                                <div class="divider my-0"></div>
+                                    <div class="divider my-0"></div>
 
-                                {{-- Logout --}}
-                                <div class="p-2">
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit"
-                                            class="w-full py-3 px-4 text-error hover:bg-error/10 hover:cursor-pointer transition-colors flex items-center gap-3 rounded-lg">
-                                            <i class="fa-solid fa-right-from-bracket w-5"></i>
-                                            <span class="font-medium">Log Out</span>
-                                        </button>
-                                    </form>
+                                    {{-- Logout --}}
+                                    <div class="p-2">
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                                            <button type="submit"
+                                                class="w-full py-3 px-4 text-error hover:bg-error/10 hover:cursor-pointer transition-colors flex items-center gap-3 rounded-lg">
+                                                <i class="fa-solid fa-right-from-bracket w-5"></i>
+                                                <span class="font-medium">Log Out</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                        </x-mary-dropdown>
+                            </x-mary-dropdown>
                         @else
-                        {{-- Login Button for Guests --}}
-                        <a href="{{ route('login') }}" wire:navigate class="btn btn-primary btn-sm gap-2">
-                            <i class="fas fa-sign-in-alt"></i>
-                            Login
-                        </a>
+                            {{-- Login Button for Guests --}}
+                            <a href="{{ route('login') }}" wire:navigate class="btn btn-primary btn-sm gap-2">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Login
+                            </a>
                         @endauth
                     </nav>
                 </div>
