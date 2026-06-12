@@ -61,7 +61,7 @@
                         active-bg-color="bg-neutral text-base-content dark:text-neutral-content"
                         class="font-heading mt-2 [&_a]:rounded-lg [&_a]:transition-colors [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-2 [&_a]:focus-visible:ring-primary/50">
                         @foreach ([['title' => 'Dashboard', 'icon' => 's-squares-2x2', 'link' => '/student-org/dashboard'], ['title' => 'My Tickets', 'icon' => 's-ticket', 'link' => '/student-org/my-tickets'], ['title' => 'Submit Ticket', 'icon' => 's-document-plus', 'link' => '/student-org/submit-ticket'], ['title' => 'Event Calendar', 'icon' => 's-calendar', 'link' => '/student-org/calendar'], ['title' => 'Reschedule Request', 'icon' => 's-arrow-path', 'link' => '/student-org/reschedule'], ['title' => 'Notifications', 'icon' => 's-bell', 'link' => '/student-org/notifications'], ['title' => 'History', 'icon' => 's-archive-box', 'link' => '/student-org/history']] as $item)
-                            <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate />
+                            <x-mary-menu-item :title="$item['title']" :icon="$item['icon']" :link="$item['link']" wire:navigate.hover />
                         @endforeach
                     </x-mary-menu>
                 </x-slot:sidebar>
