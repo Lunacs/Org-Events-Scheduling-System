@@ -108,9 +108,12 @@ class Reports extends Component
         $dateFrom = Carbon::parse($this->dateFrom);
         $dateTo = Carbon::parse($this->dateTo)->endOfDay();
 
-        $cacheKey = "osa_report_{$this->reportType}_{$this->dateFrom}_{$this->dateTo}_{$this->organizationFilter}";
-
-        return Cache::remember($cacheKey, 600, function () use ($dateFrom, $dateTo) {
+        return \App\Services\Cache\ReportCacheService::getReport(
+            $this->reportType,
+            $dateFrom->toDateString(),
+            $dateTo->toDateString(),
+            $this->organizationFilter,
+            function () use ($dateFrom, $dateTo) {
             switch ($this->reportType) {
                 case 'approved_events':
                     return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
@@ -277,10 +280,10 @@ class Reports extends Component
         $dateTo = Carbon::now()->endOfDay();
 
         $this->chartData = [
-            'eventsByMonth' => $this->getEventsByMonth($dateFrom, $dateTo),
-            'eventsByType' => $this->getEventsByType($dateFrom, $dateTo),
-            'statusDistribution' => $this->getStatusDistribution(),
-            'topOrganizations' => $this->getTopOrganizations(),
+            'eventsByMonth' => \App\Services\Cache\ReportCacheService::getChartData('eventsByMonth', fn() => $this->getEventsByMonth($dateFrom, $dateTo)),
+            'eventsByType' => \App\Services\Cache\ReportCacheService::getChartData('eventsByType', fn() => $this->getEventsByType($dateFrom, $dateTo)),
+            'statusDistribution' => \App\Services\Cache\ReportCacheService::getChartData('statusDistribution', fn() => $this->getStatusDistribution()),
+            'topOrganizations' => \App\Services\Cache\ReportCacheService::getChartData('topOrganizations', fn() => $this->getTopOrganizations()),
         ];
     }
 

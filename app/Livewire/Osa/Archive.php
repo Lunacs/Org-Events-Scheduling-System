@@ -98,25 +98,38 @@ class Archive extends Component
     #[Computed]
     public function archivedEvents()
     {
-        return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
-            ->with([
-                'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+        $page = request()->get('page', 1);
+
+        return \App\Services\Cache\ArchiveCacheService::getArchivedEvents(
+            'osa',
+            $this->search,
+            $this->statusFilter,
+            $this->organizationFilter,
+            (string) $this->yearFilter,
+            $this->eventTypeFilter,
+            $page,
+            function () {
+                return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
                     ->with([
-                        'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
-                            ->with('studentOrganization:org_id,org_name,logo'),
+                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+                            ->with([
+                                'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
+                                    ->with('studentOrganization:org_id,org_name,logo'),
+                            ])
+                            ->withCount('attachments'),
+                        'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
+                        'eventType:event_type_id,type_name',
                     ])
-                    ->withCount('attachments'),
-                'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
-                'eventType:event_type_id,type_name',
-            ])
-            ->whereHas('ticket', fn($query) => $query->where('status', 'completed'))
-            ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
-            ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
-            ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-            ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
-            ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
-            ->orderBy('created_at', 'desc')
-            ->paginate(10); // Reduced from 12 to 10 for faster loads
+                    ->whereHas('ticket', fn($query) => $query->where('status', 'completed'))
+                    ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
+                    ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
+                    ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
+                    ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
+                    ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+            }
+        );
     }
 
     public function render()
@@ -131,7 +144,7 @@ class Archive extends Component
     #[Computed]
     public function availableYears()
     {
-        return Cache::remember('osa_archive_available_years', 600, function () {
+        return \App\Services\Cache\ArchiveCacheService::getAvailableYears('osa', function () {
             return Event::selectRaw('YEAR(created_at) as year')
                 ->distinct()
                 ->orderBy('year', 'desc')
