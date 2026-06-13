@@ -65,6 +65,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// ping route
+Route::get('/ping', function () {
+    return response()->json(['status' => 'ok']);
+});
+
 // About Us - Public route
 Route::get('/about-us', AboutUs::class)->name('about-us');
 
@@ -208,4 +213,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
