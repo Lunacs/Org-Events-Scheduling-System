@@ -111,7 +111,11 @@
                             <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
                                 placeholder="0999 999 9999" readonly />
                             <x-mary-input label="Contact of Adviser" wire:model.live.debounce.300ms="adviser_contact"
-                                required />
+                                required
+                                maxlength="11"
+                                inputmode="numeric"
+                                placeholder="09XXXXXXXXX"
+                                x-on:input="$el.value = $el.value.replace(/\D/g, '').slice(0, 11); $wire.set('adviser_contact', $el.value)" />
                         </div>
                     </x-mary-card>
                 @endif
@@ -143,16 +147,19 @@
                     <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-datetime label="Event Start Date" wire:model.live.debounce.300ms="eventStartDate"
-                                required />
+                                required
+                                min="{{ now()->format('Y-m-d') }}" />
 
                             <x-mary-datetime label="Event End Date" wire:model.live.debounce.300ms="eventEndDate"
-                                required />
+                                required
+                                min="{{ $eventStartDate ?: now()->format('Y-m-d') }}" />
 
                             <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
                                 required />
 
                             <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
-                                required />
+                                required
+                                min="{{ ($eventStartDate === $eventEndDate && $eventStartTime) ? $eventStartTime : '' }}" />
 
                             <div x-data="{
                                 preferredVenue: @entangle('preferredVenue').live,

@@ -335,6 +335,28 @@ class SubmitTicket extends Component
         ]);
     }
 
+    /**
+     * When start date changes, clear end date if it precedes the new start date.
+     * This prevents stale invalid end dates from silently passing validation.
+     */
+    public function updatedEventStartDate($value): void
+    {
+        if ($this->eventEndDate && $this->eventEndDate < $value) {
+            $this->eventEndDate = '';
+        }
+    }
+
+    /**
+     * When start time changes, clear end time if they share the same date
+     * and the end time is no longer after the start time.
+     */
+    public function updatedEventStartTime($value): void
+    {
+        if ($this->eventEndTime && $this->eventStartDate === $this->eventEndDate && $this->eventEndTime <= $value) {
+            $this->eventEndTime = '';
+        }
+    }
+
     protected function validateCurrentStep()
     {
         $rules = $this->getCurrentStepRules();
