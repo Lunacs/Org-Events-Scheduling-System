@@ -1,21 +1,23 @@
 <div>
     {{-- Header with Admin Actions --}}
-    <div class="mb-8">
-        <div class="bg-base-100 rounded-box shadow-lg p-6">
+    <section
+        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
+        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+        <div class="relative p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-base-content">Event Calendar - SuperAdmin</h1>
+                    <h1 class="text-3xl font-heading font-bold text-base-content">Event Calendar</h1>
                     <p class="text-base-content/70 mt-1">Manage all events across all organizations</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 relative z-10">
                     <x-mary-badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
-                    <x-mary-button icon="o-arrow-path" class="btn-outline btn-sm" wire:click.async="$refresh">
+                    <x-mary-button icon="o-arrow-path" class="btn-outline btn-sm bg-base-100" wire:click.async="$refresh">
                         Refresh
                     </x-mary-button>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     {{-- Calendar Controls --}}
     <div x-data="osaCalendar()" x-init="init()" x-cloak

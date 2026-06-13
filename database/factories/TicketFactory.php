@@ -2,10 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\Event_Type;
+use App\Models\Fund_Sources;
+use App\Models\Ticket;
+use App\Models\User;
+use App\Models\Venue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Ticket>
+ * @extends Factory<Ticket>
  */
 class TicketFactory extends Factory
 {
@@ -53,15 +58,15 @@ class TicketFactory extends Factory
         ];
 
         // Generate realistic ticket number (e.g., TKT-2024-0001)
-        $ticketNumber = 'TKT-' . date('Y') . '-' . str_pad(fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT);
+        $ticketNumber = 'TKT-'.date('Y').'-'.str_pad(fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT);
 
         $plvParticipants = fake()->numberBetween(20, 200);
         $externalParticipants = fake()->numberBetween(0, 50);
 
         return [
             'ticket_number' => $ticketNumber,
-            'user_id' => \App\Models\User::factory(),
-            'event_type_id' => \App\Models\Event_Type::factory(),
+            'user_id' => User::factory(),
+            'event_type_id' => Event_Type::factory(),
             'title' => fake()->randomElement($eventTitles),
             'description' => fake()->paragraph(3),
             'proponent_contact' => fake()->phoneNumber(),
@@ -69,8 +74,8 @@ class TicketFactory extends Factory
             'plv_participants' => $plvParticipants,
             'external_participants' => $externalParticipants,
             'total_participants' => $plvParticipants + $externalParticipants,
-            'venue_requested' => fake()->randomElement($venues),
-            'alternate_venue' => fake()->optional()->randomElement($venues),
+            'venue_requested' => fn () => Venue::first()?->venue_id ?? Venue::create(['venue_name' => 'PLV Auditorium', 'venue_location' => 'PLV Main Campus - Main Building'])->venue_id,
+            'alternate_venue' => fn () => Venue::skip(1)->first()?->venue_id ?? Venue::first()?->venue_id ?? Venue::create(['venue_name' => 'PLV Conference Hall', 'venue_location' => 'PLV Main Campus - COED Building'])->venue_id,
             'special_requirements' => fake()->optional()->sentence(),
             'igp_requested' => fake()->boolean(30),
             'igp_details' => fake()->optional()->sentence(),
@@ -87,7 +92,7 @@ class TicketFactory extends Factory
             'estimated_budget' => fake()->randomFloat(2, 5000, 50000),
             'budget_breakdown' => fake()->optional()->paragraph(),
             'additional_notes' => fake()->optional()->paragraph(),
-            'fund_source_id' => \App\Models\Fund_Sources::factory(),
+            'fund_source_id' => fn () => Fund_Sources::first()?->source_id ?? Fund_Sources::create(['source_name' => 'Organizational Funds'])->source_id,
             'status' => fake()->randomElement($statuses),
         ];
     }
@@ -97,7 +102,7 @@ class TicketFactory extends Factory
      */
     public function received(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'received',
         ]);
     }
@@ -107,7 +112,7 @@ class TicketFactory extends Factory
      */
     public function approved(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'approved',
         ]);
     }
@@ -117,9 +122,8 @@ class TicketFactory extends Factory
      */
     public function for_revision(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'for_revision',
         ]);
     }
-
 }

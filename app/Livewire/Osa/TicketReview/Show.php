@@ -115,6 +115,12 @@ class Show extends Component
             'approvalRemarks.min' => 'Remarks must be at least 3 characters.',
         ]);
 
+        $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
+        if (!$lock->get()) {
+            $this->warning('Action is already in progress.');
+            return;
+        }
+
         DB::beginTransaction();
         try {
             // Lock the ticket to prevent concurrent modifications
@@ -182,6 +188,10 @@ class Show extends Component
                 'type' => 'success',
             ]);
 
+            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
+            \App\Services\Cache\CalendarCacheService::clearAllCalendar();
+            \App\Services\Cache\EventCacheService::clearAllEventRelatedCaches();
+
             $this->success('Ticket has been approved and event has been created successfully.');
             $this->dispatch('ticket-approved');
         } catch (\Exception $e) {
@@ -191,6 +201,8 @@ class Show extends Component
                 'error' => $e->getMessage(),
             ]);
             $this->error('Failed to approve ticket: ' . $e->getMessage());
+        } finally {
+            $lock->release();
         }
     }
 
@@ -203,6 +215,12 @@ class Show extends Component
             'forwardRemarks.required' => 'Please provide remarks for forwarding to GSO.',
             'forwardRemarks.min' => 'Remarks must be at least 3 characters.',
         ]);
+
+        $lock = Cache::lock("lock:ticket:forward:{$this->ticket->ticket_id}", 10);
+        if (!$lock->get()) {
+            $this->warning('Action is already in progress.');
+            return;
+        }
 
         DB::beginTransaction();
         try {
@@ -281,6 +299,9 @@ class Show extends Component
                 'type' => 'info',
             ]);
 
+            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
+            \App\Services\Cache\EventCacheService::clearRequestLists();
+
             $this->success('Ticket has been forwarded to GSO for approval.');
             $this->dispatch('ticket-forwarded');
         } catch (\Exception $e) {
@@ -290,6 +311,8 @@ class Show extends Component
                 'error' => $e->getMessage(),
             ]);
             $this->error('Failed to forward ticket: ' . $e->getMessage());
+        } finally {
+            $lock->release();
         }
     }
 
@@ -302,6 +325,12 @@ class Show extends Component
             'finalApprovalRemarks.required' => 'Please provide remarks for final approval.',
             'finalApprovalRemarks.min' => 'Remarks must be at least 3 characters.',
         ]);
+
+        $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
+        if (!$lock->get()) {
+            $this->warning('Action is already in progress.');
+            return;
+        }
 
         DB::beginTransaction();
         try {
@@ -370,6 +399,10 @@ class Show extends Component
                 'type' => 'success',
             ]);
 
+            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
+            \App\Services\Cache\CalendarCacheService::clearAllCalendar();
+            \App\Services\Cache\EventCacheService::clearAllEventRelatedCaches();
+
             $this->success('Ticket has been approved and event has been created successfully.');
             $this->dispatch('ticket-final-approved');
         } catch (\Exception $e) {
@@ -379,6 +412,8 @@ class Show extends Component
                 'error' => $e->getMessage(),
             ]);
             $this->error('Failed to approve ticket: ' . $e->getMessage());
+        } finally {
+            $lock->release();
         }
     }
 
@@ -391,6 +426,12 @@ class Show extends Component
             'revisionRemarks.required' => 'Please provide detailed remarks explaining what needs to be revised.',
             'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
         ]);
+
+        $lock = Cache::lock("lock:ticket:reject:{$this->ticket->ticket_id}", 10);
+        if (!$lock->get()) {
+            $this->warning('Action is already in progress.');
+            return;
+        }
 
         DB::beginTransaction();
         try {
@@ -439,6 +480,9 @@ class Show extends Component
                 'type' => 'warning',
             ]);
 
+            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
+            \App\Services\Cache\EventCacheService::clearRequestLists();
+
             $this->warning('Ticket has been sent back for revision.');
             $this->dispatch('ticket-for-revision');
         } catch (\Exception $e) {
@@ -448,6 +492,8 @@ class Show extends Component
                 'error' => $e->getMessage(),
             ]);
             $this->error('Failed to send ticket for revision: ' . $e->getMessage());
+        } finally {
+            $lock->release();
         }
     }
 

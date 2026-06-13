@@ -1,44 +1,53 @@
 <?php
 
+namespace Tests\Unit\Superadmin;
+
 use App\Livewire\Superadmin\Tickets\Index;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Tests\TestCase;
 
-afterEach(function (): void {
-    \Mockery::close();
-});
+class TicketBulkActionsTest extends TestCase
+{
+    use RefreshDatabase;
 
-test('bulk reject updates tickets to rejected status', function (): void {
-    Auth::shouldReceive('user')
-        ->once()
-        ->andReturn((object) ['user_id' => 1]);
-
-    $ticketAlias = \Mockery::mock('alias:App\\Models\\Ticket');
-    $ticketAlias->shouldReceive('whereIn')
-        ->once()
-        ->with('ticket_id', [10, 11])
-        ->andReturnSelf();
-    $ticketAlias->shouldReceive('update')
-        ->once()
-        ->with(['status' => 'rejected'])
-        ->andReturn(2);
-
-    $transactionLogAlias = \Mockery::mock('alias:App\\Services\\TransactionLogService');
-    $transactionLogAlias->shouldReceive('log')
-        ->once();
-
-    $component = new class extends Index
+    public function test_bulk_reject_updates_tickets_to_rejected_status(): void
     {
-        public function success(string $title, ?string $description = null, ?string $position = null, string $icon = 'o-check-circle', string $css = 'alert-success', int $timeout = 3000, ?string $redirectTo = null, bool $noProgress = false, ?string $progressClass = null): void {}
+        // Create a SuperAdmin user to execute the bulk action
+        $superadmin = User::factory()->create([
+            'role_id' => User::getRoleId('superadmin'),
+        ]);
 
-        public function error(string $title, ?string $description = null, ?string $position = null, string $icon = 'o-x-circle', string $css = 'alert-error', int $timeout = 3000, ?string $redirectTo = null, bool $noProgress = false, ?string $progressClass = null): void {}
+        // Log in as superadmin
+        $this->actingAs($superadmin);
 
-        public function warning(string $title, ?string $description = null, ?string $position = null, string $icon = 'o-exclamation-triangle', string $css = 'alert-warning', int $timeout = 3000, ?string $redirectTo = null, bool $noProgress = false, ?string $progressClass = null): void {}
-    };
-    $component->selectedTickets = [10, 11];
-    $component->bulkAction = 'reject';
+        // Create a student org user
+        $student = User::factory()->create([
+            'role_id' => User::getRoleId('student-org'),
+        ]);
 
-    $component->executeBulkAction();
+        // Create some test tickets
+        $ticket1 = Ticket::factory()->create([
+            'user_id' => $student->user_id,
+            'status' => 'received',
+        ]);
 
-    expect($component->selectedTickets)->toBe([]);
-    expect($component->bulkAction)->toBe('');
-});
+        $ticket2 = Ticket::factory()->create([
+            'user_id' => $student->user_id,
+            'status' => 'received',
+        ]);
+
+        // Run Livewire test
+        $lwTest = Livewire::actingAs($superadmin)
+            ->test(Index::class)
+            ->set('selectedTickets', [$ticket1->ticket_id, $ticket2->ticket_id])
+            ->set('bulkAction', 'reject')
+            ->call('executeBulkAction');
+
+        // Assert that ticket statuses are updated to 'for_revision'
+        $this->assertEquals('for_revision', $ticket1->fresh()->status);
+        $this->assertEquals('for_revision', $ticket2->fresh()->status);
+    }
+}

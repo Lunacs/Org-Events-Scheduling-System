@@ -41,8 +41,10 @@ class NotificationDropdown extends Component
         // Get latest notifications
         $this->notifications = $user->notifications()->latest()->take(5)->get();
 
-        // Count unread notifications
-        $this->unreadCount = $user->unreadNotifications()->count();
+        // Count unread notifications using cache
+        $this->unreadCount = \App\Services\Cache\LayoutCacheService::getUnreadNotificationCount($user->user_id, function () use ($user) {
+            return $user->unreadNotifications()->count();
+        });
     }
 
     #[Async]
@@ -53,6 +55,7 @@ class NotificationDropdown extends Component
 
         if ($notification) {
             $notification->markAsRead();
+            \App\Services\Cache\LayoutCacheService::clearNotificationCount($user->user_id);
             $this->loadNotifications();
 
             // Dispatch event to refresh notifications page
@@ -71,6 +74,7 @@ class NotificationDropdown extends Component
 
         // Mark as read
         $notification->markAsRead();
+        \App\Services\Cache\LayoutCacheService::clearNotificationCount($user->user_id);
         $this->loadNotifications();
 
         // Get the appropriate URL based on notification type
@@ -153,6 +157,7 @@ class NotificationDropdown extends Component
     {
         $user = auth()->user();
         $user->unreadNotifications->markAsRead();
+        \App\Services\Cache\LayoutCacheService::clearNotificationCount($user->user_id);
         $this->loadNotifications();
     }
 

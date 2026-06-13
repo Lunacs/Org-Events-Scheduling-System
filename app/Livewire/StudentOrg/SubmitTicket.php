@@ -559,9 +559,15 @@ class SubmitTicket extends Component
             // Validate all steps before submission
             $this->validateAllSteps();
 
-            // Check for required organization data
             if (! $currentUserinfo || ! $currentUserinfo->org_code) {
                 throw new Exception('Organization information is missing. Please contact support.');
+            }
+
+            $lock = Cache::lock("lock:ticket:submit:{$currentUser->user_id}", 10);
+            if (!$lock->get()) {
+                $this->isProcessing = false;
+                $this->warning('Submission is already in progress.');
+                return;
             }
 
             \DB::beginTransaction();
@@ -655,6 +661,10 @@ class SubmitTicket extends Component
             // Short delay to ensure draft clearing completes before redirect
             usleep(100000); // 100ms delay
 
+            // Clear related caches
+            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
+            \App\Services\Cache\EventCacheService::clearRequestLists();
+
             $this->toast(
                 type: 'success',
                 title: 'Ticket Created!',
@@ -720,6 +730,9 @@ class SubmitTicket extends Component
             );
         } finally {
             $this->isProcessing = false;
+            if (isset($lock)) {
+                $lock->release();
+            }
         }
     }
 

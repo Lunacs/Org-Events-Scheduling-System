@@ -1,32 +1,37 @@
 <div class="p-4 sm:p-6 max-w-4xl mx-auto">
     {{-- Header with Breadcrumb --}}
-    <div class="mb-6">
-        <nav class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
-            <a href="{{ route('superadmin.tickets') }}" wire:navigate
-                class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                Ticket Management
-            </a>
-            <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
-            <span class="text-slate-700 dark:text-slate-200">
-                {{ $isEditing ? 'Edit Ticket' : 'Create New Ticket' }}
-            </span>
-        </nav>
-
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 flex items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
-                <x-mary-icon name="{{ $isEditing ? 'o-pencil-square' : 'o-plus' }}"
-                    class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+    <section
+        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
+        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+        <div class="relative p-6 sm:p-8">
+            {{-- Breadcrumb --}}
+            <nav class="flex items-center text-sm text-base-content/60 mb-4 relative z-10">
+                <a href="{{ route('superadmin.tickets') }}" wire:navigate
+                    class="hover:text-primary transition-colors">
+                    Ticket Management
+                </a>
+                <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
+                <span class="text-base-content font-medium">
                     {{ $isEditing ? 'Edit Ticket' : 'Create New Ticket' }}
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    {{ $isEditing ? 'Update the ticket details below.' : 'Create a ticket on behalf of an organization.' }}
-                </p>
+                </span>
+            </nav>
+
+            <div class="flex items-center gap-4 relative z-10">
+                <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
+                    <x-mary-icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
+                        class="w-6 h-6 text-primary" />
+                </span>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-base-content">
+                        {{ $isEditing ? 'Edit Ticket' : 'Create New Ticket' }}
+                    </h1>
+                    <p class="text-sm text-base-content/70 mt-1">
+                        {{ $isEditing ? 'Update the ticket details below.' : 'Create a ticket on behalf of an organization.' }}
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     {{-- Main Form --}}
     <form wire:submit.prevent="save" class="space-y-6">

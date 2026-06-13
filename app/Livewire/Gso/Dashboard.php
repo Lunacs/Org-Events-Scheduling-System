@@ -39,12 +39,12 @@ class Dashboard extends Component
         ]);
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function stats(): array
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return Cache::remember("gso_dashboard_stats_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'stats', function () use ($officeId) {
             $baseApprovalQuery = Office_Approval::query()
                 ->where('office_id', $officeId);
 
@@ -66,12 +66,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function pendingApprovals(): array
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return Cache::remember("gso_dashboard_pending_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'pending_approvals', function () use ($officeId) {
             return Office_Approval::query()
                 ->where('office_id', $officeId)
                 ->where('decision', 'pending')
@@ -88,12 +88,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function approvalSnapshot(): array
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return Cache::remember("gso_dashboard_snapshot_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'snapshot', function () use ($officeId) {
             return Office_Approval::query()
                 ->where('office_id', $officeId)
                 ->with([
@@ -112,12 +112,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 180)]
+    #[Computed]
     public function recentActivities(): array
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return Cache::remember("gso_dashboard_activities_{$officeId}", 180, function () use ($officeId) {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'activities', function () use ($officeId) {
             return Transaction_Logs::query()
                 ->with(['user' => fn ($q) => $q->withTrashed()])
                 ->whereHas('user', fn ($userQuery) => $userQuery->withTrashed()->where('office_id', $officeId))
@@ -137,12 +137,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function ticketsInQueue(): int
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return Cache::remember("gso_dashboard_queue_{$officeId}", $this->cacheDuration, function () use ($officeId) {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'queue_count', function () use ($officeId) {
             return $this->countUniqueTicketsInQueue($officeId);
         });
     }

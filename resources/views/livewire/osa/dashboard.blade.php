@@ -11,19 +11,25 @@
     <div class="p-6 space-y-6">
         <!-- Enhanced Header with Breadcrumb and Actions -->
         @persist('dashboard-header')
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold font-heading text-primary dark:text-primary flex items-center gap-2">
-                        <x-mary-icon name="o-squares-2x2" class="w-8 h-8" />
-                        Dashboard Overview
-                    </h1>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Welcome back! Here's what's happening with event requests.
-                    </p>
+            <section
+                class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+                <div class="relative p-6 sm:p-8">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="flex items-start space-x-4">
+                            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
+                                <x-mary-icon name="s-squares-2x2" class="w-6 h-6 text-primary" />
+                            </span>
+                            <div>
+                                <h1 class="text-2xl md:text-3xl font-bold font-heading text-base-content">Dashboard Overview</h1>
+                                <p class="text-sm text-base-content/70 mt-1">
+                                    Welcome back! Here's what's happening with event requests.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-
-            </div>
+            </section>
         @endpersist
 
         <!-- Modern Statistics Cards -->

@@ -32,7 +32,7 @@
             <p class="font-medium mb-1">Required Documents:</p>
             @if ($isRichText)
                 {{-- Rich text from Event_Type --}}
-                <div class="prose prose-sm prose-slate dark:prose-invert max-w-none text-gray-600">
+                <div class="prose prose-sm prose-slate dark:prose-invert max-w-none text-base-content/80">
                     <ul class="list-disc list-inside space-y-1">
                         {{-- <li>Document containing the Rationale</li> --}}
                     </ul>
@@ -47,12 +47,12 @@
                     );
                 @endphp
                 @if (!empty($configRequirements))
-                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                    <ul class="list-disc list-inside space-y-1 text-base-content/80">
                         <li>Document containing the Rationale</li>
                         @foreach ($configRequirements as $document)
                             @if (is_array($document) && isset($document['nested']))
                                 <li>{{ $document[0] }}</li>
-                                <ul class="list-disc list-inside ml-8 mt-1 space-y-1 text-gray-600">
+                                <ul class="list-disc list-inside ml-8 mt-1 space-y-1 text-base-content/80">
                                     @foreach ($document['nested'] as $nestedDoc)
                                         <li>{{ $nestedDoc }}</li>
                                     @endforeach
@@ -63,11 +63,11 @@
                         @endforeach
                     </ul>
                 @else
-                    <p class="text-gray-500 italic">No specific requirements defined for this event type.</p>
+                    <p class="text-base-content/50 italic">No specific requirements defined for this event type.</p>
                 @endif
             @else
                 {{-- No event type provided --}}
-                <p class="text-gray-500 italic">Select an event type to see required documents.</p>
+                <p class="text-base-content/50 italic">Select an event type to see required documents.</p>
             @endif
             {{ $slot ?? '' }}
         </div>

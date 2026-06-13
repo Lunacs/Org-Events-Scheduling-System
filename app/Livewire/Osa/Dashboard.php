@@ -36,10 +36,10 @@ class Dashboard extends Component
         return view('livewire.osa.dashboard');
     }
 
-    #[Computed(persist: true, seconds: 600)]
+    #[Computed]
     public function stats(): array
     {
-        return Cache::remember('osa_dashboard_stats', $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'stats', function () {
             $now = now();
             $currentMonth = $now->month;
             $currentYear = $now->year;
@@ -60,10 +60,10 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 600)]
+    #[Computed]
     public function recentTickets(): array
     {
-        return Cache::remember('osa_dashboard_recent_tickets', $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'recent_tickets', function () {
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                 ->with([
                     'eventType:event_type_id,type_name',
@@ -88,10 +88,10 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 600)]
+    #[Computed]
     public function pendingApprovals(): array
     {
-        return Cache::remember('osa_dashboard_pending_approvals', $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'pending_approvals', function () {
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id'])
                 ->with([
                     'user' => fn ($q) => $q->withTrashed()->select(['user_id', 'org_id'])

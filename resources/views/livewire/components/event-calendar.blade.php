@@ -9,16 +9,18 @@
     <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
         {{-- Header --}}
-        <div class="mb-8">
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
+        <section
+            class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 class="text-3xl font-bold text-base-content font-heading">Event Calendar</h1>
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Event Calendar</h1>
                         <p class="text-base-content/70 mt-1">View all approved and scheduled events</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
 
         {{-- Calendar Controls --}}

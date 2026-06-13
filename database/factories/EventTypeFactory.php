@@ -2,13 +2,16 @@
 
 namespace Database\Factories;
 
+use App\Models\Event_Type;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event_Type>
+ * @extends Factory<Event_Type>
  */
 class EventTypeFactory extends Factory
 {
+    protected $model = Event_Type::class;
+
     /**
      * Define the model's default state.
      *

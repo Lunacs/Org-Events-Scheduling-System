@@ -1,16 +1,27 @@
 <div>
     <div class="p-6 space-y-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold font-heading">Transaction Logs</h1>
-            <div class="flex gap-2">
-                <x-mary-button icon="o-arrow-down-tray" class="btn-outline" wire:click="exportLogs">
-                    Export
-                </x-mary-button>
-                <x-mary-button icon="o-trash" class="btn-error" wire:click="clearLogs">
-                    Clear Old Logs
-                </x-mary-button>
+        <section
+            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Transaction Logs</h1>
+                        <p class="text-sm text-base-content/70 mt-1">
+                            Review system transaction events and user actions logs
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+                        <x-mary-button icon="o-arrow-down-tray" class="btn-outline bg-base-100" wire:click="exportLogs">
+                            Export
+                        </x-mary-button>
+                        <x-mary-button icon="o-trash" class="btn-error" wire:click="clearLogs">
+                            Clear Old Logs
+                        </x-mary-button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
 
         <x-mary-card>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">

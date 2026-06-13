@@ -19,7 +19,7 @@ class Index extends Component
 {
     use Toast, WithPagination;
 
-    private const STATUS_REJECTED = 'rejected';
+    private const STATUS_REJECTED = 'for_revision';
 
     #[Title('Ticket Management - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]

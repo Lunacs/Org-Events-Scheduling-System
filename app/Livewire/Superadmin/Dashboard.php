@@ -37,10 +37,10 @@ class Dashboard extends Component
         ]);
     }
 
-    #[Computed(persist: true, seconds: 300)] // 5 minutes cache
+    #[Computed]
     public function stats(): array
     {
-        return Cache::remember('superadmin_dashboard_stats', 300, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'stats', function () {
             $pendingTickets = Ticket::where('status', 'pending')->count();
             $gsoReviewTickets = Ticket::where('status', 'gso_review')->count();
             $forRevisionTickets = Ticket::where('status', 'for_revision')->count();
@@ -63,10 +63,10 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 180)] // 3 minutes cache
+    #[Computed]
     public function todaySnapshot(): array
     {
-        return Cache::remember('superadmin_dashboard_today_snapshot', 180, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'today_snapshot', function () {
             $today = now()->toDateString();
             $todayStart = now()->startOfDay();
             $todayEnd = now()->endOfDay();
@@ -78,17 +78,17 @@ class Dashboard extends Component
                 'ticketsSubmittedToday' => Ticket::whereDate('created_at', $today)->count(),
                 'ticketsApprovedToday' => Ticket::where('status', 'approved')
                     ->whereDate('updated_at', $today)->count(),
-                'ticketsRejectedToday' => Ticket::where('status', 'rejected')
+                'ticketsRejectedToday' => Ticket::where('status', 'for_revision')
                     ->whereDate('updated_at', $today)->count(),
                 'newUsersToday' => User::whereDate('created_at', $today)->count(),
             ];
         });
     }
 
-    #[Computed(persist: true, seconds: 120)] // 2 minutes cache
+    #[Computed]
     public function attentionRequired(): array
     {
-        return Cache::remember('superadmin_dashboard_attention', 120, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'attention_required', function () {
             // Tickets awaiting OSA review (pending status)
             $pendingOsaReview = Ticket::where('status', 'pending')
                 ->orderBy('created_at', 'asc')
@@ -145,10 +145,10 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)] // 5 minutes cache
+    #[Computed]
     public function upcomingEvents(): array
     {
-        return Cache::remember('superadmin_dashboard_upcoming_events', 300, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'upcoming_events', function () {
             $today = now()->toDateString();
             $nextWeek = now()->addDays(7)->toDateString();
 

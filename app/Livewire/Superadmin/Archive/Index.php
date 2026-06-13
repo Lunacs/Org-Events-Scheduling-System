@@ -43,67 +43,75 @@ class Index extends Component
     #[Computed]
     public function archivedItems()
     {
-        $items = collect();
+        return \App\Services\Cache\ArchiveCacheService::getSuperadminArchives(
+            $this->search,
+            $this->typeFilter,
+            $this->dateFrom,
+            $this->dateTo,
+            function () {
+                $items = collect();
 
-        // Get archived/cancelled events
-        if ($this->typeFilter === 'all' || $this->typeFilter === 'events') {
-            $events = Event::with(['ticket', 'studentOrganization', 'eventType'])
-                ->whereHas('ticket', function ($q) {
-                    $q->whereIn('status', ['cancelled', '']);
-                })
-                ->when($this->search, function ($q) {
-                    $q->whereHas('ticket', function ($q2) {
-                        $q2->where('title', 'like', "%{$this->search}%")
-                            ->orWhere('ticket_number', 'like', "%{$this->search}%");
-                    });
-                })
-                ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
-                ->get()
-                ->map(function ($event) {
-                    return [
-                        'id' => $event->event_id,
-                        'type' => 'event',
-                        'title' => $event->ticket->title ?? 'Untitled Event',
-                        'identifier' => $event->ticket->ticket_number ?? 'N/A',
-                        'organization' => $event->studentOrganization->org_name ?? 'N/A',
-                        'status' => $event->ticket->status ?? 'cancelled',
-                        'date' => $event->event_date,
-                        'archived_at' => $event->updated_at,
-                    ];
-                });
+                // Get archived/cancelled events
+                if ($this->typeFilter === 'all' || $this->typeFilter === 'events') {
+                    $events = Event::with(['ticket', 'studentOrganization', 'eventType'])
+                        ->whereHas('ticket', function ($q) {
+                            $q->whereIn('status', ['cancelled', '']);
+                        })
+                        ->when($this->search, function ($q) {
+                            $q->whereHas('ticket', function ($q2) {
+                                $q2->where('title', 'like', "%{$this->search}%")
+                                    ->orWhere('ticket_number', 'like', "%{$this->search}%");
+                            });
+                        })
+                        ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                        ->get()
+                        ->map(function ($event) {
+                            return [
+                                'id' => $event->event_id,
+                                'type' => 'event',
+                                'title' => $event->ticket->title ?? 'Untitled Event',
+                                'identifier' => $event->ticket->ticket_number ?? 'N/A',
+                                'organization' => $event->studentOrganization->org_name ?? 'N/A',
+                                'status' => $event->ticket->status ?? 'cancelled',
+                                'date' => $event->event_date,
+                                'archived_at' => $event->updated_at,
+                            ];
+                        });
 
-            $items = $items->merge($events);
-        }
+                    $items = $items->merge($events);
+                }
 
-        // Get cancelled/ tickets (without events)
-        if ($this->typeFilter === 'all' || $this->typeFilter === 'tickets') {
-            $tickets = Ticket::with(['user.studentOrganization'])
-                ->whereIn('status', ['cancelled', ''])
-                ->whereDoesntHave('events')
-                ->when($this->search, function ($q) {
-                    $q->where('title', 'like', "%{$this->search}%")
-                        ->orWhere('ticket_number', 'like', "%{$this->search}%");
-                })
-                ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
-                ->get()
-                ->map(function ($ticket) {
-                    $orgDeleted = $ticket->user?->studentOrganization?->trashed();
-                    return [
-                        'id' => $ticket->ticket_id,
-                        'type' => 'ticket',
-                        'title' => $ticket->title,
-                        'identifier' => $ticket->ticket_number,
-                        'organization' => $orgDeleted ? 'Deleted Organization' : ($ticket->user?->studentOrganization?->org_name ?? 'N/A'),
-                        'status' => $ticket->status,
-                        'date' => $ticket->created_at,
-                        'archived_at' => $ticket->updated_at,
-                    ];
-                });
+                // Get cancelled/ tickets (without events)
+                if ($this->typeFilter === 'all' || $this->typeFilter === 'tickets') {
+                    $tickets = Ticket::with(['user.studentOrganization'])
+                        ->whereIn('status', ['cancelled', ''])
+                        ->whereDoesntHave('events')
+                        ->when($this->search, function ($q) {
+                            $q->where('title', 'like', "%{$this->search}%")
+                                ->orWhere('ticket_number', 'like', "%{$this->search}%");
+                        })
+                        ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                        ->get()
+                        ->map(function ($ticket) {
+                            $orgDeleted = $ticket->user?->studentOrganization?->trashed();
+                            return [
+                                'id' => $ticket->ticket_id,
+                                'type' => 'ticket',
+                                'title' => $ticket->title,
+                                'identifier' => $ticket->ticket_number,
+                                'organization' => $orgDeleted ? 'Deleted Organization' : ($ticket->user?->studentOrganization?->org_name ?? 'N/A'),
+                                'status' => $ticket->status,
+                                'date' => $ticket->created_at,
+                                'archived_at' => $ticket->updated_at,
+                            ];
+                        });
 
-            $items = $items->merge($tickets);
-        }
+                    $items = $items->merge($tickets);
+                }
 
-        return $items->sortByDesc('archived_at')->values();
+                return $items->sortByDesc('archived_at')->values();
+            }
+        );
     }
 
     public function headers(): array
@@ -163,6 +171,7 @@ class Index extends Component
             );
 
             DB::commit();
+            \App\Services\Cache\ArchiveCacheService::clearAllArchives();
             $this->success('Item restored successfully!', position: 'toast-top');
             $this->showRestoreModal = false;
             $this->itemToAction = null;
@@ -218,6 +227,7 @@ class Index extends Component
             );
 
             DB::commit();
+            \App\Services\Cache\ArchiveCacheService::clearAllArchives();
             $this->success('Item permanently deleted!', position: 'toast-top');
             $this->showDeleteModal = false;
             $this->itemToAction = null;

@@ -14,7 +14,6 @@
                 <div class="relative p-6 sm:p-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p class="text-xs tracking-[0.2em] uppercase text-base-content/50">Student Organization</p>
                             <h1 class="text-3xl font-heading font-bold text-base-content">All Event Requests</h1>
                             <p class="text-base-content/70 mt-1">Track the progress of your organization's tickets</p>
                         </div>

@@ -43,12 +43,12 @@ class Dashboard extends Component
         return $query;
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function tickets(): Collection
     {
         $user = auth()->user();
 
-        return Cache::remember("studentorg_dashboard_tickets_{$user->user_id}", $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'tickets', function () {
             return $this->getBaseTicketsQuery()
                 ->with(['eventType', 'user' => function ($query) {
                     $query->withTrashed();
@@ -58,12 +58,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function recentTickets(): Collection
     {
         $user = auth()->user();
 
-        return Cache::remember("studentorg_dashboard_recent_{$user->user_id}", $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'recent_tickets', function () {
             return $this->getBaseTicketsQuery()
                 ->with(['eventType', 'user' => function ($query) {
                     $query->withTrashed();
@@ -74,12 +74,12 @@ class Dashboard extends Component
         });
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    #[Computed]
     public function upcomingEventsCount(): int
     {
         $user = auth()->user();
 
-        return Cache::remember("studentorg_dashboard_upcoming_{$user->user_id}", $this->cacheDuration, function () {
+        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'upcoming_events', function () {
             return $this->getBaseTicketsQuery()
                 ->where('status', 'approved')
                 ->whereBetween('date_from', [now(), now()->addDays(30)])

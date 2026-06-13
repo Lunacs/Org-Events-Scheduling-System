@@ -5,29 +5,35 @@
 }">
     <div class="p-6 space-y-6">
         {{-- Header --}}
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold font-heading">Ticket Management</h1>
-                <p class="text-sm text-base-content/60 mt-1">View and manage all event tickets</p>
+        <section
+            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Ticket Management</h1>
+                        <p class="text-sm text-base-content/70 mt-1">View and manage all event tickets</p>
+                    </div>
+                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+                        @if (count($selectedTickets) > 0)
+                            <x-mary-button icon="o-check-circle" class="btn-success btn-sm" wire:click="openBulkModal('approve')">
+                                Approve ({{ count($selectedTickets) }})
+                            </x-mary-button>
+                            <x-mary-button icon="o-x-circle" class="btn-error btn-sm" wire:click="openBulkModal('reject')">
+                                Reject ({{ count($selectedTickets) }})
+                            </x-mary-button>
+                        @endif
+                        <a href="{{ route('superadmin.ticket.create') }}" wire:navigate
+                            class="btn btn-accent btn-sm gap-2 w-full sm:w-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Create Ticket
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-2">
-                @if (count($selectedTickets) > 0)
-                    <x-mary-button icon="o-check-circle" class="btn-success btn-sm" wire:click="openBulkModal('approve')">
-                        Approve ({{ count($selectedTickets) }})
-                    </x-mary-button>
-                    <x-mary-button icon="o-x-circle" class="btn-error btn-sm" wire:click="openBulkModal('reject')">
-                        Reject ({{ count($selectedTickets) }})
-                    </x-mary-button>
-                @endif
-                <a href="{{ route('superadmin.ticket.create') }}" wire:navigate
-                    class="btn btn-accent btn-sm gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Ticket
-                </a>
-            </div>
-        </div>
+        </section>
 
         {{-- Filters --}}
         <div class="bg-base-100 rounded-xl border border-base-200 p-4">

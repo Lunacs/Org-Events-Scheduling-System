@@ -1,11 +1,17 @@
-<x-slot name="header">
-    <h2 class="font-semibold text-xl font-heading text-base-content leading-tight">
-        {{ __('Event Calendar') }}
-    </h2>
-</x-slot>
-
 <div class="py-12" x-data="eventCalendar()">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <section
+            class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
+            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
+            <div class="relative p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-heading font-bold text-base-content">Event Calendar</h1>
+                        <p class="text-base-content/70 mt-1">View all approved and scheduled events</p>
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- Calendar Controls -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">

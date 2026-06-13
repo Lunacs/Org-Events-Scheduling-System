@@ -6,8 +6,8 @@
             <div class="flex items-start space-x-3">
                 <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">
-                    <p class="font-medium mb-2 text-warning-content">Important Notice:</p>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <p class="font-medium mb-2">Important Notice:</p>
+                    <div class="prose prose-sm max-w-none text-base-content/80">
                         {{ h($guidelines->content) }}
                     </div>
                 </div>
@@ -20,8 +20,8 @@
             <div class="flex items-start space-x-3">
                 <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">
-                    <p class="font-medium mb-2 text-warning-content">Important Notice:</p>
-                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                    <p class="font-medium mb-2">Important Notice:</p>
+                    <ul class="list-disc list-inside space-y-1 text-base-content/80">
                         <li>Reschedule requests must be submitted at least 2 days before the current
                             event date
                         </li>

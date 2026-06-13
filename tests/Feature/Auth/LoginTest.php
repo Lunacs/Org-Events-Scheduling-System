@@ -39,16 +39,16 @@ class LoginTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_osa_users_can_authenticate_through_admin_portal(): void
+    public function test_osa_users_can_authenticate_through_unified_portal(): void
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('osa'),
-            'email' => 'osa@example.com',
+            'email' => 'osa-test@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        Livewire::test('pages.auth.osa-login')
-            ->set('form.email', 'osa@example.com')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'osa-test@example.com')
             ->set('form.password', 'password')
             ->call('login')
             ->assertRedirect(route('admin.dashboard'));
@@ -56,17 +56,17 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_student_org_users_can_authenticate_through_student_org_portal(): void
+    public function test_student_org_users_can_authenticate_through_unified_portal(): void
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('student-org'),
-            'email' => 'student@plv.edu.ph',
+            'email' => 'student-test@plv.edu.ph',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
         ]);
 
-        Livewire::test('pages.auth.student-org-login')
-            ->set('form.email', 'student@plv.edu.ph')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'student-test@plv.edu.ph')
             ->set('form.password', 'password')
             ->call('login')
             ->assertRedirect(route('student-org.dashboard'));
@@ -74,16 +74,16 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_gso_users_can_authenticate_through_gso_portal(): void
+    public function test_gso_users_can_authenticate_through_unified_portal(): void
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('gso'),
-            'email' => 'gso@example.com',
+            'email' => 'gso-test@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        Livewire::test('pages.auth.gso-login')
-            ->set('form.email', 'gso@example.com')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'gso-test@example.com')
             ->set('form.password', 'password')
             ->call('login')
             ->assertRedirect(route('gso.dashboard'));
@@ -91,16 +91,16 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_superadmin_users_can_authenticate_through_superadmin_portal(): void
+    public function test_superadmin_users_can_authenticate_through_unified_portal(): void
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('superadmin'),
-            'email' => 'superadmin@example.com',
+            'email' => 'superadmin-test@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        Livewire::test('pages.auth.superadmin-login')
-            ->set('form.email', 'superadmin@example.com')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'superadmin-test@example.com')
             ->set('form.password', 'password')
             ->call('login')
             ->assertRedirect(route('superadmin.dashboard'));
@@ -108,70 +108,19 @@ class LoginTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_student_org_login_requires_plv_email(): void
-    {
-        $user = User::factory()->create([
-            'role_id' => User::getRoleId('student-org'),
-            'email' => 'student@gmail.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        Livewire::test('pages.auth.student-org-login')
-            ->set('form.email', 'student@gmail.com')
-            ->set('form.password', 'password')
-            ->call('login')
-            ->assertHasErrors(['form.email']);
-
-        $this->assertGuest();
-    }
-
-    public function test_osa_user_cannot_login_through_gso_portal(): void
-    {
-        $user = User::factory()->create([
-            'role_id' => User::getRoleId('osa'),
-            'email' => 'osa@example.com',
-            'password' => bcrypt('password'),
-        ]);
-
-        Livewire::test('pages.auth.gso-login')
-            ->set('form.email', 'osa@example.com')
-            ->set('form.password', 'password')
-            ->call('login')
-            ->assertHasErrors(['form.email']);
-
-        $this->assertGuest();
-    }
-
-    public function test_student_org_user_cannot_login_through_admin_portal(): void
-    {
-        $user = User::factory()->create([
-            'role_id' => User::getRoleId('student-org'),
-            'email' => 'student@plv.edu.ph',
-            'password' => bcrypt('password'),
-        ]);
-
-        Livewire::test('pages.auth.osa-login')
-            ->set('form.email', 'student@plv.edu.ph')
-            ->set('form.password', 'password')
-            ->call('login')
-            ->assertHasErrors(['form.email']);
-
-        $this->assertGuest();
-    }
-
     public function test_users_cannot_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('osa'),
-            'email' => 'osa@example.com',
+            'email' => 'osa-test@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        Livewire::test('pages.auth.osa-login')
-            ->set('form.email', 'osa@example.com')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'osa-test@example.com')
             ->set('form.password', 'wrong-password')
             ->call('login')
-            ->assertHasErrors(['form.email']);
+            ->assertHasErrors(['form.password']);
 
         $this->assertGuest();
     }
@@ -180,18 +129,25 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('osa'),
-            'email' => 'osa@example.com',
+            'email' => 'osa-test-throttle@example.com',
             'password' => bcrypt('password'),
         ]);
 
-        // Attempt login 6 times with wrong password
-        for ($i = 0; $i < 6; $i++) {
-            Livewire::test('pages.auth.osa-login')
-                ->set('form.email', 'osa@example.com')
+        // Attempt login 5 times with wrong password
+        for ($i = 0; $i < 5; $i++) {
+            Livewire::test('pages.auth.login')
+                ->set('form.email', 'osa-test-throttle@example.com')
                 ->set('form.password', 'wrong-password')
                 ->call('login')
-                ->assertHasErrors(['form.email']);
+                ->assertHasErrors(['form.password']);
         }
+
+        // The 6th attempt should hit rate limiter on email
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'osa-test-throttle@example.com')
+            ->set('form.password', 'wrong-password')
+            ->call('login')
+            ->assertHasErrors(['form.email']);
 
         $this->assertGuest();
     }
@@ -200,13 +156,13 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create([
             'role_id' => User::getRoleId('student-org'),
-            'email' => 'student@plv.edu.ph',
+            'email' => 'student-unverified-test@plv.edu.ph',
             'password' => bcrypt('password'),
             'email_verified_at' => null,
         ]);
 
-        Livewire::test('pages.auth.student-org-login')
-            ->set('form.email', 'student@plv.edu.ph')
+        Livewire::test('pages.auth.login')
+            ->set('form.email', 'student-unverified-test@plv.edu.ph')
             ->set('form.password', 'password')
             ->call('login')
             ->assertRedirect(route('verification.notice'));

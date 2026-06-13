@@ -85,38 +85,25 @@
                 </x-mary-card>
 
                 {{-- Password Change --}}
-                <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure"
-                    x-data="{
-                        get hasPasswordInput() {
-                            return ($wire.current_password && $wire.current_password.length > 0) ||
-                                ($wire.new_password && $wire.new_password.length > 0) ||
-                                ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
-                        }
-                    }">
-                    <x-slot:menu>
-                        <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
-                    </x-slot:menu>
+                <form wire:submit.prevent="updatePassword">
+                    <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure"
+                        x-data="{
+                            get hasPasswordInput() {
+                                return ($wire.current_password && $wire.current_password.length > 0) ||
+                                    ($wire.new_password && $wire.new_password.length > 0) ||
+                                    ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
+                            }
+                        }">
+                        <x-slot:menu>
+                            <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
+                        </x-slot:menu>
 
-                    <div class="space-y-4">
-                        {{-- Current Password with Toggle --}}
-                        <div x-data="{ show: false }" class="relative">
-                            <x-mary-input wire:model="current_password" label="Current Password"
-                                x-bind:type="show ? 'text' : 'password'" placeholder="Enter current password"
-                                icon="o-key" />
-                            <button type="button" @click="show = !show"
-                                class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
-                                tabindex="-1">
-                                <i class="fas fa-eye-slash" x-show="!show"></i>
-                                <i class="fas fa-eye" x-show="show" style="display: none;"></i>
-                            </button>
-                        </div>
-
-                        {{-- New Password Fields --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            {{-- Current Password with Toggle --}}
                             <div x-data="{ show: false }" class="relative">
-                                <x-mary-input wire:model="new_password" label="New Password"
-                                    x-bind:type="show ? 'text' : 'password'" placeholder="Enter new password"
-                                    icon="o-lock-closed" />
+                                <x-mary-input wire:model="current_password" label="Current Password"
+                                    x-bind:type="show ? 'text' : 'password'" placeholder="Enter current password"
+                                    icon="o-key" autocomplete="current-password" />
                                 <button type="button" @click="show = !show"
                                     class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
                                     tabindex="-1">
@@ -125,40 +112,55 @@
                                 </button>
                             </div>
 
-                            <div x-data="{ show: false }" class="relative">
-                                <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
-                                    x-bind:type="show ? 'text' : 'password'" placeholder="Confirm new password"
-                                    icon="o-lock-closed" />
-                                <button type="button" @click="show = !show"
-                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
-                                    tabindex="-1">
-                                    <i class="fas fa-eye-slash" x-show="!show"></i>
-                                    <i class="fas fa-eye" x-show="show" style="display: none;"></i>
-                                </button>
+                            {{-- New Password Fields --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div x-data="{ show: false }" class="relative">
+                                    <x-mary-input wire:model="new_password" label="New Password"
+                                        x-bind:type="show ? 'text' : 'password'" placeholder="Enter new password"
+                                        icon="o-lock-closed" autocomplete="new-password" />
+                                    <button type="button" @click="show = !show"
+                                        class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                        tabindex="-1">
+                                        <i class="fas fa-eye-slash" x-show="!show"></i>
+                                        <i class="fas fa-eye" x-show="show" style="display: none;"></i>
+                                    </button>
+                                </div>
+
+                                <div x-data="{ show: false }" class="relative">
+                                    <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
+                                        x-bind:type="show ? 'text' : 'password'" placeholder="Confirm new password"
+                                        icon="o-lock-closed" autocomplete="new-password" />
+                                    <button type="button" @click="show = !show"
+                                        class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                        tabindex="-1">
+                                        <i class="fas fa-eye-slash" x-show="!show"></i>
+                                        <i class="fas fa-eye" x-show="show" style="display: none;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                                <div class="text-sm">
+                                    <p class="font-medium">Password Requirements:</p>
+                                    <ul class="list-disc list-inside mt-1">
+                                        <li>At least 8 characters long</li>
+                                        <li>Contains uppercase and lowercase letters</li>
+                                        <li>Contains at least one number</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="alert alert-info">
-                            <x-mary-icon name="o-information-circle" class="w-5 h-5" />
-                            <div class="text-sm">
-                                <p class="font-medium">Password Requirements:</p>
-                                <ul class="list-disc list-inside mt-1">
-                                    <li>At least 8 characters long</li>
-                                    <li>Contains uppercase and lowercase letters</li>
-                                    <li>Contains at least one number</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <x-slot:actions>
-                        <x-mary-button wire:click="updatePassword" icon="o-shield-check"
-                            class="btn-warning data-loading:opacity-50 data-loading:pointer-events-none"
-                            x-show="hasPasswordInput" spinner>
-                            Update Password
-                        </x-mary-button>
-                    </x-slot:actions>
-                </x-mary-card>
+                        <x-slot:actions>
+                            <x-mary-button type="submit" icon="o-shield-check"
+                                class="btn-warning data-loading:opacity-50 data-loading:pointer-events-none"
+                                x-show="hasPasswordInput" spinner>
+                                Update Password
+                            </x-mary-button>
+                        </x-slot:actions>
+                    </x-mary-card>
+                </form>
 
                 {{-- Notification Preferences --}}
                 <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates"
