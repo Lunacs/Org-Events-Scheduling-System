@@ -1,3 +1,7 @@
+@push('head')
+    @vite(['resources/css/calendar.css', 'resources/js/calendar.js'])
+@endpush
+
 <div x-data="{ firstLoad: true }" x-init="$nextTick(() => firstLoad = false)">
 
     {{-- Skeleton Loading State (First Load Only) --}}

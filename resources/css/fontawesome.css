@@ -1,0 +1,8 @@
+/**
+ * Self-hosted Font Awesome 6.5.1 — Solid + Brands only
+ * Replaces the external CDN all.min.css (~300KB) with locally bundled subsets (~30KB)
+ * Only solid and brands icon styles are included (no regular, light, thin, etc.)
+ */
+@import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
+@import "@fortawesome/fontawesome-free/css/solid.min.css";
+@import "@fortawesome/fontawesome-free/css/brands.min.css";

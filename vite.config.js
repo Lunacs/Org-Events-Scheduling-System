@@ -6,7 +6,16 @@ export default defineConfig({
     plugins: [
         tailwindcss(),
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            input: [
+                "resources/css/app.css",
+                "resources/css/fontawesome.css",
+                "resources/css/calendar.css",
+                "resources/js/app.js",
+                "resources/js/avatar.js",
+                "resources/js/calendar.js",
+                "resources/js/charts.js",
+                "resources/js/libs/trix.js",
+            ],
             refresh: true,
         }),
     ],

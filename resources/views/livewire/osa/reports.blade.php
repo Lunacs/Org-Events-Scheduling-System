@@ -1,3 +1,7 @@
+@push('head')
+    @vite('resources/js/charts.js')
+@endpush
+
 <div>
     {{-- Header --}}
     {{-- Header --}}
