@@ -9,25 +9,19 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
-    <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
+    <link rel="icon" type="image/webp" href="{{ asset('images/optimized/osa-logo.webp') }}">
 
-    <!-- Resource Hints for Performance -->
-    <link rel="dns-prefetch" href="https://fonts.bunny.net">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <!-- Preload hero image for LCP -->
+    <link rel="preload" as="image" type="image/webp"
+        imagesrcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
+        imagesizes="(max-width: 1023px) 0px, 55vw">
+
+    <!-- Fonts — single consolidated request, non-render-blocking -->
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link href="https://fonts.bunny.net/css?family=poppins:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Fonts with optimized loading -->
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Scripts — minimal: only core CSS + JS (no avatar, calendar, charts) -->
+    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js'])
 
 </head>
 
@@ -36,9 +30,15 @@
         <!-- Left side - Image (Hidden on mobile) -->
         <div class="hidden lg:flex lg:w-[55%] relative overflow-hidden rounded-3xl shadow-2xl h-full">
             <div class="absolute inset-0">
-                <img src="{{ asset('images/suhay husay.png') }}"
-                    class="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-10000 ease-linear"
-                    alt="PLV Background" loading="eager" fetchpriority="high">
+                <picture>
+                    <source type="image/webp"
+                        srcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
+                        sizes="55vw">
+                    <img src="{{ asset('images/suhay husay.png') }}"
+                        class="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-10000 ease-linear"
+                        alt="PLV Background" loading="eager" fetchpriority="high" decoding="async"
+                        width="1280" height="960">
+                </picture>
             </div>
             <div class="absolute inset-0 bg-gradient-to-tr from-secondary/40 via-transparent to-black/20"></div>
             <div class="absolute bottom-10 left-10 right-10 text-white z-10">
@@ -60,9 +60,10 @@
                         <div
                             class="absolute -inset-1 bg-gradient-to-r from-secondary to-secondary-focus rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
                         </div>
-                        <img src="{{ asset('images/osa-logo.jpg') }}"
+                        <img src="{{ asset('images/optimized/osa-logo.webp') }}"
                             class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shadow-2xl border-2 border-white dark:border-gray-800"
-                            alt="OSA Logo" loading="eager" fetchpriority="high">
+                            alt="OSA Logo" loading="eager" fetchpriority="high" decoding="async"
+                            width="200" height="200">
                     </div>
                 </a>
             </div>

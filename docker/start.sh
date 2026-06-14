@@ -55,6 +55,9 @@ php artisan route:cache
 echo "Caching views..."
 php artisan view:cache
 
+echo "Caching events..."
+php artisan event:cache
+
 echo "Optimizing..."
 php artisan optimize
 

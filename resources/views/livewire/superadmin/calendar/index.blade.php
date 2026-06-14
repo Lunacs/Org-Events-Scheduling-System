@@ -1,3 +1,7 @@
+@push('head')
+    @vite(['resources/css/calendar.css', 'resources/js/calendar.js'])
+@endpush
+
 <div>
     {{-- Header with Admin Actions --}}
     <section

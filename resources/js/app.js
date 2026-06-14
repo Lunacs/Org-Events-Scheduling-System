@@ -1,14 +1,4 @@
-import "./libs/trix";
 import "./bootstrap";
-import "./avatar";
-import "./calendar";
-import { Chart, registerables } from "chart.js";
-
-// Register all Chart.js components
-Chart.register(...registerables);
-
-// Make Chart available globally
-window.Chart = Chart;
 
 // Register Alpine.js password strength component globally
 // This must be in app.js (not inline @push) to work with wire:navigate SPA navigation

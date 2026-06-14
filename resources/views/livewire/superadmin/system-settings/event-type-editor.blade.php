@@ -1,3 +1,7 @@
+@push('head')
+    @vite('resources/js/libs/trix.js')
+@endpush
+
 <div class="p-4 sm:p-6 max-w-4xl mx-auto">
     {{-- Header with Breadcrumb --}}
     <section
