@@ -1,3 +1,7 @@
+@push('head')
+    @vite('resources/js/charts.js')
+@endpush
+
 <div x-data="gsoReports()" x-ref="reportsContainer">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <!-- Page Header -->

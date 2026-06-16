@@ -9,30 +9,17 @@
     <title>{{ isset($title) ? $title . ' - ' . config('app.name') : config('app.name') }}</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
-    <link rel="shortcut icon" type="image/jpeg" href="{{ asset('images/osa-logo.jpg') }}">
+    <link rel="icon" type="image/webp" href="{{ asset('images/optimized/osa-logo.webp') }}">
 
-    <!-- Resource Hints for Performance -->
-    <link rel="dns-prefetch" href="https://fonts.bunny.net">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <!-- Fonts — single consolidated request -->
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-
-    <!-- Fonts with optimized loading -->
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,900&display=swap" rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,900|poppins:400,500,600,900&display=swap"
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600|poppins:400,500,600&display=swap"
         rel="stylesheet" />
-    <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,900|poppins:500i|roboto:400,500,900&display=swap"
-        rel="stylesheet" />
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js', 'resources/js/avatar.js'])
+
+    @stack('head')
 </head>
 
 <body class="font-sans antialiased scroll-smooth">
@@ -80,8 +67,8 @@
                     {{-- BRAND --}}
                     <div class="w-full px-3 pt-5 pb-2 border-b border-base-300/60">
                         <div class="flex items-center gap-3">
-                            <img src="{{ asset('images/plv-logo.png') }}" alt="PLV Logo" class="h-10 w-10 shrink-0"
-                                loading="eager" fetchpriority="high">
+                            <img src="{{ asset('images/optimized/plv-logo.webp') }}" alt="PLV Logo"
+                                class="h-10 w-10 shrink-0" loading="eager" width="80" height="80">
                             <div class="is-drawer-close:hidden">
                                 <h2 class="text-lg font-semibold font-heading leading-tight">Event Scheduling</h2>
                                 <p class="text-xs text-base-content/60">GSO Portal</p>
@@ -168,9 +155,7 @@
     {{-- Scripts Stack --}}
     @stack('scripts')
 
-    {{-- Performance Monitoring Scripts --}}
-    <script src="{{ asset('js/network-aware.js') }}" defer></script>
-    <script src="{{ asset('js/lazy-livewire.js') }}" defer></script>
+
 </body>
 
 </html>

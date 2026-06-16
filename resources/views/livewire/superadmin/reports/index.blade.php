@@ -1,3 +1,7 @@
+@push('head')
+    @vite('resources/js/charts.js')
+@endpush
+
 <div>
     <div class="p-6 space-y-6" wire:loading.class="opacity-50 pointer-events-none"
         wire:target="dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
