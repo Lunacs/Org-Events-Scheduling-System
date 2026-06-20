@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-content leading-tight">
             {{ __('Submit Event Ticket (Digital Proposal)') }}
@@ -124,9 +124,10 @@
                     <x-mary-card title="Event Details" subtitle="Information about your proposed event">
                         <div class="space-y-4">
                             <x-mary-input label="Event Title" wire:model.live.debounce.300ms="eventTitle"
-                                placeholder="Enter your event title" required />
+                                placeholder="Enter your event title" required maxlength="255" />
                             <x-mary-textarea label="Event Description" wire:model.live.debounce.300ms="eventDescription"
-                                rows="4" required />
+                                rows="4" required maxlength="2000"
+                                x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                             <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
                                 option-value="event_type_id" option-label="type_name" required />
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -175,7 +176,7 @@
                                 <div x-show="preferredVenue === 'other'" x-collapse x-cloak class="mt-4">
                                     <x-mary-input label="Please specify preferred venue"
                                         wire:model.live="preferredVenueOther" placeholder="Enter venue name"
-                                        required />
+                                        required maxlength="255" />
                                 </div>
                             </div>
 
@@ -193,7 +194,8 @@
 
                                 <div x-show="alternativeVenue === 'other'" x-collapse x-cloak class="mt-4">
                                     <x-mary-input label="Please specify alternative venue"
-                                        wire:model.live.blur="alternativeVenueOther" placeholder="Enter venue name" />
+                                        wire:model.live.blur="alternativeVenueOther" placeholder="Enter venue name"
+                                        maxlength="255" />
                                 </div>
                             </div>
                         </div>
@@ -202,7 +204,8 @@
                             <x-mary-textarea label="Special Requirements"
                                 wire:model.live.debounce.300ms="specialRequirements"
                                 placeholder="Audio/visual equipment, seating arrangement, catering, etc."
-                                rows="3" />
+                                rows="3" maxlength="2000"
+                                x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
 
                         <div x-data="{ open: @entangle('is_oc') }">
@@ -215,7 +218,8 @@
                                 <div class="mt-4">
                                     <x-mary-textarea label="Accommodation Provider (if any)"
                                         wire:model.live.debounce.300ms="oc_accommodation"
-                                        placeholder="Accommodation Provider Details" rows="2" />
+                                        placeholder="Accommodation Provider Details" rows="2" maxlength="2000"
+                                        x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                                 </div>
 
                                 <div x-data="{ tsp: @entangle('oc_tsp') }">
@@ -231,19 +235,25 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <x-mary-input label="Name of Driver"
                                                 wire:model.live.debounce.300ms="oc_driver_name"
-                                                placeholder="Enter the driver name" />
+                                                placeholder="Enter the driver name"
+                                                maxlength="60" />
 
                                             <x-mary-input label="Contact Details"
                                                 wire:model.live.debounce.300ms="oc_driver_contact_number"
-                                                placeholder="Enter the driver's contact" />
+                                                placeholder="Enter the driver's contact"
+                                                maxlength="11"
+                                                inputmode="numeric"
+                                                x-on:input="$el.value = $el.value.replace(/[^0-9\s\-\+\(\)]/g, '').slice(0, 11); $wire.set('oc_driver_contact_number', $el.value)" />
 
                                             <x-mary-input label="Type of Transportation"
                                                 wire:model.live.debounce.300ms="oc_transportation_type"
-                                                placeholder="Enter the type of transportation" />
+                                                placeholder="Enter the type of transportation"
+                                                maxlength="50" />
 
                                             <x-mary-input label="Plate Number"
                                                 wire:model.live.debounce.300ms="oc_vehicle_plate_number"
-                                                placeholder="Enter the plate number" />
+                                                placeholder="Enter the plate number"
+                                                maxlength="100" />
                                         </div>
                                     </div>
                                 </div>
@@ -257,7 +267,7 @@
                     <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
+                                wire:model.live="totalBudget" placeholder="0.00" prefix="â‚±" />
 
                             <x-mary-select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
                                 option-value="source_id" option-label="source_name"
@@ -267,7 +277,8 @@
                         <div class="mt-4">
                             <x-mary-textarea label="Budget Breakdown" wire:model.live.debounce.300ms="budgetBreakdown"
                                 placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
-                                rows="4" />
+                                rows="4" maxlength="2000"
+                                x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
 
                         <div x-data="{ igp: @entangle('igp_requested') }">
@@ -284,7 +295,8 @@
                                     <x-mary-textarea label="IGP (Income Generated Project) Brief Description"
                                         wire:model.live.debounce.300ms="igp_details"
                                         placeholder="List all descriptions for IGP (Income Generated Project) requested items"
-                                        rows="4" />
+                                        rows="4" maxlength="2000"
+                                        x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                                 </div>
                             </div>
                         </div>
@@ -304,12 +316,18 @@
                                         {{ count($errors) }} validation errors found
                                     @endif
                                 </div>
-                                <x-mary-file wire:model="newAttachments" aria-label="Upload event documents"
+                                {{-- wire:key changes on every upload attempt (uploadKey is incremented  --}}
+                                {{-- server-side in updatedNewAttachments). This forces Livewire to tear  --}}
+                                {{-- down and recreate the DOM element, clearing any stale browser upload --}}
+                                {{-- state that would otherwise leave the input stuck on "uploading".     --}}
+                                <x-mary-file wire:model="newAttachments"
+                                    wire:key="upload-input-{{ $uploadKey }}"
+                                    aria-label="Upload event documents"
                                     aria-describedby="file-help-text"
                                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
                                     <x-slot:hint>
                                         <span id="file-help-text">
-                                            Upload one file at a time, up to 10MB. Accepted: PDF, DOC, images, Excel
+                                            Upload one file at a time Â· Max 10 MB per file Â· Accepted formats: PDF, Word (.doc/.docx), images (.jpg/.png), Excel (.xls/.xlsx)
                                         </span>
                                     </x-slot:hint>
                                 </x-mary-file>
@@ -336,7 +354,8 @@
                         <div class="space-y-4">
                             <x-mary-textarea label="Additional Notes" wire:model.live.debounce.300ms="additionalNotes"
                                 placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
-                                rows="3" />
+                                rows="3" maxlength="2000"
+                                x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
                     </x-mary-card>
                 @endif
@@ -454,95 +473,83 @@
     @endscript
     @script
         <script>
-            const DRAFT_KEY = 'ticket_draft_{{ auth()->id() }}';
-            const SUBMITTED_FLAG_KEY = 'ticket_submitted_{{ auth()->id() }}';
+            /**
+             * DB-backed draft system.
+             * localStorage is used only as a lightweight pointer: { draft_id: N, savedAt: ISO }
+             * All real form data lives in the ticket_drafts DB table (server-side).
+             */
+            const DRAFT_PTR_KEY = 'ticket_draft_ptr_{{ auth()->id() }}';
             let draftTimeout;
             let modalShown = false;
-            let isSubmitting = false; // Flag to prevent auto-save during submission
+            let isSubmitting = false;
 
-            // Save draft with debouncing
-            $wire.on('save-draft', (event) => {
-                // Don't save if currently submitting
-                if (isSubmitting) {
-                    console.log('Skipping auto-save during submission');
-                    return;
-                }
+            // â”€â”€â”€ Server â†’ JS events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+            /**
+             * save-draft: server emits the draft_id after every field update.
+             * We persist just that ID + timestamp to localStorage as a pointer.
+             */
+            $wire.on('save-draft', (payload) => {
+                if (isSubmitting) return;
 
                 clearTimeout(draftTimeout);
                 draftTimeout = setTimeout(() => {
-                    const data = event[0] || event;
-                    localStorage.setItem(DRAFT_KEY, JSON.stringify({
-                        ...data,
-                        savedAt: new Date().toISOString(),
-                        draftId: Date.now()
+                    const draftId = Array.isArray(payload) ? payload[0] : payload;
+                    if (!draftId) return;
+
+                    localStorage.setItem(DRAFT_PTR_KEY, JSON.stringify({
+                        draft_id: draftId,
+                        savedAt: new Date().toISOString()
                     }));
-                    console.log('Draft saved with ID:', Date.now());
-                }, 2000);
+
+                    // Show auto-save indicator
+                    const indicator = document.getElementById('autosave-indicator');
+                    if (indicator) {
+                        indicator.classList.remove('hidden');
+                        setTimeout(() => indicator.classList.add('hidden'), 2000);
+                    }
+                }, 1500); // 1.5 s debounce
             });
 
-            // Clear draft (regular)
+            /**
+             * draft-found: server emits this on mount when it detects an existing draft.
+             * Show the resume-or-discard modal.
+             */
+            $wire.on('draft-found', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                if (!data || modalShown) return;
+
+                // Store/refresh the pointer in localStorage
+                localStorage.setItem(DRAFT_PTR_KEY, JSON.stringify({
+                    draft_id: data.draftId,
+                    savedAt: data.savedAt
+                }));
+
+                showResumeModal({ draft_id: data.draftId, savedAt: data.savedAt });
+            });
+
+            /**
+             * clear-draft: server signals that the draft was discarded.
+             */
             $wire.on('clear-draft', () => {
-                localStorage.removeItem(DRAFT_KEY);
-                console.log('Draft cleared');
+                localStorage.removeItem(DRAFT_PTR_KEY);
+                console.log('[draft] pointer cleared');
             });
 
-            // Clear draft immediately (for submission)
+            /**
+             * clear-draft-immediate: ticket was submitted; wipe pointer and lock saves.
+             */
             $wire.on('clear-draft-immediate', () => {
-                isSubmitting = true; // Set flag to prevent further auto-saves
-                clearTimeout(draftTimeout); // Cancel any pending auto-save
+                isSubmitting = true;
+                clearTimeout(draftTimeout);
+                localStorage.removeItem(DRAFT_PTR_KEY);
+                console.log('[draft] pointer cleared after submission');
 
-                const draft = localStorage.getItem(DRAFT_KEY);
-                let draftId = null;
-
-                if (draft) {
-                    try {
-                        const draftData = JSON.parse(draft);
-                        draftId = draftData.draftId;
-                    } catch (e) {
-                        console.error('Error parsing draft:', e);
-                    }
-                }
-
-                // Remove the draft
-                localStorage.removeItem(DRAFT_KEY);
-
-                // NEW: Set a persistent "just submitted" flag with timestamp
-                localStorage.setItem(`ticket_just_submitted_${draftId}`, Date.now());
-                console.log('Draft removed from storage');
-
-                // Store submission record with the draft ID
-                if (draftId) {
-                    let submissions = [];
-
-                    try {
-                        const stored = localStorage.getItem(SUBMITTED_FLAG_KEY);
-                        const parsed = stored ? JSON.parse(stored) : [];
-                        submissions = Array.isArray(parsed) ? parsed : [];
-                    } catch (e) {
-                        console.error('Error parsing submissions, resetting:', e);
-                        submissions = [];
-                    }
-
-                    submissions.push({
-                        draftId: draftId,
-                        submittedAt: Date.now()
-                    });
-
-                    if (submissions.length > 10) {
-                        submissions.shift();
-                    }
-
-                    localStorage.setItem(SUBMITTED_FLAG_KEY, JSON.stringify(submissions));
-                    console.log('Draft cleared immediately after submission, ID:', draftId);
-                }
-
-                // Keep flag set for a few seconds to ensure no race conditions
-                setTimeout(() => {
-                    isSubmitting = false;
-                }, 3000);
+                setTimeout(() => { isSubmitting = false; }, 3000);
             });
 
-            // Function to close and cleanup modal
+            // â”€â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
             function closeModal() {
                 const modal = document.getElementById('draftModal');
                 if (modal) {
@@ -550,106 +557,114 @@
                     setTimeout(() => {
                         modal.remove();
                         modalShown = false;
-                        console.log('Modal removed from DOM');
                     }, 300);
                 }
             }
 
-            // Function to remove any existing modals
             function cleanupExistingModal() {
-                const existingModal = document.getElementById('draftModal');
-                if (existingModal) {
-                    console.log('Removing existing modal');
-                    existingModal.remove();
-                }
+                const m = document.getElementById('draftModal');
+                if (m) m.remove();
                 modalShown = false;
             }
 
-            // Function to check if draft is stale (submitted recently)
-            function isDraftStale(draftId) {
-                // NEW: Check for "just submitted" flag first
-                const justSubmittedTimestamp = localStorage.getItem(`ticket_just_submitted_${draftId}`);
-                if (justSubmittedTimestamp) {
-                    const elapsed = Date.now() - parseInt(justSubmittedTimestamp);
-                    if (elapsed < 5 * 60 * 1000) { // 5 minutes
-                        console.log('Draft is stale (submission flag exists)');
-                        return true;
-                    } else {
-                        // Clean up old flag
-                        localStorage.removeItem(`ticket_just_submitted_${draftId}`);
-                    }
-                }
+            function showResumeModal(ptr) {
+                cleanupExistingModal();
+                modalShown = true;
 
-                let submissions = [];
+                const savedDate    = new Date(ptr.savedAt);
+                const formattedDate = savedDate.toLocaleString();
 
-                try {
-                    const stored = localStorage.getItem(SUBMITTED_FLAG_KEY);
-                    const parsed = stored ? JSON.parse(stored) : [];
+                // Build modal DOM
+                const modal = document.createElement('div');
+                modal.id = 'draftModal';
+                modal.className = 'modal modal-open';
 
-                    // Ensure it's an array (migration from old format)
-                    if (!Array.isArray(parsed)) {
-                        console.log('Invalid submissions format, resetting');
-                        localStorage.removeItem(SUBMITTED_FLAG_KEY);
-                        return false;
-                    }
+                const modalBox = document.createElement('div');
+                modalBox.className = 'modal-box relative max-w-md mx-auto';
 
-                    submissions = parsed;
-                } catch (e) {
-                    console.error('Error parsing submissions:', e);
-                    localStorage.removeItem(SUBMITTED_FLAG_KEY);
-                    return false;
-                }
+                const title = document.createElement('h3');
+                title.className = 'font-bold text-lg mb-4';
+                title.textContent = 'Resume Previous Draft?';
 
-                const now = Date.now();
+                const text1 = document.createElement('p');
+                text1.className = 'mb-2';
+                text1.textContent = 'You have an unsaved draft from:';
 
-                // Clean up old submissions (older than 5 minutes)
-                const cleanedSubmissions = submissions.filter(sub => {
-                    return sub && sub.submittedAt && (now - sub.submittedAt) < 5 * 60 * 1000;
+                const dateText = document.createElement('p');
+                dateText.className = 'text-sm text-gray-600 mb-4';
+                dateText.textContent = formattedDate;
+
+                const text2 = document.createElement('p');
+                text2.className = 'mb-4';
+                text2.textContent = 'Would you like to continue where you left off?';
+
+                // Loading spinner (hidden by default)
+                const spinnerWrapper = document.createElement('div');
+                spinnerWrapper.id = 'draftLoadingSpinner';
+                spinnerWrapper.className =
+                    'hidden absolute inset-0 bg-base-100 bg-opacity-90 items-center justify-center rounded-lg';
+
+                const spinnerContent = document.createElement('div');
+                spinnerContent.className = 'flex flex-col items-center gap-3';
+
+                const spinner = document.createElement('span');
+                spinner.className = 'loading loading-spinner loading-lg text-primary';
+
+                const spinnerText = document.createElement('p');
+                spinnerText.className = 'text-sm font-medium';
+                spinnerText.textContent = 'Loading draftâ€¦';
+
+                spinnerContent.appendChild(spinner);
+                spinnerContent.appendChild(spinnerText);
+                spinnerWrapper.appendChild(spinnerContent);
+
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'modal-action';
+
+                const discardBtn = document.createElement('button');
+                discardBtn.className = 'btn btn-ghost';
+                discardBtn.id = 'discardDraftBtn';
+                discardBtn.textContent = 'Start Fresh';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn btn-primary';
+                loadBtn.id = 'loadDraftBtn';
+                loadBtn.textContent = 'Resume Draft';
+
+                actionDiv.appendChild(discardBtn);
+                actionDiv.appendChild(loadBtn);
+
+                modalBox.appendChild(title);
+                modalBox.appendChild(text1);
+                modalBox.appendChild(dateText);
+                modalBox.appendChild(text2);
+                modalBox.appendChild(spinnerWrapper);
+                modalBox.appendChild(actionDiv);
+                modal.appendChild(modalBox);
+
+                document.body.appendChild(modal);
+
+                // Attach listeners
+                requestAnimationFrame(() => {
+                    setTimeout(() => attachButtonListeners(ptr), 50);
                 });
-
-                // Update storage with cleaned list
-                if (cleanedSubmissions.length !== submissions.length) {
-                    localStorage.setItem(SUBMITTED_FLAG_KEY, JSON.stringify(cleanedSubmissions));
-                }
-
-                // Check if this specific draft was submitted
-                const wasSubmitted = cleanedSubmissions.some(sub => sub.draftId === draftId);
-
-                if (wasSubmitted) {
-                    console.log('Draft is stale (this specific draft was submitted)');
-                    return true;
-                }
-
-                return false;
             }
 
-            // Function to attach button listeners
-            function attachButtonListeners(draftData, retryCount = 0) {
-                const loadBtn = document.getElementById('loadDraftBtn');
+            function attachButtonListeners(ptr, retryCount = 0) {
+                const loadBtn    = document.getElementById('loadDraftBtn');
                 const discardBtn = document.getElementById('discardDraftBtn');
-
-                console.log('Attempting to attach listeners, retry:', retryCount);
-                console.log('Load button found:', !!loadBtn);
-                console.log('Discard button found:', !!discardBtn);
 
                 if (!loadBtn || !discardBtn) {
                     if (retryCount < 10) {
-                        setTimeout(() => attachButtonListeners(draftData, retryCount + 1), 100);
-                    } else {
-                        console.error('Could not find modal buttons after multiple retries');
+                        setTimeout(() => attachButtonListeners(ptr, retryCount + 1), 100);
                     }
                     return;
                 }
 
-                console.log('Attaching click listeners to buttons');
-
                 loadBtn.addEventListener('click', function handleLoadClick() {
-                    console.log('Load button clicked');
-                    console.log('Draft data:', draftData.data);
-
                     loadBtn.removeEventListener('click', handleLoadClick);
 
-                    // Show loading spinner
+                    // Show spinner
                     const spinner = document.getElementById('draftLoadingSpinner');
                     if (spinner) {
                         spinner.classList.remove('hidden');
@@ -658,176 +673,35 @@
                         discardBtn.disabled = true;
                     }
 
-                    // Dispatch load event
-                    Livewire.dispatch('load-draft', {
-                        data: draftData.data
-                    });
+                    // Dispatch DB-backed load â€” passes only the draft_id; PHP fetches the rest.
+                    Livewire.dispatch('load-draft', { data: { draft_id: ptr.draft_id } });
 
-                    // Wait for draft to be loaded before closing modal
-                    const checkDraftLoaded = setInterval(() => {
-                        // Check if draft data has been applied (you can verify by checking a specific property)
-                        if ($wire.currentStep === draftData.data.currentStep) {
-                            clearInterval(checkDraftLoaded);
-                            setTimeout(() => {
-                                closeModal();
-                            }, 300); // Small delay to ensure all data is rendered
-                        }
-                    }, 100);
+                    // Wait for draft-loaded confirmation then close
+                    const checkLoaded = setInterval(() => {
+                        // PHP will have updated currentStep; close once Livewire re-renders
+                        clearInterval(checkLoaded);
+                        setTimeout(closeModal, 300);
+                    }, 200);
 
-                    // Fallback timeout in case check fails
+                    // Fallback
                     setTimeout(() => {
-                        clearInterval(checkDraftLoaded);
+                        clearInterval(checkLoaded);
                         closeModal();
                     }, 3000);
                 });
 
                 discardBtn.addEventListener('click', function handleDiscardClick() {
-                    console.log('Discard button clicked');
-
                     discardBtn.removeEventListener('click', handleDiscardClick);
-
                     Livewire.dispatch('discard-draft');
-
-                    setTimeout(() => {
-                        closeModal();
-                    }, 100);
+                    setTimeout(closeModal, 100);
                 });
             }
 
-            // Function to check and show draft modal
-            function checkAndShowDraftModal() {
-                const draft = localStorage.getItem(DRAFT_KEY);
-                console.log('Checking for draft:', draft);
-                console.log('Modal already shown:', modalShown);
+            // â”€â”€â”€ On navigated (SPA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-                // Clean up any existing modal first
-                cleanupExistingModal();
-
-                if (draft && !modalShown) {
-                    const draftData = JSON.parse(draft);
-                    const draftId = draftData.draftId;
-
-                    // Check if this specific draft is stale
-                    if (isDraftStale(draftId)) {
-                        console.log('Removing stale draft');
-                        localStorage.removeItem(DRAFT_KEY);
-                        return;
-                    }
-
-                    modalShown = true;
-                    const savedDate = new Date(draftData.savedAt);
-                    const formattedDate = savedDate.toLocaleString();
-
-                    const modal = document.createElement('div');
-                    modal.id = 'draftModal';
-                    modal.className = 'modal modal-open';
-
-                    const modalBox = document.createElement('div');
-                    modalBox.className = 'modal-box relative max-w-md mx-auto';
-
-                    const title = document.createElement('h3');
-                    title.className = 'font-bold text-lg mb-4';
-                    title.textContent = 'Resume Previous Draft?';
-
-                    const text1 = document.createElement('p');
-                    text1.className = 'mb-2';
-                    text1.textContent = 'You have an unsaved draft from:';
-
-                    const dateText = document.createElement('p');
-                    dateText.className = 'text-sm text-gray-600 mb-4';
-                    dateText.textContent = formattedDate;
-
-                    const text2 = document.createElement('p');
-                    text2.className = 'mb-4';
-                    text2.textContent = 'Would you like to continue where you left off?';
-
-                    // Loading spinner (hidden by default)
-                    const spinnerWrapper = document.createElement('div');
-                    spinnerWrapper.id = 'draftLoadingSpinner';
-                    spinnerWrapper.className =
-                        'hidden absolute inset-0 bg-base-100 bg-opacity-90 items-center justify-center rounded-lg';
-
-                    const spinnerContent = document.createElement('div');
-                    spinnerContent.className = 'flex flex-col items-center gap-3';
-
-                    const spinner = document.createElement('span');
-                    spinner.className = 'loading loading-spinner loading-lg text-primary';
-
-                    const spinnerText = document.createElement('p');
-                    spinnerText.className = 'text-sm font-medium';
-                    spinnerText.textContent = 'Loading draft...';
-
-                    spinnerContent.appendChild(spinner);
-                    spinnerContent.appendChild(spinnerText);
-                    spinnerWrapper.appendChild(spinnerContent);
-
-                    const actionDiv = document.createElement('div');
-                    actionDiv.className = 'modal-action';
-
-                    const discardBtn = document.createElement('button');
-                    discardBtn.className = 'btn btn-ghost';
-                    discardBtn.id = 'discardDraftBtn';
-                    discardBtn.textContent = 'Start Fresh';
-
-                    const loadBtn = document.createElement('button');
-                    loadBtn.className = 'btn btn-primary';
-                    loadBtn.id = 'loadDraftBtn';
-                    loadBtn.textContent = 'Resume Draft';
-
-                    actionDiv.appendChild(discardBtn);
-                    actionDiv.appendChild(loadBtn);
-
-                    modalBox.appendChild(title);
-                    modalBox.appendChild(text1);
-                    modalBox.appendChild(dateText);
-                    modalBox.appendChild(text2);
-                    modalBox.appendChild(spinnerWrapper);
-                    modalBox.appendChild(actionDiv);
-                    modal.appendChild(modalBox);
-
-                    document.body.appendChild(modal);
-                    console.log('Modal HTML inserted into DOM');
-
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            attachButtonListeners(draftData);
-                        }, 50);
-                    });
-                }
-            }
-
-            // Check on initial page load (full reload)
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(checkAndShowDraftModal, 500);
-                });
-            } else {
-                setTimeout(checkAndShowDraftModal, 500);
-            }
-
-            // Check when navigating to this page via Livewire (SPA navigation)
             document.addEventListener('livewire:navigated', () => {
-                console.log('Livewire navigated event fired');
-
                 cleanupExistingModal();
-
-                setTimeout(() => {
-                    if (this.$refs.submitForm) {
-                        console.log('Navigated to ticket submission page, checking for draft');
-                        checkAndShowDraftModal();
-                    } else {
-                        console.log('Not on ticket submission page, skipping draft check');
-                    }
-                }, 800);
-            });
-
-            // Auto-save indicator
-            $wire.on('save-draft', () => {
-                const indicator = document.getElementById('autosave-indicator');
-                if (indicator) {
-                    indicator.classList.remove('hidden');
-                    setTimeout(() => indicator.classList.add('hidden'), 2000);
-                }
+                // Server will emit draft-found if applicable â€” no client-side check needed.
             });
         </script>
     @endscript

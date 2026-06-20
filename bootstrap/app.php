@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Replaces cron-based scheduler for hosts without cron support (e.g., Render free tier)
         $middleware->appendToGroup('web', [
             \App\Http\Middleware\AutoCompleteTickets::class,
+            \App\Http\Middleware\CleanupStaleDrafts::class,
         ]);
 
         // Configure maintenance mode to allow SuperAdmin access
