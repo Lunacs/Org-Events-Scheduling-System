@@ -585,17 +585,21 @@ class SubmitTicket extends Component
 
     public function mount()
     {
-        $currentUser = auth()->user();
-        $currentUserinfo = $currentUser->studentOrganization;
+        // Eagerly load both relationships so null-access on nested objects never crashes mount().
+        // Without eager loading, `->course` is a second lazy query; if course_id is null the
+        // subsequent `->course_name` read throws a silent fatal that wipes all autofill values.
+        $currentUser = auth()->user()->load(['studentOrganization.course', 'position']);
+
+        $currentUserinfo     = $currentUser->studentOrganization;
         $currentUserPosition = $currentUser->position;
 
-        $this->organizationName = $currentUserinfo->org_code ?? '';
-        $this->adviser = $currentUserinfo->adviser_name ?? '';
-        $this->contactEmail = $currentUser->email ?? '';
-        $this->proponentName = $currentUser->name ?? '';
-        $this->organizationCourse = $currentUserinfo->course->course_name ?? 'Non Academic Org';
-        $this->proponentPosition = $currentUserPosition->position_name ?? '';
-        $this->proponent_contact = $currentUser->phone ?? '';
+        $this->organizationName    = $currentUserinfo?->org_code ?? '';
+        $this->adviser             = $currentUserinfo?->adviser_name ?? '';
+        $this->contactEmail        = $currentUser->email ?? '';
+        $this->proponentName       = $currentUser->name ?? '';
+        $this->organizationCourse  = $currentUserinfo?->course?->course_name ?? 'Non Academic Org';
+        $this->proponentPosition   = $currentUserPosition?->position_name ?? '';
+        $this->proponent_contact   = $currentUser->phone ?? '';
         $this->venues = Venue::where('is_active', true)->get();
 
         // Resolve the "N/A" fund source and ensure it exists in the table.
