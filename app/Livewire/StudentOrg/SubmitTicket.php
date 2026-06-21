@@ -889,9 +889,17 @@ class SubmitTicket extends Component
                 return;
             }
 
+            // Fields sourced from the user's profile are intentionally excluded here
+            // so that mount()'s fresh values are never clobbered by stale draft data.
+            $profileFields = [
+                'organizationName', 'organizationCourse', 'adviser',
+                'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+            ];
+
             foreach ($draft->data as $key => $value) {
                 if (property_exists($this, $key)
-                    && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing', 'draftId'])) {
+                    && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing', 'draftId'])
+                    && ! in_array($key, $profileFields)) {
                     $this->{$key} = $value;
                 }
             }
@@ -906,9 +914,15 @@ class SubmitTicket extends Component
         }
 
         // Legacy path — plain associative array payload (backward compat)
+        $profileFields = [
+            'organizationName', 'organizationCourse', 'adviser',
+            'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+        ];
+
         foreach ($draftData as $key => $value) {
             if (property_exists($this, $key)
-                && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing'])) {
+                && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing'])
+                && ! in_array($key, $profileFields)) {
                 $this->{$key} = $value;
             }
         }
@@ -1052,7 +1066,16 @@ class SubmitTicket extends Component
      */
     private function persistDraftToDb(): void
     {
-        $excluded = ['newAttachments', 'attachments', 'isProcessing', 'venues', 'uploadKey', 'draftId'];
+        // Fields derived from the authenticated user's profile are excluded from the
+        // draft payload — they are always re-populated from the live User record in
+        // mount(), so storing them would cause stale data to overwrite fresh values
+        // on draft resume (the original bug: org name / contact disappeared).
+        $excluded = [
+            'newAttachments', 'attachments', 'isProcessing', 'venues', 'uploadKey', 'draftId',
+            // User-profile autofills — never persist to draft:
+            'organizationName', 'organizationCourse', 'adviser',
+            'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+        ];
 
         $data = collect($this->all())->except($excluded)->toArray();
 
