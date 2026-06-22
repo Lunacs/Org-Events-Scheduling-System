@@ -1,4 +1,4 @@
-﻿<div>
+<div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-content leading-tight">
             {{ __('Submit Event Ticket (Digital Proposal)') }}
@@ -450,14 +450,13 @@
         });
     </script>
 
+
     @script
         <script>
+            // ─── Step changed: scroll to top & keep progress bar in view ─────────────
             $wire.on('step-changed', () => {
                 setTimeout(() => {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                     const container = document.getElementById('progress-container');
                     const currentStepElement = document.getElementById(`step-${$wire.currentStep}`);
                     if (container && currentStepElement && window.innerWidth < 768) {
@@ -469,10 +468,7 @@
                     }
                 }, 100);
             });
-        </script>
-    @endscript
-    @script
-        <script>
+
             /**
              * DB-backed draft system.
              * localStorage is used only as a lightweight pointer: { draft_id: N, savedAt: ISO }
