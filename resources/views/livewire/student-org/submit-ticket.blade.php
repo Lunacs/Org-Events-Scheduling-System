@@ -275,8 +275,10 @@
                         </div>
 
                         <div class="mt-4">
-                            <x-mary-textarea label="Budget Breakdown" wire:model.live.debounce.300ms="budgetBreakdown"
-                                placeholder="Itemized list of expenses (venue, equipment, materials, etc.)"
+                            <x-mary-textarea
+                                :label="(int) $fundingSource === 1 ? 'Budget Proposal Breakdown' : 'Request Details'"
+                                wire:model.live.debounce.300ms="budgetBreakdown"
+                                :placeholder="(int) $fundingSource === 1 ? 'Itemized list of expenses or Program Parapernalias Information (venue, equipment, materials, etc.)' : 'Example: 1. 200 packs of foods'"
                                 rows="4" maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
@@ -324,10 +326,10 @@
                                     wire:key="upload-input-{{ $uploadKey }}"
                                     aria-label="Upload event documents"
                                     aria-describedby="file-help-text"
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                                    accept=".pdf">
                                     <x-slot:hint>
                                         <span id="file-help-text">
-                                            Upload one file at a time · Max 10 MB per file · Accepted formats: PDF, Word (.doc/.docx), images (.jpg/.png), Excel (.xls/.xlsx)
+                                            Upload one file at a time · Max 10 MB per file · Accepted format: PDF only
                                         </span>
                                     </x-slot:hint>
                                 </x-mary-file>

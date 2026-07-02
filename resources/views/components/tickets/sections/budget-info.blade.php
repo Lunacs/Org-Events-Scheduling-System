@@ -21,7 +21,7 @@
 
     @if ($ticket->budget_breakdown)
         <div class="mt-4 min-w-0">
-            <label class="text-sm font-medium text-base-content/70">Budget Breakdown</label>
+            <label class="text-sm font-medium text-base-content/70">{{ $ticket->budget_breakdown_label }}</label>
             <p class="text-base-content whitespace-pre-wrap break-words overflow-wrap-anywhere bg-base-200 p-3 rounded">
                 {{ $ticket->budget_breakdown }}</p>
         </div>

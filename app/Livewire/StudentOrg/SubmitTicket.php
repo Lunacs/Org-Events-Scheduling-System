@@ -273,7 +273,7 @@ class SubmitTicket extends Component
                 'is_amended' => 'required|boolean',
             ],
             2 => [
-                'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
+                'eventTitle' => 'required|string|max:255|min:5',
                 'eventDescription' => 'required|string|max:2000|min:20',
                 'eventType' => 'required|integer|exists:event__types,event_type_id',
                 'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
@@ -323,7 +323,17 @@ class SubmitTicket extends Component
             ],
             4 => [
                 'totalBudget' => 'required|numeric|min:0|max:999999999.99',
-                'fundingSource' => 'required|integer|exists:fund__sources,source_id',
+                'fundingSource' => [
+                    'required',
+                    'integer',
+                    'exists:fund__sources,source_id',
+                    function ($attribute, $value, $fail) {
+                        $naFundSource = Fund_Sources::where('source_name', 'N/A')->first();
+                        if ($naFundSource && (int) $value === (int) $naFundSource->source_id) {
+                            $fail('Please select a valid funding source.');
+                        }
+                    }
+                ],
                 'igp_requested' => 'required|string|in:true,false',
                 'budgetBreakdown' => 'nullable|string|max:2000',
                 'igp_details' => $this->igp_requested === 'true' ? 'required|string|max:2000|min:10' : 'nullable',
@@ -331,7 +341,7 @@ class SubmitTicket extends Component
             5 => [
                 'additionalNotes' => 'nullable|string|max:2000',
                 'newAttachments' => 'nullable|array|max:25',
-                'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+                'newAttachments.*' => 'file|max:10240|mimes:pdf',
             ],
             6 => [
                 'agreeToTerms' => 'required|accepted',
@@ -390,7 +400,6 @@ class SubmitTicket extends Component
                 'eventTitle.required'                   => 'Please provide a title for your event.',
                 'eventTitle.min'                        => 'The event title must be at least 5 characters long.',
                 'eventTitle.max'                        => 'The event title may not exceed 255 characters.',
-                'eventTitle.regex'                      => 'The event title must not start with a number.',
                 'eventDescription.required'             => 'Please describe your event.',
                 'eventDescription.min'                  => 'The event description must be at least 20 characters long.',
                 'eventDescription.max'                  => 'The event description may not exceed 2,000 characters.',
@@ -459,7 +468,7 @@ class SubmitTicket extends Component
                 'newAttachments.max'                    => 'You may not upload more than 25 files.',
                 'newAttachments.*.file'                 => 'One or more uploaded items are not valid files.',
                 'newAttachments.*.max'                  => 'Each file must not exceed 10 MB.',
-                'newAttachments.*.mimes'                => 'Only PDF, Word, image, and Excel files are accepted.',
+                'newAttachments.*.mimes'                => 'Only PDF files are accepted.',
 
                 // Step 6 — Terms
                 'agreeToTerms.required'                 => 'You must agree to the terms and conditions to proceed.',
@@ -537,6 +546,7 @@ class SubmitTicket extends Component
         $ticket->alternate_venue_other = $this->alternativeVenueOther;
         $ticket->special_requirements = $this->specialRequirements;
         $ticket->estimated_budget = $this->totalBudget;
+        $ticket->fund_source_id   = (int) $this->fundingSource;
         $ticket->budget_breakdown = $this->budgetBreakdown;
         $ticket->igp_requested = $this->igp_requested === 'true';
         $ticket->igp_details = $this->igp_details;
@@ -1004,11 +1014,11 @@ class SubmitTicket extends Component
             // Laravel's mimes rule is used instead of finfo_file because Livewire
             // temp files may be stored on S3 and are not locally accessible.
             $this->validate(
-                ['newAttachments.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx']],
+                ['newAttachments.*' => ['file', 'max:10240', 'mimes:pdf']],
                 [
                     'newAttachments.*.file'  => 'The uploaded item could not be processed. Please try again.',
                     'newAttachments.*.max'   => 'The file exceeds the 10 MB size limit. Please reduce the file size and try again.',
-                    'newAttachments.*.mimes' => 'This file type is not supported. Accepted formats: PDF, Word (.doc/.docx), images (.jpg/.png), and Excel (.xls/.xlsx).',
+                    'newAttachments.*.mimes' => 'This file type is not supported. Only PDF files are accepted.',
                 ]
             );
 
