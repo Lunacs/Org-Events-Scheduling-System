@@ -267,7 +267,7 @@
                     <x-mary-card title="Budget Information" subtitle="Financial details of your event">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                wire:model.live="totalBudget" placeholder="0.00" prefix="â‚±" />
+                                wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
 
                             <x-mary-select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
                                 option-value="source_id" option-label="source_name"
@@ -327,7 +327,7 @@
                                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
                                     <x-slot:hint>
                                         <span id="file-help-text">
-                                            Upload one file at a time Â· Max 10 MB per file Â· Accepted formats: PDF, Word (.doc/.docx), images (.jpg/.png), Excel (.xls/.xlsx)
+                                            Upload one file at a time · Max 10 MB per file · Accepted formats: PDF, Word (.doc/.docx), images (.jpg/.png), Excel (.xls/.xlsx)
                                         </span>
                                     </x-slot:hint>
                                 </x-mary-file>
@@ -337,7 +337,7 @@
                                         <p class="text-sm font-medium">Attached Files:</p>
                                         @foreach ($attachments as $index => $file)
                                             <div class="flex items-center justify-between bg-base-200 p-2 rounded">
-                                                <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
+                                                <span class="text-sm">{{ is_array($file) ? $file['file_name'] : $file->getClientOriginalName() }}</span>
                                                 <x-mary-button icon="o-x-mark"
                                                     wire:click="removeAttachment({{ $index }})"
                                                     class="btn-ghost btn-sm" spinner />
@@ -424,36 +424,27 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('open-attachment-preview', ({
-                url
-            }) => {
-                if (url) {
-                    window.open(url, '_blank');
-                }
-            });
-            Livewire.on('download-attachment', ({
-                url,
-                filename
-            }) => {
-                if (url) {
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename || 'download';
-                    link.target = '_blank';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-            });
-        });
-    </script>
-
 
     @script
+
         <script>
-            // ─── Step changed: scroll to top & keep progress bar in view ─────────────
+            // ─── Attachment preview / download ────────────────────────────────────────
+            $wire.on('open-attachment-preview', ({ url }) => {
+                if (url) window.open(url, '_blank');
+            });
+
+            $wire.on('download-attachment', ({ url, filename }) => {
+                if (!url) return;
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename || 'download';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // ─── Step changed: scroll to top & keep progress bar in view ─────────
             $wire.on('step-changed', () => {
                 setTimeout(() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -477,9 +468,7 @@
             const DRAFT_PTR_KEY = 'ticket_draft_ptr_{{ auth()->id() }}';
             let draftTimeout;
             let modalShown = false;
-            let isSubmitting = false;
-
-            // â”€â”€â”€ Server â†’ JS events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            let isSubmitting = false
 
             /**
              * save-draft: server emits the draft_id after every field update.
@@ -508,8 +497,12 @@
             });
 
             /**
-             * draft-found: server emits this on mount when it detects an existing draft.
-             * Show the resume-or-discard modal.
+             * draft-found: fallback for XHR-triggered navigations (e.g. redirect back
+             * to submit-ticket). For initial full-page loads and wire:navigate SPA
+             * navigations, the eager $wire.draftId check below is more reliable because
+             * Livewire public props are guaranteed to be hydrated before script runs,
+             * whereas buffered mount() events may replay before $wire.on() listeners
+             * are fully active.
              */
             $wire.on('draft-found', (payload) => {
                 const data = Array.isArray(payload) ? payload[0] : payload;
@@ -564,7 +557,8 @@
             }
 
             function showResumeModal(ptr) {
-                cleanupExistingModal();
+                // Guard: never build a second modal if one is already up.
+                if (modalShown) return;
                 modalShown = true;
 
                 const savedDate    = new Date(ptr.savedAt);
@@ -693,9 +687,29 @@
                 });
             }
 
-            // â”€â”€â”€ On navigated (SPA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        
+            // We defer by one rAF + 50 ms so this fires AFTER livewire:navigated
+            // (which Livewire dispatches at the tail of SPA navigation and could
+            // otherwise call cleanupExistingModal before the modal is built).
+            if ($wire.draftId && $wire.draftSavedAt && !modalShown) {
+                localStorage.setItem(DRAFT_PTR_KEY, JSON.stringify({
+                    draft_id: $wire.draftId,
+                    savedAt: $wire.draftSavedAt
+                }));
 
-            document.addEventListener('livewire:navigated', () => {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Re-check modalShown — draft-found may have already shown it
+                        showResumeModal({ draft_id: $wire.draftId, savedAt: $wire.draftSavedAt });
+                    }, 80);
+                });
+            }
+
+            // ——— On navigating (SPA) ─────────────────────────────────────────────────
+            // livewire:navigating fires BEFORE the new page loads, so cleanup runs
+            // before any new script builds a fresh modal. Using :navigated (after)
+            // caused the modal to be destroyed right after it appeared.
+            document.addEventListener('livewire:navigating', () => {
                 cleanupExistingModal();
                 // Server will emit draft-found if applicable â€” no client-side check needed.
             });

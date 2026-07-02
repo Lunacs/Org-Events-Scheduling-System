@@ -208,6 +208,9 @@ class SubmitTicket extends Component
     /** Primary key of the active ticket_drafts row; broadcast to JS as draft pointer. */
     public ?int $draftId = null;
 
+    /** ISO timestamp of when the active draft was last updated; broadcast to JS. */
+    public ?string $draftSavedAt = null;
+
     use Toast;
     // To prevent multiple submissions
 
@@ -623,6 +626,7 @@ class SubmitTicket extends Component
             $existingDraft = TicketDraft::where('user_id', auth()->id())->first();
             if ($existingDraft) {
                 $this->draftId = $existingDraft->id;
+                $this->draftSavedAt = $existingDraft->updated_at->toISOString();
                 $this->dispatch('draft-found',
                     draftId: $existingDraft->id,
                     savedAt: $existingDraft->updated_at->toISOString()
@@ -796,6 +800,7 @@ class SubmitTicket extends Component
                            ->where('user_id', $currentUser->user_id)
                            ->delete();
                 $this->draftId = null;
+                $this->draftSavedAt = null;
             }
 
             // Clear draft BEFORE showing success message
@@ -910,6 +915,7 @@ class SubmitTicket extends Component
 
             $this->currentStep = $draft->current_step;
             $this->draftId     = $draft->id;
+            $this->draftSavedAt = $draft->updated_at->toISOString();
             // Restore attachment list from DB records (each is an array representation)
             $this->attachments = $draft->attachments->toArray();
 
@@ -952,6 +958,7 @@ class SubmitTicket extends Component
             }
 
             $this->draftId = null;
+            $this->draftSavedAt = null;
         }
 
         $this->dispatch('clear-draft');
@@ -1092,6 +1099,7 @@ class SubmitTicket extends Component
         if ($this->draftId !== $draft->id) {
             $this->draftId = $draft->id;
         }
+        $this->draftSavedAt = $draft->updated_at->toISOString();
     }
 
     /**
