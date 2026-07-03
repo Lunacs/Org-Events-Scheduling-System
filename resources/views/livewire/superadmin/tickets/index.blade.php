@@ -248,7 +248,7 @@
 
                         @if ($selectedTicket->budget_breakdown)
                             <div>
-                                <p class="text-sm text-base-content/60 mb-1">Budget Breakdown</p>
+                                <p class="text-sm text-base-content/60 mb-1">{{ $selectedTicket->budget_breakdown_label }}</p>
                                 <p class="text-sm bg-base-200 p-3 rounded-lg">{{ $selectedTicket->budget_breakdown }}</p>
                             </div>
                         @endif

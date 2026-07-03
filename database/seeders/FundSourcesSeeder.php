@@ -14,9 +14,10 @@ class FundSourcesSeeder extends Seeder
     {
         //All fund sources here
         $fundSources = [
+            ['source_name' => 'N/A'],
             ['source_name' => 'Organizational Funds'],
-            ['source_name' => 'University/Appropriate Government Funds']
-            ];
+            ['source_name' => 'University/Appropriate Government Funds'],
+        ];
         foreach ($fundSources as $fundSource) {
             \App\Models\Fund_Sources::create($fundSource);
         }

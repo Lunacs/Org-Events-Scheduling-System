@@ -255,7 +255,7 @@
                         @error('fund_source_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="md:col-span-2">
-                        <label for="budget_breakdown" class="block text-sm font-medium text-base-content/70 mb-1">Budget Breakdown</label>
+                        <label for="budget_breakdown" class="block text-sm font-medium text-base-content/70 mb-1">{{ (int) $fund_source_id === 1 ? 'Budget Proposal Breakdown' : 'Request Details' }}</label>
                         <textarea id="budget_breakdown" wire:model="budget_breakdown" class="textarea textarea-bordered w-full" rows="2"
                             placeholder="Itemize the budget..."></textarea>
                         @error('budget_breakdown') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror

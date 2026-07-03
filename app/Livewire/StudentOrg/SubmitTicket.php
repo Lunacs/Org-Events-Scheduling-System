@@ -8,6 +8,8 @@ use App\Models\ContentSection;
 use App\Models\Event_Type;
 use App\Models\Fund_Sources;
 use App\Models\Ticket;
+use App\Models\TicketDraft;
+use App\Models\TicketDraftAttachment;
 use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
@@ -15,6 +17,7 @@ use App\Services\TransactionLogService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -102,7 +105,6 @@ class SubmitTicket extends Component
 
     #[Validate('required', message: 'The event end time is required.')]
     #[Validate('date_format:H:i', message: 'The event end time must be in HH:MM format.')]
-    #[Validate('after:eventStartTime', message: 'The end time must be after the start time.')]
     #[Validate('before_or_equal:21:00', message: 'Event end time must be at or before 9:00 PM.')]
     public $eventEndTime = '';
 
@@ -182,7 +184,11 @@ class SubmitTicket extends Component
     // Step 5: Attachments
     public $attachments = [];
 
-    #[Validate('nullable|array|max:25')]
+    // Validation is handled entirely in updatedNewAttachments() — do NOT add
+    // #[Validate] here. Livewire v3 applies property-level #[Validate] rules
+    // at the /upload-file XHR endpoint (before the component lifecycle runs).
+    // The 'array' rule would reject every single-file upload with a 422 because
+    // Livewire sends one UploadedFile at a time, not an array.
     public $newAttachments = [];
 
     #[Validate('nullable|string|max:2000')]
@@ -190,6 +196,20 @@ class SubmitTicket extends Component
 
     // UI
     public $isProcessing = false;
+
+    /**
+     * Incremented on every upload attempt (success or failure).
+     * The blade binds this to wire:key on the file input so Livewire
+     * destroys and recreates the DOM element, clearing any stale
+     * browser upload state that would otherwise leave the input stuck.
+     */
+    public int $uploadKey = 0;
+
+    /** Primary key of the active ticket_drafts row; broadcast to JS as draft pointer. */
+    public ?int $draftId = null;
+
+    /** ISO timestamp of when the active draft was last updated; broadcast to JS. */
+    public ?string $draftSavedAt = null;
 
     use Toast;
     // To prevent multiple submissions
@@ -253,7 +273,7 @@ class SubmitTicket extends Component
                 'is_amended' => 'required|boolean',
             ],
             2 => [
-                'eventTitle' => 'required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i',
+                'eventTitle' => 'required|string|max:255|min:5',
                 'eventDescription' => 'required|string|max:2000|min:20',
                 'eventType' => 'required|integer|exists:event__types,event_type_id',
                 'expectedPLVParticipants' => 'required|integer|min:1|max:100000',
@@ -263,7 +283,23 @@ class SubmitTicket extends Component
                 'eventStartDate' => 'required|date|after_or_equal:today',
                 'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
                 'eventStartTime' => ['required', 'date_format:H:i', 'after_or_equal:00:01'],
-                'eventEndTime' => ['required', 'date_format:H:i', 'after:eventStartTime', 'before_or_equal:21:00'],
+                'eventEndTime' => [
+                    'required',
+                    'date_format:H:i',
+                    'before_or_equal:21:00',
+                    // Only enforce after-start-time when both events fall on the same date.
+                    // When end date is a later day, any valid time is acceptable.
+                    function ($attribute, $value, $fail) {
+                        if (
+                            $this->eventStartDate &&
+                            $this->eventEndDate &&
+                            $this->eventStartDate === $this->eventEndDate &&
+                            $value <= $this->eventStartTime
+                        ) {
+                            $fail('The event end time must be after the start time when the event is on the same day.');
+                        }
+                    },
+                ],
                 'preferredVenue' => ['required', function ($attribute, $value, $fail) {
                     if ($value !== 'other' && ! Venue::where('venue_id', $value)->exists()) {
                         $fail('The selected venue is invalid.');
@@ -280,14 +316,24 @@ class SubmitTicket extends Component
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
                 'oc_tsp' => $this->is_oc ? 'required|string|in:in-house,outsourced' : 'nullable',
-                'oc_driver_name' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
-                'oc_driver_contact_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
-                'oc_transportation_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|min:2' : 'nullable',
-                'oc_vehicle_plate_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:255|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
+                'oc_driver_name' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:30|min:2' : 'nullable',
+                'oc_driver_contact_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:11|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
+                'oc_transportation_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:50|min:2' : 'nullable',
+                'oc_vehicle_plate_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:10|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
             ],
             4 => [
                 'totalBudget' => 'required|numeric|min:0|max:999999999.99',
-                'fundingSource' => 'required|integer|exists:fund__sources,source_id',
+                'fundingSource' => [
+                    'required',
+                    'integer',
+                    'exists:fund__sources,source_id',
+                    function ($attribute, $value, $fail) {
+                        $naFundSource = Fund_Sources::where('source_name', 'N/A')->first();
+                        if ($naFundSource && (int) $value === (int) $naFundSource->source_id) {
+                            $fail('Please select a valid funding source.');
+                        }
+                    }
+                ],
                 'igp_requested' => 'required|string|in:true,false',
                 'budgetBreakdown' => 'nullable|string|max:2000',
                 'igp_details' => $this->igp_requested === 'true' ? 'required|string|max:2000|min:10' : 'nullable',
@@ -295,7 +341,7 @@ class SubmitTicket extends Component
             5 => [
                 'additionalNotes' => 'nullable|string|max:2000',
                 'newAttachments' => 'nullable|array|max:25',
-                'newAttachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+                'newAttachments.*' => 'file|max:10240|mimes:pdf',
             ],
             6 => [
                 'agreeToTerms' => 'required|accepted',
@@ -315,24 +361,27 @@ class SubmitTicket extends Component
         return $venue && $venue->venue_name === 'Others (Please Specify)';
     }
 
-    // Auto-save draft on property update
-    public function updated($property)
+
+    /**
+     * When start date changes, clear end date if it precedes the new start date.
+     * This prevents stale invalid end dates from silently passing validation.
+     */
+    public function updatedEventStartDate($value): void
     {
-        // Don't auto-save if currently processing submission
-        if ($this->isProcessing) {
-            return;
+        if ($this->eventEndDate && $this->eventEndDate < $value) {
+            $this->eventEndDate = '';
         }
+    }
 
-        // Exclude certain properties from auto-save
-        if (in_array($property, ['newAttachments', 'isProcessing'])) {
-            return;
+    /**
+     * When start time changes, clear end time if they share the same date
+     * and the end time is no longer after the start time.
+     */
+    public function updatedEventStartTime($value): void
+    {
+        if ($this->eventEndTime && $this->eventStartDate === $this->eventEndDate && $this->eventEndTime <= $value) {
+            $this->eventEndTime = '';
         }
-
-        // Save draft every 2 seconds
-        $this->dispatch('save-draft', [
-            'step' => $this->currentStep,
-            'data' => $this->all(),
-        ]);
     }
 
     protected function validateCurrentStep()
@@ -341,18 +390,89 @@ class SubmitTicket extends Component
 
         if (! empty($rules)) {
             $this->validate($rules, [
-                'adviser_contact.size' => 'The adviser contact number must be 11 digits.',
-                'expectedPLVParticipants.required' => 'The number of PLV participants is required.',
-                'expectedNonPLVParticipants.required' => 'The number of non-PLV participants is required.',
-                'expectedPLVParticipants.integer' => 'The number of PLV participants must be an integer.',
-                'expectedNonPLVParticipants.integer' => 'The number of non-PLV participants must be an integer.',
-                'expectedPLVParticipants.min' => 'The number of PLV participants must be at least 1.',
-                'expectedNonPLVParticipants.min' => 'The number of non-PLV participants must be at least 0.',
-                'expectedPLVParticipants.max' => 'The number of PLV participants must be less than 100000.',
-                'expectedNonPLVParticipants.max' => 'The number of non-PLV participants must be less than 100000.',
-                'eventStartTime.after_or_equal' => 'Event start time must be at or after 12:01 AM.',
-                'eventEndTime.before_or_equal' => 'Event end time must be at or before 9:00 PM.',
-                'eventEndTime.after' => 'The end time must be after the start time.',
+                // Step 1 — Organization
+                'adviser_contact.required'              => 'Please enter the adviser\'s contact number.',
+                'adviser_contact.digits'                => 'The adviser\'s contact number must be exactly 11 digits.',
+                'adviser_contact.size'                  => 'The adviser\'s contact number must be exactly 11 digits.',
+                'adviser_contact.regex'                 => 'The adviser\'s contact number must contain numbers only.',
+
+                // Step 2 — Event Details
+                'eventTitle.required'                   => 'Please provide a title for your event.',
+                'eventTitle.min'                        => 'The event title must be at least 5 characters long.',
+                'eventTitle.max'                        => 'The event title may not exceed 255 characters.',
+                'eventDescription.required'             => 'Please describe your event.',
+                'eventDescription.min'                  => 'The event description must be at least 20 characters long.',
+                'eventDescription.max'                  => 'The event description may not exceed 2,000 characters.',
+                'eventType.required'                    => 'Please select an event type.',
+                'eventType.exists'                      => 'The selected event type is not valid.',
+                'expectedPLVParticipants.required'      => 'Please enter the expected number of PLV participants.',
+                'expectedPLVParticipants.integer'       => 'The PLV participant count must be a whole number.',
+                'expectedPLVParticipants.min'           => 'There must be at least 1 PLV participant.',
+                'expectedPLVParticipants.max'           => 'The PLV participant count seems too high. Please verify.',
+                'expectedNonPLVParticipants.integer'    => 'The non-PLV participant count must be a whole number.',
+                'expectedNonPLVParticipants.min'        => 'The non-PLV participant count cannot be negative.',
+                'expectedNonPLVParticipants.max'        => 'The non-PLV participant count seems too high. Please verify.',
+
+                // Step 3 — Schedule & Venue
+                'eventStartDate.required'               => 'Please select a start date for your event.',
+                'eventStartDate.date'                   => 'The start date is not a valid date.',
+                'eventStartDate.after_or_equal'         => 'The event start date must be today or a future date.',
+                'eventEndDate.required'                 => 'Please select an end date for your event.',
+                'eventEndDate.date'                     => 'The end date is not a valid date.',
+                'eventEndDate.after_or_equal'           => 'The event end date must be on or after the start date.',
+                'eventStartTime.required'               => 'Please enter the event start time.',
+                'eventStartTime.date_format'            => 'The start time must be in a valid HH:MM format.',
+                'eventStartTime.after_or_equal'         => 'Event start time must be at or after 12:01 AM.',
+                'eventEndTime.required'                 => 'Please enter the event end time.',
+                'eventEndTime.date_format'              => 'The end time must be in a valid HH:MM format.',
+                'eventEndTime.before_or_equal'          => 'Event end time must be at or before 9:00 PM.',
+                'eventEndTime.after'                    => 'The end time must be after the start time.',
+                'preferredVenue.required'               => 'Please select a preferred venue.',
+                'preferredVenueOther.required'          => 'Please specify the preferred venue name.',
+                'preferredVenueOther.min'               => 'The venue name must be at least 3 characters.',
+                'preferredVenueOther.max'               => 'The venue name may not exceed 255 characters.',
+                'alternativeVenueOther.required'        => 'Please specify the alternative venue name.',
+                'alternativeVenueOther.min'             => 'The alternative venue name must be at least 3 characters.',
+                'alternativeVenueOther.max'             => 'The alternative venue name may not exceed 255 characters.',
+                'specialRequirements.max'               => 'Special requirements may not exceed 2,000 characters.',
+                'is_oc.required'                        => 'Please indicate whether this is an off-campus event.',
+                'oc_tsp.required'                       => 'Please select a transportation service option.',
+                'oc_tsp.in'                             => 'The selected transportation option is not valid.',
+                'oc_driver_name.required'               => "Please enter the driver's full name.",
+                'oc_driver_name.min'                    => "The driver's name must be at least 2 characters.",
+                'oc_driver_name.max'                    => "The driver's name may not exceed 30 characters.",
+                'oc_driver_contact_number.required'     => "Please enter the driver's contact number.",
+                'oc_driver_contact_number.max'          => "The driver's contact number may not exceed 11 digits.",
+                'oc_driver_contact_number.regex'        => "The driver's contact number may only contain digits.",
+                'oc_transportation_type.min'            => 'The vehicle type must be at least 2 characters.',
+                'oc_transportation_type.max'            => 'The vehicle type may not exceed 50 characters.',
+                'oc_vehicle_plate_number.max'           => 'The plate number may not exceed 10 characters.',
+                'oc_vehicle_plate_number.regex'         => 'The plate number may only contain letters, digits, dashes, and spaces.',
+
+                // Step 4 — Budget
+                'totalBudget.required'                  => 'Please enter the estimated total budget.',
+                'totalBudget.numeric'                   => 'The budget must be a valid number.',
+                'totalBudget.min'                       => 'The budget cannot be negative.',
+                'totalBudget.max'                       => 'The budget amount entered seems too large. Please verify.',
+                'fundingSource.required'                => 'Please select a funding source.',
+                'fundingSource.exists'                  => 'The selected funding source is not valid.',
+                'igp_requested.required'                => 'Please indicate whether an IGP is requested.',
+                'igp_requested.in'                      => 'The IGP request selection is not valid.',
+                'budgetBreakdown.max'                   => 'The budget breakdown may not exceed 2,000 characters.',
+                'igp_details.required'                  => 'Please provide a brief description of the IGP.',
+                'igp_details.min'                       => 'The IGP description must be at least 10 characters.',
+                'igp_details.max'                       => 'The IGP description may not exceed 2,000 characters.',
+
+                // Step 5 — Attachments
+                'additionalNotes.max'                   => 'Additional notes may not exceed 2,000 characters.',
+                'newAttachments.max'                    => 'You may not upload more than 25 files.',
+                'newAttachments.*.file'                 => 'One or more uploaded items are not valid files.',
+                'newAttachments.*.max'                  => 'Each file must not exceed 10 MB.',
+                'newAttachments.*.mimes'                => 'Only PDF files are accepted.',
+
+                // Step 6 — Terms
+                'agreeToTerms.required'                 => 'You must agree to the terms and conditions to proceed.',
+                'agreeToTerms.accepted'                 => 'You must agree to the terms and conditions to proceed.',
             ]);
         }
 
@@ -426,6 +546,7 @@ class SubmitTicket extends Component
         $ticket->alternate_venue_other = $this->alternativeVenueOther;
         $ticket->special_requirements = $this->specialRequirements;
         $ticket->estimated_budget = $this->totalBudget;
+        $ticket->fund_source_id   = (int) $this->fundingSource;
         $ticket->budget_breakdown = $this->budgetBreakdown;
         $ticket->igp_requested = $this->igp_requested === 'true';
         $ticket->igp_details = $this->igp_details;
@@ -438,11 +559,22 @@ class SubmitTicket extends Component
         $ticket->additional_notes = $this->additionalNotes;
 
         // Create temporary attachment objects for preview
+        // Supports both DB-backed array records and legacy TemporaryUploadedFile objects.
         $previewAttachments = collect($this->attachments)->map(function ($file, int $index) {
             $attachment = new Attachment;
-            $attachment->file_name = $file->getClientOriginalName();
-            $attachment->file_type = $file->getMimeType();
-            $attachment->file_path = null;
+
+            if (is_array($file)) {
+                // DB-backed draft attachment (persisted to disk+DB)
+                $attachment->file_name = $file['file_name'];
+                $attachment->file_type = $file['file_type'];
+                $attachment->file_path = null;
+            } else {
+                // Legacy TemporaryUploadedFile (should not normally occur after migration)
+                $attachment->file_name = $file->getClientOriginalName();
+                $attachment->file_type = $file->getMimeType();
+                $attachment->file_path = null;
+            }
+
             $attachment->setAttribute('preview_upload_index', $index);
 
             return $attachment;
@@ -466,26 +598,49 @@ class SubmitTicket extends Component
 
     public function mount()
     {
-        $currentUser = auth()->user();
-        $currentUserinfo = $currentUser->studentOrganization;
+        // Eagerly load both relationships so null-access on nested objects never crashes mount().
+        // Without eager loading, `->course` is a second lazy query; if course_id is null the
+        // subsequent `->course_name` read throws a silent fatal that wipes all autofill values.
+        $currentUser = auth()->user()->load(['studentOrganization.course', 'position']);
+
+        $currentUserinfo     = $currentUser->studentOrganization;
         $currentUserPosition = $currentUser->position;
 
-        $this->organizationName = $currentUserinfo->org_code ?? '';
-        $this->adviser = $currentUserinfo->adviser_name ?? '';
-        $this->contactEmail = $currentUser->email ?? '';
-        $this->proponentName = $currentUser->name ?? '';
-        $this->organizationCourse = $currentUserinfo->course->course_name ?? 'Non Academic Org';
-        $this->proponentPosition = $currentUserPosition->position_name ?? '';
-        $this->proponent_contact = $currentUser->phone ?? '';
+        $this->organizationName    = $currentUserinfo?->org_code ?? '';
+        $this->adviser             = $currentUserinfo?->adviser_name ?? '';
+        $this->contactEmail        = $currentUser->email ?? '';
+        $this->proponentName       = $currentUser->name ?? '';
+        $this->organizationCourse  = $currentUserinfo?->course?->course_name ?? 'Non Academic Org';
+        $this->proponentPosition   = $currentUserPosition?->position_name ?? '';
+        $this->proponent_contact   = $currentUser->phone ?? '';
         $this->venues = Venue::where('is_active', true)->get();
 
-        // Load resubmit data if available
+        // Resolve the "N/A" fund source and ensure it exists in the table.
+        // firstOrCreate guarantees this works even if the seeder hasn't been re-run.
+        $naFundSource = Fund_Sources::firstOrCreate(['source_name' => 'N/A']);
+        // Bust the cached list so the new record appears immediately if it was just created.
+        Cache::forget('fund_sources_all');
+        $this->fundingSource = $naFundSource->source_id;
+
+        // Load resubmit data if available (may override fundingSource with a saved value)
         if (session()->has('resubmit_ticket')) {
             $data = session()->pull('resubmit_ticket');
             foreach ($data as $key => $value) {
                 if (property_exists($this, $key)) {
                     $this->{$key} = $value;
                 }
+            }
+        } else {
+            // No resubmit session — check for an existing server-side draft for this user.
+            // Dispatches a `draft-found` browser event so the JS layer can show the resume modal.
+            $existingDraft = TicketDraft::where('user_id', auth()->id())->first();
+            if ($existingDraft) {
+                $this->draftId = $existingDraft->id;
+                $this->draftSavedAt = $existingDraft->updated_at->toISOString();
+                $this->dispatch('draft-found',
+                    draftId: $existingDraft->id,
+                    savedAt: $existingDraft->updated_at->toISOString()
+                );
             }
         }
 
@@ -602,23 +757,39 @@ class SubmitTicket extends Component
             ]);
 
             // Handle file attachments
+            // Supports DB-backed draft attachments (array) and legacy TemporaryUploadedFile objects.
             if (! empty($this->attachments)) {
-                foreach ($this->attachments as $file) {
-                    $originalName = $file->getClientOriginalName();
-                    $filename = time().'_'.uniqid().'_'.$originalName;
-                    $path = $file->storeAs(
-                        "tickets/{$ticket->ticket_id}/attachments",
-                        $filename,
-                        config('filesystems.default')
-                    );
+                foreach ($this->attachments as $fileData) {
+                    if (is_array($fileData)) {
+                        // DB-backed: move file from draft-attachments/ to tickets/ folder.
+                        $newPath = "tickets/{$ticket->ticket_id}/attachments/" . basename($fileData['file_path']);
+                        Storage::move($fileData['file_path'], $newPath);
 
-                    Attachment::create([
-                        'ticket_id' => $ticket->ticket_id,
-                        'file_name' => $originalName,
-                        'file_path' => $path,
-                        'file_type' => $file->getMimeType(),
-                        'file_size' => $file->getSize(),
-                    ]);
+                        Attachment::create([
+                            'ticket_id' => $ticket->ticket_id,
+                            'file_name' => $fileData['file_name'],
+                            'file_path' => $newPath,
+                            'file_type' => $fileData['file_type'],
+                            'file_size' => $fileData['file_size'],
+                        ]);
+                    } else {
+                        // Legacy TemporaryUploadedFile fallback (pre-migration users)
+                        $originalName = $fileData->getClientOriginalName();
+                        $filename     = time() . '_' . uniqid() . '_' . $originalName;
+                        $path = $fileData->storeAs(
+                            "tickets/{$ticket->ticket_id}/attachments",
+                            $filename,
+                            config('filesystems.default')
+                        );
+
+                        Attachment::create([
+                            'ticket_id' => $ticket->ticket_id,
+                            'file_name' => $originalName,
+                            'file_path' => $path,
+                            'file_type' => $fileData->getMimeType(),
+                            'file_size' => $fileData->getSize(),
+                        ]);
+                    }
                 }
             }
 
@@ -632,6 +803,15 @@ class SubmitTicket extends Component
             }
 
             \DB::commit();
+
+            // Remove DB draft now that a real ticket record exists.
+            if ($this->draftId) {
+                TicketDraft::where('id', $this->draftId)
+                           ->where('user_id', $currentUser->user_id)
+                           ->delete();
+                $this->draftId = null;
+                $this->draftSavedAt = null;
+            }
 
             // Clear draft BEFORE showing success message
             $this->dispatch('clear-draft-immediate');
@@ -716,8 +896,53 @@ class SubmitTicket extends Component
 
     public function loadDraft($draftData)
     {
+        // DB-backed path: JS passes { draft_id: N }
+        if (isset($draftData['draft_id'])) {
+            $draft = TicketDraft::with('attachments')
+                ->where('id', $draftData['draft_id'])
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (! $draft) {
+                $this->dispatch('draft-loaded');
+                return;
+            }
+
+            // Fields sourced from the user's profile are intentionally excluded here
+            // so that mount()'s fresh values are never clobbered by stale draft data.
+            $profileFields = [
+                'organizationName', 'organizationCourse', 'adviser',
+                'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+            ];
+
+            foreach ($draft->data as $key => $value) {
+                if (property_exists($this, $key)
+                    && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing', 'draftId'])
+                    && ! in_array($key, $profileFields)) {
+                    $this->{$key} = $value;
+                }
+            }
+
+            $this->currentStep = $draft->current_step;
+            $this->draftId     = $draft->id;
+            $this->draftSavedAt = $draft->updated_at->toISOString();
+            // Restore attachment list from DB records (each is an array representation)
+            $this->attachments = $draft->attachments->toArray();
+
+            $this->dispatch('draft-loaded');
+            return;
+        }
+
+        // Legacy path — plain associative array payload (backward compat)
+        $profileFields = [
+            'organizationName', 'organizationCourse', 'adviser',
+            'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+        ];
+
         foreach ($draftData as $key => $value) {
-            if (property_exists($this, $key) && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing'])) {
+            if (property_exists($this, $key)
+                && ! in_array($key, ['newAttachments', 'attachments', 'isProcessing'])
+                && ! in_array($key, $profileFields)) {
                 $this->{$key} = $value;
             }
         }
@@ -728,6 +953,24 @@ class SubmitTicket extends Component
     #[Renderless]
     public function discardDraft()
     {
+        // Remove DB draft and its files from disk
+        if ($this->draftId) {
+            $draft = TicketDraft::with('attachments')
+                ->where('id', $this->draftId)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if ($draft) {
+                foreach ($draft->attachments as $a) {
+                    Storage::delete($a->file_path);
+                }
+                $draft->delete(); // cascade removes ticket_draft_attachments rows
+            }
+
+            $this->draftId = null;
+            $this->draftSavedAt = null;
+        }
+
         $this->dispatch('clear-draft');
     }
 
@@ -738,38 +981,150 @@ class SubmitTicket extends Component
 
     public function removeAttachment($index)
     {
+        $attachment = $this->attachments[$index] ?? null;
+
+        // If this is a DB-backed draft attachment, clean up disk + DB record.
+        if ($attachment && is_array($attachment) && isset($attachment['id'])) {
+            $record = TicketDraftAttachment::find($attachment['id']);
+            if ($record) {
+                Storage::delete($record->file_path);
+                $record->delete();
+            }
+        }
+
         array_splice($this->attachments, $index, 1);
     }
 
     public function updatedNewAttachments()
     {
-        // Handle single file upload (S3 driver doesn't support multiple)
-        // Wrap single file in array for consistent processing
+        // Wrap a single UploadedFile into an array for consistent batch processing.
+        // The S3 driver does not support simultaneous multi-file uploads.
         $files = $this->newAttachments;
         if (! is_array($files)) {
             $files = $files ? [$files] : [];
         }
 
-        // If no files, return early
-        if (empty($files)) {
+        try {
+            if (empty($files)) {
+                return;
+            }
+
+            $this->newAttachments = $files;
+
+            // Laravel's mimes rule is used instead of finfo_file because Livewire
+            // temp files may be stored on S3 and are not locally accessible.
+            $this->validate(
+                ['newAttachments.*' => ['file', 'max:10240', 'mimes:pdf']],
+                [
+                    'newAttachments.*.file'  => 'The uploaded item could not be processed. Please try again.',
+                    'newAttachments.*.max'   => 'The file exceeds the 10 MB size limit. Please reduce the file size and try again.',
+                    'newAttachments.*.mimes' => 'This file type is not supported. Only PDF files are accepted.',
+                ]
+            );
+
+            // Validation passed — persist files to disk and DB, then append to the component state.
+            // Ensure a draft row exists so we can associate files with it.
+            if (! $this->draftId) {
+                $this->persistDraftToDb();
+            }
+
+            $draft = TicketDraft::findOrFail($this->draftId);
+
+            foreach ($files as $file) {
+                $originalName = $file->getClientOriginalName();
+                $storedName   = time() . '_' . uniqid() . '_' . $originalName;
+                $path = $file->storeAs(
+                    "draft-attachments/{$this->draftId}",
+                    $storedName,
+                    'local'
+                );
+
+                $record = TicketDraftAttachment::create([
+                    'ticket_draft_id' => $draft->id,
+                    'file_name'       => $originalName,
+                    'file_path'       => $path,
+                    'file_type'       => $file->getMimeType(),
+                    'file_size'       => $file->getSize(),
+                ]);
+
+                // Store as array so Livewire can serialise it in component state
+                $this->attachments[] = $record->toArray();
+            }
+
+        } catch (ValidationException $e) {
+            // Extract the first human-readable error from the exception bag.
+            $firstError = collect($e->errors())->flatten()->first()
+                ?? 'The file could not be uploaded. Verify the file type and that it does not exceed 10 MB.';
+
+            // Scope the error to the file input field so it renders inline
+            // below the upload widget — without triggering the global error banner.
+            // We intentionally do NOT re-throw here.
+            $this->addError('newAttachments', $firstError);
+
+            // Also surface a toast for immediate, unmissable feedback.
+            $this->toast(
+                type: 'error',
+                title: 'Upload Rejected',
+                description: $firstError,
+                position: 'toast-top toast-end',
+                icon: 'o-x-circle',
+                css: 'alert-error',
+                timeout: 7000,
+            );
+        } finally {
+            // Increment uploadKey so the blade wire:key changes on re-render.
+            // This forces Livewire to destroy and recreate the file input DOM
+            // element, clearing any stale browser upload state that would
+            // otherwise leave the input stuck on "uploading".
+            $this->uploadKey++;
+            $this->reset('newAttachments');
+        }
+    }
+
+    /**
+     * Upsert the current form state into ticket_drafts.
+     * Excluded: file objects, upload state, runtime-only properties.
+     */
+    private function persistDraftToDb(): void
+    {
+        // Fields derived from the authenticated user's profile are excluded from the
+        // draft payload — they are always re-populated from the live User record in
+        // mount(), so storing them would cause stale data to overwrite fresh values
+        // on draft resume (the original bug: org name / contact disappeared).
+        $excluded = [
+            'newAttachments', 'attachments', 'isProcessing', 'venues', 'uploadKey', 'draftId',
+            // User-profile autofills — never persist to draft:
+            'organizationName', 'organizationCourse', 'adviser',
+            'contactEmail', 'proponentName', 'proponentPosition', 'proponent_contact',
+        ];
+
+        $data = collect($this->all())->except($excluded)->toArray();
+
+        $draft = TicketDraft::updateOrCreate(
+            ['user_id' => auth()->id()],
+            ['current_step' => $this->currentStep, 'data' => $data]
+        );
+
+        // Expose the draft ID so the blade/JS layer can store a lightweight pointer in localStorage.
+        if ($this->draftId !== $draft->id) {
+            $this->draftId = $draft->id;
+        }
+        $this->draftSavedAt = $draft->updated_at->toISOString();
+    }
+
+    /**
+     * Livewire lifecycle: fires after any public property is updated.
+     * Persists form state to DB on every field change, then signals the JS auto-save indicator.
+     */
+    public function updated(string $property): void
+    {
+        // Skip file upload properties — they are handled in updatedNewAttachments()
+        if (in_array($property, ['newAttachments', 'attachments', 'draftId'])) {
             return;
         }
 
-        // Temporarily set as array for validation
-        $this->newAttachments = $files;
-
-        // Note: Using Laravel's built-in mimes validation instead of finfo_file
-        // because temp files are stored on S3 and not accessible locally
-        $this->validate([
-            'newAttachments.*' => [
-                'file',
-                'max:10240',
-                'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
-            ],
-        ]);
-
-        $this->attachments = array_merge($this->attachments, $files);
-        $this->reset('newAttachments');
+        $this->persistDraftToDb();
+        $this->dispatch('save-draft', $this->draftId);
     }
 
     #[On('load-draft')]
