@@ -64,6 +64,7 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 # Config files
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
