@@ -99,11 +99,12 @@ class DashboardCacheService
                     ? $redis->connection()
                     : $redis;
 
-                $cachePrefix = config('cache.prefix', '').':';
+                $cachePrefix = config('cache.prefix', '');
                 $pattern = $cachePrefix.$prefix.'*';
 
                 // Use SCAN for safe, non-blocking iteration
                 $cursor = null;
+                $deletedCount = 0;
                 do {
                     $result = $connection->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
 
@@ -115,8 +116,14 @@ class DashboardCacheService
 
                     if (! empty($keys)) {
                         $connection->del(...$keys);
+                        $deletedCount += count($keys);
                     }
                 } while ($cursor > 0);
+
+                Log::debug('DashboardCacheService: Redis prefix flush completed', [
+                    'prefix' => $prefix,
+                    'deleted_count' => $deletedCount,
+                ]);
 
                 return;
             } catch (\Throwable $e) {

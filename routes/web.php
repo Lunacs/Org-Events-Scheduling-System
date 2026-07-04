@@ -77,6 +77,12 @@ Route::get('/about-us', AboutUs::class)->name('about-us');
 // FAQ - Public route
 Route::get('/faq', Faq::class)->name('faq');
 
+// routes/web.php — remove after confirming, or gate behind an admin check
+Route::get('/debug/schedule-list', function () {
+    \Illuminate\Support\Facades\Artisan::call('schedule:list');
+    return response('<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>');
+})->middleware(['auth', 'role:superadmin']);
+
 // Profile route (accessible by all authenticated users)
 Route::middleware(['auth', 'verified'])->group(function () {
     // Generic profile route - redirects based on user role
@@ -219,4 +225,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

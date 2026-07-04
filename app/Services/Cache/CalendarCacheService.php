@@ -25,6 +25,8 @@ class CalendarCacheService
                 ->remember($key, self::TTL_SECONDS, $callback);
         }
 
+        self::trackKey('calendar:known_keys', $key);
+
         return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
@@ -40,6 +42,8 @@ class CalendarCacheService
                 ->remember($key, self::TTL_SECONDS, $callback);
         }
 
+        self::trackKey('calendar:known_keys', $key);
+
         return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
@@ -50,6 +54,8 @@ class CalendarCacheService
     {
         if (self::supportsTags()) {
             Cache::tags(["month:{$year}-{$month}"])->flush();
+        } else {
+            self::clearTrackedKeysMatching('calendar:known_keys', ":{$year}:{$month}");
         }
     }
 
@@ -60,6 +66,8 @@ class CalendarCacheService
     {
         if (self::supportsTags()) {
             Cache::tags(['calendar'])->flush();
+        } else {
+            self::clearTrackedKeys('calendar:known_keys');
         }
     }
 }

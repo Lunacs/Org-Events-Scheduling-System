@@ -37,6 +37,8 @@ class DashboardCacheService
             return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
         }
 
+        self::trackKey('dashboard:known_keys', $key);
+
         return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
@@ -63,6 +65,8 @@ class DashboardCacheService
         if (self::supportsTags()) {
             return Cache::tags($tags)->remember($key, $ttl, $callback);
         }
+
+        self::trackKey('dashboard:known_keys', $key);
 
         return Cache::remember($key, $ttl, $callback);
     }
@@ -106,7 +110,7 @@ class DashboardCacheService
         if (self::supportsTags()) {
             Cache::tags(['dashboard'])->flush();
         } else {
-            Cache::flush();
+            self::clearTrackedKeys('dashboard:known_keys');
         }
     }
 }

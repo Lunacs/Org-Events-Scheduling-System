@@ -29,6 +29,8 @@ class ArchiveCacheService
             return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
         }
 
+        self::trackKey('archives:known_keys', $cacheKey);
+
         return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
@@ -46,6 +48,8 @@ class ArchiveCacheService
             return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
         }
 
+        self::trackKey('archives:known_keys', $cacheKey);
+
         return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
@@ -61,6 +65,8 @@ class ArchiveCacheService
             return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
         }
 
+        self::trackKey('archives:known_keys', $cacheKey);
+
         return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
@@ -72,6 +78,8 @@ class ArchiveCacheService
     {
         if (self::supportsTags()) {
             Cache::tags(self::$tags)->flush();
+        } else {
+            self::clearTrackedKeys('archives:known_keys');
         }
     }
 }

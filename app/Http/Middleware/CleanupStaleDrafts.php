@@ -52,7 +52,7 @@ class CleanupStaleDrafts
      * Delete ticket_drafts rows that haven't been touched in > 30 days,
      * along with their associated files from disk.
      */
-    private function cleanup(): void
+    public function cleanup(): void
     {
         try {
             $stale = TicketDraft::with('attachments')

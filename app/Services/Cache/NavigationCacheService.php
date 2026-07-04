@@ -34,7 +34,7 @@ class NavigationCacheService
     public static function clearUserNavigation(int $userId): void
     {
         if (self::supportsTags()) {
-            Cache::tags(["navigation:user:{$userId}"])->flush();
+            Cache::tags(['navigation', "user:{$userId}"])->flush();
         } else {
             // Fallback: clear by key
             Cache::forget("navigation:superadmin:{$userId}");

@@ -41,7 +41,7 @@ class AutoCompleteTickets
      * Find and mark approved tickets as completed 1 week after the event ends.
      * This grace period allows student orgs to request rescheduling.
      */
-    protected function autoCompleteTickets(): void
+    public function autoCompleteTickets(): void
     {
         try {
             $oneWeekAgo = now()->subWeek()->endOfDay();
@@ -91,13 +91,13 @@ class AutoCompleteTickets
             if ($count > 0) {
                 TransactionLogService::logSystemOperation(
                     'auto_complete_tickets',
-                    "Automatically completed {$count} ticket(s): ".implode(', ', $ticketsList)
+                    "Automatically completed {$count} ticket(s): " . implode(', ', $ticketsList)
                 );
             }
 
             Log::info("AutoCompleteTickets: Completed {$count} ticket(s).");
         } catch (\Throwable $e) {
-            Log::error('AutoCompleteTickets middleware error: '.$e->getMessage());
+            Log::error('AutoCompleteTickets middleware error: ' . $e->getMessage());
         }
     }
 

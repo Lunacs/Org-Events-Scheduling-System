@@ -54,7 +54,7 @@ class Notifications extends Component
 
         // Optimize: Load all counts in a single query with aggregations
         $counts = Cache::remember(
-            "osa_notifications_counts_{$user->user_id}",
+            "gso_notifications_counts_{$user->user_id}",
             60, // 1 minute cache
             function () use ($user) {
                 $today = today();
@@ -245,7 +245,7 @@ class Notifications extends Component
     {
         $user = auth()->user();
         if ($user) {
-            Cache::forget("osa_notifications_counts_{$user->user_id}");
+            Cache::forget("gso_notifications_counts_{$user->user_id}");
         }
         $this->loadCounts();
     }

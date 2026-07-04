@@ -1,8 +1,6 @@
 <?php
 
-use App\Http\Middleware\AutoCompleteTickets;
 use App\Http\Middleware\CheckUserRole;
-use App\Http\Middleware\CleanupStaleDrafts;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -30,10 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Auto-complete approved tickets (runs once per day via cache lock)
         // Replaces cron-based scheduler for hosts without cron support (e.g., Render free tier)
-        $middleware->appendToGroup('web', [
-            AutoCompleteTickets::class,
-            CleanupStaleDrafts::class,
-        ]);
+        // $middleware->appendToGroup('web', [
+        //     AutoCompleteTickets::class,
+        //     CleanupStaleDrafts::class,
+        // ]);
 
         // Configure maintenance mode to allow SuperAdmin access
         $middleware->preventRequestsDuringMaintenance(except: [

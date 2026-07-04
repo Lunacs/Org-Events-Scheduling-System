@@ -35,6 +35,8 @@ class EventCacheService
             return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
         }
 
+        self::trackKey('events:known_keys', $key);
+
         return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
@@ -45,6 +47,8 @@ class EventCacheService
     {
         if (self::supportsTags()) {
             Cache::tags(['requests'])->flush();
+        } else {
+            self::clearTrackedKeys('events:known_keys');
         }
     }
 
@@ -55,6 +59,10 @@ class EventCacheService
     {
         if (self::supportsTags()) {
             Cache::tags(['events', 'dashboard', 'calendar', 'requests'])->flush();
+        } else {
+            DashboardCacheService::clearAllDashboards();
+            CalendarCacheService::clearAllCalendar();
+            self::clearRequestLists();
         }
     }
 }

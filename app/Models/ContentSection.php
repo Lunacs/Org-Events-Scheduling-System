@@ -218,13 +218,11 @@ class ContentSection extends Model
         static::saved(function ($section) {
             Cache::forget("content_section_{$section->section_key}");
             Cache::forget("content_sections_type_{$section->section_type}");
-            Cache::forget('content_sections');
         });
 
         static::deleted(function ($section) {
             Cache::forget("content_section_{$section->section_key}");
             Cache::forget("content_sections_type_{$section->section_type}");
-            Cache::forget('content_sections');
         });
     }
 }

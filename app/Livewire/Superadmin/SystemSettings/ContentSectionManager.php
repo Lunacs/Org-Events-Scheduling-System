@@ -143,7 +143,6 @@ class ContentSectionManager extends Component
 
     protected function clearCache()
     {
-        Cache::forget('content_sections');
         // Clear individual section caches
         $sections = ContentSection::all();
         foreach ($sections as $section) {

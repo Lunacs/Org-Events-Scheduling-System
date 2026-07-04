@@ -197,7 +197,6 @@ class ContentSectionEditor extends Component
 
     protected function clearCache()
     {
-        Cache::forget('content_sections');
         $sections = ContentSection::all();
         foreach ($sections as $section) {
             Cache::forget("content_section_{$section->section_key}");

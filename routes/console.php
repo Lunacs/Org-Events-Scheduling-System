@@ -10,6 +10,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::call(function () {
+    app(\App\Http\Middleware\CleanupStaleDrafts::class)->cleanup();
+    app(\App\Http\Middleware\AutoCompleteTickets::class)->autoCompleteTickets();
+})->daily()->name('daily-maintenance')->description('Cleanup stale drafts and auto-complete tickets');
+
 // Automatically mark tickets as completed after their event date has passed
 // Schedule::call(function () {
 //     $yesterday = now()->subDay()->endOfDay();
