@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class CalendarCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache TTL in seconds (1 hour for calendar data)
      */
@@ -17,9 +19,13 @@ class CalendarCacheService
     public static function getMonthlyEvents(int $year, int $month, callable $callback)
     {
         $key = "calendar:approved:{$year}:{$month}";
-        
-        return Cache::tags(['calendar', 'events', "month:{$year}-{$month}"])
-            ->remember($key, self::TTL_SECONDS, $callback);
+
+        if (self::supportsTags()) {
+            return Cache::tags(['calendar', 'events', "month:{$year}-{$month}"])
+                ->remember($key, self::TTL_SECONDS, $callback);
+        }
+
+        return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
     /**
@@ -28,9 +34,13 @@ class CalendarCacheService
     public static function getRoleMonthlyEvents(string $role, int $userId, int $year, int $month, callable $callback)
     {
         $key = "calendar:role:{$role}:{$userId}:{$year}:{$month}";
-        
-        return Cache::tags(['calendar', 'events', "role:{$role}", "user:{$userId}", "month:{$year}-{$month}"])
-            ->remember($key, self::TTL_SECONDS, $callback);
+
+        if (self::supportsTags()) {
+            return Cache::tags(['calendar', 'events', "role:{$role}", "user:{$userId}", "month:{$year}-{$month}"])
+                ->remember($key, self::TTL_SECONDS, $callback);
+        }
+
+        return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
     /**
@@ -38,7 +48,9 @@ class CalendarCacheService
      */
     public static function clearMonthlyEvents(int $year, int $month): void
     {
-        Cache::tags(["month:{$year}-{$month}"])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(["month:{$year}-{$month}"])->flush();
+        }
     }
 
     /**
@@ -46,6 +58,8 @@ class CalendarCacheService
      */
     public static function clearAllCalendar(): void
     {
-        Cache::tags(['calendar'])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['calendar'])->flush();
+        }
     }
 }

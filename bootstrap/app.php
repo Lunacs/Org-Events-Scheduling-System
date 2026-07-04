@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\AutoCompleteTickets;
+use App\Http\Middleware\CheckUserRole;
+use App\Http\Middleware\CleanupStaleDrafts;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -8,19 +11,19 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
             // Email preview routes (development only)
             if (app()->environment('local')) {
-                require __DIR__ . '/../routes/email-preview.php';
+                require __DIR__.'/../routes/email-preview.php';
             }
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckUserRole::class,
+            'role' => CheckUserRole::class,
         ]);
 
         $middleware->trustProxies(at: '*');
@@ -28,8 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Auto-complete approved tickets (runs once per day via cache lock)
         // Replaces cron-based scheduler for hosts without cron support (e.g., Render free tier)
         $middleware->appendToGroup('web', [
-            \App\Http\Middleware\AutoCompleteTickets::class,
-            \App\Http\Middleware\CleanupStaleDrafts::class,
+            AutoCompleteTickets::class,
+            CleanupStaleDrafts::class,
         ]);
 
         // Configure maintenance mode to allow SuperAdmin access

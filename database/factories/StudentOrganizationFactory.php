@@ -2,13 +2,17 @@
 
 namespace Database\Factories;
 
+use App\Models\Course;
+use App\Models\Student_Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Student_Organization>
+ * @extends Factory<Student_Organization>
  */
 class StudentOrganizationFactory extends Factory
 {
+    protected $model = Student_Organization::class;
+
     /**
      * Define the model's default state.
      *
@@ -48,7 +52,7 @@ class StudentOrganizationFactory extends Factory
         return [
             'org_code' => strtoupper(fake()->unique()->bothify('ORG-####')),
             'org_name' => $orgName,
-            'course_id' => \App\Models\Course::factory(),
+            'course_id' => Course::factory(),
             'adviser_name' => fake()->name(),
             'status' => fake()->randomElement(['active', 'active', 'active', 'inactive']), // 75% active
         ];
@@ -59,7 +63,7 @@ class StudentOrganizationFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'active',
         ]);
     }
@@ -69,7 +73,7 @@ class StudentOrganizationFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'inactive',
         ]);
     }
@@ -79,7 +83,7 @@ class StudentOrganizationFactory extends Factory
      */
     public function suspended(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'suspended',
         ]);
     }

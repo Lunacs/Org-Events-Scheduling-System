@@ -313,40 +313,9 @@
                             <x-documentary-requirements :event-type-id="$eventType" />
 
                             <div class="space-y-2">
-                                <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
-                                    @if ($errors->any())
-                                        {{ count($errors) }} validation errors found
-                                    @endif
-                                </div>
-                                {{-- wire:key changes on every upload attempt (uploadKey is incremented  --}}
-                                {{-- server-side in updatedNewAttachments). This forces Livewire to tear  --}}
-                                {{-- down and recreate the DOM element, clearing any stale browser upload --}}
-                                {{-- state that would otherwise leave the input stuck on "uploading".     --}}
-                                <x-mary-file wire:model="newAttachments"
-                                    wire:key="upload-input-{{ $uploadKey }}"
-                                    aria-label="Upload event documents"
-                                    aria-describedby="file-help-text"
-                                    accept=".pdf">
-                                    <x-slot:hint>
-                                        <span id="file-help-text">
-                                            Upload one file at a time · Max 10 MB per file · Accepted format: PDF only
-                                        </span>
-                                    </x-slot:hint>
-                                </x-mary-file>
-
-                                @if ($attachments)
-                                    <div class="mt-4 space-y-2">
-                                        <p class="text-sm font-medium">Attached Files:</p>
-                                        @foreach ($attachments as $index => $file)
-                                            <div class="flex items-center justify-between bg-base-200 p-2 rounded">
-                                                <span class="text-sm">{{ is_array($file) ? $file['file_name'] : $file->getClientOriginalName() }}</span>
-                                                <x-mary-button icon="o-x-mark"
-                                                    wire:click="removeAttachment({{ $index }})"
-                                                    class="btn-ghost btn-sm" spinner />
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                <x-filepond wire-model="uploadedFileIds"
+                                    :max-files="25"
+                                    :max-size-mb="10" />
                             </div>
                         </div>
                     </x-mary-card>

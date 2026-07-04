@@ -3,8 +3,9 @@
 // Public Pages
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\DraftAttachmentController;
-// OSA/admin Imports
 use App\Http\Controllers\Gso\ReportsExportController;
+// OSA/admin Imports
+use App\Http\Controllers\TemporaryUploadController;
 use App\Http\Controllers\VerifyNewEmailController;
 use App\Livewire\AboutUs;
 use App\Livewire\Faq;
@@ -115,6 +116,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('keep-alive');
 
+    // Temporary upload routes (FilePond)
+    Route::post('/upload-temp', [TemporaryUploadController::class, 'store'])->name('upload.temp');
+    Route::delete('/upload-temp', [TemporaryUploadController::class, 'destroy'])->name('upload.temp.delete');
+    Route::get('/upload-temp/restore/{id?}', [TemporaryUploadController::class, 'restore'])->name('upload.temp.restore');
+
     // Signed URL routes for attachment access (private storage)
     Route::get('/attachments/{attachment}/preview', [AttachmentController::class, 'preview'])
         ->name('attachments.preview')
@@ -213,4 +219,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -16,6 +16,14 @@ class Student_Organization extends Model
     use HasFactory, SoftDeletes;
 
     /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): StudentOrganizationFactory
+    {
+        return StudentOrganizationFactory::new();
+    }
+
+    /**
      * The table associated with the model.
      *
      * @var string

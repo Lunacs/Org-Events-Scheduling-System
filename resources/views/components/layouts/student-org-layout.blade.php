@@ -16,8 +16,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600|poppins:400,500,600&display=swap"
         rel="stylesheet" />
 
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js', 'resources/js/avatar.js'])
+    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js', 'resources/js/avatar.js', 'resources/js/filepond.js'])
 
     @stack('head')
 </head>

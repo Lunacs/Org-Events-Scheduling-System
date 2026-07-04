@@ -12,6 +12,7 @@ export default defineConfig({
                 "resources/css/calendar.css",
                 "resources/js/app.js",
                 "resources/js/avatar.js",
+                "resources/js/filepond.js",
                 "resources/js/calendar.js",
                 "resources/js/charts.js",
                 "resources/js/libs/trix.js",

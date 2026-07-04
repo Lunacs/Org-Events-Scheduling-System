@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class EventCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache TTL in seconds (10 minutes)
      */
@@ -29,7 +31,11 @@ class EventCacheService
             $tags[] = "org:{$orgId}";
         }
 
-        return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
+        }
+
+        return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
     /**
@@ -37,7 +43,9 @@ class EventCacheService
      */
     public static function clearRequestLists(): void
     {
-        Cache::tags(['requests'])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['requests'])->flush();
+        }
     }
 
     /**
@@ -45,6 +53,8 @@ class EventCacheService
      */
     public static function clearAllEventRelatedCaches(): void
     {
-        Cache::tags(['events', 'dashboard', 'calendar', 'requests'])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['events', 'dashboard', 'calendar', 'requests'])->flush();
+        }
     }
 }

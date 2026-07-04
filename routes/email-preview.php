@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Models\Ticket;
-use App\Models\User;
-use App\Models\TicketComment;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,6 +89,7 @@ Route::prefix('email-preview')->middleware(['web'])->group(function () {
         }
 
         $html .= '</body></html>';
+
         return $html;
     });
 

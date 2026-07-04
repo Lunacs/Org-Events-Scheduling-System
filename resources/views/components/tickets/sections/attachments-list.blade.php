@@ -12,12 +12,14 @@
                     <div class="flex items-center gap-3">
                         <div>
                             @if ($attachment->exists && $attachment->file_path)
-                                <button type="button" class="link link-neutral font-medium"
+                                <button type="button"
+                                    class="hover:underline hover:cursor-pointer text-neutral font-medium transition-colors"
                                     wire:click.renderless="previewAttachment({{ $attachment->attachment_id }})">
                                     {{ $attachment->file_name }}
                                 </button>
                             @elseif ($attachment->getAttribute('preview_upload_index') !== null)
-                                <button type="button" class="link link-neutral font-medium"
+                                <button type="button"
+                                    class="hover:underline hover:cursor-pointer text-neutral font-medium transition-colors"
                                     wire:click.renderless="previewDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})">
                                     {{ $attachment->file_name }}
                                 </button>
@@ -25,7 +27,24 @@
                                 <span class="font-medium text-base-content">{{ $attachment->file_name }}</span>
                             @endif
                             <p class="text-sm text-base-content/70">
-                                {{ $attachment->file_type ? strtoupper($attachment->file_type) : (strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) ?: 'FILE') }}
+                                @php
+                                    $ext = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                    if (!$ext && $attachment->file_type) {
+                                        $mime = $attachment->file_type;
+                                        if (str_contains($mime, 'spreadsheetml')) {
+                                            $ext = 'xlsx';
+                                        } elseif (str_contains($mime, 'wordprocessingml')) {
+                                            $ext = 'docx';
+                                        } elseif (str_contains($mime, 'presentationml')) {
+                                            $ext = 'pptx';
+                                        } elseif (str_contains($mime, 'document')) {
+                                            $ext = 'pdf';
+                                        } else {
+                                            $ext = explode('/', $mime)[1] ?? 'file';
+                                        }
+                                    }
+                                @endphp
+                                {{ strtoupper($ext ?: 'FILE') }}
                             </p>
                         </div>
                     </div>
