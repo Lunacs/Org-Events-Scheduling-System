@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StudentOrg;
 
+use App\Jobs\ProcessTicketAttachments;
 use App\Livewire\Concerns\HandlesDraftAttachmentPreviews;
 use App\Models\Attachment;
 use App\Models\ContentSection;
@@ -13,11 +14,10 @@ use App\Models\TicketDraftAttachment;
 use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
-use App\Services\Cache\DashboardCacheService;
-use App\Services\Cache\EventCacheService;
 use App\Services\TransactionLogService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -740,41 +740,16 @@ class SubmitTicket extends Component
             // Sync any FilePond uploads into $this->attachments before processing
             $this->syncFilePondUploads();
 
-            // Handle file attachments (all DB-backed draft attachment arrays)
-            if (! empty($this->attachments)) {
-                foreach ($this->attachments as $fileData) {
-                    // Use stream copy instead of move to avoid S3 ACL restrictions on Cloudflare R2
-                    $newPath = "tickets/{$ticket->ticket_id}/attachments/".basename($fileData['file_path']);
-
-                    if (Storage::exists($fileData['file_path'])) {
-                        $stream = Storage::readStream($fileData['file_path']);
-                        if ($stream) {
-                            Storage::writeStream($newPath, $stream);
-                            if (is_resource($stream)) {
-                                fclose($stream);
-                            }
-                            Storage::delete($fileData['file_path']);
-                        }
-                    }
-
-                    Attachment::create([
-                        'ticket_id' => $ticket->ticket_id,
-                        'file_name' => $fileData['file_name'],
-                        'file_path' => $newPath,
-                        'file_type' => $fileData['file_type'],
-                        'file_size' => $fileData['file_size'],
-                    ]);
-                }
-            }
+            // Dispatch job to process file attachments asynchronously
+            ProcessTicketAttachments::dispatch($ticket->ticket_id, $this->attachments)->afterCommit();
 
             // Log transaction
+            // Note: autoCleanup() does a COUNT+DELETE periodically and may be worth moving to a scheduled command later.
             TransactionLogService::logTicketOperation('created', $ticket);
 
             // Notify OSA admins about the new ticket
             $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
-            foreach ($osaUsers as $osaUser) {
-                $osaUser->notify(new TicketSubmittedNotification($ticket));
-            }
+            Notification::send($osaUsers, new TicketSubmittedNotification($ticket));
 
             \DB::commit();
 
@@ -789,10 +764,6 @@ class SubmitTicket extends Component
 
             // Clear draft BEFORE showing success message
             $this->dispatch('clear-draft-immediate');
-
-            // Clear related caches
-            DashboardCacheService::clearAllDashboards();
-            EventCacheService::clearRequestLists();
 
             $this->toast(
                 type: 'success',
