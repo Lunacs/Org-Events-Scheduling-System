@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
@@ -27,7 +28,6 @@ use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class SubmitTicket extends Component
 {

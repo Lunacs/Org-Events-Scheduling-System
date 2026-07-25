@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "daisyui-blueprint": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "daisyui-blueprint@latest"
+      ],
+      "env": {
+        "LICENSE": "TFC98-GGFOO-UIM6B-GAFB6-MFL8I",
+        "EMAIL": "johnreygabon3@gmail.com",
+        "FIGMA": "YOUR FIGMA API KEY (optional)"
+      },
+      "disabledTools": [],
+      "autoApprove": [
+        "daisyUI-Snippets"
+      ]
+    }
+  }
+}

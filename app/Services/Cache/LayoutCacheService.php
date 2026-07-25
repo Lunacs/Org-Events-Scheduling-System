@@ -15,12 +15,8 @@ class LayoutCacheService
     {
         $key = "notifications:{$userId}:unread_count";
 
-        // Short TTL for notifications (2 minutes)
-        if (self::supportsTags()) {
-            return Cache::tags(['layout', 'notifications', "user:{$userId}"])
-                ->remember($key, 120, $callback);
-        }
-
+        // Keep this high-frequency, per-user counter directly addressable so it can
+        // be invalidated without maintaining Redis tag metadata.
         return Cache::remember($key, 120, $callback);
     }
 

@@ -6,6 +6,8 @@ use App\Models\Event;
 use App\Models\Event_Schedule;
 use App\Models\Event_Type;
 use App\Models\Student_Organization;
+use App\Services\Cache\SupportsTags;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,11 +19,11 @@ use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class EventCalendar extends Component
 {
+    use SupportsTags;
     use Toast;
 
     private const CALENDAR_CACHE_TTL_SECONDS = 600;
@@ -148,7 +150,7 @@ class EventCalendar extends Component
         $this->filterDrawerOpen = false; // Close drawer when clearing filters
 
         // Clear computed property caches to force recomputation
-        unset($this->uniqueEventsCount, $this->upcomingEventsThisMonth, $this->eventsForCalendar);
+        unset($this->uniqueEventsCount, $this->upcomingEventsThisMonth, $this->completedEventsThisMonth, $this->eventsForCalendar);
 
         $this->dispatch('calendar-refetch');
     }
@@ -260,8 +262,14 @@ class EventCalendar extends Component
     #[Computed]
     public function eventsForCalendar()
     {
+        $key = $this->calendarFiltersCacheKey('events');
+
+        if (! static::supportsTags()) {
+            static::trackKey('event_calendar:known_keys', $key);
+        }
+
         return Cache::remember(
-            $this->calendarFiltersCacheKey('events'),
+            $key,
             self::CALENDAR_CACHE_TTL_SECONDS,
             fn () => $this->buildCalendarEventsFromSchedules($this->loadFilteredEventSchedules()),
         );
@@ -530,8 +538,14 @@ class EventCalendar extends Component
     #[Computed]
     public function uniqueEventsCount()
     {
+        $key = $this->calendarFiltersCacheKey('unique_count');
+
+        if (! static::supportsTags()) {
+            static::trackKey('event_calendar:known_keys', $key);
+        }
+
         return Cache::remember(
-            $this->calendarFiltersCacheKey('unique_count'),
+            $key,
             self::CALENDAR_CACHE_TTL_SECONDS,
             fn () => (int) $this->baseCalendarSchedulesQuery()
                 ->reorder()
@@ -557,7 +571,30 @@ class EventCalendar extends Component
             ? $this->currentDate->copy()->startOfMonth()
             : $today;
 
-        $eventSchedules = Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
+        $eventSchedules = $this->thisMonthScheduleQuery(['approved', 'rescheduled'], $startDate, $endOfMonth)->get();
+
+        return $eventSchedules->map(fn ($schedule) => $this->mapScheduleToDisplayArray($schedule))->toArray();
+    }
+
+    #[Computed]
+    public function completedEventsThisMonth()
+    {
+        $startOfMonth = $this->currentDate->copy()->startOfMonth();
+        $endOfMonth = $this->currentDate->copy()->endOfMonth();
+
+        $eventSchedules = $this->thisMonthScheduleQuery(['completed'], $startOfMonth, $endOfMonth)->get();
+
+        return $eventSchedules->map(fn ($schedule) => $this->mapScheduleToDisplayArray($schedule))->toArray();
+    }
+
+    /**
+     * Build the base query for event schedules within a date range, filtered by ticket status.
+     *
+     * @param  array<int, string>  $ticketStatuses
+     */
+    protected function thisMonthScheduleQuery(array $ticketStatuses, Carbon $startDate, Carbon $endDate): Builder
+    {
+        return Event_Schedule::select(['schedule_id', 'event_id', 'start_date', 'end_date', 'start_time', 'end_time', 'venue', 'status'])
             ->with([
                 'event' => fn ($q) => $q->select(['event_id', 'ticket_id', 'event__type_id'])
                     ->with([
@@ -570,74 +607,80 @@ class EventCalendar extends Component
                     ]),
             ])
             ->where('status', 'approved')
-            ->whereHas('event.ticket', fn ($query) => $query->whereIn('status', ['approved', 'rescheduled']))
-            ->whereBetween('start_date', [$startDate, $endOfMonth])
+            ->whereHas('event.ticket', fn ($query) => $query->whereIn('status', $ticketStatuses))
+            ->whereBetween('start_date', [$startDate, $endDate])
             ->orderBy('start_date')
-            ->orderBy('start_time')
-            ->get();
+            ->orderBy('start_time');
+    }
 
-        return $eventSchedules->map(function ($schedule) {
-            $event = $schedule->event;
-            $rawStartTime = $schedule->getRawOriginal('start_time');
-            $rawEndTime = $schedule->getRawOriginal('end_time');
+    /**
+     * Transform an event schedule into the display array shape used by the
+     * "Upcoming Events This Month" and "Completed This Month" sections.
+     *
+     * @return array<string, mixed>
+     */
+    protected function mapScheduleToDisplayArray(Event_Schedule $schedule): array
+    {
+        $event = $schedule->event;
+        $rawStartTime = $schedule->getRawOriginal('start_time');
+        $rawEndTime = $schedule->getRawOriginal('end_time');
 
-            // Format date
-            $startDate = Carbon::parse($schedule->start_date);
-            $endDate = $schedule->end_date ? Carbon::parse($schedule->end_date) : $startDate;
+        // Format date
+        $startDate = Carbon::parse($schedule->start_date);
+        $endDate = $schedule->end_date ? Carbon::parse($schedule->end_date) : $startDate;
 
-            // Format time
-            $formatTime = function ($timeStr) {
-                if (! $timeStr) {
-                    return '';
-                }
-                try {
-                    $parts = explode(':', $timeStr);
-                    $hours = (int) $parts[0];
-                    $minutes = (int) ($parts[1] ?? 0);
-                    $period = $hours >= 12 ? 'PM' : 'AM';
-                    $hour12 = $hours % 12 ?: 12;
-
-                    return sprintf('%d:%02d %s', $hour12, $minutes, $period);
-                } catch (\Exception $e) {
-                    return $timeStr;
-                }
-            };
-
-            $startTimeFormatted = $formatTime($rawStartTime);
-            $endTimeFormatted = $formatTime($rawEndTime);
-            $timeRange = $startTimeFormatted && $endTimeFormatted
-                ? "{$startTimeFormatted} - {$endTimeFormatted}"
-                : ($startTimeFormatted ?: 'TBD');
-
-            // Date range formatting
-            $dateDisplay = $startDate->format('M d, Y');
-            if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
-                $dateDisplay = $startDate->format('M d').' - '.$endDate->format('M d, Y');
+        // Format time
+        $formatTime = function ($timeStr) {
+            if (! $timeStr) {
+                return '';
             }
+            try {
+                $parts = explode(':', $timeStr);
+                $hours = (int) $parts[0];
+                $minutes = (int) ($parts[1] ?? 0);
+                $period = $hours >= 12 ? 'PM' : 'AM';
+                $hour12 = $hours % 12 ?: 12;
 
-            // Get event color using the same method as calendar
-            $hexColor = $this->getEventColor($event);
-            $colorName = $this->hexToTailwindColor($hexColor);
+                return sprintf('%d:%02d %s', $hour12, $minutes, $period);
+            } catch (\Exception $e) {
+                return $timeStr;
+            }
+        };
 
-            $org = $event->ticket->user->studentOrganization ?? null;
+        $startTimeFormatted = $formatTime($rawStartTime);
+        $endTimeFormatted = $formatTime($rawEndTime);
+        $timeRange = $startTimeFormatted && $endTimeFormatted
+            ? "{$startTimeFormatted} - {$endTimeFormatted}"
+            : ($startTimeFormatted ?: 'TBD');
 
-            return [
-                'title' => $event->ticket->title ?? 'Untitled Event',
-                'description' => $event->ticket->description ?? null,
-                'organization' => $org->org_name ?? 'No Organization',
-                'organizationLogo' => $org ? $org->logo_url : asset('images/default-org-logo.svg'),
-                'eventType' => $event->eventType?->type_name ?? 'N/A',
-                'date' => $dateDisplay,
-                'time' => $timeRange,
-                'datetime' => "{$dateDisplay} • {$timeRange}",
-                'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
-                'color' => $colorName,
-                'hexColor' => $hexColor,
-                'icon' => $this->getEventTypeIcon($event->eventType?->type_name ?? ''),
-                'start_date' => $schedule->start_date,
-                'event_id' => $event->event_id,
-            ];
-        })->toArray();
+        // Date range formatting
+        $dateDisplay = $startDate->format('M d, Y');
+        if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
+            $dateDisplay = $startDate->format('M d').' - '.$endDate->format('M d, Y');
+        }
+
+        // Get event color using the same method as calendar
+        $hexColor = $this->getEventColor($event);
+        $colorName = $this->hexToTailwindColor($hexColor);
+
+        $org = $event->ticket->user->studentOrganization ?? null;
+
+        return [
+            'title' => $event->ticket->title ?? 'Untitled Event',
+            'description' => $event->ticket->description ?? null,
+            'organization' => $org->org_name ?? 'No Organization',
+            'organizationLogo' => $org ? $org->logo_url : asset('images/default-org-logo.svg'),
+            'eventType' => $event->eventType?->type_name ?? 'N/A',
+            'date' => $dateDisplay,
+            'time' => $timeRange,
+            'datetime' => "{$dateDisplay} • {$timeRange}",
+            'venue' => $schedule->venue ?? $event->ticket->venue_requested ?? 'TBD',
+            'color' => $colorName,
+            'hexColor' => $hexColor,
+            'icon' => $this->getEventTypeIcon($event->eventType?->type_name ?? ''),
+            'start_date' => $schedule->start_date,
+            'event_id' => $event->event_id,
+        ];
     }
 
     private function getEventTypeIcon($typeName): string

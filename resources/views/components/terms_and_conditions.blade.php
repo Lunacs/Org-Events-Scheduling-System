@@ -13,7 +13,7 @@
         {{-- Alert Banner --}}
         <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
             <div class="flex items-start gap-3">
-                <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <x-ui.icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div class="flex-1 min-w-0">
                     <p class="font-semibold text-sm md:text-base text-base-content">Please read carefully before
                         proceeding</p>
@@ -54,7 +54,7 @@
         {{-- Alert Banner --}}
         <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
             <div class="flex items-start gap-3">
-                <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <x-ui.icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div class="flex-1 min-w-0">
                     <p class="font-semibold text-sm md:text-base text-base-content">Please read carefully before
                         proceeding
@@ -182,7 +182,7 @@
         <div class="mt-4 pt-4 border-t-2 border-base-content/10">
             <div class="bg-info/10 border-l-4 border-info p-3 md:p-4 rounded-r-lg">
                 <div class="flex gap-3">
-                    <x-mary-icon name="o-shield-check" class="w-5 h-5 text-info flex-shrink-0 mt-1" />
+                    <x-ui.icon name="o-shield-check" class="w-5 h-5 text-info flex-shrink-0 mt-1" />
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-base-content mb-2 text-sm md:text-base flex items-center gap-2">
                             Certification Statement

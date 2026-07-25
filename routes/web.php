@@ -8,6 +8,7 @@ use App\Http\Controllers\Gso\ReportsExportController;
 use App\Http\Controllers\TemporaryUploadController;
 use App\Http\Controllers\VerifyNewEmailController;
 use App\Livewire\AboutUs;
+use App\Livewire\DataPrivacyNotice;
 use App\Livewire\Faq;
 use App\Livewire\Gso\Calendar as GsoCalendar;
 use App\Livewire\Gso\Dashboard as GsoDashboard;
@@ -51,6 +52,7 @@ use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 use App\Livewire\Superadmin\SystemSettings\VenueEditor;
 use App\Livewire\Superadmin\Tickets\TicketEditor;
 use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -77,10 +79,14 @@ Route::get('/about-us', AboutUs::class)->name('about-us');
 // FAQ - Public route
 Route::get('/faq', Faq::class)->name('faq');
 
+// Data Privacy Notice - Public route
+Route::get('/data-privacy', DataPrivacyNotice::class)->name('data-privacy');
+
 // routes/web.php — remove after confirming, or gate behind an admin check
 Route::get('/debug/schedule-list', function () {
-    \Illuminate\Support\Facades\Artisan::call('schedule:list');
-    return response('<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>');
+    Artisan::call('schedule:list');
+
+    return response('<pre>'.Artisan::output().'</pre>');
 })->middleware(['auth', 'role:superadmin']);
 
 // Profile route (accessible by all authenticated users)
@@ -225,4 +231,4 @@ Route::prefix('student-org')
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

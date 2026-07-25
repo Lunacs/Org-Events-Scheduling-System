@@ -2,14 +2,16 @@
 
 namespace App\Livewire\Superadmin\Users;
 
+use App\Livewire\Forms\CreateUserForm;
+use App\Livewire\Forms\EditUserForm;
 use App\Models\Office;
 use App\Models\Positions;
 use App\Models\Roles;
 use App\Models\Student_Organization;
 use App\Models\User;
+use App\Notifications\UserCreatedNotification;
 use App\Services\TransactionLogService;
-use App\Livewire\Forms\CreateUserForm;
-use App\Livewire\Forms\EditUserForm;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +22,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class Index extends Component
@@ -29,7 +30,6 @@ class Index extends Component
 
     #[Title('Superadmin - User Management')]
     #[Layout('components.layouts.superadmin')]
-
     public function placeholder()
     {
         return view('livewire.superadmin.placeholders.users');
@@ -45,6 +45,7 @@ class Index extends Component
     public array $sortBy = ['column' => 'email_verified_at', 'direction' => 'desc'];
 
     public CreateUserForm $createForm;
+
     public EditUserForm $editForm;
 
     public function updated($property, $value)
@@ -57,7 +58,7 @@ class Index extends Component
 
         if ($property === 'createForm.role') {
             // Re-validate email when role changes (for @plv.edu.ph rule)
-            if (!empty($this->createForm->email)) {
+            if (! empty($this->createForm->email)) {
                 $this->resetErrorBag('createForm.email');
                 $this->createForm->validateOnly('email');
             }
@@ -70,7 +71,7 @@ class Index extends Component
 
         if ($property === 'editForm.role') {
             // Re-validate email when role changes (for @plv.edu.ph rule)
-            if (!empty($this->editForm->email)) {
+            if (! empty($this->editForm->email)) {
                 $this->resetErrorBag('editForm.email');
                 $this->editForm->validateOnly('email');
             }
@@ -89,7 +90,7 @@ class Index extends Component
         }
 
         if ($property === 'editForm.password') {
-            if (!empty($this->editForm->password)) {
+            if (! empty($this->editForm->password)) {
                 $this->resetErrorBag('editForm.password');
                 $this->editForm->validateOnly('password');
             }
@@ -97,7 +98,7 @@ class Index extends Component
 
         if ($property === 'editForm.password_confirmation') {
             // Only validate if password is provided
-            if (!empty($this->editForm->password)) {
+            if (! empty($this->editForm->password)) {
                 $this->resetErrorBag('editForm.password');
                 $this->resetErrorBag('editForm.password_confirmation');
                 $this->editForm->validateOnly('password');
@@ -140,8 +141,8 @@ class Index extends Component
             ->select(['user_id', 'name', 'email', 'role_id', 'email_verified_at', 'org_id', 'office_id'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->roleFilter !== 'all', function ($query) {
@@ -183,8 +184,6 @@ class Index extends Component
             'is_superadmin' => $user->isSuperAdmin(),
         ]);
     }
-
-
 
     public function createUser()
     {
@@ -269,7 +268,7 @@ class Index extends Component
             // Send notification after commit
             $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
             foreach ($superadmins as $admin) {
-                $admin->notify(new \App\Notifications\UserCreatedNotification($user, auth()->user()));
+                $admin->notify(new UserCreatedNotification($user, auth()->user()));
             }
 
             // Reset and close
@@ -281,7 +280,7 @@ class Index extends Component
             \Log::error('User creation failed', [
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to create user: ' . $e->getMessage(), position: 'toast-bottom');
+            $this->error('Failed to create user: '.$e->getMessage(), position: 'toast-bottom');
         }
     }
 
@@ -388,7 +387,7 @@ class Index extends Component
                 'user_id' => $this->editForm->user_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to update user: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to update user: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -471,7 +470,7 @@ class Index extends Component
                 'user_id' => $this->deletingUserId,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to delete user: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete user: '.$e->getMessage(), position: 'toast-top');
             $this->closeDeleteModal();
         }
     }
@@ -521,6 +520,7 @@ class Index extends Component
                 return true;
             }
         }
+
         return false;
     }
 
@@ -533,29 +533,30 @@ class Index extends Component
                 return true;
             }
         }
+
         return false;
     }
 
     public function isCreateFormValid()
     {
         // Check if all required fields are filled and no errors exist
-        return !empty($this->createForm->name)
-            && !empty($this->createForm->email)
-            && !empty($this->createForm->password)
-            && !empty($this->createForm->password_confirmation)
-            && !empty($this->createForm->role)
-            && !empty($this->createForm->phone)
-            && !$this->hasCreateFormErrors();
+        return ! empty($this->createForm->name)
+            && ! empty($this->createForm->email)
+            && ! empty($this->createForm->password)
+            && ! empty($this->createForm->password_confirmation)
+            && ! empty($this->createForm->role)
+            && ! empty($this->createForm->phone)
+            && ! $this->hasCreateFormErrors();
     }
 
     public function isEditFormValid()
     {
         // Check if all required fields are filled and no errors exist
-        return !empty($this->editForm->name)
-            && !empty($this->editForm->email)
-            && !empty($this->editForm->role)
-            && !empty($this->editForm->phone)
-            && !$this->hasEditFormErrors();
+        return ! empty($this->editForm->name)
+            && ! empty($this->editForm->email)
+            && ! empty($this->editForm->role)
+            && ! empty($this->editForm->phone)
+            && ! $this->hasEditFormErrors();
     }
 
     public function render()

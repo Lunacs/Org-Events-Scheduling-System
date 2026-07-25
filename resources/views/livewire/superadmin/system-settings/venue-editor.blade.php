@@ -10,12 +10,12 @@
                     class="hover:text-primary transition-colors">
                     System Settings
                 </a>
-                <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
+                <x-ui.icon name="o-chevron-right" class="w-4 h-4 mx-2" />
                 <a href="{{ route('superadmin.system-settings', ['activeTab' => 'venues']) }}" wire:navigate
                     class="hover:text-primary transition-colors">
                     Venues
                 </a>
-                <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
+                <x-ui.icon name="o-chevron-right" class="w-4 h-4 mx-2" />
                 <span class="text-base-content font-medium">
                     {{ $isEditing ? 'Edit Venue' : 'Add New Venue' }}
                 </span>
@@ -23,7 +23,7 @@
 
             <div class="flex items-center gap-4 relative z-10">
                 <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                    <x-mary-icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
+                    <x-ui.icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
                         class="w-6 h-6 text-primary" />
                 </span>
                 <div>
@@ -40,13 +40,13 @@
 
     {{-- Main Form Card --}}
     <form wire:submit.prevent="save">
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-6">
                 {{-- Section 1: Basic Information --}}
                 <div class="pb-6 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-information-circle" class="w-4 h-4" />
+                            <x-ui.icon name="o-information-circle" class="w-4 h-4" />
                             Venue Information
                         </span>
                     </label>
@@ -54,7 +54,7 @@
                     <div class="grid grid-cols-1 gap-4">
                         {{-- Venue Name --}}
                         <div>
-                            <x-mary-input wire:model="venueName" label="Venue Name"
+                            <x-ui.input wire:model="venueName" label="Venue Name"
                                 placeholder="e.g., Main Auditorium, Conference Room A, Sports Complex" icon="o-map-pin"
                                 required />
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -64,7 +64,7 @@
 
                         {{-- Venue Location --}}
                         <div>
-                            <x-mary-input wire:model="venueLocation" label="Location (Optional)"
+                            <x-ui.input wire:model="venueLocation" label="Location (Optional)"
                                 placeholder="e.g., Building A, 2nd Floor, Room 201" icon="o-building-office-2" />
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
                                 Provide additional location details to help event organizers find the venue.
@@ -77,19 +77,19 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-cog-6-tooth" class="w-4 h-4" />
+                            <x-ui.icon name="o-cog-6-tooth" class="w-4 h-4" />
                             Venue Status
                         </span>
                     </label>
 
                     <div class="bg-slate-50 dark:bg-base-300 rounded-xl p-4">
-                        <x-mary-toggle wire:model="isActive" label="Active Venue"
+                        <x-ui.toggle wire:model="isActive" label="Active Venue"
                             hint="Only active venues can be selected for new event submissions" />
 
                         @if ($isEditing && !$isActive)
                             <div class="mt-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
                                 <div class="flex items-start gap-3">
-                                    <x-mary-icon name="o-exclamation-triangle"
+                                    <x-ui.icon name="o-exclamation-triangle"
                                         class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                                     <div>
                                         <p class="font-medium text-sm text-base-content">Deactivation Notice</p>
@@ -108,10 +108,10 @@
 
             {{-- Form Actions --}}
             <x-slot:actions>
-                <x-mary-button label="Cancel" wire:click="cancel" class="btn-ghost" />
-                <x-mary-button type="submit" label="{{ $isEditing ? 'Update Venue' : 'Create Venue' }}"
+                <x-ui.button label="Cancel" wire:click="cancel" class="btn-ghost" />
+                <x-ui.button type="submit" label="{{ $isEditing ? 'Update Venue' : 'Create Venue' }}"
                     class="btn-primary" spinner="save" />
             </x-slot:actions>
-        </x-mary-card>
+        </x-ui.card>
     </form>
 </div>

@@ -46,7 +46,7 @@
             class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-base-100 px-4 py-8 sm:py-10 cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary"
         >
             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <x-mary-icon name="o-cloud-arrow-up" class="h-6 w-6 text-primary" />
+                <x-ui.icon name="o-cloud-arrow-up" class="h-6 w-6 text-primary" />
             </div>
 
             <div class="text-center">
@@ -85,7 +85,7 @@
 
     <div id="{{ $constraintsId }}" class="rounded-lg border-l-4 border-info bg-info/10 p-4">
         <div class="flex items-start gap-2">
-            <x-mary-icon name="s-information-circle" class="mt-0.5 h-5 w-5 shrink-0 text-info" />
+            <x-ui.icon name="s-information-circle" class="mt-0.5 h-5 w-5 shrink-0 text-info" />
             <div class="text-sm text-base-content/80">
                 <p class="font-medium text-base-content">File requirements</p>
                 <ul class="mt-1 list-inside list-disc space-y-0.5">

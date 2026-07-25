@@ -4,6 +4,7 @@ namespace App\Livewire\Superadmin;
 
 use App\Models\Faq;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -11,7 +12,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
 #[Title('FAQ Management')]
 #[Layout('components.layouts.superadmin')]

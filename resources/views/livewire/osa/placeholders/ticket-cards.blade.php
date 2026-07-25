@@ -1,7 +1,7 @@
 {{-- Reusable Ticket Card Skeleton Grid --}}
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
     @for ($i = 0; $i < 6; $i++)
-        <div class="bg-base-100 rounded-box shadow-lg overflow-hidden animate-pulse">
+        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden animate-pulse">
             <div class="p-6 space-y-4">
                 {{-- Header --}}
                 <div class="flex items-start justify-between">

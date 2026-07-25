@@ -1,24 +1,7 @@
 <div class="py-12 bg-base-100 min-h-screen">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{-- Header Section --}}
-        <div class="text-center mb-12">
-            <div
-                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-6">
-                <x-mary-icon name="o-question-mark-circle" class="w-8 h-8 text-purple-600 dark:text-purple-400" />
-            </div>
-            <h1 class="text-4xl font-extrabold text-base-content sm:text-5xl mb-4">
-                Frequently Asked <span class="text-primary italic">Questions</span>
-            </h1>
-            <p class="mt-4 max-w-2xl text-lg text-base-content/70 mx-auto leading-relaxed">
-                Find answers to common questions about the PLV Event Scheduling System. Can't find what you're looking
-                for? Contact us for more help.
-            </p>
-
-            {{-- Decorative element --}}
-            <div class="mt-8 flex justify-center">
-                <div class="w-24 h-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-full"></div>
-            </div>
-        </div>
+        <x-ui.page-header title="Frequently Asked Questions" icon="o-question-mark-circle"
+            subtitle="Find answers to common questions about the PLV Event Scheduling System. Can't find what you're looking for? Contact us for more help." />
 
         @if ($this->hasFaqs)
             {{-- FAQ Accordion Sections --}}
@@ -28,7 +11,7 @@
                         {{-- Category Title --}}
                         @if ($this->faqs->count() > 1 || $category !== 'General')
                             <h2 class="text-2xl font-bold text-base-content mb-6 flex items-center gap-3">
-                                <x-mary-icon name="o-bookmark" class="w-6 h-6 text-primary" />
+                                <x-ui.icon name="o-bookmark" class="w-6 h-6 text-primary" />
                                 {{ $category }}
                             </h2>
                         @endif
@@ -45,8 +28,8 @@
                                     <div class="collapse-title text-base font-semibold text-base-content pr-12 cursor-pointer"
                                         @click="openIndex = openIndex === {{ $index }} ? null : {{ $index }}">
                                         <span class="flex items-start gap-3">
-                                            <x-mary-icon name="o-question-mark-circle"
-                                                class="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                            <x-ui.icon name="o-question-mark-circle"
+                                                class="w-5 h-5 text-accent shrink-0 mt-0.5" />
                                             {{ $faq->question }}
                                         </span>
                                     </div>
@@ -64,18 +47,18 @@
 
             {{-- Contact CTA --}}
             <div class="mt-12 text-center">
-                <div
-                    class="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl p-8 border border-base-300">
-                    <h3 class="text-xl font-bold text-base-content mb-3">Still have questions?</h3>
-                    <p class="text-base-content/70 mb-6">Our team is here to help you with any additional inquiries.</p>
+                <div class="bg-primary text-primary-content rounded-2xl p-8">
+                    <h3 class="text-xl font-bold mb-3">Still have questions?</h3>
+                    <p class="opacity-90 mb-6">Our team is here to help you with any additional inquiries.</p>
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <a href="mailto:plv.osa.official@gmail.com" class="btn btn-primary gap-2">
-                            <x-mary-icon name="o-envelope" class="w-5 h-5" />
+                        <a href="mailto:plv.osa.official@gmail.com"
+                            class="btn bg-accent text-accent-content border-none hover:bg-accent/85 gap-2">
+                            <x-ui.icon name="o-envelope" class="w-5 h-5" />
                             Contact Support
                         </a>
                         <a href="{{ route('about-us') }}" wire:navigate
-                            class="btn btn-outline text-gray-700! dark:text-white! hover:text-white! btn-secondary gap-2">
-                            <x-mary-icon name="o-user-group" class="w-5 h-5" />
+                            class="btn btn-outline border-white/40 text-white hover:bg-white/10 hover:border-white gap-2">
+                            <x-ui.icon name="o-user-group" class="w-5 h-5" />
                             About Us
                         </a>
                     </div>
@@ -85,7 +68,7 @@
             {{-- Empty State: No FAQs Available --}}
             <div class="text-center py-16">
                 <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-base-200 mb-6">
-                    <x-mary-icon name="o-document-magnifying-glass" class="w-12 h-12 text-base-content/40" />
+                    <x-ui.icon name="o-document-magnifying-glass" class="w-12 h-12 text-base-content/40" />
                 </div>
                 <h3 class="text-2xl font-bold text-base-content mb-3">FAQs Coming Soon</h3>
                 <p class="text-base-content/70 max-w-md mx-auto mb-8">
@@ -93,7 +76,7 @@
                     directly for assistance.
                 </p>
                 <a href="mailto:plv.osa.official@gmail.com" class="btn btn-primary gap-2">
-                    <x-mary-icon name="o-envelope" class="w-5 h-5" />
+                    <x-ui.icon name="o-envelope" class="w-5 h-5" />
                     Contact Us
                 </a>
             </div>
@@ -103,7 +86,7 @@
         <div class="mt-12 text-center">
             <a href="/" wire:navigate
                 class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors">
-                <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                <x-ui.icon name="o-arrow-left" class="w-4 h-4" />
                 <span>Back to Home</span>
             </a>
         </div>

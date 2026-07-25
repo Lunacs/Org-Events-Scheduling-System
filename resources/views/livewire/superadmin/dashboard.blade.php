@@ -19,7 +19,7 @@
         {{-- Attention Required Alert --}}
         @if ($attentionRequired['total_attention'] > 0)
             <div class="alert alert-warning shadow-lg">
-                <x-mary-icon name="o-exclamation-triangle" class="w-6 h-6" />
+                <x-ui.icon name="o-exclamation-triangle" class="w-6 h-6" />
                 <div>
                     <h3 class="font-bold">Attention Required</h3>
                     <div class="text-sm">{{ $attentionRequired['total_attention'] }} item(s) need your attention</div>
@@ -31,84 +31,42 @@
         {{-- Quick Stats Overview --}}
         <div>
             <h2 class="text-lg font-semibold text-base-content mb-3 flex items-center gap-2">
-                <x-mary-icon name="o-chart-bar" class="w-5 h-5 text-primary" />
+                <x-ui.icon name="o-chart-bar" class="w-5 h-5 text-primary" />
                 System Overview
             </h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div
-                    class="stat bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl shadow border border-primary/20">
-                    <div class="stat-figure text-primary">
-                        <x-mary-icon name="o-users" class="w-8 h-8" />
-                    </div>
-                    <div class="stat-title">Total Users</div>
-                    <div class="stat-value text-primary">{{ number_format($stats['totalUsers']) }}</div>
-                </div>
-                <div
-                    class="stat bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-xl shadow border border-secondary/20">
-                    <div class="stat-figure text-secondary">
-                        <x-mary-icon name="o-ticket" class="w-8 h-8" />
-                    </div>
-                    <div class="stat-title">Total Tickets</div>
-                    <div class="stat-value text-secondary">{{ number_format($stats['totalTickets']) }}</div>
-                </div>
-                <div
-                    class="stat bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl shadow border border-accent/20">
-                    <div class="stat-figure text-accent">
-                        <x-mary-icon name="o-calendar-days" class="w-8 h-8" />
-                    </div>
-                    <div class="stat-title">Total Events</div>
-                    <div class="stat-value text-accent">{{ number_format($stats['totalEvents']) }}</div>
-                </div>
-                <div
-                    class="stat bg-gradient-to-br from-warning/10 to-warning/5 rounded-xl shadow border border-warning/20">
-                    <div class="stat-figure text-warning">
-                        <x-mary-icon name="o-clock" class="w-8 h-8" />
-                    </div>
-                    <div class="stat-title">Pending Review</div>
-                    <div class="stat-value text-warning">{{ number_format($stats['pendingTickets']) }}</div>
-                </div>
+                <x-ui.metric-card label="Total Users" value="{{ number_format($stats['totalUsers']) }}"
+                    icon="o-users" color="primary" />
+
+                <x-ui.metric-card label="Total Tickets" value="{{ number_format($stats['totalTickets']) }}"
+                    icon="o-ticket" color="secondary" />
+
+                <x-ui.metric-card label="Total Events" value="{{ number_format($stats['totalEvents']) }}"
+                    icon="o-calendar-days" color="accent" />
+
+                <x-ui.metric-card label="Pending Review" value="{{ number_format($stats['pendingTickets']) }}"
+                    icon="o-clock" color="warning" />
             </div>
         </div>
 
         {{-- Quick Actions --}}
         <div>
             <h2 class="text-lg font-semibold text-base-content mb-3 flex items-center gap-2">
-                <x-mary-icon name="o-bolt" class="w-5 h-5 text-accent" />
+                <x-ui.icon name="o-bolt" class="w-5 h-5 text-accent" />
                 Quick Actions
             </h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <a href="{{ route('superadmin.tickets') }}"
-                    class="btn btn-outline justify-start gap-3 h-auto py-4 text-gray-700! dark:text-white! hover:text-white! hover:btn-primary">
-                    <x-mary-icon name="o-ticket" class="w-5 h-5" />
-                    <div class="text-left">
-                        <div class="font-semibold">Review Tickets</div>
-                        <div class="text-xs opacity-70">{{ $stats['pendingTickets'] }} pending</div>
-                    </div>
-                </a>
-                <a href="{{ route('superadmin.calendar') }}"
-                    class="btn btn-outline justify-start gap-3 h-auto py-4 text-gray-700! dark:text-white! hover:text-white! hover:btn-secondary">
-                    <x-mary-icon name="o-calendar" class="w-5 h-5" />
-                    <div class="text-left">
-                        <div class="font-semibold">View Calendar</div>
-                        <div class="text-xs opacity-70">{{ $stats['eventsThisWeek'] }} this week</div>
-                    </div>
-                </a>
-                <a href="{{ route('superadmin.users') }}"
-                    class="btn btn-outline justify-start gap-3 h-auto py-4 text-gray-700! dark:text-white! hover:text-white! hover:btn-accent">
-                    <x-mary-icon name="o-user-group" class="w-5 h-5" />
-                    <div class="text-left">
-                        <div class="font-semibold">Manage Users</div>
-                        <div class="text-xs opacity-70">{{ $stats['totalUsers'] }} users</div>
-                    </div>
-                </a>
-                <a href="{{ route('superadmin.reports') }}"
-                    class="btn btn-outline justify-start gap-3 h-auto py-4 text-gray-700! dark:text-white! hover:text-white! hover:btn-info">
-                    <x-mary-icon name="o-chart-pie" class="w-5 h-5" />
-                    <div class="text-left">
-                        <div class="font-semibold">View Reports</div>
-                        <div class="text-xs opacity-70">Analytics & exports</div>
-                    </div>
-                </a>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <x-ui.quick-action label="Review Tickets" description="{{ $stats['pendingTickets'] }} pending"
+                    icon="o-ticket" color="primary" link="{{ route('superadmin.tickets') }}" />
+
+                <x-ui.quick-action label="View Calendar" description="{{ $stats['eventsThisWeek'] }} this week"
+                    icon="o-calendar" color="secondary" link="{{ route('superadmin.calendar') }}" />
+
+                <x-ui.quick-action label="Manage Users" description="{{ $stats['totalUsers'] }} users"
+                    icon="o-user-group" color="accent" link="{{ route('superadmin.users') }}" />
+
+                <x-ui.quick-action label="View Reports" description="Analytics & exports" icon="o-chart-pie"
+                    color="info" link="{{ route('superadmin.reports') }}" />
             </div>
         </div>
 
@@ -118,7 +76,7 @@
             <livewire:superadmin.dashboard.pending-approvals defer.bundle class="lg:col-span-2" />
 
             {{-- Upcoming Events --}}
-            <x-mary-card title="Upcoming Events" subtitle="Next 7 days" shadow>
+            <x-ui.card title="Upcoming Events" subtitle="Next 7 days" shadow>
                 <x-slot:menu>
                     <a href="{{ route('superadmin.calendar') }}" class="btn btn-ghost btn-sm">Calendar</a>
                 </x-slot:menu>
@@ -144,7 +102,7 @@
                                         <span>{{ $event['time'] }}</span>
                                     </div>
                                     <div class="text-xs text-base-content/50 flex items-center gap-1 mt-1">
-                                        <x-mary-icon name="o-map-pin" class="w-3 h-3" />
+                                        <x-ui.icon name="o-map-pin" class="w-3 h-3" />
                                         {{ $event['venue'] }}
                                     </div>
                                 </div>
@@ -152,15 +110,10 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-4">
-                            <x-mary-icon name="o-calendar" class="w-8 h-8 text-base-content/40" />
-                        </div>
-                        <h3 class="text-lg font-semibold text-base-content mb-1">No Upcoming Events</h3>
-                        <p class="text-sm text-base-content/60">No events scheduled for the next 7 days.</p>
-                    </div>
+                    <x-ui.empty-state title="No Upcoming Events"
+                        description="No events scheduled for the next 7 days." icon="o-calendar" />
                 @endif
-            </x-mary-card>
+            </x-ui.card>
         </div>
 
         {{-- Bottom Row --}}
@@ -169,7 +122,7 @@
             <livewire:superadmin.dashboard.recent-activity defer.bundle />
 
             {{-- Items Needing Attention --}}
-            <x-mary-card title="Items Needing Attention" subtitle="Tickets requiring follow-up" shadow>
+            <x-ui.card title="Items Needing Attention" subtitle="Tickets requiring follow-up" shadow>
                 @if ($attentionRequired['total_attention'] > 0)
                     <div class="space-y-4">
                         {{-- Pending OSA Review --}}
@@ -181,14 +134,12 @@
                                         class="text-xs text-base-content/60">{{ count($attentionRequired['pending_osa_review']) }}
                                         tickets</span>
                                 </div>
-                                @foreach (array_slice($attentionRequired['pending_osa_review'], 0, 2) as $item)
-                                    <div class="text-sm p-2 bg-warning/10 rounded-lg mb-1">
-                                        <div class="font-medium truncate">{{ $item['title'] }}</div>
-                                        <div class="text-xs text-base-content/60">Waiting {{ $item['days_waiting'] }}
-                                            days
-                                        </div>
-                                    </div>
-                                @endforeach
+                                <div class="space-y-2">
+                                    @foreach (array_slice($attentionRequired['pending_osa_review'], 0, 2) as $item)
+                                        <x-ui.approval-queue-item title="{{ $item['title'] }}"
+                                            :days-waiting="$item['days_waiting']" tone="warning" />
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
 
@@ -201,14 +152,12 @@
                                         class="text-xs text-base-content/60">{{ count($attentionRequired['stuck_gso_review']) }}
                                         tickets</span>
                                 </div>
-                                @foreach (array_slice($attentionRequired['stuck_gso_review'], 0, 2) as $item)
-                                    <div class="text-sm p-2 bg-info/10 rounded-lg mb-1">
-                                        <div class="font-medium truncate">{{ $item['title'] }}</div>
-                                        <div class="text-xs text-base-content/60">Waiting {{ $item['days_waiting'] }}
-                                            days
-                                        </div>
-                                    </div>
-                                @endforeach
+                                <div class="space-y-2">
+                                    @foreach (array_slice($attentionRequired['stuck_gso_review'], 0, 2) as $item)
+                                        <x-ui.approval-queue-item title="{{ $item['title'] }}"
+                                            :days-waiting="$item['days_waiting']" tone="info" />
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
 
@@ -221,14 +170,12 @@
                                         class="text-xs text-base-content/60">{{ count($attentionRequired['revision_followup']) }}
                                         tickets</span>
                                 </div>
-                                @foreach (array_slice($attentionRequired['revision_followup'], 0, 2) as $item)
-                                    <div class="text-sm p-2 bg-error/10 rounded-lg mb-1">
-                                        <div class="font-medium truncate">{{ $item['title'] }}</div>
-                                        <div class="text-xs text-base-content/60">Waiting {{ $item['days_waiting'] }}
-                                            days
-                                        </div>
-                                    </div>
-                                @endforeach
+                                <div class="space-y-2">
+                                    @foreach (array_slice($attentionRequired['revision_followup'], 0, 2) as $item)
+                                        <x-ui.approval-queue-item title="{{ $item['title'] }}"
+                                            :days-waiting="$item['days_waiting']" tone="error" />
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -238,15 +185,10 @@
                         </a>
                     </div>
                 @else
-                    <div class="text-center py-12">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10 mb-4">
-                            <x-mary-icon name="o-check-badge" class="w-8 h-8 text-success" />
-                        </div>
-                        <h3 class="text-lg font-semibold text-base-content mb-1">All Clear!</h3>
-                        <p class="text-sm text-base-content/60">No items require immediate attention.</p>
-                    </div>
+                    <x-ui.empty-state title="All Clear!" description="No items require immediate attention."
+                        icon="o-check-badge" tone="success" iconColor="text-success" />
                 @endif
-            </x-mary-card>
+            </x-ui.card>
         </div>
     </div>
 </div>

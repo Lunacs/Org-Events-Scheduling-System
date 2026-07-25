@@ -4,11 +4,11 @@ namespace App\Livewire\Superadmin\SystemSettings;
 
 use App\Models\ContentSection;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class ContentSectionManager extends Component
 {
@@ -16,15 +16,19 @@ class ContentSectionManager extends Component
 
     // Delete data
     public $deletingId = null;
+
     public $deletingTitle = '';
+
     public $deleteModalOpen = false;
 
     // Preview data
     public $previewSection = null;
+
     public $previewModalOpen = false;
 
     // Filter & Search
     public $filterType = '';
+
     public $search = '';
 
     public function render()
@@ -69,7 +73,7 @@ class ContentSectionManager extends Component
     {
         $section = ContentSection::find($id);
         if ($section) {
-            $section->update(['is_active' => !$section->is_active]);
+            $section->update(['is_active' => ! $section->is_active]);
 
             $status = $section->is_active ? 'activated' : 'deactivated';
             TransactionLogService::log(
@@ -102,8 +106,9 @@ class ContentSectionManager extends Component
     {
         $section = ContentSection::find($this->deletingId);
 
-        if (!$section) {
+        if (! $section) {
             $this->error('Content section not found!', position: 'toast-top');
+
             return;
         }
 

@@ -32,7 +32,7 @@
     {{-- Actual Content --}}
     <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
-        <x-mary-toast />
+        {{-- Toasts are rendered by the layout-level <x-ui.toast /> host. --}}
 
         {{-- Header --}}
         @persist('ticket-management-header')
@@ -48,7 +48,7 @@
                             </p>
                         </div>
                         <div class="flex items-center gap-2 relative z-10">
-                            <x-mary-badge value="{{ $tickets->total() }} Total Tickets" class="badge-primary" />
+                            <x-ui.badge value="{{ $tickets->total() }} Total Tickets" class="badge-primary" />
                         </div>
                     </div>
                 </div>
@@ -56,14 +56,14 @@
         @endpersist
 
         {{-- Filters --}}
-        <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
-                        icon="o-magnifying-glass" clearable />
+                    <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                        icon="o-magnifying-glass" />
                 </div>
 
-                <x-mary-select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
+                <x-ui.select wire:model.live="statusFilter" placeholder="Filter by Status" :options="[
                     ['id' => '', 'name' => 'All Statuses'],
                     ['id' => 'received', 'name' => 'Received'],
                     ['id' => 'gso_review', 'name' => 'GSO Review'],
@@ -73,26 +73,26 @@
                 ]"
                     option-value="id" option-label="name" />
 
-                <x-mary-select wire:model.live="organizationFilter" placeholder="Filter by Organization"
-                    :options="$organizations" option-value="org_id" option-label="org_name" />
+                <x-ui.select wire:model.live="organizationFilter" placeholder="Filter by Organization" :options="$organizations"
+                    option-value="org_id" option-label="org_name" />
 
                 <div class="flex gap-2">
-                    <x-mary-input wire:model.live="dateFilter" type="date" placeholder="Filter by Date" />
+                    <x-ui.input wire:model.live="dateFilter" type="date" placeholder="Filter by Date" />
                     @if ($search || $statusFilter || $organizationFilter || $dateFilter)
-                        <x-mary-button wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters"
+                        <x-ui.button wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters"
                             class="btn-ghost" icon="o-x-mark" tooltip="Clear Filters">
                             <span wire:loading.remove wire:target="clearFilters">Clear</span>
                             <span wire:loading wire:target="clearFilters">
                                 <span class="loading loading-spinner loading-xs"></span>
                             </span>
-                        </x-mary-button>
+                        </x-ui.button>
                     @endif
                 </div>
             </div>
         </div>
 
         {{-- Tickets Table --}}
-        <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden">
             <!-- Skeleton Loading State -->
             <div wire:loading.delay wire:target="search,statusFilter,organizationFilter,dateFilter,clearFilters">
                 <div class="overflow-x-auto hidden md:block">
@@ -179,7 +179,7 @@
                                                             class="object-cover" />
                                                     @else
                                                         <div class="w-full h-full flex items-center justify-center">
-                                                            <x-mary-icon name="o-building-office"
+                                                            <x-ui.icon name="o-building-office"
                                                                 class="w-4 h-4 text-base-content/30" />
                                                         </div>
                                                     @endif
@@ -203,7 +203,7 @@
                                                 'for_revision' => 'badge-warning',
                                             ];
                                         @endphp
-                                        <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
+                                        <x-ui.badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
                                             class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-md w-[10rem] justify-center truncate" />
                                     </td>
                                     <td>
@@ -217,8 +217,7 @@
                                 <tr>
                                     <td colspan="5" class="text-center py-8">
                                         <div class="flex flex-col items-center gap-2">
-                                            <x-mary-icon name="o-document-text"
-                                                class="w-12 h-12 text-base-content/30" />
+                                            <x-ui.icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
                                             <span class="text-base-content/70">No tickets found</span>
                                         </div>
                                     </td>
@@ -245,7 +244,7 @@
                                         'for_revision' => 'badge-warning',
                                     ];
                                 @endphp
-                                <x-mary-badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
+                                <x-ui.badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
                                     class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-sm" />
                             </div>
 
@@ -263,7 +262,7 @@
                                                 class="object-cover" />
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
-                                                <x-mary-icon name="o-building-office"
+                                                <x-ui.icon name="o-building-office"
                                                     class="w-3 h-3 text-base-content/30" />
                                             </div>
                                         @endif
@@ -280,7 +279,7 @@
                         </div>
                     @empty
                         <div class="flex flex-col items-center gap-2 py-8">
-                            <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
+                            <x-ui.icon name="o-document-text" class="w-12 h-12 text-base-content/30" />
                             <span class="text-base-content/70">No tickets found</span>
                         </div>
                     @endforelse

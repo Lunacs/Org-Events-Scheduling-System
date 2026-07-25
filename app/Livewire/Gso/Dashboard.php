@@ -6,6 +6,8 @@ use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Event_Schedule;
 use App\Models\Office_Approval;
 use App\Models\Transaction_Logs;
+use App\Services\Cache\DashboardCacheService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +15,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class Dashboard extends Component
 {
@@ -44,7 +45,7 @@ class Dashboard extends Component
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'stats', function () use ($officeId) {
+        return DashboardCacheService::getDashboardWidget('gso', 'stats', function () use ($officeId) {
             $baseApprovalQuery = Office_Approval::query()
                 ->where('office_id', $officeId);
 
@@ -71,7 +72,7 @@ class Dashboard extends Component
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'pending_approvals', function () use ($officeId) {
+        return DashboardCacheService::getDashboardWidget('gso', 'pending_approvals', function () use ($officeId) {
             return Office_Approval::query()
                 ->where('office_id', $officeId)
                 ->where('decision', 'pending')
@@ -93,7 +94,7 @@ class Dashboard extends Component
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'snapshot', function () use ($officeId) {
+        return DashboardCacheService::getDashboardWidget('gso', 'snapshot', function () use ($officeId) {
             return Office_Approval::query()
                 ->where('office_id', $officeId)
                 ->with([
@@ -117,7 +118,7 @@ class Dashboard extends Component
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'activities', function () use ($officeId) {
+        return DashboardCacheService::getDashboardWidget('gso', 'activities', function () use ($officeId) {
             return Transaction_Logs::query()
                 ->with(['user' => fn ($q) => $q->withTrashed()])
                 ->whereHas('user', fn ($userQuery) => $userQuery->withTrashed()->where('office_id', $officeId))
@@ -142,7 +143,7 @@ class Dashboard extends Component
     {
         $officeId = $this->resolveOfficeId(Auth::user());
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('gso', 'queue_count', function () use ($officeId) {
+        return DashboardCacheService::getDashboardWidget('gso', 'queue_count', function () use ($officeId) {
             return $this->countUniqueTicketsInQueue($officeId);
         });
     }

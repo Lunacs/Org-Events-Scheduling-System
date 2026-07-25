@@ -2,11 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use App\Traits\WithProfilePhoto;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class AvatarSelector extends Component
 {
@@ -49,6 +50,7 @@ class AvatarSelector extends Component
     ];
 
     protected const DEFAULT_STYLE = 'big-ears';
+
     protected const DEFAULT_SEED = 'felix';
 
     public function mount()
@@ -96,11 +98,11 @@ class AvatarSelector extends Component
 
             // Dispatch event to trigger avatar re-initialization
             $this->dispatch('photo-uploaded');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->photo = null;
             throw $e; // Re-throw to let Livewire handle validation display
         } catch (\Exception $e) {
-            Log::error('Photo upload failed: ' . $e->getMessage());
+            Log::error('Photo upload failed: '.$e->getMessage());
             $this->photo = null;
             $this->error('The photo failed to upload. Please try again with a smaller file.', position: 'toast-top');
         }
@@ -120,8 +122,9 @@ class AvatarSelector extends Component
     public function saveUploadedPhoto()
     {
         try {
-            if (!$this->photo) {
+            if (! $this->photo) {
                 $this->error('No photo to save.', position: 'toast-top');
+
                 return;
             }
 
@@ -129,7 +132,7 @@ class AvatarSelector extends Component
             $this->dispatch('avatar-updated');
             $this->js('window.dispatchEvent(new CustomEvent("avatar-changed"))');
         } catch (\Exception $e) {
-            Log::error('Failed to save profile photo: ' . $e->getMessage());
+            Log::error('Failed to save profile photo: '.$e->getMessage());
             $this->photo = null;
             $this->error('Failed to save the photo. Please try again.', position: 'toast-top');
         }
@@ -142,8 +145,9 @@ class AvatarSelector extends Component
     {
         $user = Auth::user();
 
-        if (!$user->avatar) {
+        if (! $user->avatar) {
             $this->error('No uploaded photo found.', position: 'toast-top');
+
             return;
         }
 
@@ -157,8 +161,9 @@ class AvatarSelector extends Component
     public function saveAvatar($style, $seed)
     {
         // Validate inputs
-        if (!isset(self::AVAILABLE_STYLES[$style]) || !in_array($seed, self::AVATAR_SEEDS, true)) {
+        if (! isset(self::AVAILABLE_STYLES[$style]) || ! in_array($seed, self::AVATAR_SEEDS, true)) {
             $this->error('Invalid avatar selection.', position: 'toast-top');
+
             return;
         }
 

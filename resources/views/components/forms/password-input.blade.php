@@ -17,8 +17,8 @@
                 tabindex="-1">
                 {{-- <i class="fas fa-eye" x-show="!show"></i>
                 <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}
-                <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
-                <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
+                <x-ui.icon name="o-eye" class="w-5 h-5" x-show="show" />
+                <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
             </button>
         </div>
     </div>
@@ -37,8 +37,8 @@
             tabindex="-1">
             {{-- <i class="fas fa-eye" x-show="!show"></i>
             <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}
-            <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
-            <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
+            <x-ui.icon name="o-eye" class="w-5 h-5" x-show="show" />
+            <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
         </button>
     </div>
 @endif

@@ -11,35 +11,35 @@
                         <p class="text-sm text-base-content/70 mt-1">View and manage archived events and tickets</p>
                     </div>
                     <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-mary-button icon="o-arrow-path" class="btn-outline bg-base-100" wire:click.async="$refresh">
+                        <x-ui.button icon="o-arrow-path" class="btn-outline bg-base-100" wire:click.async="$refresh">
                             Refresh
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
         </section>
 
         {{-- Filters --}}
-        <x-mary-card>
+        <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <x-mary-input label="Search" wire:model.live.debounce.300ms="search"
+                <x-ui.input label="Search" wire:model.live.debounce.300ms="search"
                     placeholder="Search by title or ID..." icon="o-magnifying-glass" />
 
-                <x-mary-select label="Type" wire:model.live="typeFilter" :options="[
+                <x-ui.select label="Type" wire:model.live="typeFilter" :options="[
                     ['id' => 'all', 'name' => 'All Items'],
                     ['id' => 'events', 'name' => 'Events Only'],
                     ['id' => 'tickets', 'name' => 'Tickets Only'],
                 ]" option-value="id"
                     option-label="name" />
 
-                <x-mary-input label="From Date" wire:model.live="dateFrom" type="date" />
+                <x-ui.input label="From Date" wire:model.live="dateFrom" type="date" />
 
-                <x-mary-input label="To Date" wire:model.live="dateTo" type="date" />
+                <x-ui.input label="To Date" wire:model.live="dateTo" type="date" />
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Items Table --}}
-        <x-mary-card shadow>
+        <x-ui.card shadow>
             @if ($items->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="table">
@@ -54,7 +54,7 @@
                             @foreach ($items as $item)
                                 <tr class="hover">
                                     <td>
-                                        <x-mary-badge :value="ucfirst($item['type'])" :class="$item['type'] === 'event' ? 'badge-primary' : 'badge-info'" />
+                                        <x-ui.badge :value="ucfirst($item['type'])" :class="$item['type'] === 'event' ? 'badge-primary' : 'badge-info'" />
                                     </td>
                                     <td class="font-medium">{{ $item['title'] }}</td>
                                     <td>
@@ -62,7 +62,7 @@
                                     </td>
                                     <td>{{ $item['organization'] }}</td>
                                     <td>
-                                        <x-mary-badge :value="ucfirst($item['status'])" :class="match ($item['status']) {
+                                        <x-ui.badge :value="ucfirst($item['status'])" :class="match ($item['status']) {
                                             'cancelled' => 'badge-warning',
                                             'for_revision' => 'badge-error',
                                             default => 'badge-ghost',
@@ -76,14 +76,14 @@
                                     </td>
                                     <td>
                                         <div class="flex gap-2">
-                                            <x-mary-button size="xs" icon="o-arrow-uturn-left" class="btn-ghost"
+                                            <x-ui.button size="xs" icon="o-arrow-uturn-left" class="btn-ghost"
                                                 wire:click="openRestoreModal({{ $item['id'] }}, '{{ $item['type'] }}')">
                                                 Restore
-                                            </x-mary-button>
-                                            <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                            </x-ui.button>
+                                            <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
                                                 wire:click="openDeleteModal({{ $item['id'] }}, '{{ $item['type'] }}')">
                                                 Delete
-                                            </x-mary-button>
+                                            </x-ui.button>
                                         </div>
                                     </td>
                                 </tr>
@@ -102,11 +102,11 @@
                     <p class="mt-2 text-sm text-base-content/60">Try adjusting your filters</p>
                 </div>
             @endif
-        </x-mary-card>
+        </x-ui.card>
     </div>
 
     {{-- Restore Modal --}}
-    <x-mary-modal wire:model="showRestoreModal" title="Restore Item">
+    <x-ui.modal-dialog wire:model="showRestoreModal" title="Restore Item">
         <div class="space-y-4">
             <p>Are you sure you want to restore this item? It will be set back to "pending" status.</p>
             <div class="alert alert-info">
@@ -120,13 +120,13 @@
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showRestoreModal = false" />
-            <x-mary-button label="Restore" class="btn-primary" wire:click="restoreItem" spinner="restoreItem" />
+            <x-ui.button label="Cancel" @click="$wire.showRestoreModal = false" />
+            <x-ui.button label="Restore" class="btn-primary" wire:click="restoreItem" spinner="restoreItem" />
         </x-slot:actions>
-    </x-mary-modal>
+    </x-ui.modal-dialog>
 
     {{-- Delete Confirmation Modal --}}
-    <x-mary-modal wire:model="showDeleteModal" title="Permanently Delete">
+    <x-ui.modal-dialog wire:model="showDeleteModal" title="Permanently Delete">
         <div class="space-y-4">
             <div class="alert alert-error">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
@@ -141,9 +141,9 @@
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.showDeleteModal = false" />
-            <x-mary-button label="Delete Permanently" class="btn-error" wire:click="permanentlyDelete"
+            <x-ui.button label="Cancel" @click="$wire.showDeleteModal = false" />
+            <x-ui.button label="Delete Permanently" class="btn-error" wire:click="permanentlyDelete"
                 spinner="permanentlyDelete" />
         </x-slot:actions>
-    </x-mary-modal>
+    </x-ui.modal-dialog>
 </div>

@@ -20,7 +20,7 @@
                 class="announcement-banner bg-primary/10 border-b border-primary/20 px-4 py-3">
                 <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
                     <div class="flex items-start gap-3 flex-1 min-w-0">
-                        <x-mary-icon name="o-megaphone" class="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <x-ui.icon name="o-megaphone" class="w-5 h-5 text-primary shrink-0 mt-0.5" />
                         <div class="flex-1 min-w-0">
                             @if ($announcement->title)
                                 <p class="font-semibold text-sm text-primary mb-1">{{ $announcement->title }}</p>
@@ -34,7 +34,7 @@
                     <button
                         @click="dismissed.push('{{ $announcement->section_key }}'); localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed))"
                         class="btn btn-ghost btn-sm btn-circle shrink-0" title="Dismiss announcement">
-                        <x-mary-icon name="o-x-mark" class="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                        <x-ui.icon name="o-x-mark" class="w-4 h-4 text-gray-700 dark:text-gray-200" />
                     </button>
                 </div>
             </div>

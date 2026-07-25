@@ -6,14 +6,14 @@ use App\Models\Event;
 use App\Models\Event_Schedule;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\Cache\DashboardCacheService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class Dashboard extends Component
@@ -40,7 +40,7 @@ class Dashboard extends Component
     #[Computed]
     public function stats(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'stats', function () {
+        return DashboardCacheService::getDashboardWidget('superadmin', 'stats', function () {
             $pendingTickets = Ticket::where('status', 'pending')->count();
             $gsoReviewTickets = Ticket::where('status', 'gso_review')->count();
             $forRevisionTickets = Ticket::where('status', 'for_revision')->count();
@@ -66,7 +66,7 @@ class Dashboard extends Component
     #[Computed]
     public function todaySnapshot(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'today_snapshot', function () {
+        return DashboardCacheService::getDashboardWidget('superadmin', 'today_snapshot', function () {
             $today = now()->toDateString();
             $todayStart = now()->startOfDay();
             $todayEnd = now()->endOfDay();
@@ -88,7 +88,7 @@ class Dashboard extends Component
     #[Computed]
     public function attentionRequired(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'attention_required', function () {
+        return DashboardCacheService::getDashboardWidget('superadmin', 'attention_required', function () {
             // Tickets awaiting OSA review (pending status)
             $pendingOsaReview = Ticket::where('status', 'pending')
                 ->orderBy('created_at', 'asc')
@@ -148,7 +148,7 @@ class Dashboard extends Component
     #[Computed]
     public function upcomingEvents(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('superadmin', 'upcoming_events', function () {
+        return DashboardCacheService::getDashboardWidget('superadmin', 'upcoming_events', function () {
             $today = now()->toDateString();
             $nextWeek = now()->addDays(7)->toDateString();
 

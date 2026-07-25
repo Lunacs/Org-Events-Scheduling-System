@@ -76,15 +76,15 @@ new class extends Component
         $todaysSummary = $this->todaysSummary;
     @endphp
 
-    <x-mary-card class="shadow-md md:sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
+    <x-ui.card class="shadow-md md:sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
         <x-slot:menu>
-            <x-mary-button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" wire:navigate />
+            <x-ui.button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" wire:navigate />
         </x-slot:menu>
 
         @if (count($upcomingEvents) > 0)
             <div class="space-y-3">
                 @foreach ($upcomingEvents as $index => $event)
-                    <div class="group p-3 bg-gradient-to-br from-base-200 to-base-100 rounded-lg border border-base-300 hover:shadow-md transition-all"
+                    <div class="group p-3 bg-base-200/60 rounded-lg border border-base-300 hover:border-primary/40 transition-colors"
                         wire:key="upcoming-{{ $index }}">
                         <div class="flex items-start gap-3">
                             <div class="text-center bg-primary text-primary-content rounded-lg p-2 min-w-[48px]">
@@ -97,16 +97,16 @@ new class extends Component
                             </div>
 
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-semibold text-sm dark:text-white mb-1 truncate">
+                                <h4 class="font-semibold text-sm text-base-content mb-1 truncate">
                                     {{ $event['title'] }}
                                 </h4>
                                 <div class="space-y-1">
-                                    <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                        <x-mary-icon name="o-user-group" class="w-3 h-3" />
+                                    <div class="flex items-center gap-1 text-xs text-base-content/60">
+                                        <x-ui.icon name="o-user-group" class="w-3 h-3" />
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </div>
-                                    <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                        <x-mary-icon name="o-map-pin" class="w-3 h-3" />
+                                    <div class="flex items-center gap-1 text-xs text-base-content/60">
+                                        <x-ui.icon name="o-map-pin" class="w-3 h-3" />
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </div>
                                 </div>
@@ -117,34 +117,34 @@ new class extends Component
             </div>
 
             <div class="mt-4 pt-4 border-t">
-                <x-mary-button label="View Full Calendar" icon-right="o-arrow-right"
+                <x-ui.button label="View Full Calendar" icon-right="o-arrow-right"
                     class="btn-sm btn-block btn-outline" link="/admin/calendar" wire:navigate />
             </div>
         @else
             <div class="text-center py-12">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                    <x-mary-icon name="o-calendar-days" class="w-8 h-8 text-gray-400" />
+                    <x-ui.icon name="o-calendar-days" class="w-8 h-8 text-base-content/40" />
                 </div>
-                <p class="text-sm text-gray-500 font-medium">No upcoming events</p>
-                <p class="text-xs text-gray-400 mt-1">Approved events will appear here</p>
+                <p class="text-sm text-base-content/60 font-medium">No upcoming events</p>
+                <p class="text-xs text-base-content/40 mt-1">Approved events will appear here</p>
             </div>
         @endif
-    </x-mary-card>
+    </x-ui.card>
 
-    <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-5 mt-4">
-        <h3 class="text-md font-bold text-gray-900 dark:text-white mb-4">Today's Summary</h3>
+    <div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-5 mt-4">
+        <h3 class="text-md font-bold text-base-content mb-4">Today's Summary</h3>
         <div class="space-y-3">
             <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500 dark:text-gray-400">New Requests</span>
-                <span class="font-bold text-gray-900 dark:text-white">{{ $todaysSummary['newRequests'] }}</span>
+                <span class="text-sm text-base-content/60">New Requests</span>
+                <span class="font-bold text-base-content">{{ $todaysSummary['newRequests'] }}</span>
             </div>
             <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500 dark:text-gray-400">Processed</span>
-                <span class="font-bold text-emerald-600 dark:text-emerald-500">{{ $todaysSummary['processed'] }}</span>
+                <span class="text-sm text-base-content/60">Processed</span>
+                <span class="font-bold text-success">{{ $todaysSummary['processed'] }}</span>
             </div>
             <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500 dark:text-gray-400">Pending Review</span>
-                <span class="font-bold text-amber-600 dark:text-amber-500">{{ $todaysSummary['pending'] }}</span>
+                <span class="text-sm text-base-content/60">Pending Review</span>
+                <span class="font-bold text-warning">{{ $todaysSummary['pending'] }}</span>
             </div>
         </div>
     </div>

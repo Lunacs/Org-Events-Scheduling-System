@@ -9,7 +9,7 @@
 <div class="flex gap-3">
     <div class="flex flex-col items-center">
         <div class="w-8 h-8 rounded-full bg-{{ $iconColor }}/10 flex items-center justify-center">
-            <x-mary-icon :name="$icon" class="w-4 h-4 {{ $iconColor }}" />
+            <x-ui.icon :name="$icon" class="w-4 h-4 {{ $iconColor }}" />
         </div>
         <div class="w-px h-full bg-base-300 mt-2"></div>
     </div>

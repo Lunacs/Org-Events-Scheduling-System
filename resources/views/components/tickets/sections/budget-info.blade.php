@@ -2,7 +2,7 @@
 
 <div class="bg-base-100 rounded-box shadow-lg p-4 md:p-6 overflow-hidden">
     <h2 class="text-lg md:text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-        <x-mary-icon name="o-currency-dollar" class="w-5 h-5 flex-shrink-0" />
+        <x-ui.icon name="o-currency-dollar" class="w-5 h-5 flex-shrink-0" />
         <span class="break-words">Budget Information</span>
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
@@ -32,13 +32,13 @@
         <label class="text-sm font-medium text-base-content/70">IGP Request</label>
         <p class="text-base-content">
             @if ($ticket->igp_requested)
-                <x-mary-badge value="Requested" class="badge-success" />
+                <x-ui.badge value="Requested" class="badge-success" />
                 @if ($ticket->igp_details)
                     <span
                         class="block mt-2 bg-base-200 p-3 rounded whitespace-pre-wrap break-words overflow-wrap-anywhere">{{ $ticket->igp_details }}</span>
                 @endif
             @else
-                <x-mary-badge value="Not Requested" class="badge-neutral" />
+                <x-ui.badge value="Not Requested" class="badge-neutral" />
             @endif
         </p>
     </div>

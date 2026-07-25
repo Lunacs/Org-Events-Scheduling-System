@@ -13,9 +13,9 @@
                             configuration changes</p>
                     </div>
                     <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-mary-button label="Mark All as Read" icon="s-check" class="btn-ghost btn-sm cursor-pointer"
+                        <x-ui.button label="Mark All as Read" icon="s-check" class="btn-ghost btn-sm cursor-pointer"
                             wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
-                        <x-mary-button label="Clear All Read" icon="s-trash"
+                        <x-ui.button label="Clear All Read" icon="s-trash"
                             class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
                             wire:click="clearAllRead" :disabled="$readCount === 0"
                             wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
@@ -29,7 +29,7 @@
             <div class="bg-base-100 rounded-box shadow-lg p-4">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-error/20 rounded-full flex items-center justify-center">
-                        <x-mary-icon name="s-bell" class="w-6 h-6 text-error" />
+                        <x-ui.icon name="s-bell" class="w-6 h-6 text-error" />
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-base-content">{{ $unreadCount }}</p>
@@ -41,7 +41,7 @@
             <div class="bg-base-100 rounded-box shadow-lg p-4">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-info/20 rounded-full flex items-center justify-center">
-                        <x-mary-icon name="s-clock" class="w-6 h-6 text-info" />
+                        <x-ui.icon name="s-clock" class="w-6 h-6 text-info" />
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-base-content">{{ $todayCount }}</p>
@@ -53,7 +53,7 @@
             <div class="bg-base-100 rounded-box shadow-lg p-4">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
-                        <x-mary-icon name="s-calendar-days" class="w-6 h-6 text-success" />
+                        <x-ui.icon name="s-calendar-days" class="w-6 h-6 text-success" />
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-base-content">{{ $weekCount }}</p>
@@ -65,7 +65,7 @@
             <div class="bg-base-100 rounded-box shadow-lg p-4">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center">
-                        <x-mary-icon name="s-archive-box" class="w-6 h-6 text-secondary" />
+                        <x-ui.icon name="s-archive-box" class="w-6 h-6 text-secondary" />
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-base-content">{{ $totalCount }}</p>
@@ -207,7 +207,7 @@
                         class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border-l-4 hover:shadow-md transition-all {{ !$isUnread ? 'opacity-75' : '' }} group">
                         <div class="shrink-0">
                             <div class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
-                                <x-mary-icon :name="$icon" class="w-5 h-5 {{ $iconTextClass }}" />
+                                <x-ui.icon :name="$icon" class="w-5 h-5 {{ $iconTextClass }}" />
                             </div>
                         </div>
                         <a href="{{ $url }}" wire:navigate
@@ -230,18 +230,18 @@
                                     <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
                                         @if (isset($data['created_by']))
                                             <span class="flex items-center gap-1">
-                                                <x-mary-icon name="s-user" class="w-3 h-3" />
+                                                <x-ui.icon name="s-user" class="w-3 h-3" />
                                                 <span>{{ $data['created_by'] }}</span>
                                             </span>
                                         @endif
                                         @if (isset($data['updated_by']))
                                             <span class="flex items-center gap-1">
-                                                <x-mary-icon name="s-user" class="w-3 h-3" />
+                                                <x-ui.icon name="s-user" class="w-3 h-3" />
                                                 <span>{{ $data['updated_by'] }}</span>
                                             </span>
                                         @endif
                                         <span class="flex items-center gap-1">
-                                            <x-mary-icon name="s-clock" class="w-3 h-3" />
+                                            <x-ui.icon name="s-clock" class="w-3 h-3" />
                                             <span>{{ $timeAgo }}</span>
                                         </span>
                                     </div>
@@ -259,7 +259,7 @@
                                 wire:confirm="Delete this notification? This action cannot be undone."
                                 class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
                                 title="Delete notification">
-                                <x-mary-icon name="s-trash" class="w-4 h-4" />
+                                <x-ui.icon name="s-trash" class="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -269,7 +269,7 @@
                     @endif
                 @empty
                     <div class="text-center py-12">
-                        <x-mary-icon name="s-bell-slash" class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
+                        <x-ui.icon name="s-bell-slash" class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                         <p class="text-base-content/70 text-lg font-medium">No system notifications found</p>
                         <p class="text-base-content/50 text-sm mt-2">
                             <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting

@@ -2,7 +2,7 @@
 
 <div class="bg-base-100 rounded-box shadow-lg p-6">
     <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-        <x-mary-icon name="o-paper-clip" class="w-5 h-5" />
+        <x-ui.icon name="o-paper-clip" class="w-5 h-5" />
         Attachments
     </h2>
     @if ($ticket->attachments->count() > 0)
@@ -64,7 +64,7 @@
         </div>
     @else
         <div class="text-center py-8">
-            <x-mary-icon name="o-document-text" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
+            <x-ui.icon name="o-document-text" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
             <p class="text-base-content/70">No attachments uploaded</p>
         </div>
     @endif

@@ -2,7 +2,7 @@
 
 <div class="bg-base-100 rounded-box shadow-lg p-4 md:p-6 overflow-hidden">
     <h2 class="text-lg md:text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-        <x-mary-icon name="o-map-pin" class="w-5 h-5 flex-shrink-0" />
+        <x-ui.icon name="o-map-pin" class="w-5 h-5 flex-shrink-0" />
         <span class="break-words">Schedule & Venue</span>
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
@@ -57,7 +57,7 @@
     @if ($ticket->oc_accommodation || $ticket->oc_tsp)
         <div class="mt-4 p-3 md:p-4 bg-warning/10 border-l-4 border-warning rounded overflow-hidden">
             <h3 class="font-semibold text-base-content mb-3 flex items-center gap-2">
-                <x-mary-icon name="o-map" class="w-4 h-4 flex-shrink-0" />
+                <x-ui.icon name="o-map" class="w-4 h-4 flex-shrink-0" />
                 <span class="break-words">Off-Campus Activity Details</span>
             </h3>
 

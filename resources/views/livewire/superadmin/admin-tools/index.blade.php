@@ -11,9 +11,9 @@
                         <p class="text-sm text-base-content/70 mt-1">System maintenance and management utilities</p>
                     </div>
                     <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-mary-button icon="o-arrow-path" class="btn-outline w-full sm:w-auto" wire:click="loadSystemStatus; $refresh">
+                        <x-ui.button icon="o-arrow-path" class="btn-outline w-full sm:w-auto" wire:click="loadSystemStatus; $refresh">
                             Refresh
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
@@ -21,37 +21,37 @@
 
         {{-- System Status Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <x-mary-stat title="Cache Size" :value="$systemStatus['cache_size'] ?? 'N/A'" icon="o-server-stack"
+            <x-ui.stat title="Cache Size" :value="$systemStatus['cache_size'] ?? 'N/A'" icon="o-server-stack"
                 class="bg-info text-info-content shadow-lg" />
 
-            <x-mary-stat title="Database Size" :value="$systemStatus['db_size'] ?? 'N/A'" icon="o-circle-stack"
+            <x-ui.stat title="Database Size" :value="$systemStatus['db_size'] ?? 'N/A'" icon="o-circle-stack"
                 class="bg-primary text-primary-content shadow-lg" />
 
-            <x-mary-stat title="Storage Size" :value="$systemStatus['storage_size'] ?? 'N/A'" icon="o-folder"
+            <x-ui.stat title="Storage Size" :value="$systemStatus['storage_size'] ?? 'N/A'" icon="o-folder"
                 class="bg-accent text-accent-content shadow-lg" />
 
-            <x-mary-stat title="Transaction Logs" :value="$systemStatus['logs_count'] ?? 0" icon="o-document-text"
+            <x-ui.stat title="Transaction Logs" :value="$systemStatus['logs_count'] ?? 0" icon="o-document-text"
                 class="bg-warning text-warning-content shadow-lg" />
 
-            <x-mary-stat title="Queue Jobs" :value="$systemStatus['queue_jobs'] ?? 0" icon="o-queue-list"
+            <x-ui.stat title="Queue Jobs" :value="$systemStatus['queue_jobs'] ?? 0" icon="o-queue-list"
                 class="bg-success text-success-content shadow-lg" />
 
-            <x-mary-stat title="Failed Jobs" :value="$systemStatus['failed_jobs'] ?? 0" icon="o-exclamation-triangle"
+            <x-ui.stat title="Failed Jobs" :value="$systemStatus['failed_jobs'] ?? 0" icon="o-exclamation-triangle"
                 class="bg-error text-error-content shadow-lg" />
         </div>
 
         {{-- Cache Management --}}
-        <x-mary-card title="Cache Management" shadow>
+        <x-ui.card title="Cache Management" shadow>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="card bg-base-200">
                     <div class="card-body">
                         <h3 class="card-title text-base">Clear All Cache</h3>
                         <p class="text-sm text-base-content/70">Clear application, config, route, and view cache</p>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-trash" class="btn-outline" wire:click="clearCache"
+                            <x-ui.button icon="o-trash" class="btn-outline" wire:click="clearCache"
                                 spinner="clearCache" wire:confirm="Are you sure you want to clear all cache?">
                                 Clear Cache
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
@@ -62,28 +62,28 @@
                         <p class="text-sm text-base-content/70">Cache config, routes, and views for better performance
                         </p>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-rocket-launch" class="btn-primary" wire:click="optimizeCache"
+                            <x-ui.button icon="o-rocket-launch" class="btn-primary" wire:click="optimizeCache"
                                 spinner="optimizeCache">
                                 Optimize
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Database Management --}}
-        <x-mary-card title="Database Management" shadow>
+        <x-ui.card title="Database Management" shadow>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="card bg-base-200">
                     <div class="card-body">
                         <h3 class="card-title text-base">Optimize Database</h3>
                         <p class="text-sm text-base-content/70">Run database optimization commands</p>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-wrench-screwdriver" class="btn-primary" wire:click="optimizeDatabase"
+                            <x-ui.button icon="o-wrench-screwdriver" class="btn-primary" wire:click="optimizeDatabase"
                                 spinner="optimizeDatabase">
                                 Optimize Database
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
@@ -93,18 +93,18 @@
                         <h3 class="card-title text-base">Generate Backup</h3>
                         <p class="text-sm text-base-content/70">Create a database backup</p>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-arrow-down-tray" class="btn-success" wire:click="generateBackup"
+                            <x-ui.button icon="o-arrow-down-tray" class="btn-success" wire:click="generateBackup"
                                 spinner="generateBackup">
                                 Generate Backup
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Logs Management --}}
-        <x-mary-card title="Logs Management" shadow>
+        <x-ui.card title="Logs Management" shadow>
             <div class="card bg-base-200">
                 <div class="card-body">
                     <h3 class="card-title text-base">Cleanup Transaction Logs</h3>
@@ -118,17 +118,17 @@
                         <span>Current logs: {{ $systemStatus['logs_count'] ?? 0 }}</span>
                     </div>
                     <div class="card-actions justify-end mt-4">
-                        <x-mary-button icon="o-trash" class="btn-warning" wire:click="clearLogs" spinner="clearLogs"
+                        <x-ui.button icon="o-trash" class="btn-warning" wire:click="clearLogs" spinner="clearLogs"
                             wire:confirm="Are you sure? This will delete older logs.">
                             Cleanup Logs
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Queue Management --}}
-        <x-mary-card title="Queue Management" shadow>
+        <x-ui.card title="Queue Management" shadow>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="card bg-base-200">
                     <div class="card-body">
@@ -143,10 +143,10 @@
                             <span>Failed jobs: {{ $systemStatus['failed_jobs'] ?? 0 }}</span>
                         </div>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-arrow-path" class="btn-primary" wire:click="retryFailedJobs"
+                            <x-ui.button icon="o-arrow-path" class="btn-primary" wire:click="retryFailedJobs"
                                 spinner="retryFailedJobs">
                                 Retry All
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
@@ -164,19 +164,19 @@
                             <span>This action cannot be undone!</span>
                         </div>
                         <div class="card-actions justify-end mt-4">
-                            <x-mary-button icon="o-trash" class="btn-error" wire:click="clearFailedJobs"
+                            <x-ui.button icon="o-trash" class="btn-error" wire:click="clearFailedJobs"
                                 spinner="clearFailedJobs"
                                 wire:confirm="Are you sure? This will permanently delete all failed jobs.">
                                 Clear Failed Jobs
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Maintenance Mode --}}
-        <x-mary-card title="Maintenance Mode" shadow>
+        <x-ui.card title="Maintenance Mode" shadow>
             <div class="card bg-base-200">
                 <div class="card-body">
                     <h3 class="card-title text-base">System Maintenance Mode</h3>
@@ -218,14 +218,14 @@
                     @endif
 
                     <div class="card-actions justify-end mt-4">
-                        <x-mary-button :icon="$maintenanceMode ? 'o-play' : 'o-pause'" :class="$maintenanceMode ? 'btn-success' : 'btn-warning'" wire:click="toggleMaintenanceMode"
+                        <x-ui.button :icon="$maintenanceMode ? 'o-play' : 'o-pause'" :class="$maintenanceMode ? 'btn-success' : 'btn-warning'" wire:click="toggleMaintenanceMode"
                             spinner="toggleMaintenanceMode"
                             wire:confirm="Are you sure you want to {{ $maintenanceMode ? 'disable' : 'enable' }} maintenance mode?">
                             {{ $maintenanceMode ? 'Disable' : 'Enable' }} Maintenance Mode
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
     </div>
 </div>

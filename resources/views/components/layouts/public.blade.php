@@ -2,6 +2,36 @@
 <html data-theme="emerald" class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    <script>
+        (function() {
+            var dark = localStorage.getItem('theme') === 'dark';
+            if (dark) {
+                document.documentElement.setAttribute('data-theme', 'emeraldDark');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+        window.__themeToggleChange = function(input) {
+            var dark = input.checked;
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.classList.toggle('dark', dark);
+            document.querySelectorAll('input.theme-controller').forEach(function(el) {
+                if (el !== input) el.checked = dark;
+            });
+        };
+        document.addEventListener('livewire:navigated', function() {
+            var dark = localStorage.getItem('theme') === 'dark';
+            if (dark) {
+                document.documentElement.setAttribute('data-theme', 'emeraldDark');
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'emerald');
+                document.documentElement.classList.remove('dark');
+            }
+            document.querySelectorAll('input.theme-controller').forEach(function(el) {
+                el.checked = dark;
+            });
+        });
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -44,13 +74,18 @@
                     {{-- Navigation Links --}}
                     <nav class="flex items-center gap-3">
                         {{-- Theme Toggle --}}
-                        <x-mary-theme-toggle lightTheme="emerald" darkTheme="emeraldDark"
-                            class="btn btn-ghost btn-sm btn-circle" />
+                        <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle theme">
+                            <input id="theme-toggle" type="checkbox" value="emeraldDark"
+                                class="theme-controller opacity-0" onchange="window.__themeToggleChange(this)" />
+                            <x-ui.icon name="o-sun" class="swap-off" />
+                            <x-ui.icon name="o-moon" class="swap-on" />
+                        </label>
 
                         @auth
                             @php $user = auth()->user(); @endphp
                             {{-- User Profile Dropdown --}}
-                            <x-mary-dropdown right>
+                            <x-ui.dropdown right width="auto" class="p-2 border border-base-content/10 min-w-max shadow">
+
                                 {{-- Trigger Button --}}
                                 <x-slot:trigger>
                                     <div class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
@@ -118,7 +153,7 @@
                                         </form>
                                     </div>
                                 </div>
-                            </x-mary-dropdown>
+                            </x-ui.dropdown>
                         @else
                             {{-- Login Button for Guests --}}
                             <a href="{{ route('login') }}" wire:navigate class="btn btn-primary btn-sm gap-2">
@@ -140,7 +175,7 @@
         <x-footer variant="osa" />
 
         {{-- Toast --}}
-        <x-mary-toast />
+        <x-ui.toast />
     </div>
 
     {{-- Scripts Stack --}}

@@ -109,7 +109,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
     <div class="space-y-4">
         <button wire:click="sendVerification" wire:loading.attr="disabled"
-            class="relative w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-secondary/20 text-base font-bold hover:!bg-[oklch(50%_0.202_261.294)] hover:!border-[oklch(50%_0.202_261.294)] active:!bg-[oklch(40%_0.202_261.294)] active:!border-[oklch(40%_0.202_261.294)] text-white bg-secondary hover:bg-secondary-focus focus:outline-none focus:ring-4 focus:ring-secondary/30 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
+            class="relative w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-base font-bold text-white bg-primary hover:bg-primary/85 active:bg-primary/70 focus:outline-none focus:ring-4 focus:ring-accent/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
             <span wire:loading.remove wire:target="sendVerification" class="flex items-center">
                 {{ __('Resend Verification Email') }}
                 <i

@@ -1,12 +1,12 @@
 <div>
-    <x-mary-card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
+    <x-ui.card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
                 <h2 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">Student Organizations</h2>
                 <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Authorized campus groups and
                     clubs</p>
             </div>
-            <x-mary-button icon="o-plus" label="Register Org" class="btn-primary btn-sm shadow-sm w-full sm:w-auto"
+            <x-ui.button icon="o-plus" label="Register Org" class="btn-primary btn-sm shadow-sm w-full sm:w-auto"
                 wire:click="$set('addOrgModalOpen', true)" />
         </div>
 
@@ -14,7 +14,7 @@
             {{-- Academic Organizations Section --}}
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <x-mary-icon name="o-academic-cap" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <x-ui.icon name="o-academic-cap" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Academic
                         Organizations</h3>
                     {{-- <span
@@ -35,7 +35,7 @@
                 @else
                     <div
                         class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
-                        <x-mary-icon name="o-academic-cap"
+                        <x-ui.icon name="o-academic-cap"
                             class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                         <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No academic organizations</p>
                         <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Organizations linked to specific
@@ -47,7 +47,7 @@
             {{-- Non-Academic Organizations Section --}}
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <x-mary-icon name="o-globe-alt" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <x-ui.icon name="o-globe-alt" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Non-Academic
                         Organizations</h3>
                     <span
@@ -66,7 +66,7 @@
                 @else
                     <div
                         class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
-                        <x-mary-icon name="o-globe-alt"
+                        <x-ui.icon name="o-globe-alt"
                             class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                         <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No non-academic organizations
                         </p>
@@ -76,24 +76,24 @@
                 @endif
             </div>
         </div>
-    </x-mary-card>
+    </x-ui.card>
 
     {{-- Add Student Organization Modal --}}
-    <x-mary-modal wire:model="addOrgModalOpen" title="Add Student Organization"
+    <x-ui.modal-dialog wire:model="addOrgModalOpen" title="Add Student Organization"
         subtitle="Create a new student organization" separator with-close-button close-on-escape>
         <form wire:submit.prevent="addOrganization" class="space-y-4">
-            <x-mary-input wire:model="newOrgCode" label="Organization Code" placeholder="e.g., VITS" icon="o-hashtag" />
-            <x-mary-input wire:model="newOrgName" label="Organization Name" placeholder="Enter organization name"
+            <x-ui.input wire:model="newOrgCode" label="Organization Code" placeholder="e.g., VITS" icon="o-hashtag" />
+            <x-ui.input wire:model="newOrgName" label="Organization Name" placeholder="Enter organization name"
                 icon="o-user-group" />
-            <x-mary-select wire:model="newCourseId" :options="$allCourses
+            <x-ui.select wire:model="newCourseId" :options="$allCourses
                 ->map(function ($course) {
                     return ['id' => $course->course_id, 'name' => $course->course_name];
                 })
                 ->toArray()" option-value="id" option-label="name"
                 label="Course (Optional)" placeholder="Select course (optional)" icon="o-academic-cap" />
-            <x-mary-input wire:model="newAdviserName" label="Adviser Name" placeholder="Enter adviser name"
+            <x-ui.input wire:model="newAdviserName" label="Adviser Name" placeholder="Enter adviser name"
                 icon="o-user" />
-            <x-mary-select wire:model="newOrgStatus" :options="[
+            <x-ui.select wire:model="newOrgStatus" :options="[
                 ['id' => 'active', 'name' => 'Active'],
                 ['id' => 'inactive', 'name' => 'Inactive'],
                 ['id' => 'suspended', 'name' => 'Suspended'],
@@ -102,7 +102,7 @@
 
             {{-- Logo Upload with Preview --}}
             <div class="space-y-2">
-                <x-mary-file wire:model="newOrgLogo" label="Organization Logo (Optional)"
+                <x-ui.file wire:model="newOrgLogo" label="Organization Logo (Optional)"
                     hint="Max 10MB. Images auto-compressed to WebP format." accept=".jpg,.jpeg,.png,.gif,.svg,.webp" />
 
                 {{-- Loading indicator --}}
@@ -120,37 +120,37 @@
                             <p class="text-sm font-medium text-success">Logo ready to upload</p>
                             <p class="text-xs text-base-content/60">Will be compressed to WebP format</p>
                         </div>
-                        <x-mary-button icon="o-x-mark" class="btn-ghost btn-sm" wire:click="$set('newOrgLogo', null)" />
+                        <x-ui.button icon="o-x-mark" class="btn-ghost btn-sm" wire:click="$set('newOrgLogo', null)" />
                     </div>
                 @endif
             </div>
         </form>
 
         <x-slot:actions>
-            <x-mary-button label="Cancel" @click="$wire.addOrgModalOpen = false; $wire.resetAddOrgForm()" />
-            <x-mary-button label="Create Organization" wire:click="addOrganization" class="btn-primary"
+            <x-ui.button label="Cancel" @click="$wire.addOrgModalOpen = false; $wire.resetAddOrgForm()" />
+            <x-ui.button label="Create Organization" wire:click="addOrganization" class="btn-primary"
                 spinner="addOrganization" />
         </x-slot:actions>
-    </x-mary-modal>
+    </x-ui.modal-dialog>
 
     {{-- Edit Student Organization Modal --}}
     @if ($editingOrgId)
-        <x-mary-modal wire:model="editOrgModalOpen" title="Edit Student Organization"
+        <x-ui.modal-dialog wire:model="editOrgModalOpen" title="Edit Student Organization"
             subtitle="Update organization information" separator with-close-button close-on-escape>
             <form wire:submit.prevent="editOrganization" class="space-y-4">
-                <x-mary-input wire:model="orgCode" label="Organization Code" placeholder="e.g., CITE-CSC"
+                <x-ui.input wire:model="orgCode" label="Organization Code" placeholder="e.g., CITE-CSC"
                     icon="o-hashtag" />
-                <x-mary-input wire:model="orgName" label="Organization Name" placeholder="Enter organization name"
+                <x-ui.input wire:model="orgName" label="Organization Name" placeholder="Enter organization name"
                     icon="o-user-group" />
-                <x-mary-select wire:model="courseId" :options="$allCourses
+                <x-ui.select wire:model="courseId" :options="$allCourses
                     ->map(function ($course) {
                         return ['id' => $course->course_id, 'name' => $course->course_name];
                     })
                     ->toArray()" option-value="id" option-label="name"
                     label="Course (Optional)" placeholder="Select course (optional)" icon="o-academic-cap" />
-                <x-mary-input wire:model="adviserName" label="Adviser Name" placeholder="Enter adviser name"
+                <x-ui.input wire:model="adviserName" label="Adviser Name" placeholder="Enter adviser name"
                     icon="o-user" />
-                <x-mary-select wire:model="orgStatus" :options="[
+                <x-ui.select wire:model="orgStatus" :options="[
                     ['id' => 'active', 'name' => 'Active'],
                     ['id' => 'inactive', 'name' => 'Inactive'],
                     ['id' => 'suspended', 'name' => 'Suspended'],
@@ -168,7 +168,7 @@
                                 <p class="text-sm font-medium">Organization Logo</p>
                                 <p class="text-xs text-base-content/60">Click delete to remove</p>
                             </div>
-                            <x-mary-button icon="o-trash" class="btn-ghost btn-error btn-sm hover:"
+                            <x-ui.button icon="o-trash" class="btn-ghost btn-error btn-sm hover:"
                                 wire:click="deleteCurrentOrgLogo" spinner="deleteCurrentOrgLogo" />
                         </div>
                     </div>
@@ -176,7 +176,7 @@
 
                 {{-- Logo Upload with Preview --}}
                 <div class="space-y-2">
-                    <x-mary-file wire:model="orgLogo"
+                    <x-ui.file wire:model="orgLogo"
                         label="{{ $currentOrgLogo ? 'Replace Logo' : 'Upload Logo (Optional)' }}"
                         hint="Max 10MB. Images auto-compressed to WebP format."
                         accept=".jpg,.jpeg,.png,.gif,.svg,.webp" />
@@ -197,7 +197,7 @@
                                 <p class="text-sm font-medium text-success">New logo ready</p>
                                 <p class="text-xs text-base-content/60">Will replace current logo when saved</p>
                             </div>
-                            <x-mary-button icon="o-x-mark" class="btn-ghost btn-sm"
+                            <x-ui.button icon="o-x-mark" class="btn-ghost btn-sm"
                                 wire:click="$set('orgLogo', null)" />
                         </div>
                     @endif
@@ -205,16 +205,16 @@
             </form>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.editOrgModalOpen = false; $wire.resetEditOrgForm()" />
-                <x-mary-button label="Update" wire:click="editOrganization" class="btn-primary"
+                <x-ui.button label="Cancel" @click="$wire.editOrgModalOpen = false; $wire.resetEditOrgForm()" />
+                <x-ui.button label="Update" wire:click="editOrganization" class="btn-primary"
                     spinner="editOrganization" />
             </x-slot:actions>
-        </x-mary-modal>
+        </x-ui.modal-dialog>
     @endif
 
     {{-- Delete Student Organization Confirmation Modal --}}
     @if ($deletingOrgName)
-        <x-mary-modal wire:model="deleteOrgModalOpen" title="Delete Student Organization Confirmation"
+        <x-ui.modal-dialog wire:model="deleteOrgModalOpen" title="Delete Student Organization Confirmation"
             subtitle="This action cannot be undone" separator with-close-button close-on-escape>
             <div class="space-y-4">
                 <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -238,7 +238,7 @@
 
                 @if ($hasAssociatedUsers)
                     <div class="alert alert-error">
-                        <x-mary-icon name="o-x-circle" class="w-6 h-6" />
+                        <x-ui.icon name="o-x-circle" class="w-6 h-6" />
                         <span>
                             This organization cannot be deleted because it has associated users.
                         </span>
@@ -247,11 +247,11 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel"
+                <x-ui.button label="Cancel"
                     @click="$wire.deleteOrgModalOpen = false; $wire.resetDeleteOrgModal()" />
-                <x-mary-button label="Delete Organization" wire:click="confirmDeleteOrg" class="btn-error"
+                <x-ui.button label="Delete Organization" wire:click="confirmDeleteOrg" class="btn-error"
                     :disabled="$hasAssociatedUsers" spinner="confirmDeleteOrg" />
             </x-slot:actions>
-        </x-mary-modal>
+        </x-ui.modal-dialog>
     @endif
 </div>

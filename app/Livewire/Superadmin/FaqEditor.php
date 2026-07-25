@@ -6,11 +6,11 @@ use App\Models\Faq;
 use App\Models\User;
 use App\Notifications\SystemSettingsUpdatedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Title('FAQ Editor')]
 #[Layout('components.layouts.superadmin')]
@@ -19,19 +19,28 @@ class FaqEditor extends Component
     use Toast;
 
     public ?int $faqId = null;
+
     public string $question = '';
+
     public string $answer = '';
+
     public ?string $category = null;
+
     public int $displayOrder = 0;
+
     public bool $isActive = true;
 
     public bool $isEditing = false;
 
     // Category combobox state
     public string $categorySearch = '';
+
     public bool $showCategoryDropdown = false;
+
     public string $categoryMode = 'selecting'; // selecting, creating, editing
+
     public ?string $editingCategory = null;
+
     public string $editCategoryName = '';
 
     /**
@@ -106,10 +115,10 @@ class FaqEditor extends Component
 
                 // Track changes for logging
                 if ($faq->question !== $this->question) {
-                    $changes[] = "Question updated";
+                    $changes[] = 'Question updated';
                 }
                 if ($faq->answer !== $this->answer) {
-                    $changes[] = "Answer updated";
+                    $changes[] = 'Answer updated';
                 }
                 if ($faq->category !== $this->category) {
                     $oldCat = $faq->category ?: '(none)';
@@ -133,10 +142,10 @@ class FaqEditor extends Component
                     'is_active' => $this->isActive,
                 ]);
 
-                if (!empty($changes)) {
+                if (! empty($changes)) {
                     TransactionLogService::log(
                         'faq_updated',
-                        "FAQ updated (ID: {$faq->id}): " . implode(', ', $changes)
+                        "FAQ updated (ID: {$faq->id}): ".implode(', ', $changes)
                     );
                 }
 
@@ -178,7 +187,8 @@ class FaqEditor extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('FAQ save failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to save FAQ: ' . $e->getMessage(), position: 'toast-bottom');
+            $this->error('Failed to save FAQ: '.$e->getMessage(), position: 'toast-bottom');
+
             return null;
         }
     }
@@ -213,6 +223,7 @@ class FaqEditor extends Component
     public function getIsExactMatchProperty(): bool
     {
         $allCategories = Faq::getCategories();
+
         return in_array($this->categorySearch, $allCategories, true);
     }
 
@@ -245,7 +256,7 @@ class FaqEditor extends Component
         $this->categoryMode = 'selecting';
 
         // Update the actual category value
-        $this->category = !empty($this->categorySearch) ? $this->categorySearch : null;
+        $this->category = ! empty($this->categorySearch) ? $this->categorySearch : null;
     }
 
     /**
@@ -266,11 +277,13 @@ class FaqEditor extends Component
         $trimmed = trim($this->categorySearch);
         if (empty($trimmed)) {
             $this->error('Category name cannot be empty.', position: 'toast-bottom');
+
             return;
         }
 
         if (strlen($trimmed) > 100) {
             $this->error('Category name must not exceed 100 characters.', position: 'toast-bottom');
+
             return;
         }
 
@@ -319,16 +332,19 @@ class FaqEditor extends Component
 
         if (empty($newName)) {
             $this->error('Category name cannot be empty.', position: 'toast-bottom');
+
             return;
         }
 
         if (strlen($newName) > 100) {
             $this->error('Category name must not exceed 100 characters.', position: 'toast-bottom');
+
             return;
         }
 
         if ($newName === $this->editingCategory) {
             $this->cancelEditCategory();
+
             return;
         }
 
@@ -336,6 +352,7 @@ class FaqEditor extends Component
         $existingCategories = Faq::getCategories();
         if (in_array($newName, $existingCategories)) {
             $this->error('A category with this name already exists.', position: 'toast-bottom');
+
             return;
         }
 

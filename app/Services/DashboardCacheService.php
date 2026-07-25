@@ -134,7 +134,28 @@ class DashboardCacheService
             }
         }
 
-        // For non-Redis drivers (database, file), we cannot scan keys by prefix.
-        // The TTL will handle expiry naturally — typically 5-10 minutes.
+        // For non-Redis drivers (database, file), fall back to the tracked-key
+        // registry for prefixes that register their keys (see SupportsTags::trackKey).
+        // EventCalendar tracks its composite filter keys under 'event_calendar:known_keys'
+        // so this prefix can be reliably cleared even without Redis SCAN support.
+        if ($prefix === 'event_calendar:') {
+            $keys = Cache::get('event_calendar:known_keys', []);
+            if (is_array($keys)) {
+                foreach ($keys as $key) {
+                    Cache::forget($key);
+                }
+            }
+            Cache::forget('event_calendar:known_keys');
+
+            Log::debug('DashboardCacheService: Tracked-key prefix flush completed', [
+                'prefix' => $prefix,
+                'deleted_count' => is_array($keys) ? count($keys) : 0,
+            ]);
+
+            return;
+        }
+
+        // Other prefixes without a tracked-key registry (e.g. osa_report_) rely
+        // on TTL expiry on non-Redis drivers — typically 5-10 minutes.
     }
 }

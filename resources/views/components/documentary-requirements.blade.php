@@ -33,7 +33,7 @@
 
 <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
     <div class="flex items-start space-x-2">
-        <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
+        <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
         <div class="text-sm flex-1">
             <p class="font-medium mb-1">Required Documents:</p>
             @if ($hasContent)

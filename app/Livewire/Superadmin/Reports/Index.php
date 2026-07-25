@@ -7,6 +7,7 @@ use App\Models\Office;
 use App\Models\Student_Organization;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,6 @@ use Livewire\Attributes\Session;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class Index extends Component

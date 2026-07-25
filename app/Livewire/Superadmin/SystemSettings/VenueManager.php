@@ -4,11 +4,11 @@ namespace App\Livewire\Superadmin\SystemSettings;
 
 use App\Models\Venue;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class VenueManager extends Component
 {
@@ -16,9 +16,13 @@ class VenueManager extends Component
 
     // Delete data
     public $deletingVenueId = null;
+
     public $deletingVenueName = '';
+
     public $hasAssociatedTickets = false;
+
     public $associatedTicketsCount = 0;
+
     public $deleteModalOpen = false;
 
     // Cache duration
@@ -60,14 +64,16 @@ class VenueManager extends Component
     {
         $venue = Venue::find($this->deletingVenueId);
 
-        if (!$venue) {
+        if (! $venue) {
             $this->error('Venue not found!', position: 'toast-top');
+
             return;
         }
 
         // Block deletion if venue has associated tickets
         if ($venue->tickets()->count() > 0) {
             $this->error('Cannot delete venue that is being used by tickets! Consider deactivating it instead.', position: 'toast-top');
+
             return;
         }
 
@@ -87,7 +93,7 @@ class VenueManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Venue deletion failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to delete venue: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete venue: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -99,15 +105,16 @@ class VenueManager extends Component
     {
         $venue = Venue::find($venueId);
 
-        if (!$venue) {
+        if (! $venue) {
             $this->error('Venue not found!', position: 'toast-top');
+
             return;
         }
 
         DB::beginTransaction();
         try {
             $previousStatus = $venue->is_active ? 'active' : 'inactive';
-            $venue->is_active = !$venue->is_active;
+            $venue->is_active = ! $venue->is_active;
             $venue->save();
 
             $newStatus = $venue->is_active ? 'active' : 'inactive';
@@ -121,7 +128,7 @@ class VenueManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Venue status toggle failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to update venue status: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to update venue status: '.$e->getMessage(), position: 'toast-top');
         }
     }
 

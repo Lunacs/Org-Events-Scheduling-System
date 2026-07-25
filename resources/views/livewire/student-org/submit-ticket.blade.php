@@ -25,7 +25,7 @@
             @if ($errors->any())
                 <div class="mb-6 rounded-xl border border-error/30 bg-error/10 p-4">
                     <div class="flex items-start gap-3">
-                        <x-mary-icon name="s-exclamation-circle" class="w-5 h-5 text-error mt-0.5" />
+                        <x-ui.icon name="s-exclamation-circle" class="w-5 h-5 text-error mt-0.5" />
                         <div>
                             <p class="font-semibold text-error">Please review the required fields in this step.</p>
                             <ul class="mt-2 list-disc list-inside text-sm text-base-content/80 space-y-1">
@@ -38,7 +38,7 @@
                 </div>
             @endif
 
-            <x-mary-form wire:submit="save" wire:ref="submitForm">
+            <form wire:submit="save" wire:ref="submitForm">
                 {{-- Progress Indicator --}}
                 <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
                     <div class="flex justify-between items-center min-w-max md:min-w-0">
@@ -64,16 +64,18 @@
                                         {{ $currentStep < $i ? 'bg-base-300 text-base-content/50' : '' }}"
                                     @if ($i > $currentStep + 1) disabled @endif>
                                     @if ($currentStep > $i)
-                                        <x-mary-icon name="o-check" class="w-4 h-4" />
+                                        <x-ui.icon name="o-check" class="w-4 h-4" />
                                     @else
                                         {{ $i }}
                                     @endif
                                 </button>
 
-                                <span class="text-xs text-center whitespace-nowrap px-1 hidden md:block {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
+                                <span
+                                    class="text-xs text-center whitespace-nowrap px-1 hidden md:block {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
                                     {{ $stepLabels[$i]['full'] }}
                                 </span>
-                                <span class="text-xs text-center whitespace-nowrap px-1 md:hidden {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
+                                <span
+                                    class="text-xs text-center whitespace-nowrap px-1 md:hidden {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
                                     {{ $stepLabels[$i]['short'] }}
                                 </span>
                             </div>
@@ -90,83 +92,78 @@
                 {{-- Step 1: Organization Information --}}
                 @if ($currentStep === 1)
                     {{-- Instructions Card --}}
-                    <x-mary-card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
+                    <x-ui.card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
                         class="mb-1">
                         <x-submit_guidelines :guidelines="$ticketGuidelines" />
-                    </x-mary-card>
-                    <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning mb-4">
-                        <x-mary-checkbox label="Check this box if the proposal is amended from a previous submission."
+                    </x-ui.card>
+                    <div class="bg-warning/10 p-4 rounded-lg border border-warning/30 mb-4">
+                        <x-ui.checkbox label="Check this box if the proposal is amended from a previous submission."
                             wire:model.live="is_amended" />
                     </div>
 
-                    <x-mary-card title="Organization Information" subtitle="Details about your student organization">
+                    <x-ui.card title="Organization Information" subtitle="Details about your student organization">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input label="Organization Name" wire:model="organizationName" readonly />
-                            <x-mary-input label="Organization Course" wire:model="organizationCourse" readonly />
-                            <x-mary-input label="Name of Proponent" wire:model="proponentName" readonly />
-                            <x-mary-input label="Contact Email" type="email" wire:model="contactEmail" readonly />
-                            <x-mary-input label="Proponent Position" wire:model="proponentPosition" readonly />
-                            <x-mary-input label="Organization Adviser" wire:model="adviser" readonly />
-                            <x-mary-input label="Contact of Proponent" wire:model="proponent_contact"
+                            <x-ui.input label="Organization Name" wire:model="organizationName" readonly />
+                            <x-ui.input label="Organization Course" wire:model="organizationCourse" readonly />
+                            <x-ui.input label="Name of Proponent" wire:model="proponentName" readonly />
+                            <x-ui.input label="Contact Email" type="email" wire:model="contactEmail" readonly />
+                            <x-ui.input label="Proponent Position" wire:model="proponentPosition" readonly />
+                            <x-ui.input label="Organization Adviser" wire:model="adviser" readonly />
+                            <x-ui.input label="Contact of Proponent" wire:model="proponent_contact"
                                 placeholder="0999 999 9999" readonly />
-                            <x-mary-input label="Contact of Adviser" wire:model.live.debounce.300ms="adviser_contact"
-                                required
-                                maxlength="11"
-                                inputmode="numeric"
-                                placeholder="09XXXXXXXXX"
+                            <x-ui.input label="Contact of Adviser" wire:model.live.debounce.300ms="adviser_contact"
+                                required maxlength="11" inputmode="numeric" placeholder="09XXXXXXXXX"
                                 x-on:input="$el.value = $el.value.replace(/\D/g, '').slice(0, 11); $wire.set('adviser_contact', $el.value)" />
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
                 @endif
 
                 {{-- Step 2: Event Details --}}
                 @if ($currentStep === 2)
-                    <x-mary-card title="Event Details" subtitle="Information about your proposed event">
+                    <x-ui.card title="Event Details" subtitle="Information about your proposed event">
                         <div class="space-y-4">
-                            <x-mary-input label="Event Title" wire:model.live.debounce.300ms="eventTitle"
+                            <x-ui.input label="Event Title" wire:model.live.debounce.300ms="eventTitle"
                                 placeholder="Enter your event title" required maxlength="255" />
-                            <x-mary-textarea label="Event Description" wire:model.live.debounce.300ms="eventDescription"
+                            <x-ui.textarea label="Event Description" wire:model.live.debounce.300ms="eventDescription"
                                 rows="4" required maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
-                            <x-mary-select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
+                            <x-ui.select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
                                 option-value="event_type_id" option-label="type_name" required />
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <x-mary-input label="PLV Participants" type="number"
+                                <x-ui.input label="PLV Participants" type="number"
                                     wire:model.live="expectedPLVParticipants" required />
-                                <x-mary-input label="Non-PLV Participants" type="number"
+                                <x-ui.input label="Non-PLV Participants" type="number"
                                     wire:model.live="expectedNonPLVParticipants" />
-                                <x-mary-input label="Total" type="number" value="{{ $this->expectedParticipants }}"
+                                <x-ui.input label="Total" type="number" value="{{ $this->expectedParticipants }}"
                                     readonly />
                             </div>
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
                 @endif
 
                 {{-- Step 3: Schedule & Venue --}}
                 @if ($currentStep === 3)
-                    <x-mary-card title="Schedule & Venue" subtitle="When and where your event will take place">
+                    <x-ui.card title="Schedule & Venue" subtitle="When and where your event will take place">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-datetime label="Event Start Date" wire:model.live.debounce.300ms="eventStartDate"
-                                required
-                                min="{{ now()->format('Y-m-d') }}" />
+                            <x-ui.datetime label="Event Start Date" wire:model.live.debounce.300ms="eventStartDate"
+                                required min="{{ now()->format('Y-m-d') }}" />
 
-                            <x-mary-datetime label="Event End Date" wire:model.live.debounce.300ms="eventEndDate"
-                                required
+                            <x-ui.datetime label="Event End Date" wire:model.live.debounce.300ms="eventEndDate" required
                                 min="{{ $eventStartDate ?: now()->format('Y-m-d') }}" />
 
-                            <x-mary-datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
+                            <x-ui.datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
                                 required />
 
-                            <x-mary-datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
+                            <x-ui.datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
                                 required
-                                min="{{ ($eventStartDate === $eventEndDate && $eventStartTime) ? $eventStartTime : '' }}" />
+                                min="{{ $eventStartDate === $eventEndDate && $eventStartTime ? $eventStartTime : '' }}" />
 
                             <div x-data="{
                                 preferredVenue: @entangle('preferredVenue').live,
                                 showOtherPreferred: @entangle('preferredVenue').live === 'other',
                                 venues: @js($venues)
                             }">
-                                <x-mary-select label="Preferred Venue" wire:model.live="preferredVenue"
+                                <x-ui.select label="Preferred Venue" wire:model.live="preferredVenue"
                                     :options="[
                                         ...$venues,
                                         ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -174,9 +171,9 @@
                                     placeholder="Select a venue" required />
 
                                 <div x-show="preferredVenue === 'other'" x-collapse x-cloak class="mt-4">
-                                    <x-mary-input label="Please specify preferred venue"
-                                        wire:model.live="preferredVenueOther" placeholder="Enter venue name"
-                                        required maxlength="255" />
+                                    <x-ui.input label="Please specify preferred venue"
+                                        wire:model.live="preferredVenueOther" placeholder="Enter venue name" required
+                                        maxlength="255" />
                                 </div>
                             </div>
 
@@ -185,7 +182,7 @@
                                 showOtherAlternative: @entangle('alternativeVenue').live === 'other',
                                 venues: @js($venues)
                             }">
-                                <x-mary-select label="Alternative Venue" wire:model.live="alternativeVenue"
+                                <x-ui.select label="Alternative Venue" wire:model.live="alternativeVenue"
                                     :options="[
                                         ...$venues,
                                         ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -193,7 +190,7 @@
                                     placeholder="Select backup venue" />
 
                                 <div x-show="alternativeVenue === 'other'" x-collapse x-cloak class="mt-4">
-                                    <x-mary-input label="Please specify alternative venue"
+                                    <x-ui.input label="Please specify alternative venue"
                                         wire:model.live.blur="alternativeVenueOther" placeholder="Enter venue name"
                                         maxlength="255" />
                                 </div>
@@ -201,7 +198,7 @@
                         </div>
 
                         <div class="mt-4">
-                            <x-mary-textarea label="Special Requirements"
+                            <x-ui.textarea label="Special Requirements"
                                 wire:model.live.debounce.300ms="specialRequirements"
                                 placeholder="Audio/visual equipment, seating arrangement, catering, etc."
                                 rows="3" maxlength="2000"
@@ -210,13 +207,13 @@
 
                         <div x-data="{ open: @entangle('is_oc') }">
                             <div class="mt-4">
-                                <x-mary-checkbox label="Check this box if the activity is off-campus"
+                                <x-ui.checkbox label="Check this box if the activity is off-campus"
                                     wire:model.live="is_oc" />
                             </div>
 
                             <div x-show="open" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-mary-textarea label="Accommodation Provider (if any)"
+                                    <x-ui.textarea label="Accommodation Provider (if any)"
                                         wire:model.live.debounce.300ms="oc_accommodation"
                                         placeholder="Accommodation Provider Details" rows="2" maxlength="2000"
                                         x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
@@ -224,7 +221,7 @@
 
                                 <div x-data="{ tsp: @entangle('oc_tsp') }">
                                     <div class="mb-4">
-                                        <x-mary-radio label="Transportation Service Provider" wire:model.live="oc_tsp"
+                                        <x-ui.radio label="Transportation Service Provider" wire:model.live="oc_tsp"
                                             :options="[
                                                 ['id' => 'in-house', 'name' => 'In-house'],
                                                 ['id' => 'outsourced', 'name' => 'Outsourced'],
@@ -233,59 +230,64 @@
 
                                     <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <x-mary-input label="Name of Driver"
+                                            <x-ui.input label="Name of Driver"
                                                 wire:model.live.debounce.300ms="oc_driver_name"
-                                                placeholder="Enter the driver name"
-                                                maxlength="60" />
+                                                placeholder="Enter the driver name" maxlength="60" />
 
-                                            <x-mary-input label="Contact Details"
+                                            <x-ui.input label="Contact Details"
                                                 wire:model.live.debounce.300ms="oc_driver_contact_number"
-                                                placeholder="Enter the driver's contact"
-                                                maxlength="11"
+                                                placeholder="Enter the driver's contact" maxlength="11"
                                                 inputmode="numeric"
                                                 x-on:input="$el.value = $el.value.replace(/[^0-9\s\-\+\(\)]/g, '').slice(0, 11); $wire.set('oc_driver_contact_number', $el.value)" />
 
-                                            <x-mary-input label="Type of Transportation"
+                                            <x-ui.input label="Type of Transportation"
                                                 wire:model.live.debounce.300ms="oc_transportation_type"
-                                                placeholder="Enter the type of transportation"
-                                                maxlength="50" />
+                                                placeholder="Enter the type of transportation" maxlength="50" />
 
-                                            <x-mary-input label="Plate Number"
+                                            <x-ui.input label="Plate Number"
                                                 wire:model.live.debounce.300ms="oc_vehicle_plate_number"
-                                                placeholder="Enter the plate number"
-                                                maxlength="100" />
+                                                placeholder="Enter the plate number" maxlength="100" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
                 @endif
 
                 {{-- Step 4: Budget Information --}}
                 @if ($currentStep === 4)
-                    <x-mary-card title="Budget Information" subtitle="Financial details of your event">
+                    <x-ui.card title="Budget Information" subtitle="Financial details of your event">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-mary-input label="Estimated Total Proposed Budget" type="number" step="0.01"
-                                wire:model.live="totalBudget" placeholder="0.00" prefix="₱" />
+                            {{-- Inline DaisyUI input: x-ui.input has no `prefix` slot, so the ₱ prefix is rendered inline --}}
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Estimated Total Proposed Budget</label>
+                                <label class="input flex items-center gap-2 w-full">
+                                    <span class="opacity-60">₱</span>
+                                    <input type="number" step="0.01" wire:model.live="totalBudget"
+                                        placeholder="0.00" class="grow" />
+                                </label>
+                                @error('totalBudget')
+                                    <x-ui.input-error :messages="$message" class="mt-1" />
+                                @enderror
+                            </div>
 
-                            <x-mary-select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
+                            <x-ui.select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
                                 option-value="source_id" option-label="source_name"
                                 placeholder="Select funding source" required />
                         </div>
 
                         <div class="mt-4">
-                            <x-mary-textarea
-                                :label="(int) $fundingSource === 1 ? 'Budget Proposal Breakdown' : 'Request Details'"
-                                wire:model.live.debounce.300ms="budgetBreakdown"
-                                :placeholder="(int) $fundingSource === 1 ? 'Itemized list of expenses or Program Parapernalias Information (venue, equipment, materials, etc.)' : 'Example: 1. 200 packs of foods'"
-                                rows="4" maxlength="2000"
+                            <x-ui.textarea :label="(int) $fundingSource === 1 ? 'Budget Proposal Breakdown' : 'Request Details'" wire:model.live.debounce.300ms="budgetBreakdown"
+                                :placeholder="(int) $fundingSource === 1
+                                    ? 'Itemized list of expenses or Program Parapernalias Information (venue, equipment, materials, etc.)'
+                                    : 'Example: 1. 200 packs of foods'" rows="4" maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
 
                         <div x-data="{ igp: @entangle('igp_requested') }">
                             <div class="mt-4">
-                                <x-mary-radio label="IGP (Income Generated Project) Request"
+                                <x-ui.radio label="IGP (Income Generated Project) Request"
                                     wire:model.live="igp_requested" :options="[
                                         ['id' => 'true', 'name' => 'Requested'],
                                         ['id' => 'false', 'name' => 'Not Requested'],
@@ -294,7 +296,7 @@
 
                             <div x-show="igp === 'true'" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-mary-textarea label="IGP (Income Generated Project) Brief Description"
+                                    <x-ui.textarea label="IGP (Income Generated Project) Brief Description"
                                         wire:model.live.debounce.300ms="igp_details"
                                         placeholder="List all descriptions for IGP (Income Generated Project) requested items"
                                         rows="4" maxlength="2000"
@@ -302,39 +304,37 @@
                                 </div>
                             </div>
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
                 @endif
 
                 {{-- Step 5: Attachments --}}
                 @if ($currentStep === 5)
                     {{-- File Attachments --}}
-                    <x-mary-card title="Attachments" subtitle="Upload required documents and supporting files">
+                    <x-ui.card title="Attachments" subtitle="Upload required documents and supporting files">
                         <div class="space-y-4">
                             <x-documentary-requirements :event-type-id="$eventType" />
 
                             <div class="space-y-2">
-                                <x-filepond wire-model="uploadedFileIds"
-                                    :max-files="25"
-                                    :max-size-mb="10" />
+                                <x-filepond wire-model="uploadedFileIds" :max-files="25" :max-size-mb="10" />
                             </div>
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
 
                     {{-- Additional Information --}}
-                    <x-mary-card title="Additional Information" subtitle="Any other relevant details">
+                    <x-ui.card title="Additional Information" subtitle="Any other relevant details">
                         <div class="space-y-4">
-                            <x-mary-textarea label="Additional Notes" wire:model.live.debounce.300ms="additionalNotes"
+                            <x-ui.textarea label="Additional Notes" wire:model.live.debounce.300ms="additionalNotes"
                                 placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
                                 rows="3" maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                         </div>
-                    </x-mary-card>
+                    </x-ui.card>
                 @endif
 
                 {{-- Step 6: Review & Submit --}}
                 @if ($currentStep === 6)
                     <div class="overflow-x-hidden">
-                        <x-mary-card title="Review & Submit" subtitle="Please review your information"
+                        <x-ui.card title="Review & Submit" subtitle="Please review your information"
                             class="overflow-hidden">
                             {{-- Show summary of all entered data --}}
                             <div class="overflow-hidden">
@@ -343,21 +343,21 @@
 
                             {{-- Agreement & Submission --}}
                             <div class="mt-6">
-                                <x-mary-card title="Terms and Conditions"
+                                <x-ui.card title="Terms and Conditions"
                                     subtitle="Please review and agree to the terms" class="overflow-hidden">
                                     <x-terms_and_conditions />
 
                                     {{-- Agreement Checkbox with Enhanced Styling --}}
                                     <div class="mt-6 pt-4 border-t-2 border-base-content/10">
-                                        <div class="bg-success/5 border-l-4 border-success p-4 rounded-r-lg">
-                                            <x-mary-checkbox wire:model.live="agreeToTerms" required>
+                                        <div class="bg-success/5 border border-success/30 p-4 rounded-lg">
+                                            <x-ui.checkbox wire:model.live="agreeToTerms" required>
                                                 <x-slot:label>
                                                     <span class="text-sm md:text-base font-semibold text-base-content">
                                                         I have read, understood, and agree to all the terms and
                                                         conditions stated above
                                                     </span>
                                                 </x-slot:label>
-                                            </x-mary-checkbox>
+                                            </x-ui.checkbox>
                                             <p class="text-xs text-base-content/60 mt-2 ml-6">
                                                 By checking this box, you acknowledge your responsibility to comply
                                                 with
@@ -365,46 +365,49 @@
                                             </p>
                                         </div>
                                     </div>
-                                </x-mary-card>
+                                </x-ui.card>
                             </div>
-                        </x-mary-card>
+                        </x-ui.card>
                     </div>
                 @endif
 
                 {{-- Navigation Buttons --}}
                 <div class="flex justify-between items-center pt-6 border-t border-base-300/50 mt-2">
                     @if ($currentStep > 1)
-                        <x-mary-button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                            class="btn-ghost data-loading:opacity-50 data-loading:pointer-events-none"
-                            spinner :disabled="$isProcessing" />
+                        <x-ui.button label="Previous" icon="o-arrow-left" wire:click="previousStep"
+                            class="btn-ghost data-loading:opacity-50 data-loading:pointer-events-none" spinner
+                            :disabled="$isProcessing" />
                     @else
                         <div></div>
                     @endif
                     @if ($currentStep < $totalSteps)
-                        <x-mary-button label="Next" icon="o-arrow-right" wire:click="nextStep"
+                        <x-ui.button label="Next" icon="o-arrow-right" wire:click="nextStep"
                             class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
                             :disabled="$isProcessing" spinner />
                     @else
-                        <x-mary-button label="Submit Ticket" icon="s-paper-airplane" wire:click="save"
+                        <x-ui.button label="Submit Ticket" icon="s-paper-airplane" wire:click="save"
                             class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
                             :disabled="!$agreeToTerms || $isProcessing" spinner />
                     @endif
                 </div>
-                <x-mary-toast />
-            </x-mary-form>
+            </form>
         </div>
     </div>
 
 
     @script
-
         <script>
             // ─── Attachment preview / download ────────────────────────────────────────
-            $wire.on('open-attachment-preview', ({ url }) => {
+            $wire.on('open-attachment-preview', ({
+                url
+            }) => {
                 if (url) window.open(url, '_blank');
             });
 
-            $wire.on('download-attachment', ({ url, filename }) => {
+            $wire.on('download-attachment', ({
+                url,
+                filename
+            }) => {
                 if (!url) return;
                 const link = document.createElement('a');
                 link.href = url;
@@ -418,7 +421,10 @@
             // ─── Step changed: scroll to top & keep progress bar in view ─────────
             $wire.on('step-changed', () => {
                 setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
                     const container = document.getElementById('progress-container');
                     const currentStepElement = document.getElementById(`step-${$wire.currentStep}`);
                     if (container && currentStepElement && window.innerWidth < 768) {
@@ -485,7 +491,10 @@
                     savedAt: data.savedAt
                 }));
 
-                showResumeModal({ draft_id: data.draftId, savedAt: data.savedAt });
+                showResumeModal({
+                    draft_id: data.draftId,
+                    savedAt: data.savedAt
+                });
             });
 
             /**
@@ -505,7 +514,9 @@
                 localStorage.removeItem(DRAFT_PTR_KEY);
                 console.log('[draft] pointer cleared after submission');
 
-                setTimeout(() => { isSubmitting = false; }, 3000);
+                setTimeout(() => {
+                    isSubmitting = false;
+                }, 3000);
             });
 
             // â”€â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -532,7 +543,7 @@
                 if (modalShown) return;
                 modalShown = true;
 
-                const savedDate    = new Date(ptr.savedAt);
+                const savedDate = new Date(ptr.savedAt);
                 const formattedDate = savedDate.toLocaleString();
 
                 // Build modal DOM
@@ -552,7 +563,7 @@
                 text1.textContent = 'You have an unsaved draft from:';
 
                 const dateText = document.createElement('p');
-                dateText.className = 'text-sm text-gray-600 mb-4';
+                dateText.className = 'text-sm opacity-70 mb-4';
                 dateText.textContent = formattedDate;
 
                 const text2 = document.createElement('p');
@@ -573,7 +584,7 @@
 
                 const spinnerText = document.createElement('p');
                 spinnerText.className = 'text-sm font-medium';
-                spinnerText.textContent = 'Loading draftâ€¦';
+                spinnerText.textContent = 'Loading draft...';
 
                 spinnerContent.appendChild(spinner);
                 spinnerContent.appendChild(spinnerText);
@@ -612,7 +623,7 @@
             }
 
             function attachButtonListeners(ptr, retryCount = 0) {
-                const loadBtn    = document.getElementById('loadDraftBtn');
+                const loadBtn = document.getElementById('loadDraftBtn');
                 const discardBtn = document.getElementById('discardDraftBtn');
 
                 if (!loadBtn || !discardBtn) {
@@ -635,7 +646,11 @@
                     }
 
                     // Dispatch DB-backed load â€” passes only the draft_id; PHP fetches the rest.
-                    Livewire.dispatch('load-draft', { data: { draft_id: ptr.draft_id } });
+                    Livewire.dispatch('load-draft', {
+                        data: {
+                            draft_id: ptr.draft_id
+                        }
+                    });
 
                     // Wait for draft-loaded confirmation then close
                     const checkLoaded = setInterval(() => {
@@ -658,7 +673,7 @@
                 });
             }
 
-        
+
             // We defer by one rAF + 50 ms so this fires AFTER livewire:navigated
             // (which Livewire dispatches at the tail of SPA navigation and could
             // otherwise call cleanupExistingModal before the modal is built).
@@ -671,7 +686,10 @@
                 requestAnimationFrame(() => {
                     setTimeout(() => {
                         // Re-check modalShown — draft-found may have already shown it
-                        showResumeModal({ draft_id: $wire.draftId, savedAt: $wire.draftSavedAt });
+                        showResumeModal({
+                            draft_id: $wire.draftId,
+                            savedAt: $wire.draftSavedAt
+                        });
                     }, 80);
                 });
             }
@@ -690,7 +708,7 @@
     {{-- Add auto-save indicator to the form --}}
     <div id="autosave-indicator" class="hidden fixed bottom-4 right-4 bg-base-200 px-4 py-2 rounded-lg shadow-lg">
         <span class="text-sm flex items-center gap-2">
-            <x-mary-icon name="o-clock" class="w-4 h-4" />
+            <x-ui.icon name="o-clock" class="w-4 h-4" />
             Draft saved
         </span>
     </div>

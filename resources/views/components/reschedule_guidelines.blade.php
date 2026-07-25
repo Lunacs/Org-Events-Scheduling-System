@@ -1,10 +1,10 @@
 @props(['guidelines' => null])
 
 @if ($guidelines && $guidelines->is_active)
-    <x-mary-card>
+    <x-ui.card>
         <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
             <div class="flex items-start space-x-3">
-                <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
+                <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">
                     <p class="font-medium mb-2">Important Notice:</p>
                     <div class="prose prose-sm max-w-none text-base-content/80">
@@ -13,12 +13,12 @@
                 </div>
             </div>
         </div>
-    </x-mary-card>
+    </x-ui.card>
 @else
-    <x-mary-card>
+    <x-ui.card>
         <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
             <div class="flex items-start space-x-3">
-                <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
+                <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">
                     <p class="font-medium mb-2">Important Notice:</p>
                     <ul class="list-disc list-inside space-y-1 text-base-content/80">
@@ -33,5 +33,5 @@
                 </div>
             </div>
         </div>
-    </x-mary-card>
+    </x-ui.card>
 @endif

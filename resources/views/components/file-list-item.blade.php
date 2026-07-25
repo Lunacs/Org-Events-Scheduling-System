@@ -25,7 +25,7 @@
     {{-- File info: icon + name/meta --}}
     <div class="flex min-w-0 items-center gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-base-100">
-            <x-mary-icon :name="$iconName" class="h-5 w-5 text-base-content/70" />
+            <x-ui.icon :name="$iconName" class="h-5 w-5 text-base-content/70" />
         </div>
 
         <div class="min-w-0 flex-1">
@@ -56,7 +56,7 @@
                 class="btn btn-primary btn-sm flex-1 sm:flex-none"
                 wire:click.renderless="previewDraftAttachment({{ $index }})"
             >
-                <x-mary-icon name="o-eye" class="h-4 w-4" />
+                <x-ui.icon name="o-eye" class="h-4 w-4" />
                 <span class="sm:inline">Preview</span>
             </button>
             <button
@@ -64,7 +64,7 @@
                 class="btn btn-ghost btn-sm flex-1 sm:flex-none"
                 wire:click.renderless="downloadDraftAttachment({{ $index }})"
             >
-                <x-mary-icon name="o-arrow-down-tray" class="h-4 w-4" />
+                <x-ui.icon name="o-arrow-down-tray" class="h-4 w-4" />
                 <span class="sm:inline">Download</span>
             </button>
         @endif
@@ -75,7 +75,7 @@
             wire:click="removeAttachment({{ $index }})"
             aria-label="Remove {{ $fileName }}"
         >
-            <x-mary-icon name="o-trash" class="h-4 w-4" />
+            <x-ui.icon name="o-trash" class="h-4 w-4" />
         </button>
     </div>
 </div>

@@ -8,12 +8,12 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Venue;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class TicketEditor extends Component
 {

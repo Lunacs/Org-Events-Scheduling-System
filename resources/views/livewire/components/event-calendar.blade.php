@@ -35,14 +35,14 @@
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
                     {{-- Calendar Navigation --}}
                     <div class="flex items-center justify-center sm:justify-start gap-2">
-                        <x-mary-button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
+                        <x-ui.button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
                         <div class="relative">
                             {{-- Clickable title that triggers date picker --}}
                             <h2 class="text-base sm:text-lg font-semibold min-w-40 sm:min-w-[200px] text-center cursor-pointer
                                     hover:text-primary transition-colors duration-200 flex items-center justify-center gap-1 group"
                                 id="calendar-title" wire:ignore @click="$refs.datePicker.showPicker()">
                                 <span>Loading...</span>
-                                <x-mary-icon name="o-calendar"
+                                <x-ui.icon name="o-calendar"
                                     class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </h2>
                             {{-- Hidden date picker input --}}
@@ -51,14 +51,14 @@
                                 @change="if($event.target.value) { calendar.gotoDate(new Date($event.target.value)); updateTitle(); }"
                                 :value="calendar ? calendar.getDate().toISOString().split('T')[0] : ''" />
                         </div>
-                        <x-mary-button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
+                        <x-ui.button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
                     </div>
 
                     {{-- Today Button --}}
                     <div class="flex justify-center sm:justify-start">
-                        <x-mary-button @click="today()" class="btn-outline btn-sm">
+                        <x-ui.button @click="today()" class="btn-outline btn-sm">
                             Today
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
 
@@ -67,7 +67,7 @@
                     {{-- Quick Search --}}
                     <div class="relative order-1 md:order-1" x-data="{ searchQuery: '' }">
                         <div class="relative">
-                            <x-mary-icon name="o-magnifying-glass"
+                            <x-ui.icon name="o-magnifying-glass"
                                 class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" />
                             <input type="text" x-model="searchQuery"
                                 @input.debounce.300ms="$dispatch('calendar-search', { query: searchQuery })"
@@ -76,33 +76,33 @@
                             <button type="button" x-show="searchQuery.length > 0"
                                 @click="searchQuery = ''; $dispatch('calendar-search', { query: '' })"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-base-content">
-                                <x-mary-icon name="o-x-mark" class="w-4 h-4" />
+                                <x-ui.icon name="o-x-mark" class="w-4 h-4" />
                             </button>
                         </div>
                     </div>
 
                     {{-- View Mode Buttons --}}
                     <div class="flex gap-1 order-2 md:order-2 flex-1" id="view-mode-buttons">
-                        <x-mary-button @click="changeView('dayGridMonth')" data-view="dayGridMonth"
+                        <x-ui.button @click="changeView('dayGridMonth')" data-view="dayGridMonth"
                             class="btn-sm view-mode-btn flex-1"
                             x-bind:class="currentView === 'dayGridMonth' ? 'btn-primary' : 'btn-ghost'">
                             Month
-                        </x-mary-button>
-                        <x-mary-button @click="changeView('timeGridWeek')" data-view="timeGridWeek"
+                        </x-ui.button>
+                        <x-ui.button @click="changeView('timeGridWeek')" data-view="timeGridWeek"
                             class="btn-sm view-mode-btn flex-1 "
                             x-bind:class="currentView === 'timeGridWeek' ? 'btn-primary' : 'btn-ghost'">
                             Week
-                        </x-mary-button>
-                        <x-mary-button @click="changeView('timeGridDay')" data-view="timeGridDay"
+                        </x-ui.button>
+                        <x-ui.button @click="changeView('timeGridDay')" data-view="timeGridDay"
                             class="btn-sm view-mode-btn flex-1"
                             x-bind:class="currentView === 'timeGridDay' ? 'btn-primary' : 'btn-ghost'">
                             Day
-                        </x-mary-button>
-                        <x-mary-button @click="changeView('listWeek')" data-view="listWeek"
+                        </x-ui.button>
+                        <x-ui.button @click="changeView('listWeek')" data-view="listWeek"
                             class="btn-sm view-mode-btn flex-1"
                             x-bind:class="currentView === 'listWeek' ? 'btn-primary' : 'btn-ghost'">
                             List
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
 
                     {{-- Toggle Past Events & Filter Button --}}
@@ -127,11 +127,11 @@
                             </div>
 
                             {{-- Filter Button --}}
-                            <x-mary-button icon="o-funnel" class="btn-ghost btn-sm shrink-0"
+                            <x-ui.button icon="o-funnel" class="btn-ghost btn-sm shrink-0"
                                 @click="$dispatch('open-filters')" tooltip="Open Filters">
                                 <span class="hidden sm:inline">Filters</span>
                                 <span class="sm:hidden">Filter</span>
-                            </x-mary-button>
+                            </x-ui.button>
                         </div>
                     </div>
                 </div>
@@ -251,7 +251,7 @@
                                     <h4 class="font-semibold text-sm mb-2">Active Filters</h4>
                                     <div class="flex flex-wrap gap-2">
                                         @foreach ($activeFilters as $filter)
-                                            <x-mary-badge value="{{ $filter }}"
+                                            <x-ui.badge value="{{ $filter }}"
                                                 class="{{ $filter === 'Past Events' ? 'badge-warning' : 'badge-primary' }}" />
                                         @endforeach
                                     </div>
@@ -274,8 +274,8 @@
                 x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
                 class="toast toast-end toast-bottom z-[60]">
                 <div class="alert shadow-lg" :class="toast.type === 'success' ? 'alert-success' : 'alert-info'">
-                    <x-mary-icon x-show="toast.type === 'success'" name="o-check-circle" class="w-5 h-5" />
-                    <x-mary-icon x-show="toast.type !== 'success'" name="o-funnel" class="w-5 h-5" />
+                    <x-ui.icon x-show="toast.type === 'success'" name="o-check-circle" class="w-5 h-5" />
+                    <x-ui.icon x-show="toast.type !== 'success'" name="o-funnel" class="w-5 h-5" />
                     <span x-text="toast.message"></span>
                 </div>
             </div>
@@ -294,13 +294,13 @@
 
         {{-- Upcoming Events This Month --}}
         @island(name: 'upcomingEvents', defer: true)
-        <x-mary-card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
+        <x-ui.card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
             subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
             @if (count($this->upcomingEventsThisMonth) > 0)
                 @php $totalEvents = count($this->upcomingEventsThisMonth); @endphp
                 {{-- Event Count Summary --}}
                 <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-200 dark:border-base-700">
-                    <x-mary-badge value="{{ $totalEvents }} event{{ $totalEvents > 1 ? 's' : '' }}"
+                    <x-ui.badge value="{{ $totalEvents }} event{{ $totalEvents > 1 ? 's' : '' }}"
                         class="badge-primary/90 badge-outline" />
                     <span class="text-xs text-base-content/60">upcoming this month</span>
                 </div>
@@ -448,7 +448,7 @@
                                     class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
                                         group-hover:scale-110 transition-transform duration-300
                                         shadow-sm dark:shadow-md">
-                                    <x-mary-icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
+                                    <x-ui.icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
                                 </div>
                                 {{-- Organization logo thumbnail --}}
                                 <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
@@ -482,24 +482,24 @@
                                 <div
                                     class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-mary-icon name="o-clock" class="w-4 h-4 shrink-0" />
+                                        <x-ui.icon name="o-clock" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['time'] }}</span>
                                     </span>
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-mary-icon name="o-map-pin" class="w-4 h-4 shrink-0" />
+                                        <x-ui.icon name="o-map-pin" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['venue'] }}</span>
                                     </span>
                                     <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-mary-icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                        <x-ui.icon name="o-user-group" class="w-4 h-4 shrink-0" />
                                         <span class="truncate">{{ $event['organization'] }}</span>
                                     </span>
                                 </div>
 
                                 {{-- Tags row --}}
                                 <div class="flex items-center gap-2 mt-3">
-                                    <x-mary-badge value="{{ $event['eventType'] }}"
+                                    <x-ui.badge value="{{ $event['eventType'] }}"
                                         class="{{ $badgeClass }} text-xs font-medium text-neutral-content whitespace-normal h-auto" />
-                                    <x-mary-badge value="{{ $event['date'] }}"
+                                    <x-ui.badge value="{{ $event['date'] }}"
                                         class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
                                 </div>
                             </div>
@@ -513,13 +513,13 @@
                                 class="btn btn-ghost btn-sm gap-2 text-primary hover:bg-primary/10">
                                 <template x-if="!showAll">
                                     <span class="flex items-center gap-1.5">
-                                        <x-mary-icon name="o-chevron-down" class="w-4 h-4" />
+                                        <x-ui.icon name="o-chevron-down" class="w-4 h-4" />
                                         Show {{ $totalEvents - 6 }} more event{{ $totalEvents - 6 > 1 ? 's' : '' }}
                                     </span>
                                 </template>
                                 <template x-if="showAll">
                                     <span class="flex items-center gap-1.5">
-                                        <x-mary-icon name="o-chevron-up" class="w-4 h-4" />
+                                        <x-ui.icon name="o-chevron-up" class="w-4 h-4" />
                                         Show less
                                     </span>
                                 </template>
@@ -533,12 +533,12 @@
                     <div class="relative inline-block mb-6">
                         <div
                             class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
-                            <x-mary-icon name="o-calendar-days"
+                            <x-ui.icon name="o-calendar-days"
                                 class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
                         </div>
                         <div
                             class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <x-mary-icon name="o-sparkles" class="w-4 h-4 text-primary" />
+                            <x-ui.icon name="o-sparkles" class="w-4 h-4 text-primary" />
                         </div>
                     </div>
                     <h3 class="text-lg font-semibold text-base-content mb-2">
@@ -551,9 +551,95 @@
                     </p>
                 </div>
             @endif
-        </x-mary-card>
+
+            {{-- Completed This Month --}}
+            @if (count($this->completedEventsThisMonth) > 0)
+                @php $totalCompleted = count($this->completedEventsThisMonth); @endphp
+                <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-base-200 dark:border-base-700">
+                    <button type="button" @click="showCompleted = !showCompleted"
+                        class="flex w-full items-center justify-between gap-2 text-left group"
+                        :aria-expanded="showCompleted.toString()">
+                        <span class="flex items-center gap-2">
+                            <x-ui.icon name="o-check-circle" class="w-5 h-5 text-base-content/50" />
+                            <span class="font-semibold text-base-content/80">Completed This Month</span>
+                            <x-ui.badge value="{{ $totalCompleted }}" class="badge-neutral badge-sm" />
+                        </span>
+                        <x-ui.icon name="o-chevron-down" x-bind:class="showCompleted ? 'rotate-180' : ''"
+                            class="w-4 h-4 text-base-content/50 transition-transform duration-200" />
+                    </button>
+
+                    <div x-show="showCompleted" x-collapse class="space-y-3 mt-4">
+                        @foreach ($this->completedEventsThisMonth as $index => $event)
+                            <div class="group relative overflow-hidden flex items-start gap-4 p-5 bg-base-200 dark:bg-base-800 rounded-xl border-l-4 border-base-300 dark:border-base-600
+                                    hover:bg-base-300/60 dark:hover:bg-base-700/60
+                                    transition-colors duration-300 ease-out cursor-pointer
+                                    border border-base-300 dark:border-base-600"
+                                wire:key="completed-{{ $index }}"
+                                onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
+                                {{-- Left side: Icon with organization logo overlay --}}
+                                <div class="shrink-0 relative">
+                                    <div
+                                        class="w-14 h-14 bg-base-300 dark:bg-base-700 rounded-xl flex items-center justify-center
+                                            shadow-sm dark:shadow-md">
+                                        <x-ui.icon name="{{ $event['icon'] }}"
+                                            class="w-7 h-7 text-base-content/50" />
+                                    </div>
+                                    <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
+                                        class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full object-cover border-2 border-white dark:border-base-800 shadow-sm"
+                                        onerror="this.style.display='none'" />
+                                </div>
+
+                                {{-- Content area --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                                        <h4 class="font-semibold text-base text-base-content/70 line-clamp-1 flex-1">
+                                            {{ $event['title'] }}
+                                        </h4>
+                                        <span class="badge badge-neutral badge-sm shrink-0 font-semibold">
+                                            Completed
+                                        </span>
+                                    </div>
+
+                                    @if ($event['description'])
+                                        <p
+                                            class="text-sm text-base-content/50 mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
+                                            {{ Str::limit($event['description'], 100) }}
+                                        </p>
+                                    @endif
+
+                                    {{-- Meta info row --}}
+                                    <div
+                                        class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm text-base-content/50">
+                                        <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                            <x-ui.icon name="o-clock" class="w-4 h-4 shrink-0" />
+                                            <span class="truncate">{{ $event['time'] }}</span>
+                                        </span>
+                                        <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                            <x-ui.icon name="o-map-pin" class="w-4 h-4 shrink-0" />
+                                            <span class="truncate">{{ $event['venue'] }}</span>
+                                        </span>
+                                        <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                            <x-ui.icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                            <span class="truncate">{{ $event['organization'] }}</span>
+                                        </span>
+                                    </div>
+
+                                    {{-- Tags row --}}
+                                    <div class="flex items-center gap-2 mt-3">
+                                        <x-ui.badge value="{{ $event['eventType'] }}"
+                                            class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
+                                        <x-ui.badge value="{{ $event['date'] }}"
+                                            class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </x-ui.card>
         @placeholder
-            <x-mary-card class="mt-6 max-sm:p-0!">
+            <x-ui.card class="mt-6 max-sm:p-0!">
                 <div class="space-y-4 animate-pulse">
                     <div class="h-6 bg-base-200 dark:bg-base-700 rounded w-2/3"></div>
                     <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
@@ -568,7 +654,7 @@
                         </div>
                     @endfor
                 </div>
-            </x-mary-card>
+            </x-ui.card>
         @endplaceholder
         @endisland
 
@@ -631,7 +717,7 @@
                                             <div class="bg-base-200 rounded-lg p-3">
                                                 <template x-if="s.start_date === s.end_date || !s.end_date">
                                                     <div class="flex items-center gap-2 text-sm">
-                                                        <x-mary-icon name="o-calendar-days"
+                                                        <x-ui.icon name="o-calendar-days"
                                                             class="w-4 h-4 text-primary" />
                                                         <span x-text="formatDate(s.start_date)"></span>
                                                     </div>
@@ -639,14 +725,14 @@
                                                 <template x-if="s.start_date !== s.end_date && s.end_date">
                                                     <div class="space-y-1">
                                                         <div class="flex items-center gap-2 text-sm">
-                                                            <x-mary-icon name="o-calendar-days"
+                                                            <x-ui.icon name="o-calendar-days"
                                                                 class="w-4 h-4 text-primary" />
                                                             <span
                                                                 class="font-medium text-base-content/70">Start:</span>
                                                             <span x-text="formatDate(s.start_date)"></span>
                                                         </div>
                                                         <div class="flex items-center gap-2 text-sm">
-                                                            <x-mary-icon name="o-calendar-days"
+                                                            <x-ui.icon name="o-calendar-days"
                                                                 class="w-4 h-4 text-primary" />
                                                             <span class="font-medium text-base-content/70">End:</span>
                                                             <span x-text="formatDate(s.end_date)"></span>
@@ -654,7 +740,7 @@
                                                     </div>
                                                 </template>
                                                 <div class="flex items-center gap-2 text-sm mt-1">
-                                                    <x-mary-icon name="o-clock" class="w-4 h-4 text-primary" />
+                                                    <x-ui.icon name="o-clock" class="w-4 h-4 text-primary" />
                                                     <span class="font-medium text-base-content/70">Time:</span>
                                                     <span x-text="timeRange(s.start_time, s.end_time)"></span>
                                                 </div>
@@ -676,7 +762,7 @@
                             {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
                             @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
                                 <template x-if="data?.ticketNumber">
-                                    <x-mary-button label="View Full Info" icon-right="o-arrow-right"
+                                    <x-ui.button label="View Full Info" icon-right="o-arrow-right"
                                         class="btn-sm btn-block btn-outline" link="#"
                                         x-bind:href="'{{ Auth::user()->isGSO() ? url('/gso/tickets') : url('/admin/ticket-review') }}/' +
                                         data.ticketNumber"

@@ -10,14 +10,18 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketForwardedToGsoNotification;
 use App\Notifications\TicketStatusUpdatedNotification;
+use App\Services\Cache\CalendarCacheService;
+use App\Services\Cache\DashboardCacheService;
+use App\Services\Cache\EventCacheService;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class Show extends Component
 {
@@ -116,8 +120,9 @@ class Show extends Component
         ]);
 
         $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $this->warning('Action is already in progress.');
+
             return;
         }
 
@@ -188,9 +193,9 @@ class Show extends Component
                 'type' => 'success',
             ]);
 
-            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
-            \App\Services\Cache\CalendarCacheService::clearAllCalendar();
-            \App\Services\Cache\EventCacheService::clearAllEventRelatedCaches();
+            DashboardCacheService::clearAllDashboards();
+            CalendarCacheService::clearAllCalendar();
+            EventCacheService::clearAllEventRelatedCaches();
 
             $this->success('Ticket has been approved and event has been created successfully.');
             $this->dispatch('ticket-approved');
@@ -200,7 +205,7 @@ class Show extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to approve ticket: ' . $e->getMessage());
+            $this->error('Failed to approve ticket: '.$e->getMessage());
         } finally {
             $lock->release();
         }
@@ -217,8 +222,9 @@ class Show extends Component
         ]);
 
         $lock = Cache::lock("lock:ticket:forward:{$this->ticket->ticket_id}", 10);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $this->warning('Action is already in progress.');
+
             return;
         }
 
@@ -299,8 +305,8 @@ class Show extends Component
                 'type' => 'info',
             ]);
 
-            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
-            \App\Services\Cache\EventCacheService::clearRequestLists();
+            DashboardCacheService::clearAllDashboards();
+            EventCacheService::clearRequestLists();
 
             $this->success('Ticket has been forwarded to GSO for approval.');
             $this->dispatch('ticket-forwarded');
@@ -310,7 +316,7 @@ class Show extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to forward ticket: ' . $e->getMessage());
+            $this->error('Failed to forward ticket: '.$e->getMessage());
         } finally {
             $lock->release();
         }
@@ -327,8 +333,9 @@ class Show extends Component
         ]);
 
         $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $this->warning('Action is already in progress.');
+
             return;
         }
 
@@ -399,9 +406,9 @@ class Show extends Component
                 'type' => 'success',
             ]);
 
-            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
-            \App\Services\Cache\CalendarCacheService::clearAllCalendar();
-            \App\Services\Cache\EventCacheService::clearAllEventRelatedCaches();
+            DashboardCacheService::clearAllDashboards();
+            CalendarCacheService::clearAllCalendar();
+            EventCacheService::clearAllEventRelatedCaches();
 
             $this->success('Ticket has been approved and event has been created successfully.');
             $this->dispatch('ticket-final-approved');
@@ -411,7 +418,7 @@ class Show extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to approve ticket: ' . $e->getMessage());
+            $this->error('Failed to approve ticket: '.$e->getMessage());
         } finally {
             $lock->release();
         }
@@ -428,8 +435,9 @@ class Show extends Component
         ]);
 
         $lock = Cache::lock("lock:ticket:reject:{$this->ticket->ticket_id}", 10);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $this->warning('Action is already in progress.');
+
             return;
         }
 
@@ -480,8 +488,8 @@ class Show extends Component
                 'type' => 'warning',
             ]);
 
-            \App\Services\Cache\DashboardCacheService::clearAllDashboards();
-            \App\Services\Cache\EventCacheService::clearRequestLists();
+            DashboardCacheService::clearAllDashboards();
+            EventCacheService::clearRequestLists();
 
             $this->warning('Ticket has been sent back for revision.');
             $this->dispatch('ticket-for-revision');
@@ -491,7 +499,7 @@ class Show extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to send ticket for revision: ' . $e->getMessage());
+            $this->error('Failed to send ticket for revision: '.$e->getMessage());
         } finally {
             $lock->release();
         }
@@ -541,7 +549,7 @@ class Show extends Component
     {
         $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
 
-        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             $routeName,
             now()->addMinutes(5),
             ['attachment' => $attachmentId]
