@@ -13,10 +13,16 @@
         window.__themeToggleChange = function(input) {
             var dark = input.checked;
             localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
             document.documentElement.classList.toggle('dark', dark);
             document.querySelectorAll('input.theme-controller').forEach(function(el) {
                 if (el !== input) el.checked = dark;
             });
+            window.dispatchEvent(new CustomEvent('theme-changed', {
+                detail: {
+                    dark: dark
+                }
+            }));
         };
         document.addEventListener('livewire:navigated', function() {
             var dark = localStorage.getItem('theme') === 'dark';

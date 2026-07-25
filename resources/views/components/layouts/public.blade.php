@@ -13,6 +13,7 @@
         window.__themeToggleChange = function(input) {
             var dark = input.checked;
             localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
             document.documentElement.classList.toggle('dark', dark);
             document.querySelectorAll('input.theme-controller').forEach(function(el) {
                 if (el !== input) el.checked = dark;
@@ -77,8 +78,10 @@
                         <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle theme">
                             <input id="theme-toggle" type="checkbox" value="emeraldDark"
                                 class="theme-controller opacity-0" onchange="window.__themeToggleChange(this)" />
-                            <x-ui.icon name="o-sun" class="swap-off" />
-                            <x-ui.icon name="o-moon" class="swap-on" />
+                            {{-- moon = shown in light mode → click to go dark --}}
+                            <x-ui.icon name="o-moon" class="swap-off" />
+                            {{-- sun = shown in dark mode → click to go light --}}
+                            <x-ui.icon name="o-sun" class="swap-on" />
                         </label>
 
                         @auth

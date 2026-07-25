@@ -81,10 +81,10 @@ new class extends Component {
                 <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle theme">
                     <input id="theme-toggle" type="checkbox" value="emeraldDark" class="theme-controller opacity-0"
                         onchange="window.__themeToggleChange(this)" />
-                    {{-- sun = light mode icon (shown when unchecked / light) --}}
-                    <x-ui.icon name="o-sun" class="swap-off" />
-                    {{-- moon = dark mode icon (shown when checked / dark) --}}
-                    <x-ui.icon name="o-moon" class="swap-on" />
+                    {{-- moon = shown in light mode → click to go dark --}}
+                    <x-ui.icon name="o-moon" class="swap-off" />
+                    {{-- sun = shown in dark mode → click to go light --}}
+                    <x-ui.icon name="o-sun" class="swap-on" />
                 </label>
 
                 @auth

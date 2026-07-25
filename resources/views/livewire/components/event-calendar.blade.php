@@ -294,296 +294,163 @@
 
         {{-- Upcoming Events This Month --}}
         @island(name: 'upcomingEvents', defer: true)
-        <x-ui.card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
-            subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
-            @if (count($this->upcomingEventsThisMonth) > 0)
-                @php $totalEvents = count($this->upcomingEventsThisMonth); @endphp
-                {{-- Event Count Summary --}}
-                <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-200 dark:border-base-700">
-                    <x-ui.badge value="{{ $totalEvents }} event{{ $totalEvents > 1 ? 's' : '' }}"
-                        class="badge-primary/90 badge-outline" />
-                    <span class="text-xs text-base-content/60">upcoming this month</span>
-                </div>
+            <x-ui.card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
+                subtitle="Detailed list of scheduled events" class="mt-6 max-sm:p-0!">
+                @if (count($this->upcomingEventsThisMonth) > 0)
+                    @php $totalEvents = count($this->upcomingEventsThisMonth); @endphp
+                    {{-- Event Count Summary --}}
+                    <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-200 dark:border-base-700">
+                        <x-ui.badge value="{{ $totalEvents }} event{{ $totalEvents > 1 ? 's' : '' }}"
+                            class="badge-primary/90 badge-outline" />
+                        <span class="text-xs text-base-content/60">upcoming this month</span>
+                    </div>
 
-                <div x-data="{ showAll: {{ $totalEvents <= 6 ? 'true' : 'false' }} }" class="space-y-4">
-                    @foreach ($this->upcomingEventsThisMonth as $index => $event)
-                        @php
-                            $color = $event['color'];
+                    <div x-data="{ showAll: {{ $totalEvents <= 6 ? 'true' : 'false' }} }" class="space-y-4">
+                        @foreach ($this->upcomingEventsThisMonth as $index => $event)
+                            @php
+                                $color = $event['color'];
 
-                            // Calculate days until event for countdown badge
-                            $eventDate = \Carbon\Carbon::parse($event['start_date']);
-                            $today = \Carbon\Carbon::today();
-                            $daysUntil = (int) $today->diffInDays($eventDate, false);
+                                // Calculate days until event for countdown badge
+                                $eventDate = \Carbon\Carbon::parse($event['start_date']);
+                                $today = \Carbon\Carbon::today();
+                                $daysUntil = (int) $today->diffInDays($eventDate, false);
 
-                            // Countdown badge text and style
-                            $countdownText = match (true) {
-                                $daysUntil === 0 => 'Today',
-                                $daysUntil === 1 => 'Tomorrow',
-                                $daysUntil <= 7 => "In {$daysUntil} days",
-                                default => $eventDate->format('M d'),
-                            };
+                                // Countdown badge text and style
+                                $countdownText = match (true) {
+                                    $daysUntil === 0 => 'Today',
+                                    $daysUntil === 1 => 'Tomorrow',
+                                    $daysUntil <= 7 => "In {$daysUntil} days",
+                                    default => $eventDate->format('M d'),
+                                };
 
-                            $countdownClass = match (true) {
-                                $daysUntil === 0 => 'badge-primary text-white dark:text-white/80 animate-pulse',
-                                $daysUntil === 1 => 'badge-warning text-white dark:text-white/80 ',
-                                $daysUntil <= 3 => 'badge-info text-white dark:text-white/80',
-                                default => 'badge-ghost text-white dark:text-white/80',
-                            };
+                                $countdownClass = match (true) {
+                                    $daysUntil === 0 => 'badge-primary text-white dark:text-white/80 animate-pulse',
+                                    $daysUntil === 1 => 'badge-warning text-white dark:text-white/80 ',
+                                    $daysUntil <= 3 => 'badge-info text-white dark:text-white/80',
+                                    default => 'badge-ghost text-white dark:text-white/80',
+                                };
 
-                            // Dark mode compatible background colors
-                            $bgColor = match ($color) {
-                                'blue' => 'bg-blue-50 dark:bg-blue-950/30',
-                                'green' => 'bg-green-50 dark:bg-green-950/30',
-                                'purple' => 'bg-purple-50 dark:bg-purple-950/30',
-                                'yellow' => 'bg-yellow-50 dark:bg-yellow-950/30',
-                                'red' => 'bg-red-50 dark:bg-red-950/30',
-                                'cyan' => 'bg-cyan-50 dark:bg-cyan-950/30',
-                                'lime' => 'bg-lime-50 dark:bg-lime-950/30',
-                                'orange' => 'bg-orange-50 dark:bg-orange-950/30',
-                                default => 'bg-blue-50 dark:bg-blue-950/30',
-                            };
-                            // Dark mode compatible border colors
-                            $borderColor = match ($color) {
-                                'blue' => 'border-blue-400 dark:border-blue-500',
-                                'green' => 'border-green-400 dark:border-green-500',
-                                'purple' => 'border-purple-400 dark:border-purple-500',
-                                'yellow' => 'border-yellow-400 dark:border-yellow-500',
-                                'red' => 'border-red-400 dark:border-red-500',
-                                'cyan' => 'border-cyan-400 dark:border-cyan-500',
-                                'lime' => 'border-lime-400 dark:border-lime-500',
-                                'orange' => 'border-orange-400 dark:border-orange-500',
-                                default => 'border-blue-400 dark:border-blue-500',
-                            };
-                            // Dark mode compatible icon background
-                            $iconBg = match ($color) {
-                                'blue' => 'bg-blue-100 dark:bg-blue-900/50',
-                                'green' => 'bg-green-100 dark:bg-green-900/50',
-                                'purple' => 'bg-purple-100 dark:bg-purple-900/50',
-                                'yellow' => 'bg-yellow-100 dark:bg-yellow-900/50',
-                                'red' => 'bg-red-100 dark:bg-red-900/50',
-                                'cyan' => 'bg-cyan-100 dark:bg-cyan-900/50',
-                                'lime' => 'bg-lime-100 dark:bg-lime-900/50',
-                                'orange' => 'bg-orange-100 dark:bg-orange-900/50',
-                                default => 'bg-blue-100 dark:bg-blue-900/50',
-                            };
-                            // Dark mode compatible icon text
-                            $iconText = match ($color) {
-                                'blue' => 'text-blue-600 dark:text-blue-400',
-                                'green' => 'text-green-600 dark:text-green-400',
-                                'purple' => 'text-purple-600 dark:text-purple-400',
-                                'yellow' => 'text-yellow-600 dark:text-yellow-400',
-                                'red' => 'text-red-600 dark:text-red-400',
-                                'cyan' => 'text-cyan-600 dark:text-cyan-400',
-                                'lime' => 'text-lime-600 dark:text-lime-400',
-                                'orange' => 'text-orange-600 dark:text-orange-400',
-                                default => 'text-blue-600 dark:text-blue-400',
-                            };
-                            // Dark mode compatible title color
-                            $titleColor = match ($color) {
-                                'blue' => 'text-blue-900 dark:text-blue-100',
-                                'green' => 'text-green-900 dark:text-green-100',
-                                'purple' => 'text-purple-900 dark:text-purple-100',
-                                'yellow' => 'text-yellow-900 dark:text-yellow-100',
-                                'red' => 'text-red-900 dark:text-red-100',
-                                'cyan' => 'text-cyan-900 dark:text-cyan-100',
-                                'lime' => 'text-lime-900 dark:text-lime-100',
-                                'orange' => 'text-orange-900 dark:text-orange-100',
-                                default => 'text-blue-900 dark:text-blue-100',
-                            };
-                            // Dark mode compatible text color
-                            $textColor = match ($color) {
-                                'blue' => 'text-blue-700 dark:text-blue-300',
-                                'green' => 'text-green-700 dark:text-green-300',
-                                'purple' => 'text-purple-700 dark:text-purple-300',
-                                'yellow' => 'text-yellow-700 dark:text-yellow-300',
-                                'red' => 'text-red-700 dark:text-red-300',
-                                'cyan' => 'text-cyan-700 dark:text-cyan-300',
-                                'lime' => 'text-lime-700 dark:text-lime-300',
-                                'orange' => 'text-orange-700 dark:text-orange-300',
-                                default => 'text-blue-700 dark:text-blue-300',
-                            };
-                            // Dark mode compatible meta color
-                            $metaColor = match ($color) {
-                                'blue' => 'text-blue-600 dark:text-blue-400',
-                                'green' => 'text-green-600 dark:text-green-400',
-                                'purple' => 'text-purple-600 dark:text-purple-400',
-                                'yellow' => 'text-yellow-600 dark:text-yellow-400',
-                                'red' => 'text-red-600 dark:text-red-400',
-                                'cyan' => 'text-cyan-600 dark:text-cyan-400',
-                                'lime' => 'text-lime-600 dark:text-lime-400',
-                                'orange' => 'text-orange-600 dark:text-orange-400',
-                                default => 'text-blue-600 dark:text-blue-400',
-                            };
-                            $badgeClass = match ($color) {
-                                'blue' => 'badge-info',
-                                'green' => 'badge-success',
-                                'purple' => 'badge-secondary',
-                                'yellow' => 'badge-warning',
-                                'red' => 'badge-error',
-                                'cyan' => 'badge-info',
-                                'lime' => 'badge-success',
-                                'orange' => 'badge-warning',
-                                default => 'badge-info',
-                            };
-                        @endphp
-                        <div x-show="showAll || {{ $index }} < 6"
-                            x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            class="group relative overflow-hidden flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
+                                // Dark mode compatible background colors
+                                $bgColor = match ($color) {
+                                    'blue' => 'bg-blue-50 dark:bg-blue-950/30',
+                                    'green' => 'bg-green-50 dark:bg-green-950/30',
+                                    'purple' => 'bg-purple-50 dark:bg-purple-950/30',
+                                    'yellow' => 'bg-yellow-50 dark:bg-yellow-950/30',
+                                    'red' => 'bg-red-50 dark:bg-red-950/30',
+                                    'cyan' => 'bg-cyan-50 dark:bg-cyan-950/30',
+                                    'lime' => 'bg-lime-50 dark:bg-lime-950/30',
+                                    'orange' => 'bg-orange-50 dark:bg-orange-950/30',
+                                    default => 'bg-blue-50 dark:bg-blue-950/30',
+                                };
+                                // Dark mode compatible border colors
+                                $borderColor = match ($color) {
+                                    'blue' => 'border-blue-400 dark:border-blue-500',
+                                    'green' => 'border-green-400 dark:border-green-500',
+                                    'purple' => 'border-purple-400 dark:border-purple-500',
+                                    'yellow' => 'border-yellow-400 dark:border-yellow-500',
+                                    'red' => 'border-red-400 dark:border-red-500',
+                                    'cyan' => 'border-cyan-400 dark:border-cyan-500',
+                                    'lime' => 'border-lime-400 dark:border-lime-500',
+                                    'orange' => 'border-orange-400 dark:border-orange-500',
+                                    default => 'border-blue-400 dark:border-blue-500',
+                                };
+                                // Dark mode compatible icon background
+                                $iconBg = match ($color) {
+                                    'blue' => 'bg-blue-100 dark:bg-blue-900/50',
+                                    'green' => 'bg-green-100 dark:bg-green-900/50',
+                                    'purple' => 'bg-purple-100 dark:bg-purple-900/50',
+                                    'yellow' => 'bg-yellow-100 dark:bg-yellow-900/50',
+                                    'red' => 'bg-red-100 dark:bg-red-900/50',
+                                    'cyan' => 'bg-cyan-100 dark:bg-cyan-900/50',
+                                    'lime' => 'bg-lime-100 dark:bg-lime-900/50',
+                                    'orange' => 'bg-orange-100 dark:bg-orange-900/50',
+                                    default => 'bg-blue-100 dark:bg-blue-900/50',
+                                };
+                                // Dark mode compatible icon text
+                                $iconText = match ($color) {
+                                    'blue' => 'text-blue-600 dark:text-blue-400',
+                                    'green' => 'text-green-600 dark:text-green-400',
+                                    'purple' => 'text-purple-600 dark:text-purple-400',
+                                    'yellow' => 'text-yellow-600 dark:text-yellow-400',
+                                    'red' => 'text-red-600 dark:text-red-400',
+                                    'cyan' => 'text-cyan-600 dark:text-cyan-400',
+                                    'lime' => 'text-lime-600 dark:text-lime-400',
+                                    'orange' => 'text-orange-600 dark:text-orange-400',
+                                    default => 'text-blue-600 dark:text-blue-400',
+                                };
+                                // Dark mode compatible title color
+                                $titleColor = match ($color) {
+                                    'blue' => 'text-blue-900 dark:text-blue-100',
+                                    'green' => 'text-green-900 dark:text-green-100',
+                                    'purple' => 'text-purple-900 dark:text-purple-100',
+                                    'yellow' => 'text-yellow-900 dark:text-yellow-100',
+                                    'red' => 'text-red-900 dark:text-red-100',
+                                    'cyan' => 'text-cyan-900 dark:text-cyan-100',
+                                    'lime' => 'text-lime-900 dark:text-lime-100',
+                                    'orange' => 'text-orange-900 dark:text-orange-100',
+                                    default => 'text-blue-900 dark:text-blue-100',
+                                };
+                                // Dark mode compatible text color
+                                $textColor = match ($color) {
+                                    'blue' => 'text-blue-700 dark:text-blue-300',
+                                    'green' => 'text-green-700 dark:text-green-300',
+                                    'purple' => 'text-purple-700 dark:text-purple-300',
+                                    'yellow' => 'text-yellow-700 dark:text-yellow-300',
+                                    'red' => 'text-red-700 dark:text-red-300',
+                                    'cyan' => 'text-cyan-700 dark:text-cyan-300',
+                                    'lime' => 'text-lime-700 dark:text-lime-300',
+                                    'orange' => 'text-orange-700 dark:text-orange-300',
+                                    default => 'text-blue-700 dark:text-blue-300',
+                                };
+                                // Dark mode compatible meta color
+                                $metaColor = match ($color) {
+                                    'blue' => 'text-blue-600 dark:text-blue-400',
+                                    'green' => 'text-green-600 dark:text-green-400',
+                                    'purple' => 'text-purple-600 dark:text-purple-400',
+                                    'yellow' => 'text-yellow-600 dark:text-yellow-400',
+                                    'red' => 'text-red-600 dark:text-red-400',
+                                    'cyan' => 'text-cyan-600 dark:text-cyan-400',
+                                    'lime' => 'text-lime-600 dark:text-lime-400',
+                                    'orange' => 'text-orange-600 dark:text-orange-400',
+                                    default => 'text-blue-600 dark:text-blue-400',
+                                };
+                                $badgeClass = match ($color) {
+                                    'blue' => 'badge-info',
+                                    'green' => 'badge-success',
+                                    'purple' => 'badge-secondary',
+                                    'yellow' => 'badge-warning',
+                                    'red' => 'badge-error',
+                                    'cyan' => 'badge-info',
+                                    'lime' => 'badge-success',
+                                    'orange' => 'badge-warning',
+                                    default => 'badge-info',
+                                };
+                            @endphp
+                            <div x-show="showAll || {{ $index }} < 6"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="group relative overflow-hidden flex items-start gap-4 p-5 {{ $bgColor }} rounded-xl border-l-4 {{ $borderColor }}
                                 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20
                                 hover:scale-[1.01] hover:-translate-y-0.5
                                 transition-all duration-300 ease-out cursor-pointer
                                 border border-base-300 dark:border-base-700"
-                            wire:key="upcoming-{{ $index }}"
-                            onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
-                            {{-- Radar ping ripple for Today's events --}}
-                            @if ($daysUntil === 0)
-                                <span
-                                    class="absolute inset-0 rounded-xl border-2 {{ $borderColor }} animate-ping opacity-20 pointer-events-none"></span>
-                            @endif
-                            {{-- Left side: Icon with organization logo overlay --}}
-                            <div class="shrink-0 relative">
-                                <div
-                                    class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
-                                        group-hover:scale-110 transition-transform duration-300
-                                        shadow-sm dark:shadow-md">
-                                    <x-ui.icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
-                                </div>
-                                {{-- Organization logo thumbnail --}}
-                                <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
-                                    class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full object-cover border-2 border-white dark:border-base-800 shadow-sm"
-                                    onerror="this.style.display='none'" />
-                            </div>
-
-                            {{-- Content area --}}
-                            <div class="flex-1 min-w-0">
-                                {{-- Title row with countdown badge --}}
-                                <div class="flex items-start justify-between gap-2 mb-1.5">
-                                    <h4 class="font-semibold text-base {{ $titleColor }} line-clamp-1 flex-1">
-                                        {{ $event['title'] }}
-                                    </h4>
-                                    {{-- Countdown badge --}}
-                                    <span class="badge {{ $countdownClass }} badge-sm shrink-0 font-semibold">
-                                        {{ $countdownText }}
-                                    </span>
-                                </div>
-
-                                @if ($event['description'])
-                                    <div>
-                                        <p
-                                            class="text-sm {{ $textColor }} mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
-                                            {{ Str::limit($event['description'], 100) }}
-                                        </p>
-                                    </div>
-                                @endif
-
-                                {{-- Meta info row --}}
-                                <div
-                                    class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
-                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-ui.icon name="o-clock" class="w-4 h-4 shrink-0" />
-                                        <span class="truncate">{{ $event['time'] }}</span>
-                                    </span>
-                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-ui.icon name="o-map-pin" class="w-4 h-4 shrink-0" />
-                                        <span class="truncate">{{ $event['venue'] }}</span>
-                                    </span>
-                                    <span class="flex items-center gap-1.5 font-medium max-w-full">
-                                        <x-ui.icon name="o-user-group" class="w-4 h-4 shrink-0" />
-                                        <span class="truncate">{{ $event['organization'] }}</span>
-                                    </span>
-                                </div>
-
-                                {{-- Tags row --}}
-                                <div class="flex items-center gap-2 mt-3">
-                                    <x-ui.badge value="{{ $event['eventType'] }}"
-                                        class="{{ $badgeClass }} text-xs font-medium text-neutral-content whitespace-normal h-auto" />
-                                    <x-ui.badge value="{{ $event['date'] }}"
-                                        class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-
-                    {{-- Show More / Show Less Button --}}
-                    @if ($totalEvents > 6)
-                        <div class="flex justify-center pt-2">
-                            <button type="button" @click="showAll = !showAll"
-                                class="btn btn-ghost btn-sm gap-2 text-primary hover:bg-primary/10">
-                                <template x-if="!showAll">
-                                    <span class="flex items-center gap-1.5">
-                                        <x-ui.icon name="o-chevron-down" class="w-4 h-4" />
-                                        Show {{ $totalEvents - 6 }} more event{{ $totalEvents - 6 > 1 ? 's' : '' }}
-                                    </span>
-                                </template>
-                                <template x-if="showAll">
-                                    <span class="flex items-center gap-1.5">
-                                        <x-ui.icon name="o-chevron-up" class="w-4 h-4" />
-                                        Show less
-                                    </span>
-                                </template>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-            @else
-                {{-- Enhanced Empty State --}}
-                <div class="text-center py-16 px-4">
-                    <div class="relative inline-block mb-6">
-                        <div
-                            class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
-                            <x-ui.icon name="o-calendar-days"
-                                class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
-                        </div>
-                        <div
-                            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <x-ui.icon name="o-sparkles" class="w-4 h-4 text-primary" />
-                        </div>
-                    </div>
-                    <h3 class="text-lg font-semibold text-base-content mb-2">
-                        No upcoming events
-                    </h3>
-                    <p class="text-sm text-base-content/60 dark:text-base-content/50 max-w-sm mx-auto mb-6">
-                        There are no upcoming events scheduled for the rest of
-                        {{ ucfirst($currentDate->format('F Y')) }}.
-                        Check other months using the calendar above.
-                    </p>
-                </div>
-            @endif
-
-            {{-- Completed This Month --}}
-            @if (count($this->completedEventsThisMonth) > 0)
-                @php $totalCompleted = count($this->completedEventsThisMonth); @endphp
-                <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-base-200 dark:border-base-700">
-                    <button type="button" @click="showCompleted = !showCompleted"
-                        class="flex w-full items-center justify-between gap-2 text-left group"
-                        :aria-expanded="showCompleted.toString()">
-                        <span class="flex items-center gap-2">
-                            <x-ui.icon name="o-check-circle" class="w-5 h-5 text-base-content/50" />
-                            <span class="font-semibold text-base-content/80">Completed This Month</span>
-                            <x-ui.badge value="{{ $totalCompleted }}" class="badge-neutral badge-sm" />
-                        </span>
-                        <x-ui.icon name="o-chevron-down" x-bind:class="showCompleted ? 'rotate-180' : ''"
-                            class="w-4 h-4 text-base-content/50 transition-transform duration-200" />
-                    </button>
-
-                    <div x-show="showCompleted" x-collapse class="space-y-3 mt-4">
-                        @foreach ($this->completedEventsThisMonth as $index => $event)
-                            <div class="group relative overflow-hidden flex items-start gap-4 p-5 bg-base-200 dark:bg-base-800 rounded-xl border-l-4 border-base-300 dark:border-base-600
-                                    hover:bg-base-300/60 dark:hover:bg-base-700/60
-                                    transition-colors duration-300 ease-out cursor-pointer
-                                    border border-base-300 dark:border-base-600"
-                                wire:key="completed-{{ $index }}"
+                                wire:key="upcoming-{{ $index }}"
                                 onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
+                                {{-- Radar ping ripple for Today's events --}}
+                                @if ($daysUntil === 0)
+                                    <span
+                                        class="absolute inset-0 rounded-xl border-2 {{ $borderColor }} animate-ping opacity-20 pointer-events-none"></span>
+                                @endif
                                 {{-- Left side: Icon with organization logo overlay --}}
                                 <div class="shrink-0 relative">
                                     <div
-                                        class="w-14 h-14 bg-base-300 dark:bg-base-700 rounded-xl flex items-center justify-center
-                                            shadow-sm dark:shadow-md">
-                                        <x-ui.icon name="{{ $event['icon'] }}"
-                                            class="w-7 h-7 text-base-content/50" />
+                                        class="w-14 h-14 {{ $iconBg }} rounded-xl flex items-center justify-center
+                                        group-hover:scale-110 transition-transform duration-300
+                                        shadow-sm dark:shadow-md">
+                                        <x-ui.icon name="{{ $event['icon'] }}" class="w-7 h-7 {{ $iconText }}" />
                                     </div>
+                                    {{-- Organization logo thumbnail --}}
                                     <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
                                         class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full object-cover border-2 border-white dark:border-base-800 shadow-sm"
                                         onerror="this.style.display='none'" />
@@ -591,25 +458,29 @@
 
                                 {{-- Content area --}}
                                 <div class="flex-1 min-w-0">
+                                    {{-- Title row with countdown badge --}}
                                     <div class="flex items-start justify-between gap-2 mb-1.5">
-                                        <h4 class="font-semibold text-base text-base-content/70 line-clamp-1 flex-1">
+                                        <h4 class="font-semibold text-base {{ $titleColor }} line-clamp-1 flex-1">
                                             {{ $event['title'] }}
                                         </h4>
-                                        <span class="badge badge-neutral badge-sm shrink-0 font-semibold">
-                                            Completed
+                                        {{-- Countdown badge --}}
+                                        <span class="badge {{ $countdownClass }} badge-sm shrink-0 font-semibold">
+                                            {{ $countdownText }}
                                         </span>
                                     </div>
 
                                     @if ($event['description'])
-                                        <p
-                                            class="text-sm text-base-content/50 mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
-                                            {{ Str::limit($event['description'], 100) }}
-                                        </p>
+                                        <div>
+                                            <p
+                                                class="text-sm {{ $textColor }} mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
+                                                {{ Str::limit($event['description'], 100) }}
+                                            </p>
+                                        </div>
                                     @endif
 
                                     {{-- Meta info row --}}
                                     <div
-                                        class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm text-base-content/50">
+                                        class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm {{ $metaColor }}">
                                         <span class="flex items-center gap-1.5 font-medium max-w-full">
                                             <x-ui.icon name="o-clock" class="w-4 h-4 shrink-0" />
                                             <span class="truncate">{{ $event['time'] }}</span>
@@ -627,35 +498,164 @@
                                     {{-- Tags row --}}
                                     <div class="flex items-center gap-2 mt-3">
                                         <x-ui.badge value="{{ $event['eventType'] }}"
-                                            class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
+                                            class="{{ $badgeClass }} text-xs font-medium text-neutral-content whitespace-normal h-auto" />
                                         <x-ui.badge value="{{ $event['date'] }}"
                                             class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
                                     </div>
                                 </div>
                             </div>
                         @endforeach
+
+                        {{-- Show More / Show Less Button --}}
+                        @if ($totalEvents > 6)
+                            <div class="flex justify-center pt-2">
+                                <button type="button" @click="showAll = !showAll"
+                                    class="btn btn-ghost btn-sm gap-2 text-primary hover:bg-primary/10">
+                                    <template x-if="!showAll">
+                                        <span class="flex items-center gap-1.5">
+                                            <x-ui.icon name="o-chevron-down" class="w-4 h-4" />
+                                            Show {{ $totalEvents - 6 }} more event{{ $totalEvents - 6 > 1 ? 's' : '' }}
+                                        </span>
+                                    </template>
+                                    <template x-if="showAll">
+                                        <span class="flex items-center gap-1.5">
+                                            <x-ui.icon name="o-chevron-up" class="w-4 h-4" />
+                                            Show less
+                                        </span>
+                                    </template>
+                                </button>
+                            </div>
+                        @endif
                     </div>
-                </div>
-            @endif
-        </x-ui.card>
-        @placeholder
-            <x-ui.card class="mt-6 max-sm:p-0!">
-                <div class="space-y-4 animate-pulse">
-                    <div class="h-6 bg-base-200 dark:bg-base-700 rounded w-2/3"></div>
-                    <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
-                    @for ($i = 0; $i < 3; $i++)
-                        <div class="flex items-start gap-4 p-5 bg-base-200/50 dark:bg-base-700/30 rounded-xl">
-                            <div class="w-14 h-14 bg-base-300 dark:bg-base-600 rounded-xl shrink-0"></div>
-                            <div class="flex-1 space-y-2">
-                                <div class="h-4 bg-base-300 dark:bg-base-600 rounded w-3/4"></div>
-                                <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-1/2"></div>
-                                <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-2/3"></div>
+                @else
+                    {{-- Enhanced Empty State --}}
+                    <div class="text-center py-16 px-4">
+                        <div class="relative inline-block mb-6">
+                            <div
+                                class="w-24 h-24 bg-base-200 dark:bg-base-700 rounded-full flex items-center justify-center">
+                                <x-ui.icon name="o-calendar-days"
+                                    class="w-12 h-12 text-base-content/30 dark:text-base-content/20" />
+                            </div>
+                            <div
+                                class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                <x-ui.icon name="o-sparkles" class="w-4 h-4 text-primary" />
                             </div>
                         </div>
-                    @endfor
-                </div>
+                        <h3 class="text-lg font-semibold text-base-content mb-2">
+                            No upcoming events
+                        </h3>
+                        <p class="text-sm text-base-content/60 dark:text-base-content/50 max-w-sm mx-auto mb-6">
+                            There are no upcoming events scheduled for the rest of
+                            {{ ucfirst($currentDate->format('F Y')) }}.
+                            Check other months using the calendar above.
+                        </p>
+                    </div>
+                @endif
+
+                {{-- Completed This Month --}}
+                @if (count($this->completedEventsThisMonth) > 0)
+                    @php $totalCompleted = count($this->completedEventsThisMonth); @endphp
+                    <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-base-200 dark:border-base-700">
+                        <button type="button" @click="showCompleted = !showCompleted"
+                            class="flex w-full items-center justify-between gap-2 text-left group"
+                            :aria-expanded="showCompleted.toString()">
+                            <span class="flex items-center gap-2">
+                                <x-ui.icon name="o-check-circle" class="w-5 h-5 text-base-content/50" />
+                                <span class="font-semibold text-base-content/80">Completed This Month</span>
+                                <x-ui.badge value="{{ $totalCompleted }}" class="badge-neutral badge-sm" />
+                            </span>
+                            <x-ui.icon name="o-chevron-down" x-bind:class="showCompleted ? 'rotate-180' : ''"
+                                class="w-4 h-4 text-base-content/50 transition-transform duration-200" />
+                        </button>
+
+                        <div x-show="showCompleted" x-collapse class="space-y-3 mt-4">
+                            @foreach ($this->completedEventsThisMonth as $index => $event)
+                                <div class="group relative overflow-hidden flex items-start gap-4 p-5 bg-base-200 dark:bg-base-800 rounded-xl border-l-4 border-base-300 dark:border-base-600
+                                    hover:bg-base-300/60 dark:hover:bg-base-700/60
+                                    transition-colors duration-300 ease-out cursor-pointer
+                                    border border-base-300 dark:border-base-600"
+                                    wire:key="completed-{{ $index }}"
+                                    onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
+                                    {{-- Left side: Icon with organization logo overlay --}}
+                                    <div class="shrink-0 relative">
+                                        <div
+                                            class="w-14 h-14 bg-base-300 dark:bg-base-700 rounded-xl flex items-center justify-center
+                                            shadow-sm dark:shadow-md">
+                                            <x-ui.icon name="{{ $event['icon'] }}"
+                                                class="w-7 h-7 text-base-content/50" />
+                                        </div>
+                                        <img src="{{ $event['organizationLogo'] }}" alt="{{ $event['organization'] }}"
+                                            class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full object-cover border-2 border-white dark:border-base-800 shadow-sm"
+                                            onerror="this.style.display='none'" />
+                                    </div>
+
+                                    {{-- Content area --}}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-2 mb-1.5">
+                                            <h4 class="font-semibold text-base text-base-content/70 line-clamp-1 flex-1">
+                                                {{ $event['title'] }}
+                                            </h4>
+                                            <span class="badge badge-neutral badge-sm shrink-0 font-semibold">
+                                                Completed
+                                            </span>
+                                        </div>
+
+                                        @if ($event['description'])
+                                            <p
+                                                class="text-sm text-base-content/50 mt-1.5 mb-3 line-clamp-2 leading-relaxed text-pretty">
+                                                {{ Str::limit($event['description'], 100) }}
+                                            </p>
+                                        @endif
+
+                                        {{-- Meta info row --}}
+                                        <div
+                                            class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-xs sm:text-sm text-base-content/50">
+                                            <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                                <x-ui.icon name="o-clock" class="w-4 h-4 shrink-0" />
+                                                <span class="truncate">{{ $event['time'] }}</span>
+                                            </span>
+                                            <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                                <x-ui.icon name="o-map-pin" class="w-4 h-4 shrink-0" />
+                                                <span class="truncate">{{ $event['venue'] }}</span>
+                                            </span>
+                                            <span class="flex items-center gap-1.5 font-medium max-w-full">
+                                                <x-ui.icon name="o-user-group" class="w-4 h-4 shrink-0" />
+                                                <span class="truncate">{{ $event['organization'] }}</span>
+                                            </span>
+                                        </div>
+
+                                        {{-- Tags row --}}
+                                        <div class="flex items-center gap-2 mt-3">
+                                            <x-ui.badge value="{{ $event['eventType'] }}"
+                                                class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
+                                            <x-ui.badge value="{{ $event['date'] }}"
+                                                class="badge-ghost text-xs font-medium whitespace-normal h-auto" />
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </x-ui.card>
-        @endplaceholder
+            @placeholder
+                <x-ui.card class="mt-6 max-sm:p-0!">
+                    <div class="space-y-4 animate-pulse">
+                        <div class="h-6 bg-base-200 dark:bg-base-700 rounded w-2/3"></div>
+                        <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
+                        @for ($i = 0; $i < 3; $i++)
+                            <div class="flex items-start gap-4 p-5 bg-base-200/50 dark:bg-base-700/30 rounded-xl">
+                                <div class="w-14 h-14 bg-base-300 dark:bg-base-600 rounded-xl shrink-0"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-4 bg-base-300 dark:bg-base-600 rounded w-3/4"></div>
+                                    <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-1/2"></div>
+                                    <div class="h-3 bg-base-300 dark:bg-base-600 rounded w-2/3"></div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </x-ui.card>
+            @endplaceholder
         @endisland
 
         {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
@@ -1313,6 +1313,14 @@
                                 setTimeout(() => {
                                     handleResize();
                                 }, 100);
+                            });
+
+                            // Re-render FullCalendar when theme changes so dark/light CSS vars are picked up
+                            window.addEventListener('theme-changed', () => {
+                                if (this.calendar) {
+                                    this.calendar.updateSize();
+                                    this.calendar.render();
+                                }
                             });
                         },
                         updateTitle() {

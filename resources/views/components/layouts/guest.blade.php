@@ -13,6 +13,7 @@
         window.__themeToggleChange = function(input) {
             var dark = input.checked;
             localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
             document.documentElement.classList.toggle('dark', dark);
             document.querySelectorAll('input.theme-controller').forEach(function(el) {
                 if (el !== input) el.checked = dark;

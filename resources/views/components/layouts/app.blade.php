@@ -13,11 +13,17 @@
         window.__themeToggleChange = function(input) {
             var dark = input.checked;
             localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
             document.documentElement.classList.toggle('dark', dark);
             // sync any other theme-toggle inputs on the page (e.g. public layout nav)
             document.querySelectorAll('input.theme-controller').forEach(function(el) {
                 if (el !== input) el.checked = dark;
             });
+            window.dispatchEvent(new CustomEvent('theme-changed', {
+                detail: {
+                    dark: dark
+                }
+            }));
         };
         // Restore checked state after Livewire/Alpine re-renders
         document.addEventListener('livewire:navigated', function() {
