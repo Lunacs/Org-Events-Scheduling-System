@@ -30,13 +30,32 @@ class TemporaryUploadController extends Controller
      */
     public function store(Request $request)
     {
+        $file = $request->file('filepond');
+
+        if ($file && ! $file->isValid()) {
+            $uploadError = $file->getError();
+            if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE) {
+                $maxServerSize = ini_get('upload_max_filesize');
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'filepond' => ["The uploaded file exceeds the server limit of {$maxServerSize}."],
+                ]);
+            }
+        }
+
         $request->validate([
             'filepond' => [
                 'required',
                 'file',
                 'max:10240',
                 'mimes:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
+                'extensions:pdf,doc,docx,jpg,jpeg,png,xls,xlsx',
             ],
+        ], [
+            'filepond.required' => 'Please select a valid file to upload.',
+            'filepond.file' => 'The uploaded item must be a valid file.',
+            'filepond.max' => 'The file size must not exceed 10 MB.',
+            'filepond.mimes' => 'The file must be of type: PDF, DOC, DOCX, JPG, PNG, XLS, XLSX.',
+            'filepond.extensions' => 'The file extension must be one of: pdf, doc, docx, jpg, jpeg, png, xls, xlsx.',
         ]);
 
         $file = $request->file('filepond');

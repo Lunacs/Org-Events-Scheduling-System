@@ -78,32 +78,42 @@
                 </div>
 
                 @if ($ticket->oc_tsp === 'outsourced')
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 overflow-hidden">
-                        <div class="min-w-0">
-                            <label class="text-xs font-medium text-base-content/70">Driver
-                                Name</label>
-                            <p class="text-sm text-base-content break-words">
-                                {{ $ticket->oc_driver_name ?? 'N/A' }}
-                            </p>
-                        </div>
-                        <div class="min-w-0">
-                            <label class="text-xs font-medium text-base-content/70">Contact
-                                Number</label>
-                            <p class="text-sm text-base-content break-words">
-                                {{ $ticket->oc_driver_contact_number ?? 'N/A' }}</p>
-                        </div>
-                        <div class="min-w-0">
-                            <label class="text-xs font-medium text-base-content/70">Transportation Type</label>
-                            <p class="text-sm text-base-content break-words">
-                                {{ $ticket->oc_transportation_type ?? 'N/A' }}
-                            </p>
-                        </div>
-                        <div class="min-w-0">
-                            <label class="text-xs font-medium text-base-content/70">Plate
-                                Number</label>
-                            <p class="text-sm text-base-content break-words">
-                                {{ $ticket->oc_vehicle_plate_number ?? 'N/A' }}</p>
-                        </div>
+                    @php
+                        // Prefer the new oc_vehicles array; fall back to legacy flat columns
+                        $vehicles = !empty($ticket->oc_vehicles)
+                            ? (is_string($ticket->oc_vehicles) ? json_decode($ticket->oc_vehicles, true) : $ticket->oc_vehicles)
+                            : [[
+                                'driver_name'        => $ticket->oc_driver_name,
+                                'contact_number'     => $ticket->oc_driver_contact_number,
+                                'transportation_type'=> $ticket->oc_transportation_type,
+                                'plate_number'       => $ticket->oc_vehicle_plate_number,
+                            ]];
+                    @endphp
+
+                    <div class="mt-2 space-y-3">
+                        @foreach ($vehicles as $vi => $v)
+                            <div class="border border-base-300 rounded-lg p-3 bg-base-100/60">
+                                <p class="text-xs font-semibold text-primary mb-2">Vehicle / Driver #{{ $vi + 1 }}</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-hidden">
+                                    <div class="min-w-0">
+                                        <label class="text-xs font-medium text-base-content/70">Driver Name</label>
+                                        <p class="text-sm text-base-content break-words">{{ $v['driver_name'] ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <label class="text-xs font-medium text-base-content/70">Contact Number</label>
+                                        <p class="text-sm text-base-content break-words">{{ $v['contact_number'] ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <label class="text-xs font-medium text-base-content/70">Transportation Type</label>
+                                        <p class="text-sm text-base-content break-words">{{ $v['transportation_type'] ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <label class="text-xs font-medium text-base-content/70">Plate Number</label>
+                                        <p class="text-sm text-base-content break-words">{{ $v['plate_number'] ?? 'N/A' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 @endif
             @endif

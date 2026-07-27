@@ -103,6 +103,7 @@ class MyTicket extends Component
                 'ocTransportationType' => $ticket->oc_transportation_type,
                 'ocVehiclePlateNumber' => $ticket->oc_vehicle_plate_number,
                 'ocDriverContactNumber' => $ticket->oc_driver_contact_number,
+                'oc_vehicles' => $ticket->oc_vehicles ?? [],
                 'totalBudget' => $ticket->estimated_budget,
                 'fundingSource' => $ticket->fund_source_id,
                 'igp_requested' => $ticket->igp_requested ? 'true' : 'false',

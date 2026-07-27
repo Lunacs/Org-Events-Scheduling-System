@@ -47,6 +47,7 @@ class Ticket extends Model
         'oc_transportation_type',
         'oc_vehicle_plate_number',
         'oc_driver_contact_number',
+        'oc_vehicles',
         'date_from',
         'date_to',
         'time_from',
@@ -67,6 +68,7 @@ class Ticket extends Model
     protected $casts = [
         'igp_requested' => 'boolean',
         'estimated_budget' => 'float',
+        'oc_vehicles' => 'array',
     ];
 
     /**

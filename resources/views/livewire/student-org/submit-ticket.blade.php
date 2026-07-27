@@ -100,6 +100,72 @@
                     </div>
 
                     <x-mary-card title="Organization Information" subtitle="Details about your student organization">
+
+                        {{-- Data Privacy Notice --}}
+                        <div class="mb-5 rounded-xl border border-info/30 bg-info/5 overflow-hidden">
+                            {{-- Header bar --}}
+                            <div class="flex items-center gap-3 bg-info/10 px-4 py-3 border-b border-info/20">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-info/20 flex items-center justify-center">
+                                    <x-mary-icon name="o-shield-check" class="w-4 h-4 text-info" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-info leading-tight">Data Privacy Notice</p>
+                                    <p class="text-xs text-info/70 leading-tight">Republic Act No. 10173 — Data Privacy Act of the Philippines</p>
+                                </div>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="px-4 py-4 space-y-3 text-xs text-base-content/80 leading-relaxed">
+                                <p>
+                                    In compliance with <strong class="text-base-content">Republic Act No. 10173</strong>, otherwise known as the
+                                    <strong class="text-base-content">Data Privacy Act of 2012</strong>, and its Implementing Rules and
+                                    Regulations, <strong class="text-base-content">Pamantasan ng Lungsod ng Valenzuela (PLV)</strong> —
+                                    through the Office of Student Affairs (OSA) — collects and processes the personal
+                                    information provided in this form.
+                                </p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="rounded-lg bg-base-100/60 border border-base-300/60 p-3">
+                                        <p class="font-semibold text-base-content mb-1 flex items-center gap-1.5">
+                                            <x-mary-icon name="o-document-text" class="w-3.5 h-3.5 text-info" />
+                                            Data Collected
+                                        </p>
+                                        <ul class="space-y-0.5 text-base-content/70">
+                                            <li>• Name &amp; Position of Proponent</li>
+                                            <li>• Contact Number &amp; Email Address</li>
+                                            <li>• Adviser's Name &amp; Contact Number</li>
+                                            <li>• Student Organization Details</li>
+                                        </ul>
+                                    </div>
+                                    <div class="rounded-lg bg-base-100/60 border border-base-300/60 p-3">
+                                        <p class="font-semibold text-base-content mb-1 flex items-center gap-1.5">
+                                            <x-mary-icon name="o-lock-closed" class="w-3.5 h-3.5 text-info" />
+                                            Purpose of Collection
+                                        </p>
+                                        <ul class="space-y-0.5 text-base-content/70">
+                                            <li>• Processing of event proposals</li>
+                                            <li>• Communication &amp; coordination</li>
+                                            <li>• Approval workflow management</li>
+                                            <li>• Institutional compliance &amp; records</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <p class="text-base-content/60">
+                                    Your personal data will be processed solely for the purposes stated above, retained
+                                    only for the period necessary, and will not be disclosed to unauthorized third parties
+                                    without your consent. As a data subject, you have the right to
+                                    <strong class="text-base-content/80">access, correct, erase, object, and lodge a complaint</strong>
+                                    regarding the processing of your personal information, in accordance with RA 10173.
+                                </p>
+
+                                <p class="text-base-content/50 italic">
+                                    By proceeding with this form, you acknowledge that you have read and understood this
+                                    Data Privacy Notice and consent to the collection and processing of your personal data.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <x-mary-input label="Organization Name" wire:model="organizationName" readonly />
                             <x-mary-input label="Organization Course" wire:model="organizationCourse" readonly />
@@ -117,6 +183,7 @@
                                 x-on:input="$el.value = $el.value.replace(/\D/g, '').slice(0, 11); $wire.set('adviser_contact', $el.value)" />
                         </div>
                     </x-mary-card>
+
                 @endif
 
                 {{-- Step 2: Event Details --}}
@@ -232,30 +299,94 @@
                                     </div>
 
                                     <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <x-mary-input label="Name of Driver"
-                                                wire:model.live.debounce.300ms="oc_driver_name"
-                                                placeholder="Enter the driver name"
-                                                maxlength="60" />
+                                        {{-- Vehicle Cards --}}
+                                        <div class="space-y-4">
+                                            @foreach ($oc_vehicles as $vIdx => $vehicle)
+                                                <div class="border border-base-300 rounded-xl p-4 bg-base-200/40 relative"
+                                                    wire:key="vehicle-card-{{ $vIdx }}">
 
-                                            <x-mary-input label="Contact Details"
-                                                wire:model.live.debounce.300ms="oc_driver_contact_number"
-                                                placeholder="Enter the driver's contact"
-                                                maxlength="11"
-                                                inputmode="numeric"
-                                                x-on:input="$el.value = $el.value.replace(/[^0-9\s\-\+\(\)]/g, '').slice(0, 11); $wire.set('oc_driver_contact_number', $el.value)" />
+                                                    {{-- Card Header --}}
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                                                                <x-mary-icon name="o-truck" class="w-4 h-4 text-primary" />
+                                                            </div>
+                                                            <span class="text-sm font-semibold text-base-content">
+                                                                Vehicle / Driver #{{ $vIdx + 1 }}
+                                                            </span>
+                                                        </div>
 
-                                            <x-mary-input label="Type of Transportation"
-                                                wire:model.live.debounce.300ms="oc_transportation_type"
-                                                placeholder="Enter the type of transportation"
-                                                maxlength="50" />
+                                                        {{-- Remove button — disabled when only 1 card --}}
+                                                        <button
+                                                            type="button"
+                                                            wire:click="removeVehicle({{ $vIdx }})"
+                                                            wire:loading.attr="disabled"
+                                                            @disabled(count($oc_vehicles) <= 1)
+                                                            class="btn btn-xs btn-ghost text-error gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                            title="{{ count($oc_vehicles) <= 1 ? 'At least one vehicle is required' : 'Remove this vehicle' }}"
+                                                        >
+                                                            <x-mary-icon name="o-trash" class="w-3.5 h-3.5" />
+                                                            Remove
+                                                        </button>
+                                                    </div>
 
-                                            <x-mary-input label="Plate Number"
-                                                wire:model.live.debounce.300ms="oc_vehicle_plate_number"
-                                                placeholder="Enter the plate number"
-                                                maxlength="100" />
+                                                    {{-- Fields --}}
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <x-mary-input
+                                                            label="Name of Driver"
+                                                            wire:model.live.debounce.300ms="oc_vehicles.{{ $vIdx }}.driver_name"
+                                                            placeholder="Enter the driver name"
+                                                            maxlength="60"
+                                                            id="oc_driver_name_{{ $vIdx }}" />
+
+                                                        <x-mary-input
+                                                            label="Contact Details"
+                                                            wire:model.live.debounce.300ms="oc_vehicles.{{ $vIdx }}.contact_number"
+                                                            placeholder="Enter the driver's contact"
+                                                            maxlength="11"
+                                                            inputmode="numeric"
+                                                            id="oc_contact_{{ $vIdx }}"
+                                                            x-on:input="$el.value = $el.value.replace(/[^0-9\s\-\+\(\)]/g, '').slice(0, 11); $wire.set('oc_vehicles.{{ $vIdx }}.contact_number', $el.value)" />
+
+                                                        <x-mary-input
+                                                            label="Type of Transportation"
+                                                            wire:model.live.debounce.300ms="oc_vehicles.{{ $vIdx }}.transportation_type"
+                                                            placeholder="Enter the type of transportation"
+                                                            maxlength="50"
+                                                            id="oc_transport_type_{{ $vIdx }}" />
+
+                                                        <x-mary-input
+                                                            label="Plate Number"
+                                                            wire:model.live.debounce.300ms="oc_vehicles.{{ $vIdx }}.plate_number"
+                                                            placeholder="Enter the plate number"
+                                                            maxlength="15"
+                                                            id="oc_plate_{{ $vIdx }}" />
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        {{-- Add Vehicle Button --}}
+                                        <div class="mt-3">
+                                            @if (count($oc_vehicles) < 10)
+                                                <button
+                                                    type="button"
+                                                    wire:click="addVehicle"
+                                                    wire:loading.attr="disabled"
+                                                    class="btn btn-sm btn-outline btn-primary gap-2 w-full sm:w-auto"
+                                                >
+                                                    <x-mary-icon name="o-plus-circle" class="w-4 h-4" />
+                                                    Add Another Vehicle / Driver
+                                                </button>
+                                            @else
+                                                <div class="flex items-center gap-2 text-xs text-base-content/50 bg-base-200 rounded-lg px-3 py-2 w-full sm:w-auto inline-flex">
+                                                    <x-mary-icon name="o-information-circle" class="w-4 h-4 shrink-0" />
+                                                    Maximum of 10 vehicles reached.
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>

@@ -134,33 +134,19 @@ class SubmitTicket extends Component
     #[Validate('in:in-house,outsourced')]
     public $oc_tsp = null;
 
-    #[Validate('required_if:oc_tsp,outsourced')]
-    #[Validate('nullable')]
-    #[Validate('string')]
-    #[Validate('max:255')]
-    #[Validate('min:2')]
-    public $oc_driver_name = '';
-
-    #[Validate('required_if:oc_tsp,outsourced')]
-    #[Validate('nullable')]
-    #[Validate('string')]
-    #[Validate('max:255')]
-    #[Validate('regex:/^[0-9\s\-\+\(\)]+$/')]
-    public $oc_driver_contact_number = '';
-
-    #[Validate('required_if:oc_tsp,outsourced')]
-    #[Validate('nullable')]
-    #[Validate('string')]
-    #[Validate('max:255')]
-    #[Validate('min:2')]
-    public $oc_transportation_type = '';
-
-    #[Validate('required_if:oc_tsp,outsourced')]
-    #[Validate('nullable')]
-    #[Validate('string')]
-    #[Validate('max:255')]
-    #[Validate('regex:/^[A-Z0-9\-\s]+$/i')]
-    public $oc_vehicle_plate_number = '';
+    /**
+     * Array of vehicle entries when oc_tsp === 'outsourced'.
+     * Each entry: { driver_name, contact_number, transportation_type, plate_number }
+     * Minimum 1 entry is enforced via addVehicle / removeVehicle.
+     */
+    public array $oc_vehicles = [
+        [
+            'driver_name'        => '',
+            'contact_number'     => '',
+            'transportation_type'=> '',
+            'plate_number'       => '',
+        ],
+    ];
 
     // Step 4: Budget
     #[Validate('required|numeric|min:0|max:999999999.99')]
@@ -254,6 +240,36 @@ class SubmitTicket extends Component
         }
     }
 
+    /**
+     * Append a new blank vehicle entry to oc_vehicles (max 10).
+     */
+    public function addVehicle(): void
+    {
+        if (count($this->oc_vehicles) >= 10) {
+            return; // enforce maximum of 10
+        }
+
+        $this->oc_vehicles[] = [
+            'driver_name'         => '',
+            'contact_number'      => '',
+            'transportation_type' => '',
+            'plate_number'        => '',
+        ];
+    }
+
+    /**
+     * Remove the vehicle entry at $index, but never drop below 1 card.
+     */
+    public function removeVehicle(int $index): void
+    {
+        if (count($this->oc_vehicles) <= 1) {
+            return; // enforce minimum of 1
+        }
+
+        array_splice($this->oc_vehicles, $index, 1);
+        $this->oc_vehicles = array_values($this->oc_vehicles);
+    }
+
     protected function getCurrentStepRules(): array
     {
         return match ($this->currentStep) {
@@ -305,10 +321,11 @@ class SubmitTicket extends Component
                 'is_oc' => 'required|boolean',
                 'oc_accommodation' => $this->is_oc ? 'nullable|string|max:2000' : 'nullable',
                 'oc_tsp' => $this->is_oc ? 'required|string|in:in-house,outsourced' : 'nullable',
-                'oc_driver_name' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:30|min:2' : 'nullable',
-                'oc_driver_contact_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:11|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
-                'oc_transportation_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:50|min:2' : 'nullable',
-                'oc_vehicle_plate_number' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:10|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
+                'oc_vehicles'                   => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|array|min:1' : 'nullable',
+                'oc_vehicles.*.driver_name'     => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:60|min:2' : 'nullable',
+                'oc_vehicles.*.contact_number'  => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'required|string|max:11|regex:/^[0-9\s\-\+\(\)]+$/' : 'nullable',
+                'oc_vehicles.*.transportation_type' => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:50' : 'nullable',
+                'oc_vehicles.*.plate_number'    => ($this->is_oc && $this->oc_tsp === 'outsourced') ? 'nullable|string|max:15|regex:/^[A-Z0-9\-\s]+$/i' : 'nullable',
             ],
             4 => [
                 'totalBudget' => 'required|numeric|min:0|max:999999999.99',
@@ -426,16 +443,17 @@ class SubmitTicket extends Component
                 'is_oc.required' => 'Please indicate whether this is an off-campus event.',
                 'oc_tsp.required' => 'Please select a transportation service option.',
                 'oc_tsp.in' => 'The selected transportation option is not valid.',
-                'oc_driver_name.required' => "Please enter the driver's full name.",
-                'oc_driver_name.min' => "The driver's name must be at least 2 characters.",
-                'oc_driver_name.max' => "The driver's name may not exceed 30 characters.",
-                'oc_driver_contact_number.required' => "Please enter the driver's contact number.",
-                'oc_driver_contact_number.max' => "The driver's contact number may not exceed 11 digits.",
-                'oc_driver_contact_number.regex' => "The driver's contact number may only contain digits.",
-                'oc_transportation_type.min' => 'The vehicle type must be at least 2 characters.',
-                'oc_transportation_type.max' => 'The vehicle type may not exceed 50 characters.',
-                'oc_vehicle_plate_number.max' => 'The plate number may not exceed 10 characters.',
-                'oc_vehicle_plate_number.regex' => 'The plate number may only contain letters, digits, dashes, and spaces.',
+                'oc_vehicles.required'                      => 'At least one vehicle entry is required.',
+                'oc_vehicles.min'                           => 'At least one vehicle entry is required.',
+                'oc_vehicles.*.driver_name.required'        => "Please enter the driver's full name.",
+                'oc_vehicles.*.driver_name.min'             => "The driver's name must be at least 2 characters.",
+                'oc_vehicles.*.driver_name.max'             => "The driver's name may not exceed 60 characters.",
+                'oc_vehicles.*.contact_number.required'     => "Please enter the driver's contact number.",
+                'oc_vehicles.*.contact_number.max'          => "The driver's contact number may not exceed 11 digits.",
+                'oc_vehicles.*.contact_number.regex'        => "The driver's contact number may only contain digits.",
+                'oc_vehicles.*.transportation_type.max'     => 'The vehicle type may not exceed 50 characters.',
+                'oc_vehicles.*.plate_number.max'            => 'The plate number may not exceed 15 characters.',
+                'oc_vehicles.*.plate_number.regex'          => 'The plate number may only contain letters, digits, dashes, and spaces.',
 
                 // Step 4 — Budget
                 'totalBudget.required' => 'Please enter the estimated total budget.',
@@ -539,10 +557,13 @@ class SubmitTicket extends Component
         $ticket->igp_details = $this->igp_details;
         $ticket->oc_accommodation = $this->oc_accommodation;
         $ticket->oc_tsp = $this->oc_tsp;
-        $ticket->oc_driver_name = $this->oc_driver_name;
-        $ticket->oc_transportation_type = $this->oc_transportation_type;
-        $ticket->oc_vehicle_plate_number = $this->oc_vehicle_plate_number;
-        $ticket->oc_driver_contact_number = $this->oc_driver_contact_number;
+        $ticket->oc_vehicles = $this->oc_vehicles;
+        // Backward-compat: first vehicle's data in legacy columns
+        $first = $this->oc_vehicles[0] ?? [];
+        $ticket->oc_driver_name = $first['driver_name'] ?? null;
+        $ticket->oc_transportation_type = $first['transportation_type'] ?? null;
+        $ticket->oc_vehicle_plate_number = $first['plate_number'] ?? null;
+        $ticket->oc_driver_contact_number = $first['contact_number'] ?? null;
         $ticket->additional_notes = $this->additionalNotes;
 
         // Create temporary attachment objects for preview
@@ -716,10 +737,12 @@ class SubmitTicket extends Component
                 'igp_details' => $nullIfEmpty($this->igp_details),
                 'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
                 'oc_tsp' => $nullIfEmpty($this->oc_tsp),
-                'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
-                'oc_transportation_type' => $nullIfEmpty($this->oc_transportation_type),
-                'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
-                'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
+                'oc_vehicles' => (!empty($this->oc_vehicles) && $this->oc_tsp === 'outsourced') ? $this->oc_vehicles : null,
+                // Backward-compat: mirror first vehicle into legacy flat columns
+                'oc_driver_name' => $nullIfEmpty($this->oc_vehicles[0]['driver_name'] ?? ''),
+                'oc_transportation_type' => $nullIfEmpty($this->oc_vehicles[0]['transportation_type'] ?? ''),
+                'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicles[0]['plate_number'] ?? ''),
+                'oc_driver_contact_number' => $nullIfEmpty($this->oc_vehicles[0]['contact_number'] ?? ''),
                 'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
                 'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
                 'venue_requested' => $this->preferredVenue === 'other' ? null : $nullIfEmptyInt($this->preferredVenue),
@@ -1086,10 +1109,10 @@ class SubmitTicket extends Component
                 && ! empty($this->preferredVenue)
                 && (! $this->is_oc || ! empty($this->oc_tsp))
                 && (! ($this->is_oc && $this->oc_tsp === 'outsourced') || (
-                    ! empty($this->oc_driver_name)
-                    && ! empty($this->oc_driver_contact_number)
-                    && ! empty($this->oc_transportation_type)
-                    && ! empty($this->oc_vehicle_plate_number)
+                    ! empty($this->oc_vehicles)
+                    && collect($this->oc_vehicles)->every(fn ($v) =>
+                        ! empty($v['driver_name']) && ! empty($v['contact_number'])
+                    )
                 )),
             4 => ! empty($this->totalBudget)
                 && ! empty($this->fundingSource)

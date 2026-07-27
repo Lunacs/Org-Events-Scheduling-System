@@ -167,13 +167,13 @@ function registerFilePondComponent() {
                         },
                         onerror: (response) => {
                             try {
-                                const data = JSON.parse(response);
-                                if (data.errors && data.errors.filepond) {
-                                    return data.errors.filepond[0].replace('The filepond ', 'The file ');
+                                const data = typeof response === 'string' ? JSON.parse(response) : response;
+                                if (data && data.errors && data.errors.filepond) {
+                                    return data.errors.filepond[0].replace(/The filepond /g, 'The file ');
                                 }
                                 return data.message || 'Error during upload';
                             } catch (e) {
-                                return 'Error during upload';
+                                return typeof response === 'string' && response.trim() ? response : 'Error during upload';
                             }
                         },
                     },
@@ -193,7 +193,11 @@ function registerFilePondComponent() {
                 },
 
                 labelFileProcessingError: (error) => {
-                    return error.body || error || 'Error during upload';
+                    if (typeof error === 'string') return error;
+                    if (error && typeof error === 'object') {
+                        return error.body || error.message || error.error || 'Error during upload';
+                    }
+                    return 'Error during upload';
                 },
 
                 labelIdle: `<div class="flex flex-col items-center justify-center gap-1 py-4">

@@ -67,6 +67,7 @@ class Show extends Component
             'oc_driver_contact_number',
             'oc_transportation_type',
             'oc_vehicle_plate_number',
+            'oc_vehicles',
             'additional_notes',
             'proponent_contact',
             'adviser_contact',
