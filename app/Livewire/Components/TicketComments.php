@@ -7,10 +7,10 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
 use App\Notifications\TicketCommentNotification;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class TicketComments extends Component
@@ -225,7 +225,7 @@ class TicketComments extends Component
         }
 
         return $this->ticket->officeApprovals
-            ->contains(fn($approval) => (int) $approval->office_id === (int) $gsoOfficeId);
+            ->contains(fn ($approval) => (int) $approval->office_id === (int) $gsoOfficeId);
     }
 
     public function render()

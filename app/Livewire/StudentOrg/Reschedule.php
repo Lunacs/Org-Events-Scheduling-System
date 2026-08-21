@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Mary\Traits\Toast;
 
 class Reschedule extends Component
 {

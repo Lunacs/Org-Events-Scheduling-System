@@ -30,20 +30,20 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <x-mary-card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
+        <x-ui.card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
             <div class="animate-pulse space-y-4">
                 <div class="h-20 bg-base-300 rounded"></div>
                 <div class="h-20 bg-base-300 rounded"></div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
         HTML;
     }
 };
 ?>
 
-<x-mary-card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
+<x-ui.card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
     <x-slot:menu>
-        <x-mary-button label="View Calendar" link="/student-org/calendar" icon="s-calendar"
+        <x-ui.button label="View Calendar" link="/student-org/calendar" icon="s-calendar"
             class="btn-sm btn-ghost" wire:navigate />
     </x-slot:menu>
 
@@ -57,4 +57,4 @@ new class extends Component
                 actionLink="/student-org/calendar" />
         @endforelse
     </div>
-</x-mary-card>
+</x-ui.card>

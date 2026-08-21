@@ -6,20 +6,43 @@ if [ "${APP_ENV:-production}" = "production" ] && [ "${APP_DEBUG:-false}" = "tru
   echo "WARNING: APP_DEBUG=true in production reduces performance and exposes sensitive data."
 fi
 
-# --- write Aiven CA if present ---
-CERT_PATH="/etc/ssl/certs/aiven-ca.pem"
+# --- write DB CA certs if present (Aiven and/or TiDB) ---
 
-# Accept either raw PEM in AIVEN_CA_CERT or base64 in AIVEN_CA_B64
-if [ -n "${AIVEN_CA_CERT:-}" ]; then
-  mkdir -p $(dirname "$CERT_PATH")
-  echo "$AIVEN_CA_CERT" > "$CERT_PATH"
-  chmod 644 "$CERT_PATH"
-  echo "Wrote AIVEN CA to $CERT_PATH"
-elif [ -n "${AIVEN_CA_B64:-}" ]; then
-  mkdir -p $(dirname "$CERT_PATH")
-  echo "$AIVEN_CA_B64" | base64 -d > "$CERT_PATH"
-  chmod 644 "$CERT_PATH"
-  echo "Wrote AIVEN CA (from base64) to $CERT_PATH"
+write_ca_cert () {
+  # $1 = raw PEM env var name, $2 = base64 env var name, $3 = output path, $4 = label
+  local raw_var="$1" b64_var="$2" out_path="$3" label="$4"
+  local raw_val="${!raw_var:-}"
+  local b64_val="${!b64_var:-}"
+
+  if [ -n "$raw_val" ]; then
+    mkdir -p "$(dirname "$out_path")"
+    echo "$raw_val" > "$out_path"
+    chmod 644 "$out_path"
+    echo "Wrote $label CA to $out_path"
+  elif [ -n "$b64_val" ]; then
+    mkdir -p "$(dirname "$out_path")"
+    echo "$b64_val" | base64 -d > "$out_path"
+    chmod 644 "$out_path"
+    echo "Wrote $label CA (from base64) to $out_path"
+  fi
+}
+
+# Aiven (kept for backward compatibility / rollback)
+write_ca_cert "AIVEN_CA_CERT" "AIVEN_CA_B64" "/etc/ssl/certs/aiven-ca.pem" "Aiven"
+
+# TiDB Serverless (requires TLS - see https://docs.pingcap.com/tidbcloud/secure-connections-to-serverless-tier-clusters)
+write_ca_cert "TIDB_CA_CERT" "TIDB_CA_B64" "/etc/ssl/certs/tidb-ca.pem" "TiDB"
+
+# If MYSQL_ATTR_SSL_CA wasn't explicitly set but a TiDB cert was just written, default to it.
+if [ -z "${MYSQL_ATTR_SSL_CA:-}" ] && [ -f "/etc/ssl/certs/tidb-ca.pem" ]; then
+  export MYSQL_ATTR_SSL_CA="/etc/ssl/certs/tidb-ca.pem"
+  echo "MYSQL_ATTR_SSL_CA not set; defaulting to /etc/ssl/certs/tidb-ca.pem"
+fi
+
+# Fall back to the system CA bundle (covers Aiven and most managed MySQL providers)
+if [ -z "${MYSQL_ATTR_SSL_CA:-}" ]; then
+  export MYSQL_ATTR_SSL_CA="/etc/ssl/certs/ca-certificates.crt"
+  echo "MYSQL_ATTR_SSL_CA not set; defaulting to system CA bundle at /etc/ssl/certs/ca-certificates.crt"
 fi
 
 # Check if build files exist

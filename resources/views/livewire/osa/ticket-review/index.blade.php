@@ -37,71 +37,34 @@
         </section>
 
         {{-- Search Filter --}}
-        <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+        <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div class="relative">
-                    <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search tickets..."
-                        class="input input-bordered w-full pr-10" />
-                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        <span wire:loading.remove wire:target="search">
-                            <svg class="w-5 h-5 text-base-content/40" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </span>
-                        <span wire:loading wire:target="search" class="loading loading-spinner loading-sm"></span>
-                    </div>
-                </div>
-                {{-- Status Filter --}}
-                <div class="relative">
-                    <select wire:model.live="statusFilter" class="select select-bordered w-full">
-                        <option value="">Active Tickets</option>
-                        <option value="received">Received</option>
-                        <option value="gso_review">GSO Review</option>
-                        <option value="pending_osa_approval">Pending Final Approval</option>
-                        <option value="amended">Amended</option>
-                        <option value="approved">Approved</option>
-                        <option value="for_revision">For Revision</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">
-                        <span wire:loading wire:target="statusFilter" class="loading loading-spinner loading-sm"></span>
-                    </div>
-                </div>
+                <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                    icon="s-magnifying-glass" wire:loading.class="opacity-70" wire:target="search" />
 
-                {{-- Organization Filter --}}
-                <div class="relative">
-                    <select wire:model.live="organizationFilter" class="select select-bordered w-full">
-                        <option value="">All Organizations</option>
-                        @foreach ($this->organizations as $org)
-                            <option value="{{ $org->org_id }}" {{ $org->deleted_at ? 'class=italic' : '' }}>
-                                {{ $org->org_name }}{{ $org->deleted_at ? ' (Deleted)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute inset-y-0 right-10 flex items-center pointer-events-none">
-                        <span wire:loading wire:target="organizationFilter"
-                            class="loading loading-spinner loading-sm"></span>
-                    </div>
-                </div>
+                <x-ui.select wire:model.live="statusFilter" wire:loading.class="opacity-70"
+                    wire:target="statusFilter" :options="[
+                        ['id' => '', 'name' => 'Active Tickets'],
+                        ['id' => 'received', 'name' => 'Received'],
+                        ['id' => 'gso_review', 'name' => 'GSO Review'],
+                        ['id' => 'pending_osa_approval', 'name' => 'Pending Final Approval'],
+                        ['id' => 'amended', 'name' => 'Amended'],
+                        ['id' => 'approved', 'name' => 'Approved'],
+                        ['id' => 'for_revision', 'name' => 'For Revision'],
+                        ['id' => 'completed', 'name' => 'Completed'],
+                    ]" />
 
-                <div class="flex gap-2">
-                    <button wire:click="clearFilters" type="button" class="btn btn-ghost flex-1"
-                        x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter" x-transition
-                        wire:loading.attr="disabled" wire:target="clearFilters">
-                        <svg wire:loading.remove wire:target="clearFilters" class="w-4 h-4" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12">
-                            </path>
-                        </svg>
-                        <span wire:loading.remove wire:target="clearFilters">Clear Filters</span>
-                        <span wire:loading wire:target="clearFilters" class="loading loading-spinner loading-sm"></span>
-                    </button>
-                </div>
+                <x-ui.select wire:model.live="organizationFilter" wire:loading.class="opacity-70"
+                    wire:target="organizationFilter" placeholder="All Organizations" :options="$this->organizations->map(fn($org) => [
+                        'org_id' => $org->org_id,
+                        'org_name' => $org->org_name . ($org->deleted_at ? ' (Deleted)' : ''),
+                    ])" option-value="org_id" option-label="org_name" />
+
+                <x-ui.button label="Clear Filters" icon="s-x-mark" class="btn-ghost"
+                    x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter" x-transition
+                    wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters" />
             </div>
-        </div>
+        </x-ui.card>
 
         {{-- Tickets Grid --}}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative min-h-[400px]">

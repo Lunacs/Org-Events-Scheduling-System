@@ -37,7 +37,7 @@ new class extends Component
                         str_contains($log->action, 'Rejected'), str_contains($log->action, 'Revision') => 'text-error',
                         str_contains($log->action, 'Forwarded') => 'text-info',
                         str_contains($log->action, 'Submitted') => 'text-primary',
-                        default => 'text-gray-500',
+                        default => 'text-base-content/50',
                     };
 
                     return [
@@ -56,7 +56,7 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6 mt-6">
+        <div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-6 mt-6">
             <div class="animate-pulse space-y-4">
                 <div class="h-5 bg-base-300 rounded w-1/3"></div>
                 <div class="h-4 bg-base-300 rounded w-full"></div>
@@ -69,11 +69,11 @@ new class extends Component
 };
 ?>
 
-<div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6 mt-6">
+<div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-6 mt-6">
     <div class="flex items-center justify-between mb-5">
         <div>
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Latest updates and changes</p>
+            <h3 class="text-lg font-bold text-base-content">Recent Activity</h3>
+            <p class="text-sm text-base-content/60">Latest updates and changes</p>
         </div>
     </div>
     @if (count($this->recentActivity) > 0)
@@ -81,25 +81,25 @@ new class extends Component
             @foreach ($this->recentActivity as $index => $activity)
                 <div class="flex gap-3" wire:key="activity-{{ $activity['id'] }}">
                     <div class="flex flex-col items-center">
-                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                            <x-mary-icon :name="$activity['icon']" class="w-4 h-4 {{ $activity['icon_class'] }}" />
+                        <div class="w-8 h-8 rounded-full bg-base-200 flex items-center justify-center">
+                            <x-ui.icon :name="$activity['icon']" class="w-4 h-4 {{ $activity['icon_class'] }}" />
                         </div>
                         @if (! $loop->last)
-                            <div class="w-px flex-1 bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                            <div class="w-px flex-1 bg-base-300 mt-2"></div>
                         @endif
                     </div>
                     <div class="flex-1 pb-4">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $activity['action'] }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $activity['details'] }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $activity['time_ago'] }}</p>
+                        <p class="text-sm font-medium text-base-content">{{ $activity['action'] }}</p>
+                        <p class="text-xs text-base-content/60">{{ $activity['details'] }}</p>
+                        <p class="text-xs text-base-content/40 mt-1">{{ $activity['time_ago'] }}</p>
                     </div>
                 </div>
             @endforeach
         </div>
     @else
         <div class="text-center py-8">
-            <x-mary-icon name="o-clock" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
-            <p class="text-sm text-gray-500">No recent activity</p>
+            <x-ui.icon name="o-clock" class="w-8 h-8 mx-auto mb-2 text-base-content/30" />
+            <p class="text-sm text-base-content/60">No recent activity</p>
         </div>
     @endif
 </div>

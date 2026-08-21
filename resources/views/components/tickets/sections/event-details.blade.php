@@ -2,7 +2,7 @@
 
 <div class="bg-base-100 rounded-box shadow-lg p-4 md:p-6 overflow-hidden">
     <h2 class="text-lg md:text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-        <x-mary-icon name="o-calendar-days" class="w-5 h-5 flex-shrink-0" />
+        <x-ui.icon name="o-calendar-days" class="w-5 h-5 flex-shrink-0" />
         <span class="break-words">Event Details</span>
     </h2>
     <div class="space-y-4 overflow-hidden">

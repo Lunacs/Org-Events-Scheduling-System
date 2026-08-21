@@ -3,8 +3,11 @@
 .env
 .env.backup
 .env.production
+.env.testing
 .phpactor.json
 .phpunit.result.cache
+.agent
+.agents
 /.fleet
 /.idea
 /.nova
@@ -23,6 +26,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .cursor/
+.kiro
+.claude
 
 *.md
+!README.md
 .mds/

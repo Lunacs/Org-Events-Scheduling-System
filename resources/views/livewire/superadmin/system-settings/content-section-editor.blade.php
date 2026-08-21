@@ -11,13 +11,13 @@
             {{-- Back Button --}}
             <button type="button" wire:click="cancel"
                 class="inline-flex items-center gap-1.5 text-sm text-base-content/60 hover:text-primary transition-colors mb-4 group cursor-pointer relative z-10">
-                <x-mary-icon name="o-arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+                <x-ui.icon name="o-arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
                 Back to Content Sections
             </button>
 
             <div class="flex items-center gap-4 relative z-10">
                 <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                    <x-mary-icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
+                    <x-ui.icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
                         class="w-6 h-6 text-primary" />
                 </span>
                 <div>
@@ -34,13 +34,13 @@
 
     {{-- Main Form Card --}}
     <form wire:submit.prevent="save">
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-6">
                 {{-- Section 1: Content Type --}}
                 <div class="pb-6 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-tag" class="w-4 h-4" />
+                            <x-ui.icon name="o-tag" class="w-4 h-4" />
                             Content Type
                             <span class="text-error">*</span>
                         </span>
@@ -61,7 +61,7 @@
                                     <div
                                         class="w-10 h-10 flex items-center justify-center rounded-lg
                                         {{ $sectionType === $type['id'] ? 'bg-primary-100 dark:bg-primary-800' : 'bg-slate-100 dark:bg-base-300' }}">
-                                        <x-mary-icon
+                                        <x-ui.icon
                                             name="{{ match ($type['id']) {
                                                 'announcement' => 'o-megaphone',
                                                 'terms_conditions' => 'o-document-check',
@@ -89,7 +89,7 @@
                 <div class="pb-6 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-information-circle" class="w-4 h-4" />
+                            <x-ui.icon name="o-information-circle" class="w-4 h-4" />
                             Basic Information
                         </span>
                     </label>
@@ -97,7 +97,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{-- Title --}}
                         <div>
-                            <x-mary-input wire:model.live="title" label="Title"
+                            <x-ui.input wire:model.live="title" label="Title"
                                 placeholder="e.g., Event Submission Guidelines" icon="o-document-text" required />
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
                                 This will be displayed as the heading of the content section.
@@ -106,7 +106,7 @@
 
                         {{-- Section Key --}}
                         <div>
-                            <x-mary-input wire:model.live="sectionKey" label="Section Key"
+                            <x-ui.input wire:model.live="sectionKey" label="Section Key"
                                 placeholder="e.g., event_guidelines" icon="o-key" required :disabled="$isEditing"
                                 readonly />
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -118,7 +118,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         {{-- Display Order --}}
                         <div>
-                            <x-mary-input wire:model="displayOrder" label="Display Order" type="number" min="0"
+                            <x-ui.input wire:model="displayOrder" label="Display Order" type="number" min="0"
                                 icon="o-arrows-up-down" placeholder="0" />
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
                                 Lower numbers appear first when multiple sections of the same type are displayed.
@@ -127,7 +127,7 @@
 
                         {{-- Active Status --}}
                         <div class="flex items-end pb-2">
-                            <x-mary-toggle wire:model="isActive" label="Active"
+                            <x-ui.toggle wire:model="isActive" label="Active"
                                 hint="Active sections are visible in the system. Inactive sections are hidden." />
                         </div>
                     </div>
@@ -138,7 +138,7 @@
                     <div class="pb-6 border-b border-slate-200 dark:border-base-300" x-data="{ roles: $wire.entangle('targetRoles') }">
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
                             <span class="flex items-center gap-2">
-                                <x-mary-icon name="o-user-group" class="w-4 h-4" />
+                                <x-ui.icon name="o-user-group" class="w-4 h-4" />
                                 Target Audience
                             </span>
                         </label>
@@ -152,7 +152,7 @@
                                 <input type="checkbox" id="all-users" class="checkbox checkbox-gray-600 checkbox-sm"
                                     x-bind:checked="roles.length === 0" @click="roles = []" />
                                 <label for="all-users" class="flex items-center gap-2 cursor-pointer">
-                                    <x-mary-icon name="o-globe-alt" class="w-4 h-4 text-base-content" />
+                                    <x-ui.icon name="o-globe-alt" class="w-4 h-4 text-base-content" />
                                     <span class="text-sm font-medium text-slate-700 dark:text-slate-200">All
                                         Users</span>
                                     <span class="text-xs text-slate-500 dark:text-slate-400">(Show to everyone)</span>
@@ -198,7 +198,7 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-pencil" class="w-4 h-4" />
+                            <x-ui.icon name="o-pencil" class="w-4 h-4" />
                             Content
                         </span>
                     </label>
@@ -229,7 +229,7 @@
                         <div class="mt-4">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
                                 <span class="flex items-center gap-2">
-                                    <x-mary-icon name="o-eye" class="w-4 h-4" />
+                                    <x-ui.icon name="o-eye" class="w-4 h-4" />
                                     Live Preview
                                 </span>
                             </label>
@@ -247,22 +247,22 @@
             {{-- Form Actions --}}
             <x-slot:actions>
                 <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <x-mary-button label="Cancel" wire:click="cancel" class="btn-ghost order-2 sm:order-1"
+                    <x-ui.button label="Cancel" wire:click="cancel" class="btn-ghost order-2 sm:order-1"
                         icon="o-x-mark" />
-                    <x-mary-button type="submit"
+                    <x-ui.button type="submit"
                         label="{{ $isEditing ? 'Save Changes' : 'Create Content Section' }}"
                         class="btn-primary order-1 sm:order-2" spinner="save"
                         icon="{{ $isEditing ? 'o-check' : 'o-plus' }}" />
                 </div>
             </x-slot:actions>
-        </x-mary-card>
+        </x-ui.card>
     </form>
 
     {{-- Help Card --}}
-    <x-mary-card shadow class="mt-6 bg-blue-50 dark:bg-blue-900/20 border-none">
+    <x-ui.card shadow class="mt-6 bg-blue-50 dark:bg-blue-900/20 border-none">
         <div class="flex items-start gap-4">
             <div class="w-10 h-10 shrink-0 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-800">
-                <x-mary-icon name="o-light-bulb" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <x-ui.icon name="o-light-bulb" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
                 <h3 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">Tips for Great Content</h3>
@@ -275,5 +275,5 @@
                 </ul>
             </div>
         </div>
-    </x-mary-card>
+    </x-ui.card>
 </div>

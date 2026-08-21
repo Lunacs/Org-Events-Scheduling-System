@@ -41,12 +41,12 @@
 
     {{-- Header --}}
     <div class="mb-8">
-        <div class="bg-base-100 rounded-box shadow-lg p-6">
+        <x-ui.card>
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <a href="{{ $backRoute }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                            <x-ui.icon name="o-arrow-left" class="w-4 h-4" />
                             Back to Tickets
                         </a>
                     </div>
@@ -69,10 +69,7 @@
                         ];
                         $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
                         $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
-                        $ticketTextClass =
-                            $ticketBadgeClass === 'badge-warning'
-                                ? 'text-neutral-900 dark:text-neutral-900'
-                                : 'text-white';
+                        $ticketTextClass = $ticketBadgeClass === 'badge-warning' ? 'text-neutral-900' : 'text-white';
                         $officeStatusLabel = $statusOverview['status_label'] ?? null;
                         $officeBadgeClass = $statusOverview['status_badge'] ?? null;
                         $officeName = $statusOverview['office_name'] ?? null;
@@ -89,19 +86,17 @@
                         @php
                             $resolvedOfficeBadge = $officeBadgeClass ?? 'badge-warning';
                             $resolvedOfficeTextClass =
-                                $resolvedOfficeBadge === 'badge-warning'
-                                    ? 'text-neutral-900 dark:text-neutral-900'
-                                    : 'text-white';
+                                $resolvedOfficeBadge === 'badge-warning' ? 'text-neutral-900' : 'text-white';
                         @endphp
                         <span
-                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }} text-white whitespace-normal h-auto">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }} whitespace-normal h-auto">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
                     @endif
                 </div>
             </div>
             @if ($statusOverview && !empty($statusOverview['status_detail']))
                 <p class="text-sm text-base-content/70 mt-3">{{ $statusOverview['status_detail'] }}</p>
             @endif
-        </div>
+        </x-ui.card>
     </div>
 
     {{-- Main Content --}}
@@ -133,8 +128,7 @@
         {{-- Sidebar --}}
         <div class="space-y-6">
             {{-- Ticket Info --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Ticket Details</h2>
+            <x-ui.card title="Ticket Details">
                 @php $userDeleted = $ticket->user?->trashed(); @endphp
                 <div class="space-y-3">
                     <div>
@@ -168,12 +162,11 @@
                             {{ $ticket->updated_at ? $ticket->updated_at->format('F d, Y g:i A') : 'TBD' }}</p>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
 
             {{-- Event Status --}}
             @if ($ticket->events->isNotEmpty())
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-base-content mb-4">Event Created</h2>
+                <x-ui.card title="Event Created">
                     @php
                         $event = $ticket->events->first();
                         $schedule = $event->eventSchedules->first();
@@ -209,14 +202,12 @@
                     @else
                         <p class="text-sm text-base-content/70">Event created but schedule is pending.</p>
                     @endif
-                </div>
+                </x-ui.card>
             @endif
 
             {{-- Approval History Timeline --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Approval History Timeline</h2>
-                <p class="text-sm text-base-content/70 mb-6">Complete workflow progression from submission to final
-                    decision</p>
+            <x-ui.card title="Approval History Timeline"
+                subtitle="Complete workflow progression from submission to final decision">
 
                 @php
                     // Use approval_history table for timeline (immutable audit trail)
@@ -310,7 +301,7 @@
                                     {{-- Timeline Dot --}}
                                     <div
                                         class="absolute left-2 top-1 w-4 h-4 rounded-full {{ $dotColor }} ring-4 ring-base-100 flex items-center justify-center">
-                                        <x-mary-icon :name="$icon" class="w-2.5 h-2.5 text-white" />
+                                        <x-ui.icon :name="$icon" class="w-2.5 h-2.5 text-white" />
                                     </div>
 
                                     {{-- Content Card --}}
@@ -337,8 +328,14 @@
 
                                         {{-- Workflow Context --}}
                                         @if ($workflowContext)
-                                            <div
-                                                class="mt-3 p-2 bg-base-100 rounded border-l-4 {{ $action === 'approved' ? 'border-success' : ($action === '' ? 'border-warning' : ($action === 'forwarded' ? 'border-info' : 'border-warning')) }}">
+                                            @php
+                                                $contextBorderClass = match ($action) {
+                                                    'approved' => 'border-success',
+                                                    'forwarded' => 'border-info',
+                                                    default => 'border-warning',
+                                                };
+                                            @endphp
+                                            <div class="mt-3 p-2 bg-base-100 border {{ $contextBorderClass }} rounded">
                                                 <p class="text-xs text-base-content/80 leading-relaxed">
                                                     {{ $workflowContext }}
                                                 </p>
@@ -374,16 +371,15 @@
                     </div>
                 @else
                     <div class="text-center py-12">
-                        <x-mary-icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
+                        <x-ui.icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
                         <p class="text-base-content/70 font-medium">No approval actions yet</p>
                         <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting initial review by OSA</p>
                     </div>
                 @endif
-            </div>
+            </x-ui.card>
 
             {{-- Actions --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-6">
-                <h2 class="text-xl font-bold text-base-content mb-4">Actions</h2>
+            <x-ui.card title="Actions">
 
                 @php
                     $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
@@ -484,7 +480,7 @@
                     @else
                         @if ($officeDecisionDetails)
                             <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                                <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                                <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
                                 <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                             </div>
                         @endif
@@ -565,7 +561,7 @@
                 @else
                     @if ($officeDecisionDetails)
                         <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                            <x-mary-icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                            <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
                             <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
                         </div>
                     @else
@@ -597,18 +593,18 @@
 
                         @if ($statusDisplay)
                             <div class="{{ $statusDisplay['wrapper'] }}">
-                                <x-mary-icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
+                                <x-ui.icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
                                 <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
                             </div>
                         @else
                             <div class="alert alert-info">
-                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
+                                <x-ui.icon name="o-information-circle" class="w-5 h-5" />
                                 <span>No actions available for current ticket status.</span>
                             </div>
                         @endif
                     @endif
                 @endif
-            </div>
+            </x-ui.card>
         </div>
     </div>
 
@@ -619,7 +615,7 @@
             <h3 class="text-lg font-bold mb-4">Confirm Ticket Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-circle" class="w-6 h-6" />
+                    <x-ui.icon name="o-check-circle" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">You are about to approve this ticket</h3>
                         <p class="text-sm">This action will create an event and schedule it on the calendar.</p>
@@ -634,8 +630,8 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showApproval=false" />
-                <x-mary-button label="Confirm Approval" class="btn-success text-neutral-content"
+                <x-ui.button label="Cancel" class="btn" @click="showApproval=false" />
+                <x-ui.button label="Confirm Approval" class="btn-success text-neutral-content"
                     wire:click="approveTicket" spinner="approveTicket"
                     x-bind:disabled="approvalRemarks.trim().length < 3"
                     @click="$wire.set('approvalRemarks', approvalRemarks)" />
@@ -650,7 +646,7 @@
             <h3 class="text-lg font-bold mb-4">Request Ticket Revision</h3>
             <div class="space-y-4">
                 <div class="alert alert-warning">
-                    <x-mary-icon name="o-arrow-path" class="w-6 h-6" />
+                    <x-ui.icon name="o-arrow-path" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Request changes to this ticket</h3>
                         <p class="text-sm">The student organization will need to revise and resubmit.</p>
@@ -666,8 +662,8 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showRevision=false" />
-                <x-mary-button label="Request Revision" class="btn-warning text-neutral-content"
+                <x-ui.button label="Cancel" class="btn" @click="showRevision=false" />
+                <x-ui.button label="Request Revision" class="btn-warning text-neutral-content"
                     wire:click="forRevision" spinner="forRevision"
                     x-bind:disabled="revisionRemarks.trim().length < 10"
                     @click="$wire.set('revisionRemarks', revisionRemarks)" />
@@ -683,7 +679,7 @@
             <h3 class="text-lg font-bold mb-4">Forward to GSO</h3>
             <div class="space-y-4">
                 <div class="alert alert-info">
-                    <x-mary-icon name="o-arrow-right" class="w-6 h-6" />
+                    <x-ui.icon name="o-arrow-right" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Forward this ticket to GSO</h3>
                         <p class="text-sm">GSO will review and provide their decision. You'll make the final approval.
@@ -700,8 +696,8 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showForward=false" />
-                <x-mary-button label="Forward to GSO" class="btn-info text-neutral-content" wire:click="forwardToGso"
+                <x-ui.button label="Cancel" class="btn" @click="showForward=false" />
+                <x-ui.button label="Forward to GSO" class="btn-info text-neutral-content" wire:click="forwardToGso"
                     spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
                     @click="$wire.set('forwardRemarks', forwardRemarks)" />
             </div>
@@ -715,7 +711,7 @@
             <h3 class="text-lg font-bold mb-4">Final Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
-                    <x-mary-icon name="o-check-badge" class="w-6 h-6" />
+                    <x-ui.icon name="o-check-badge" class="w-6 h-6" />
                     <div>
                         <h3 class="font-bold">Final approval after GSO review</h3>
                         <p class="text-sm">This will create the event and schedule it on the calendar.</p>
@@ -730,8 +726,8 @@
                 @enderror
             </div>
             <div class="mt-6 flex justify-end gap-2">
-                <x-mary-button label="Cancel" class="btn" @click="showFinalApproval=false" />
-                <x-mary-button label="Confirm Final Approval" class="btn-success text-neutral-content"
+                <x-ui.button label="Cancel" class="btn" @click="showFinalApproval=false" />
+                <x-ui.button label="Confirm Final Approval" class="btn-success text-neutral-content"
                     wire:click="finalApproval" spinner="finalApproval"
                     x-bind:disabled="finalApprovalRemarks.trim().length < 3"
                     @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />

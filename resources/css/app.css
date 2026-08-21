@@ -8,17 +8,17 @@
     prefersdark: false;
     color-scheme: light;
     --color-base-100: oklch(100% 0 0);
-    --color-base-200: oklch(93% 0 0);
-    --color-base-300: oklch(86% 0 0);
-    --color-base-content: oklch(35.519% 0.032 262.988);
-    --color-primary: oklch(76.662% 0.135 153.45);
-    --color-primary-content: oklch(33.387% 0.04 162.24);
-    --color-secondary: oklch(61.302% 0.202 261.294);
-    --color-secondary-content: oklch(100% 0 0);
-    --color-accent: oklch(72.772% 0.149 33.2);
-    --color-accent-content: oklch(0% 0 0);
-    --color-neutral: oklch(35.519% 0.032 262.988);
-    --color-neutral-content: oklch(98.462% 0.001 247.838);
+    --color-base-200: oklch(96% 0.006 258);
+    --color-base-300: oklch(90% 0.01 258);
+    --color-base-content: oklch(24% 0.045 258);
+    --color-primary: oklch(28% 0.075 258);
+    --color-primary-content: oklch(97% 0.01 258);
+    --color-secondary: oklch(28% 0.075 258);
+    --color-secondary-content: oklch(97% 0.01 258);
+    --color-accent: oklch(74% 0.12 220);
+    --color-accent-content: oklch(20% 0.05 220);
+    --color-neutral: oklch(24% 0.045 258);
+    --color-neutral-content: oklch(97% 0.01 258);
     --color-info: oklch(72.06% 0.191 231.6);
     --color-info-content: oklch(0% 0 0);
     --color-success: oklch(64.8% 0.15 160);
@@ -27,6 +27,8 @@
     --color-warning-content: oklch(0% 0 0);
     --color-error: oklch(71.76% 0.221 22.18);
     --color-error-content: oklch(0% 0 0);
+    --color-gold: oklch(80% 0.11 85);
+    --color-gold-content: oklch(22% 0.03 85);
     --radius-selector: 1rem;
     --radius-field: 0.5rem;
     --radius-box: 1rem;
@@ -41,18 +43,18 @@
     name: "emeraldDark";
     prefersdark: true;
     color-scheme: dark;
-    --color-base-100: oklch(22% 0.015 262.988);
-    --color-base-200: oklch(18% 0.015 262.988);
-    --color-base-300: oklch(14% 0.015 262.988);
-    --color-base-content: oklch(90% 0.01 262.988);
-    --color-primary: oklch(76.662% 0.135 153.45);
-    --color-primary-content: oklch(15% 0.02 153.45);
-    --color-secondary: oklch(70% 0.18 261.294);
-    --color-secondary-content: oklch(15% 0.02 261.294);
-    --color-accent: oklch(75% 0.14 33.2);
-    --color-accent-content: oklch(15% 0.02 33.2);
-    --color-neutral: oklch(25% 0.02 262.988);
-    --color-neutral-content: oklch(85% 0.01 262.988);
+    --color-base-100: oklch(20% 0.035 258);
+    --color-base-200: oklch(16% 0.035 258);
+    --color-base-300: oklch(12% 0.035 258);
+    --color-base-content: oklch(92% 0.012 258);
+    --color-primary: oklch(74% 0.12 220);
+    --color-primary-content: oklch(16% 0.035 258);
+    --color-secondary: oklch(74% 0.12 220);
+    --color-secondary-content: oklch(16% 0.035 258);
+    --color-accent: oklch(74% 0.12 220);
+    --color-accent-content: oklch(16% 0.035 258);
+    --color-neutral: oklch(88% 0.012 258);
+    --color-neutral-content: oklch(18% 0.035 258);
     --color-info: oklch(72.06% 0.191 231.6);
     --color-info-content: oklch(15% 0.02 231.6);
     --color-success: oklch(64.8% 0.15 160);
@@ -61,6 +63,8 @@
     --color-warning-content: oklch(15% 0.02 83.87);
     --color-error: oklch(71.76% 0.221 22.18);
     --color-error-content: oklch(15% 0.02 22.18);
+    --color-gold: oklch(80% 0.11 85);
+    --color-gold-content: oklch(18% 0.03 85);
     --radius-selector: 1rem;
     --radius-field: 0.5rem;
     --radius-box: 1rem;
@@ -74,7 +78,6 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source './storage/framework/views/*.php';
 @source './resources/views/**/*.blade.php';
-@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
 
 /* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -95,16 +98,6 @@
         border-color: var(--color-gray-200, currentcolor);
     }
 
-    /* Add these rules inside @layer base to override browser defaults */
-    .mary-select select:focus,
-    .mary-input input:focus,
-    .mary-textarea textarea:focus,
-    [class*="mary-"] :focus {
-        outline: none !important;
-        box-shadow: none !important;
-        border-color: inherit !important;
-    }
-
     /* Alpine.js cloak - hide elements until Alpine is ready */
     [x-cloak] {
         display: none !important;
@@ -112,43 +105,7 @@
 }
 
 @layer utilities {
-    /* maryUI utilities can go here */
-}
-
-/* Keep your existing pagination and menu styles */
-.mary-table-pagination span[aria-current="page"] > span {
-    @apply bg-primary text-base-100;
-}
-
-.mary-table-pagination button {
-    @apply cursor-pointer;
-}
-
-.mary-active-menu,
-.mary-active-menu svg {
-    color: white !important;
-}
-
-/* Add global styles outside of layers for maximum specificity */
-/* Remove focus styles from Mary components */
-.mary-select select:focus-visible,
-.mary-select select:focus,
-.mary-input input:focus-visible,
-.mary-input input:focus,
-.mary-textarea textarea:focus-visible,
-.mary-textarea textarea:focus,
-[class*="mary-"] :focus,
-[class*="mary-"] :focus-visible,
-[class*="mary-"] input:focus,
-[class*="mary-"] input:focus-visible,
-[class*="mary-"] select:focus,
-[class*="mary-"] select:focus-visible,
-[class*="mary-"] textarea:focus,
-[class*="mary-"] textarea:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: transparent !important;
-    ring: none !important;
+    /* Project utility overrides can go here */
 }
 
 /* More specific targeting for input elements */
@@ -173,20 +130,21 @@ textarea:focus-visible {
     ring: none !important;
 }
 
-/* Ensure white text on colored backgrounds */
-.bg-primary,
-[class*="bg-primary"],
-.btn-primary,
+/* Ensure white text on solid navy-backed components (primary/secondary are dark
+   navy in both themes). Opacity-tinted backgrounds (e.g. bg-primary/10 icon chips)
+   are excluded via :not([class*="/"]) — those need the normal token text color,
+   not forced white, since the tint is a light wash, not a solid navy fill. */
+.bg-primary:not([class*="/"]),
 [class*="btn-primary"],
-.bg-secondary,
-[class*="bg-secondary"],
-.btn-secondary,
-[class*="btn-secondary"],
-.bg-accent,
-[class*="bg-accent"],
-.btn-accent,
-[class*="btn-accent"] {
+.bg-secondary:not([class*="/"]),
+[class*="btn-secondary"] {
     color: white !important;
+}
+
+/* Accent is bright cyan — needs dark text for contrast, not white */
+.bg-accent:not([class*="/"]),
+[class*="btn-accent"] {
+    color: var(--color-accent-content) !important;
 }
 
 /* Make toast text white */
@@ -236,7 +194,6 @@ input[type="number"] {
     margin-left: 40px;
 } */
 /* FullCalendar styles moved to resources/css/calendar.css — loaded only on calendar pages */
-
 
 /* ===== Minimalistic Trix Editor Styles ===== */
 trix-toolbar {
@@ -359,4 +316,3 @@ trix-editor.trix-content {
 .prose ul ol ul {
     list-style-type: square !important;
 }
-

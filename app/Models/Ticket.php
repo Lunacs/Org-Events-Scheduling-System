@@ -156,6 +156,20 @@ class Ticket extends Model
     }
 
     /**
+     * Human-readable label for the budget_breakdown field.
+     *
+     * Organisational Funds (source_id = 1) → "Budget Proposal Breakdown"
+     * University / Appropriate Government Funds (source_id = 2) → "Request Details"
+     * Any other / N/A source → "Request Details" (safe default)
+     */
+    public function getBudgetBreakdownLabelAttribute(): string
+    {
+        return (int) $this->fund_source_id === 1
+            ? 'Budget Proposal Breakdown'
+            : 'Request Details';
+    }
+
+    /**
      * Comments for this ticket
      */
     public function comments()

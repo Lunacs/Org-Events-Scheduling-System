@@ -5,7 +5,7 @@ use App\Models\User;
 
 <div wire:poll.60s.visible="loadNotifications">
     <!-- Notifications Dropdown -->
-    <x-mary-dropdown right>
+    <x-ui.dropdown right>
         {{-- Trigger Button --}}
         <x-slot:trigger>
             <div class="btn btn-ghost btn-sm btn-circle relative">
@@ -121,5 +121,5 @@ use App\Models\User;
                 </a>
             </div>
         </div>
-    </x-mary-dropdown>
+    </x-ui.dropdown>
 </div>

@@ -29,21 +29,21 @@
                         <p class="text-sm text-base-content/70 mt-1">Add, update, and manage system users and roles</p>
                     </div>
                     <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-mary-button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
+                        <x-ui.button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
                             Create User
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Search and Filter Section -->
-        <x-mary-card>
+        <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <x-mary-input label="Search Users" wire:model.live.debounce.300ms="search"
+                <x-ui.input label="Search Users" wire:model.live.debounce.300ms="search"
                     placeholder="Search by name or email..." icon="o-magnifying-glass" />
 
-                <x-mary-select label="Filter by Role" wire:model.live="roleFilter" :options="[
+                <x-ui.select label="Filter by Role" wire:model.live="roleFilter" :options="[
                     ['id' => 'all', 'name' => 'All Roles'],
                     ['id' => 'superadmin', 'name' => 'Super Admin'],
                     ['id' => 'osa', 'name' => 'OSA Staff'],
@@ -54,67 +54,72 @@
 
                 <div class="flex items-end">
                     @if ($this->hasActiveFilters())
-                        <x-mary-button icon="o-x-mark" class="btn-outline" wire:click="clearFilters" wire:transition>
+                        <x-ui.button icon="o-x-mark" class="btn-outline" wire:click="clearFilters" wire:transition>
                             Clear Filters
-                        </x-mary-button>
+                        </x-ui.button>
                     @endif
 
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
-        <x-mary-card shadow class="relative">
+        <x-ui.card shadow class="relative">
             <div wire:loading.class="opacity-50 pointer-events-none" class="transition-opacity duration-200">
-                <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" :per-page-values="[10, 25, 50]"
+                <x-ui.table :headers="$headers" :rows="$users" :sortBy="$sortBy" :per-page-values="[10, 25, 50]" :paginate="false"
                     class="rounded-lg">
-                    @scope('cell_role_id', $user)
+                    @foreach ($users as $user)
                         @php
                             $roleString = $user->role?->role_name ?? 'unknown';
                         @endphp
-                        <x-mary-badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
-                            'superadmin' => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
-                            'osa' => 'badge-primary text-base-200 dark:text-white',
-                            'gso' => 'badge-info text-base-200 dark:text-white',
-                            'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
-                            default => 'badge-ghost text-base-200 dark:text-white',
-                        }" />
-                    @endscope
-
-                    @scope('cell_email_verified_at', $user)
-                        @if ($user->email_verified_at)
-                            <x-mary-badge value="Verified" class="badge-success text-base-200 dark:text-white" />
-                        @else
-                            <x-mary-badge value="Unverified" class="badge-warning text-base-200 dark:text-white" />
-                        @endif
-                    @endscope
-
-                    @scope('cell_organization', $user)
-                        @if ($user->studentOrganization)
-                            <span class="text-sm">{{ $user->studentOrganization->org_name }}</span>
-                        @elseif($user->office)
-                            <span class="text-sm">{{ $user->office->office_name }}</span>
-                        @else
-                            <span class="text-sm text-gray-500">N/A</span>
-                        @endif
-                    @endscope
-
-                    @scope('cell_actions', $user)
-                        <div class="flex space-x-1">
-                            <x-mary-button size="xs" icon="o-pencil-square" class="btn-ghost"
-                                @click="openEditUserDrawer({{ $user->user_id }})">
-                                Edit
-                            </x-mary-button>
-                            @if (!$user->isSuperAdmin())
-                                <x-mary-button size="xs" icon="o-trash" class="btn-ghost text-red-600"
-                                    wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
-                                </x-mary-button>
-                            @endif
-                        </div>
-                    @endscope
+                        <tr wire:key="user-{{ $user->user_id }}">
+                            <x-ui.table-column>{{ $user->name }}</x-ui.table-column>
+                            <x-ui.table-column>{{ $user->email }}</x-ui.table-column>
+                            <x-ui.table-column>
+                                <x-ui.badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
+                                    'superadmin'
+                                        => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
+                                    'osa' => 'badge-primary text-base-200 dark:text-white',
+                                    'gso' => 'badge-info text-base-200 dark:text-white',
+                                    'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
+                                    default => 'badge-ghost text-base-200 dark:text-white',
+                                }" />
+                            </x-ui.table-column>
+                            <x-ui.table-column>
+                                @if ($user->email_verified_at)
+                                    <x-ui.badge value="Verified" class="badge-success text-base-200 dark:text-white" />
+                                @else
+                                    <x-ui.badge value="Unverified"
+                                        class="badge-warning text-base-200 dark:text-white" />
+                                @endif
+                            </x-ui.table-column>
+                            <x-ui.table-column>
+                                @if ($user->studentOrganization)
+                                    <span class="text-sm">{{ $user->studentOrganization->org_name }}</span>
+                                @elseif($user->office)
+                                    <span class="text-sm">{{ $user->office->office_name }}</span>
+                                @else
+                                    <span class="text-sm text-gray-500">N/A</span>
+                                @endif
+                            </x-ui.table-column>
+                            <x-ui.table-column class="text-center">
+                                <div class="flex space-x-1">
+                                    <x-ui.button size="xs" icon="o-pencil-square" class="btn-ghost"
+                                        @click="openEditUserDrawer({{ $user->user_id }})">
+                                        Edit
+                                    </x-ui.button>
+                                    @if (!$user->isSuperAdmin())
+                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                            wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
+                                        </x-ui.button>
+                                    @endif
+                                </div>
+                            </x-ui.table-column>
+                        </tr>
+                    @endforeach
 
                     <x-slot:empty>
                         <div class="flex flex-col items-center justify-center py-12 text-center">
-                            <x-mary-icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
+                            <x-ui.icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
                             <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
                             <p class="text-base-content/50 max-w-sm mx-auto mt-2">
                                 @if ($this->hasActiveFilters())
@@ -127,19 +132,19 @@
                                 @endif
                             </p>
                             @if ($this->hasActiveFilters())
-                                <x-mary-button label="Clear all filters" icon="o-x-mark" wire:click="clearFilters"
+                                <x-ui.button label="Clear all filters" icon="o-x-mark" wire:click="clearFilters"
                                     class="btn-ghost btn-sm mt-6 text-accent" wire:transition />
                             @endif
                         </div>
                     </x-slot:empty>
-                </x-mary-table>
+                </x-ui.table>
             </div>
 
             {{-- Custom Pagination --}}
             @if ($users->hasPages())
                 <x-tickets.ticket-pagination :tickets="$users" label="users" />
             @endif
-        </x-mary-card>
+        </x-ui.card>
     </div>
 
     {{-- Create User Drawer --}}
@@ -166,10 +171,10 @@
                 {{-- Form Content --}}
                 <div class="flex-1 overflow-y-auto">
                     <form wire:submit="createUser" class="space-y-4 p-1">
-                        <x-mary-input label="Full Name" wire:model.live.debounce.300ms="createForm.name"
+                        <x-ui.input label="Full Name" wire:model.live.debounce.300ms="createForm.name"
                             placeholder="John Dela Cruz" icon="o-user" required />
 
-                        <x-mary-input label="Email Address" wire:model.live.blur="createForm.email" type="email"
+                        <x-ui.input label="Email Address" wire:model.live.blur="createForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
                         {{-- Password Field with Strength Indicator --}}
@@ -178,28 +183,28 @@
 
                         {{-- In Create User Form - Confirm Password Field --}}
                         <div x-data="{ showConfirmPassword: false }" class="relative">
-                            <x-mary-input label="Confirm Password"
+                            <x-ui.input label="Confirm Password"
                                 wire:model.live.debounce.300ms="createForm.password_confirmation" ::type="showConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm password" icon="o-lock-closed" required />
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                 class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                 tabindex="-1">
-                                <x-mary-icon name="o-eye" class="w-5 h-5" x-show="showConfirmPassword" />
-                                <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirmPassword" />
+                                <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showConfirmPassword" />
+                                <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirmPassword" />
                             </button>
                         </div>
 
-                        <x-mary-select label="Role" wire:model.live="createForm.role" :options="$roles"
+                        <x-ui.select label="Role" wire:model.live="createForm.role" :options="$roles"
                             option-value="role_name" option-label="role_name" placeholder="Select user role"
                             icon="o-shield-check" required />
 
                         @if ($createForm->role === 'student-org')
-                            <x-mary-select label="Organization Name"
+                            <x-ui.select label="Organization Name"
                                 wire:model.live.debounce.300ms="createForm.org_name" :options="$organizations"
                                 option-value="org_id" option-label="org_name" placeholder="Select organization"
                                 required />
 
-                            <x-mary-select label="Org Position" wire:model.live.debounce.300ms="createForm.position"
+                            <x-ui.select label="Org Position" wire:model.live.debounce.300ms="createForm.position"
                                 :options="$positions" option-value="position_id" option-label="position_name"
                                 placeholder="Select organization position" required />
                         @endif
@@ -215,7 +220,7 @@
                             </div>
                         @endif
 
-                        <x-mary-input label="Contact Number" type="text"
+                        <x-ui.input label="Contact Number" type="text"
                             wire:model.live.debounce.700ms="createForm.phone" placeholder="09123456789"
                             icon="o-phone" required />
                     </form>
@@ -223,8 +228,8 @@
 
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
-                    <x-mary-button label="Cancel" @click="closeCreateUserDrawer()" />
-                    <x-mary-button label="Create User" wire:click="createUser" class="btn-primary" :disabled="!$this->isCreateFormValid()"
+                    <x-ui.button label="Cancel" @click="closeCreateUserDrawer()" />
+                    <x-ui.button label="Create User" wire:click="createUser" class="btn-primary" :disabled="!$this->isCreateFormValid()"
                         spinner="createUser" />
                 </div>
             </div>
@@ -255,10 +260,10 @@
                 {{-- Form Content --}}
                 <div class="flex-1 overflow-y-auto">
                     <form wire:submit="updateUser" class="space-y-4">
-                        <x-mary-input label="Full Name" wire:model.live.debounce.300ms="editForm.name"
+                        <x-ui.input label="Full Name" wire:model.live.debounce.300ms="editForm.name"
                             placeholder="John Dela Cruz" icon="o-user" required />
 
-                        <x-mary-input label="Email Address" wire:model.live.blur="editForm.email" type="email"
+                        <x-ui.input label="Email Address" wire:model.live.blur="editForm.email" type="email"
                             placeholder="user@plv.edu.ph" icon="o-envelope" required />
 
                         {{-- Password Field with Strength Indicator --}}
@@ -268,7 +273,7 @@
 
                         {{-- In Edit User Form - Confirm Password Field --}}
                         <div x-data="{ showEditConfirmPassword: false }" class="relative">
-                            <x-mary-input label="Confirm New Password"
+                            <x-ui.input label="Confirm New Password"
                                 wire:model.live.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm new password" icon="o-lock-closed" />
                             <button type="button" @click="showEditConfirmPassword = !showEditConfirmPassword"
@@ -281,20 +286,20 @@
                         </div>
 
                         @if ($editForm->is_superadmin ?? false)
-                            <x-mary-input label="Role" value="Super Admin" readonly icon="o-shield-check"
+                            <x-ui.input label="Role" value="Super Admin" readonly icon="o-shield-check"
                                 hint="Superadmin role cannot be changed" />
                         @else
-                            <x-mary-select label="Role" wire:model.live="editForm.role" :options="$roles"
+                            <x-ui.select label="Role" wire:model.live="editForm.role" :options="$roles"
                                 option-value="role_name" option-label="role_name" placeholder="Select user role"
                                 icon="o-shield-check" required />
 
                             @if ($editForm->role === 'student-org')
-                                <x-mary-select label="Organization Name"
+                                <x-ui.select label="Organization Name"
                                     wire:model.live.debounce.300ms="editForm.org_name" :options="$organizations"
                                     option-value="org_id" option-label="org_name" placeholder="Select organization"
                                     required />
 
-                                <x-mary-select label="Org Position" wire:model.live.debounce.300ms="editForm.position"
+                                <x-ui.select label="Org Position" wire:model.live.debounce.300ms="editForm.position"
                                     :options="$positions" option-value="position_id" option-label="position_name"
                                     placeholder="Select organization position" required />
                             @endif
@@ -311,15 +316,15 @@
                             @endif
                         @endif
 
-                        <x-mary-input label="Contact Number" type="text" wire:model.live.blur="editForm.phone"
+                        <x-ui.input label="Contact Number" type="text" wire:model.live.blur="editForm.phone"
                             placeholder="09123456789" icon="o-phone" required />
                     </form>
                 </div>
 
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-base-300">
-                    <x-mary-button label="Cancel" @click="closeEditUserDrawer()" />
-                    <x-mary-button label="Update User" wire:click="updateUser" class="btn-primary" :disabled="!$this->isEditFormValid()"
+                    <x-ui.button label="Cancel" @click="closeEditUserDrawer()" />
+                    <x-ui.button label="Update User" wire:click="updateUser" class="btn-primary" :disabled="!$this->isEditFormValid()"
                         spinner="updateUser" />
                 </div>
             </div>
@@ -328,7 +333,7 @@
 
     {{-- Delete Confirmation Modal --}}
     @if ($deletingUserName)
-        <x-mary-modal wire:model="showDeleteModal" title="Delete User Confirmation"
+        <x-ui.modal-dialog wire:model="showDeleteModal" title="Delete User Confirmation"
             subtitle="This action cannot be undone">
             <div class="space-y-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -358,10 +363,10 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" wire:click="closeDeleteModal()" />
-                <x-mary-button label="Delete User" wire:click="confirmDelete" class="btn-error"
+                <x-ui.button label="Cancel" wire:click="closeDeleteModal()" />
+                <x-ui.button label="Delete User" wire:click="confirmDelete" class="btn-error"
                     spinner="confirmDelete" />
             </x-slot:actions>
-        </x-mary-modal>
+        </x-ui.modal-dialog>
     @endif
 </div>

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class ReportCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache tags for reports
      */
@@ -23,7 +25,13 @@ class ReportCacheService
     {
         $cacheKey = "reports:{$reportType}:{$dateFrom}:{$dateTo}:{$organizationFilter}";
 
-        return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        }
+
+        self::trackKey('reports:known_keys', $cacheKey);
+
+        return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
     /**
@@ -33,7 +41,13 @@ class ReportCacheService
     {
         $cacheKey = "reports:chart:{$chartType}";
 
-        return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        }
+
+        self::trackKey('reports:known_keys', $cacheKey);
+
+        return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
     /**
@@ -42,6 +56,10 @@ class ReportCacheService
      */
     public static function clearAllReports(): void
     {
-        Cache::tags(self::$tags)->flush();
+        if (self::supportsTags()) {
+            Cache::tags(self::$tags)->flush();
+        } else {
+            self::clearTrackedKeys('reports:known_keys');
+        }
     }
 }

@@ -8,7 +8,7 @@
     </div>
 
     {{-- Table Header --}}
-    <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+    <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden">
         <div class="h-14 bg-base-200 border-b border-base-300"></div>
 
         {{-- Table Rows --}}

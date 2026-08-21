@@ -5,14 +5,15 @@ namespace App\Livewire\Superadmin\SystemSettings;
 use App\Models\ContentSection;
 use App\Models\User;
 use App\Notifications\AnnouncementNotification;
+use App\Notifications\SystemSettingsUpdatedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class ContentSectionEditor extends Component
 {
@@ -20,12 +21,19 @@ class ContentSectionEditor extends Component
 
     // Form data
     public $sectionId = null;
+
     public $sectionKey = '';
+
     public $title = '';
+
     public $sectionType = '';
+
     public $content = '';
+
     public $isActive = true;
+
     public $displayOrder = 0;
+
     public $targetRoles = []; // Array of role names for targeted announcements
 
     // Track if user manually edited the section key
@@ -36,7 +44,6 @@ class ContentSectionEditor extends Component
 
     #[Title('Content Section Editor')]
     #[Layout('components.layouts.superadmin')]
-
     public function mount($id = null)
     {
         if ($id) {
@@ -65,7 +72,7 @@ class ContentSectionEditor extends Component
     // Auto-generate section key from title (only if not manually edited)
     public function updatedTitle($value)
     {
-        if (!$this->isEditing && !$this->sectionKeyManuallyEdited) {
+        if (! $this->isEditing && ! $this->sectionKeyManuallyEdited) {
             $this->sectionKey = Str::slug($value, '_');
         }
     }
@@ -73,7 +80,7 @@ class ContentSectionEditor extends Component
     // Track when user manually edits the section key
     public function updatedSectionKey($value)
     {
-        if (!$this->isEditing) {
+        if (! $this->isEditing) {
             // Mark as manually edited if user types something different from auto-generated
             $this->sectionKeyManuallyEdited = $value !== Str::slug($this->title, '_');
         }
@@ -94,7 +101,7 @@ class ContentSectionEditor extends Component
 
         // Add unique validation for section key
         if ($this->isEditing) {
-            $rules['sectionKey'] .= '|unique:content_sections,section_key,' . $this->sectionId;
+            $rules['sectionKey'] .= '|unique:content_sections,section_key,'.$this->sectionId;
         } else {
             $rules['sectionKey'] .= '|unique:content_sections,section_key';
         }
@@ -115,13 +122,13 @@ class ContentSectionEditor extends Component
                     $changes[] = "Title: {$section->title} → {$this->title}";
                 }
                 if ($section->section_type !== $this->sectionType) {
-                    $changes[] = "Type changed";
+                    $changes[] = 'Type changed';
                 }
                 if (($section->content?->toHtml() ?? '') !== ($this->content ?? '')) {
-                    $changes[] = "Content updated";
+                    $changes[] = 'Content updated';
                 }
                 if ($section->is_active !== $this->isActive) {
-                    $changes[] = "Status: " . ($this->isActive ? 'Activated' : 'Deactivated');
+                    $changes[] = 'Status: '.($this->isActive ? 'Activated' : 'Deactivated');
                 }
 
                 $section->update([
@@ -131,13 +138,13 @@ class ContentSectionEditor extends Component
                     'content' => $this->content,
                     'is_active' => $this->isActive,
                     'display_order' => $this->displayOrder,
-                    'target_roles' => !empty($this->targetRoles) ? $this->targetRoles : null,
+                    'target_roles' => ! empty($this->targetRoles) ? $this->targetRoles : null,
                 ]);
 
-                if (!empty($changes)) {
+                if (! empty($changes)) {
                     TransactionLogService::log(
                         'content_section_updated',
-                        "Updated content section: {$originalTitle} (ID: {$section->id}). Changes: " . implode(', ', $changes)
+                        "Updated content section: {$originalTitle} (ID: {$section->id}). Changes: ".implode(', ', $changes)
                     );
                 }
 
@@ -151,7 +158,7 @@ class ContentSectionEditor extends Component
                     'content' => $this->content,
                     'is_active' => $this->isActive,
                     'display_order' => $this->displayOrder ?: (ContentSection::max('display_order') + 1),
-                    'target_roles' => !empty($this->targetRoles) ? $this->targetRoles : null,
+                    'target_roles' => ! empty($this->targetRoles) ? $this->targetRoles : null,
                 ]);
 
                 TransactionLogService::log(
@@ -162,7 +169,7 @@ class ContentSectionEditor extends Component
                 // Send notification to superadmins about content section creation
                 $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
                 foreach ($superadmins as $admin) {
-                    $admin->notify(new \App\Notifications\SystemSettingsUpdatedNotification(
+                    $admin->notify(new SystemSettingsUpdatedNotification(
                         'content_section',
                         $section->title,
                         'created',
@@ -197,7 +204,6 @@ class ContentSectionEditor extends Component
 
     protected function clearCache()
     {
-        Cache::forget('content_sections');
         $sections = ContentSection::all();
         foreach ($sections as $section) {
             Cache::forget("content_section_{$section->section_key}");
@@ -216,7 +222,7 @@ class ContentSectionEditor extends Component
         // Build query for users to notify
         $usersQuery = User::query();
 
-        if (!empty($targetRoles)) {
+        if (! empty($targetRoles)) {
             // Get role IDs for the target roles
             $roleIds = [];
             foreach ($targetRoles as $roleName) {

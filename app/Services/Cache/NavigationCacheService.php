@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class NavigationCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache TTL in seconds (1 hour)
      */
@@ -17,9 +19,13 @@ class NavigationCacheService
     public static function getSidebarLinks(int $userId, string $role, callable $callback): array
     {
         $key = "navigation:{$role}:{$userId}";
-        
-        return Cache::tags(['navigation', "user:{$userId}"])
-            ->remember($key, self::TTL_SECONDS, $callback);
+
+        if (self::supportsTags()) {
+            return Cache::tags(['navigation', "user:{$userId}"])
+                ->remember($key, self::TTL_SECONDS, $callback);
+        }
+
+        return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
     /**
@@ -27,6 +33,14 @@ class NavigationCacheService
      */
     public static function clearUserNavigation(int $userId): void
     {
-        Cache::tags(["navigation:user:{$userId}"])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['navigation', "user:{$userId}"])->flush();
+        } else {
+            // Fallback: clear by key
+            Cache::forget("navigation:superadmin:{$userId}");
+            Cache::forget("navigation:osa:{$userId}");
+            Cache::forget("navigation:gso:{$userId}");
+            Cache::forget("navigation:student-org:{$userId}");
+        }
     }
 }

@@ -16,20 +16,20 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <x-mary-card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
+        <x-ui.card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
             <div class="animate-pulse space-y-3">
                 <div class="h-16 bg-base-300 rounded"></div>
                 <div class="h-16 bg-base-300 rounded"></div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
         HTML;
     }
 };
 ?>
 
-<x-mary-card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
+<x-ui.card title="Recent Notifications" subtitle="Latest updates from OSA and GSO">
     <x-slot:menu>
-        <x-mary-button label="View All" link="/student-org/notifications" icon="s-bell"
+        <x-ui.button label="View All" link="/student-org/notifications" icon="s-bell"
             class="btn-sm btn-ghost" wire:navigate />
     </x-slot:menu>
 
@@ -71,7 +71,7 @@ new class extends Component
             @endphp
 
             <div class="flex items-start gap-3 p-3 {{ $containerClass }} rounded-lg border-l-4">
-                <x-mary-icon :name="$icon" class="w-5 h-5 {{ $iconColorClass }} mt-0.5" />
+                <x-ui.icon :name="$icon" class="w-5 h-5 {{ $iconColorClass }} mt-0.5" />
                 <div class="flex-1 min-w-0">
                     <p class="font-medium text-base-content">{{ $data['title'] ?? 'Notification' }}</p>
                     <p class="text-sm text-base-content/70">{{ $data['message'] ?? 'No message' }}</p>
@@ -85,4 +85,4 @@ new class extends Component
                 actionLink="/student-org/notifications" />
         @endforelse
     </div>
-</x-mary-card>
+</x-ui.card>

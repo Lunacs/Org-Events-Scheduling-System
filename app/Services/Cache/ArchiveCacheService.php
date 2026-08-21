@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class ArchiveCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache tags for archives
      */
@@ -23,7 +25,13 @@ class ArchiveCacheService
     {
         $cacheKey = "archives:{$role}:years";
 
-        return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        }
+
+        self::trackKey('archives:known_keys', $cacheKey);
+
+        return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
     /**
@@ -36,7 +44,13 @@ class ArchiveCacheService
         $searchHash = $search ? md5($search) : 'none';
         $cacheKey = "archives:{$role}:events:{$searchHash}:{$status}:{$organization}:{$year}:{$eventType}:page:{$page}";
 
-        return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        }
+
+        self::trackKey('archives:known_keys', $cacheKey);
+
+        return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
     /**
@@ -47,7 +61,13 @@ class ArchiveCacheService
         $searchHash = $search ? md5($search) : 'none';
         $cacheKey = "archives:superadmin:items:{$searchHash}:{$type}:{$dateFrom}:{$dateTo}";
 
-        return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags(self::$tags)->remember($cacheKey, self::$duration, $callback);
+        }
+
+        self::trackKey('archives:known_keys', $cacheKey);
+
+        return Cache::remember($cacheKey, self::$duration, $callback);
     }
 
     /**
@@ -56,6 +76,10 @@ class ArchiveCacheService
      */
     public static function clearAllArchives(): void
     {
-        Cache::tags(self::$tags)->flush();
+        if (self::supportsTags()) {
+            Cache::tags(self::$tags)->flush();
+        } else {
+            self::clearTrackedKeys('archives:known_keys');
+        }
     }
 }

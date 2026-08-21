@@ -4,13 +4,14 @@ namespace App\Livewire\Osa;
 
 use App\Models\Student_Organization;
 use App\Models\Ticket;
+use App\Services\Cache\DashboardCacheService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 #[Lazy]
 class Dashboard extends Component
@@ -39,7 +40,7 @@ class Dashboard extends Component
     #[Computed]
     public function stats(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'stats', function () {
+        return DashboardCacheService::getDashboardWidget('osa', 'stats', function () {
             $now = now();
             $currentMonth = $now->month;
             $currentYear = $now->year;
@@ -63,7 +64,7 @@ class Dashboard extends Component
     #[Computed]
     public function recentTickets(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'recent_tickets', function () {
+        return DashboardCacheService::getDashboardWidget('osa', 'recent_tickets', function () {
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                 ->with([
                     'eventType:event_type_id,type_name',
@@ -91,7 +92,7 @@ class Dashboard extends Component
     #[Computed]
     public function pendingApprovals(): array
     {
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('osa', 'pending_approvals', function () {
+        return DashboardCacheService::getDashboardWidget('osa', 'pending_approvals', function () {
             return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id'])
                 ->with([
                     'user' => fn ($q) => $q->withTrashed()->select(['user_id', 'org_id'])

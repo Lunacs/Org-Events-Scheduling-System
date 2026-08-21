@@ -3,7 +3,7 @@
 @if ($guidelines && $guidelines->is_active)
     <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
         <div class="flex items-start space-x-2">
-            <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
+            <x-ui.icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
             <div class="text-sm">
                 <p class="font-medium mb-2">Important Guidelines:</p>
                 <div class="prose prose-sm max-w-none">
@@ -15,7 +15,7 @@
 @else
     <div class="bg-info/10 p-4 rounded-lg border-l-4 border-info mb-4">
         <div class="flex items-start space-x-2">
-            <x-mary-icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
+            <x-ui.icon name="s-information-circle" class="w-5 h-5 text-info mt-0.5" />
             <div class="text-sm">
                 <p class="font-medium mb-2">Important Guidelines:</p>
                 <ul class="list-disc list-inside space-y-1 text-base-content/80">

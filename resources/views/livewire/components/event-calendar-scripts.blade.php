@@ -347,6 +347,14 @@
                         handleResize();
                     }, 100);
                 });
+
+                // Re-render FullCalendar when theme changes so dark/light CSS vars are picked up
+                window.addEventListener('theme-changed', () => {
+                    if (this.calendar) {
+                        this.calendar.updateSize();
+                        this.calendar.render();
+                    }
+                });
             },
             updateTitle() {
                 const el = document.getElementById('calendar-title');

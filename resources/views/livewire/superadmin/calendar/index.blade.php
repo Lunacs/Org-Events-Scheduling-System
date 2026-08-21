@@ -14,10 +14,10 @@
                     <p class="text-base-content/70 mt-1">Manage all events across all organizations</p>
                 </div>
                 <div class="flex items-center gap-2 relative z-10">
-                    <x-mary-badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
-                    <x-mary-button icon="o-arrow-path" class="btn-outline btn-sm bg-base-100" wire:click.async="$refresh">
+                    <x-ui.badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
+                    <x-ui.button icon="o-arrow-path" class="btn-outline btn-sm bg-base-100" wire:click.async="$refresh">
                         Refresh
-                    </x-mary-button>
+                    </x-ui.button>
                 </div>
             </div>
         </div>
@@ -31,19 +31,19 @@
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {{-- Calendar Navigation --}}
                 <div class="flex items-center justify-center sm:justify-start gap-2">
-                    <x-mary-button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
+                    <x-ui.button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
                     <h2 class="text-base sm:text-lg font-semibold min-w-40 sm:min-w-[200px] text-center"
                         id="calendar-title" wire:ignore>
                         Loading...
                     </h2>
-                    <x-mary-button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
+                    <x-ui.button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
                 </div>
 
                 {{-- Today Button --}}
                 <div class="flex justify-center sm:justify-start">
-                    <x-mary-button @click="today()" class="btn-outline btn-sm">
+                    <x-ui.button @click="today()" class="btn-outline btn-sm">
                         Today
-                    </x-mary-button>
+                    </x-ui.button>
                 </div>
             </div>
 
@@ -51,26 +51,26 @@
             <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
                 {{-- View Mode Buttons --}}
                 <div class="flex gap-1 order-2 md:order-1 flex-1" id="view-mode-buttons">
-                    <x-mary-button @click="changeView('dayGridMonth')" data-view="dayGridMonth"
+                    <x-ui.button @click="changeView('dayGridMonth')" data-view="dayGridMonth"
                         class="btn-sm view-mode-btn flex-1 md:flex-none"
                         x-bind:class="currentView === 'dayGridMonth' ? 'btn-primary' : 'btn-ghost'">
                         Month
-                    </x-mary-button>
-                    <x-mary-button @click="changeView('timeGridWeek')" data-view="timeGridWeek"
+                    </x-ui.button>
+                    <x-ui.button @click="changeView('timeGridWeek')" data-view="timeGridWeek"
                         class="btn-sm view-mode-btn flex-1 md:flex-none"
                         x-bind:class="currentView === 'timeGridWeek' ? 'btn-primary' : 'btn-ghost'">
                         Week
-                    </x-mary-button>
-                    <x-mary-button @click="changeView('timeGridDay')" data-view="timeGridDay"
+                    </x-ui.button>
+                    <x-ui.button @click="changeView('timeGridDay')" data-view="timeGridDay"
                         class="btn-sm view-mode-btn flex-1 md:flex-none"
                         x-bind:class="currentView === 'timeGridDay' ? 'btn-primary' : 'btn-ghost'">
                         Day
-                    </x-mary-button>
-                    <x-mary-button @click="changeView('listWeek')" data-view="listWeek"
+                    </x-ui.button>
+                    <x-ui.button @click="changeView('listWeek')" data-view="listWeek"
                         class="btn-sm view-mode-btn flex-1 md:flex-none"
                         x-bind:class="currentView === 'listWeek' ? 'btn-primary' : 'btn-ghost'">
                         List
-                    </x-mary-button>
+                    </x-ui.button>
                 </div>
 
                 {{-- Filter Button with Notification Badge --}}
@@ -87,11 +87,11 @@
                         </div>
 
                         {{-- Filter Button --}}
-                        <x-mary-button icon="o-funnel" class="btn-ghost btn-sm shrink-0"
+                        <x-ui.button icon="o-funnel" class="btn-ghost btn-sm shrink-0"
                             @click="$dispatch('open-filters')" tooltip="Open Filters">
                             <span class="hidden sm:inline">Filters</span>
                             <span class="sm:hidden">Filter</span>
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
@@ -188,7 +188,7 @@
                                 <h4 class="font-semibold text-sm mb-2">Active Filters</h4>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($activeFilters as $filter)
-                                        <x-mary-badge value="{{ $filter }}" class="badge-primary" />
+                                        <x-ui.badge value="{{ $filter }}" class="badge-primary" />
                                     @endforeach
                                 </div>
                             </div>
@@ -223,7 +223,7 @@
     </div>
 
     {{-- Upcoming Events This Month --}}
-    <x-mary-card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
+    <x-ui.card title="Upcoming Events This Month of {{ ucfirst($currentDate->format('F')) }}"
         subtitle="Detailed list of scheduled events" class="mt-6">
         @if (count($this->upcomingEventsThisMonth) > 0)
             <div class="space-y-4">
@@ -324,7 +324,7 @@
                         onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
                         <div class="flex-shrink-0">
                             <div class="w-12 h-12 {{ $iconBg }} rounded-lg flex items-center justify-center">
-                                <x-mary-icon name="{{ $event['icon'] }}" class="w-6 h-6 {{ $iconText }}" />
+                                <x-ui.icon name="{{ $event['icon'] }}" class="w-6 h-6 {{ $iconText }}" />
                             </div>
                         </div>
                         <div class="flex-1">
@@ -335,20 +335,20 @@
                             @endif
                             <div class="flex flex-wrap items-center gap-4 mt-2 text-sm {{ $metaColor }}">
                                 <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-calendar" class="w-4 h-4" />
+                                    <x-ui.icon name="o-calendar" class="w-4 h-4" />
                                     <span>{{ $event['datetime'] }}</span>
                                 </span>
                                 <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-map-pin" class="w-4 h-4" />
+                                    <x-ui.icon name="o-map-pin" class="w-4 h-4" />
                                     <span>{{ $event['venue'] }}</span>
                                 </span>
                                 <span class="flex items-center space-x-1">
-                                    <x-mary-icon name="o-user-group" class="w-4 h-4" />
+                                    <x-ui.icon name="o-user-group" class="w-4 h-4" />
                                     <span>{{ $event['organization'] }}</span>
                                 </span>
                             </div>
                             <div class="flex items-center space-x-2 mt-2">
-                                <x-mary-badge value="{{ $event['eventType'] }}" class="{{ $badgeClass }}" />
+                                <x-ui.badge value="{{ $event['eventType'] }}" class="{{ $badgeClass }}" />
                             </div>
                         </div>
                     </div>
@@ -356,11 +356,70 @@
             </div>
         @else
             <div class="text-center py-12">
-                <x-mary-icon name="o-calendar-days" class="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                <x-ui.icon name="o-calendar-days" class="w-16 h-16 mx-auto mb-3 text-gray-300" />
                 <p class="text-sm text-gray-500">No upcoming events scheduled for this month</p>
             </div>
         @endif
-    </x-mary-card>
+
+        {{-- Completed This Month --}}
+        @if (count($this->completedEventsThisMonth) > 0)
+            @php $totalCompleted = count($this->completedEventsThisMonth); @endphp
+            <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-gray-200">
+                <button type="button" @click="showCompleted = !showCompleted"
+                    class="flex w-full items-center justify-between gap-2 text-left"
+                    :aria-expanded="showCompleted.toString()">
+                    <span class="flex items-center gap-2">
+                        <x-ui.icon name="o-check-circle" class="w-5 h-5 text-gray-400" />
+                        <span class="font-semibold text-gray-600">Completed This Month</span>
+                        <x-ui.badge value="{{ $totalCompleted }}" class="badge-neutral badge-sm" />
+                    </span>
+                    <x-ui.icon name="o-chevron-down" x-bind:class="showCompleted ? 'rotate-180' : ''"
+                        class="w-4 h-4 text-gray-400 transition-transform duration-200" />
+                </button>
+
+                <div x-show="showCompleted" x-collapse class="space-y-3 mt-4">
+                    @foreach ($this->completedEventsThisMonth as $index => $event)
+                        <div class="flex items-start space-x-4 p-4 bg-gray-100 rounded-lg border-l-4 border-gray-300 hover:shadow-md transition-all cursor-pointer"
+                            wire:key="completed-{{ $index }}"
+                            onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <x-ui.icon name="{{ $event['icon'] }}" class="w-6 h-6 text-gray-500" />
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <h4 class="font-semibold text-gray-600">{{ $event['title'] }}</h4>
+                                    <x-ui.badge value="Completed" class="badge-neutral" />
+                                </div>
+                                @if ($event['description'])
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        {{ Str::limit($event['description'], 80) }}</p>
+                                @endif
+                                <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
+                                    <span class="flex items-center space-x-1">
+                                        <x-ui.icon name="o-calendar" class="w-4 h-4" />
+                                        <span>{{ $event['datetime'] }}</span>
+                                    </span>
+                                    <span class="flex items-center space-x-1">
+                                        <x-ui.icon name="o-map-pin" class="w-4 h-4" />
+                                        <span>{{ $event['venue'] }}</span>
+                                    </span>
+                                    <span class="flex items-center space-x-1">
+                                        <x-ui.icon name="o-user-group" class="w-4 h-4" />
+                                        <span>{{ $event['organization'] }}</span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <x-ui.badge value="{{ $event['eventType'] }}" class="badge-ghost" />
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    </x-ui.card>
 
     {{-- Event Details Modal (Alpine-controlled, opens instantly) --}}
     <div x-data="eventDetailsModal()" x-on:open-event.window="openById($event.detail.id)">
@@ -416,7 +475,7 @@
                                         <div class="bg-base-200 rounded-lg p-3">
                                             <template x-if="s.start_date === s.end_date || !s.end_date">
                                                 <div class="flex items-center gap-2 text-sm">
-                                                    <x-mary-icon name="o-calendar-days"
+                                                    <x-ui.icon name="o-calendar-days"
                                                         class="w-4 h-4 text-primary" />
                                                     <span x-text="formatDate(s.start_date)"></span>
                                                 </div>
@@ -424,13 +483,13 @@
                                             <template x-if="s.start_date !== s.end_date && s.end_date">
                                                 <div class="space-y-1">
                                                     <div class="flex items-center gap-2 text-sm">
-                                                        <x-mary-icon name="o-calendar-days"
+                                                        <x-ui.icon name="o-calendar-days"
                                                             class="w-4 h-4 text-primary" />
                                                         <span class="font-medium text-base-content/70">Start:</span>
                                                         <span x-text="formatDate(s.start_date)"></span>
                                                     </div>
                                                     <div class="flex items-center gap-2 text-sm">
-                                                        <x-mary-icon name="o-calendar-days"
+                                                        <x-ui.icon name="o-calendar-days"
                                                             class="w-4 h-4 text-primary" />
                                                         <span class="font-medium text-base-content/70">End:</span>
                                                         <span x-text="formatDate(s.end_date)"></span>
@@ -438,7 +497,7 @@
                                                 </div>
                                             </template>
                                             <div class="flex items-center gap-2 text-sm mt-1">
-                                                <x-mary-icon name="o-clock" class="w-4 h-4 text-primary" />
+                                                <x-ui.icon name="o-clock" class="w-4 h-4 text-primary" />
                                                 <span class="font-medium text-base-content/70">Time:</span>
                                                 <span x-text="timeRange(s.start_time, s.end_time)"></span>
                                             </div>
@@ -531,7 +590,7 @@
     @endpush
 
     {{-- SuperAdmin Action Modal --}}
-    <x-mary-modal wire:model="showActionModal" title="Event Action" persistent>
+    <x-ui.modal-dialog wire:model="showActionModal" title="Event Action" persistent>
         @if ($selectedEventForAction)
             <div class="space-y-4">
                 <div class="alert alert-warning">
@@ -559,21 +618,21 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.closeActionModal()" />
+                <x-ui.button label="Cancel" @click="$wire.closeActionModal()" />
 
                 @if ($actionType === 'approve')
-                    <x-mary-button label="Force Approve" class="btn-success"
+                    <x-ui.button label="Force Approve" class="btn-success"
                         wire:click="forceApproveEvent({{ $selectedEventForAction->event_id }})"
                         spinner="forceApproveEvent" />
                 @elseif($actionType === 'cancel')
-                    <x-mary-button label="Cancel Event" class="btn-warning"
+                    <x-ui.button label="Cancel Event" class="btn-warning"
                         wire:click="cancelEvent({{ $selectedEventForAction->event_id }})" spinner="cancelEvent" />
                 @elseif($actionType === 'delete')
-                    <x-mary-button label="Delete Permanently" class="btn-error"
+                    <x-ui.button label="Delete Permanently" class="btn-error"
                         wire:click="forceDeleteEvent({{ $selectedEventForAction->event_id }})"
                         spinner="forceDeleteEvent" />
                 @endif
             </x-slot:actions>
         @endif
-    </x-mary-modal>
+    </x-ui.modal-dialog>
 </div>

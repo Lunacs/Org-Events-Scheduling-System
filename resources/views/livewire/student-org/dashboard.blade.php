@@ -16,7 +16,7 @@
                         <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div class="flex items-start space-x-4">
                                 <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                                    <x-mary-icon name="s-building-office" class="w-6 h-6 text-primary" />
+                                    <x-ui.icon name="s-building-office" class="w-6 h-6 text-primary" />
                                 </span>
                                 <div>
                                     <h1 class="text-2xl md:text-3xl font-bold font-heading text-base-content">
@@ -33,11 +33,11 @@
                                     Last updated: <span class="font-medium">{{ now()->format('h:i A') }}</span>
                                 </div>
 
-                                <x-mary-button icon="o-arrow-path"
+                                <x-ui.button icon="o-arrow-path"
                                     class="btn-primary btn-sm data-loading:opacity-50 data-loading:pointer-events-none"
                                     wire:click.async="$refresh" spinner>
                                     Refresh
-                                </x-mary-button>
+                                </x-ui.button>
                             </div>
                         </div>
                     </div>
@@ -45,59 +45,57 @@
             @endpersist
 
             {{-- Stats Cards --}}
-            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <x-mary-stat title="Total Tickets" description="Submitted requests" value="{{ $tickets->count() }}"
-                    icon="s-ticket" color="text-primary" />
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <x-ui.metric-card label="Total Tickets" meta="Submitted requests" value="{{ $tickets->count() }}"
+                    icon="s-ticket" color="primary" />
 
-                <x-mary-stat title="Pending" description="Awaiting approval"
+                <x-ui.metric-card label="Pending" meta="Awaiting approval"
                     value="{{ $tickets->whereNotIn('status', ['approved'])->count() }}" icon="s-clock"
-                    color="text-warning" />
+                    color="warning" />
 
-                <x-mary-stat title="Approved" description="Ready to proceed"
+                <x-ui.metric-card label="Approved" meta="Ready to proceed"
                     value="{{ $tickets->where('status', 'approved')->count() }}" icon="s-check-circle"
-                    color="text-success" />
+                    color="success" />
 
-                <x-mary-stat title="Upcoming Events" description="Next 30 days" value="{{ $upcomingEventsCount }}"
-                    icon="s-calendar-days" color="text-info" />
+                <x-ui.metric-card label="Upcoming Events" meta="Next 30 days" value="{{ $upcomingEventsCount }}"
+                    icon="s-calendar-days" color="info" />
             </div>
 
             {{-- Recent Tickets --}}
-            <x-mary-card title="Recent Ticket Submissions"
+            <x-ui.card title="Recent Ticket Submissions"
                 subtitle="The latest event requests from your organization: {{ auth()->user()->studentOrganization->org_name }}">
                 <x-slot:menu>
-                    <x-mary-button label="View All" link="/student-org/my-tickets" icon="s-eye"
-                        class="btn-sm btn-ghost" wire:navigate />
+                    <x-ui.button label="View All" link="/student-org/my-tickets" icon="s-eye" class="btn-sm btn-ghost"
+                        wire:navigate />
                 </x-slot:menu>
 
                 {{-- Desktop --}}
                 <div class="hidden md:block">
-                    <x-mary-table :headers="[
+                    <x-ui.table :headers="[
                         ['key' => 'id', 'label' => '#'],
                         ['key' => 'title', 'label' => 'Event Title'],
                         ['key' => 'date', 'label' => 'Requested Date'],
                         ['key' => 'status', 'label' => 'Status'],
                         ['key' => 'submitted', 'label' => 'Submitted'],
-                    ]" :rows="$recentTickets">
-                        @scope('cell_id', $recentTicket)
-                            {{ $recentTicket->ticket_number }}
-                        @endscope
-
-                        @scope('cell_title', $recentTicket)
-                            {{ $recentTicket->event_name ?? $recentTicket->title }}
-                        @endscope
-
-                        @scope('cell_date', $recentTicket)
-                            {{ \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') ?? 'N/A' }}
-                        @endscope
-
-                        @scope('cell_status', $recentTicket)
-                            <x-tickets.progress-badge :status="$recentTicket->status" />
-                        @endscope
-
-                        @scope('cell_submitted', $recentTicket)
-                            {{ $recentTicket->created_at->format('Y-m-d') }}
-                        @endscope
-                    </x-mary-table>
+                    ]">
+                        @forelse ($recentTickets as $recentTicket)
+                            <tr>
+                                <x-ui.table-column>{{ $recentTicket->ticket_number }}</x-ui.table-column>
+                                <x-ui.table-column>{{ $recentTicket->event_name ?? $recentTicket->title }}</x-ui.table-column>
+                                <x-ui.table-column>{{ \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') ?? 'N/A' }}</x-ui.table-column>
+                                <x-ui.table-column>
+                                    <x-tickets.progress-badge :status="$recentTicket->status" />
+                                </x-ui.table-column>
+                                <x-ui.table-column>{{ $recentTicket->created_at->format('Y-m-d') }}</x-ui.table-column>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5">
+                                    <div class="text-center text-base-content/60 py-6">No recent tickets found.</div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </x-ui.table>
                 </div>
 
                 {{-- Mobile --}}
@@ -110,7 +108,8 @@
                                         <x-tickets.progress-badge :status="$recentTicket->status" />
                                     </div>
                                     <p class="text-xs text-base-content/60">#{{ $recentTicket->ticket_number }}</p>
-                                    <h4 class="font-semibold text-base-content">{{ $recentTicket->event_name ?? $recentTicket->title }}</h4>
+                                    <h4 class="font-semibold text-base-content">
+                                        {{ $recentTicket->event_name ?? $recentTicket->title }}</h4>
                                 </div>
                             </div>
                             <div class="text-sm text-base-content/70">
@@ -128,24 +127,24 @@
                             actionLink="/student-org/submit-ticket" />
                     @endforelse
                 </div>
-            </x-mary-card>
+            </x-ui.card>
 
             {{-- Upcoming Events (deferred child component) --}}
             <livewire:student-org.dashboard.upcoming-events defer.bundle />
 
             {{-- Quick Actions --}}
-            <x-mary-card title="Quick Actions" subtitle="Frequently used actions">
+            <x-ui.card title="Quick Actions" subtitle="Frequently used actions">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <x-mary-button label="Submit New Ticket" icon="s-document-plus" class="btn-primary btn-lg w-full"
-                        link="/student-org/submit-ticket" wire:navigate />
+                    <x-ui.quick-action label="Submit New Ticket" description="Start a new event request"
+                        icon="s-document-plus" color="primary" link="/student-org/submit-ticket" />
 
-                    <x-mary-button label="Check My Tickets" icon="s-ticket" class="btn-secondary btn-lg w-full"
-                        link="/student-org/my-tickets" wire:navigate />
+                    <x-ui.quick-action label="Check My Tickets" description="Track your submissions"
+                        icon="s-ticket" color="secondary" link="/student-org/my-tickets" />
 
-                    <x-mary-button label="Request Reschedule" icon="s-arrow-path" class="btn-accent btn-lg w-full"
-                        link="/student-org/reschedule" wire:navigate />
+                    <x-ui.quick-action label="Request Reschedule" description="Move an approved event"
+                        icon="s-arrow-path" color="accent" link="/student-org/reschedule" />
                 </div>
-            </x-mary-card>
+            </x-ui.card>
 
             {{-- Recent Notifications (deferred child component) --}}
             <livewire:student-org.dashboard.recent-notifications defer.bundle />

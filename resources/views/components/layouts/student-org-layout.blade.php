@@ -2,6 +2,42 @@
 <html data-theme="emerald" class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    <script>
+        (function() {
+            var dark = localStorage.getItem('theme') === 'dark';
+            if (dark) {
+                document.documentElement.setAttribute('data-theme', 'emeraldDark');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+        window.__themeToggleChange = function(input) {
+            var dark = input.checked;
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
+            document.documentElement.classList.toggle('dark', dark);
+            document.querySelectorAll('input.theme-controller').forEach(function(el) {
+                if (el !== input) el.checked = dark;
+            });
+            window.dispatchEvent(new CustomEvent('theme-changed', {
+                detail: {
+                    dark: dark
+                }
+            }));
+        };
+        document.addEventListener('livewire:navigated', function() {
+            var dark = localStorage.getItem('theme') === 'dark';
+            if (dark) {
+                document.documentElement.setAttribute('data-theme', 'emeraldDark');
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'emerald');
+                document.documentElement.classList.remove('dark');
+            }
+            document.querySelectorAll('input.theme-controller').forEach(function(el) {
+                el.checked = dark;
+            });
+        });
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -16,8 +52,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600|poppins:400,500,600&display=swap"
         rel="stylesheet" />
 
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js', 'resources/js/avatar.js'])
+    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js', 'resources/js/avatar.js', 'resources/js/filepond.js'])
 
     @stack('head')
 </head>
@@ -30,10 +65,10 @@
 
         {{-- MAIN: DaisyUI Drawer Sidebar --}}
         <div class="drawer lg:drawer-open" x-data="{ sidebarExpanded: $persist(true).as('student-sidebar-expanded') }">
-            <input id="main-drawer" type="checkbox" class="drawer-toggle" wire:ignore :checked="!sidebarExpanded"
-                @change="sidebarExpanded = !$event.target.checked" />
+            <input id="main-drawer" type="checkbox" class="drawer-toggle" wire:ignore :checked="sidebarExpanded"
+                @change="sidebarExpanded = $event.target.checked" />
             <script>
-                if (localStorage.getItem('student-sidebar-expanded') === 'false') {
+                if (localStorage.getItem('student-sidebar-expanded') === 'true') {
                     document.getElementById('main-drawer').checked = true;
                 }
             </script>
@@ -62,7 +97,7 @@
             <div class="drawer-side is-drawer-close:overflow-visible z-20">
                 <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
                 <div
-                    class="flex min-h-full flex-col items-start bg-base-200 border-r border-base-300/60 is-drawer-close:w-16 is-drawer-open:w-64 transition-all duration-200">
+                    class="flex min-h-full flex-col items-start bg-base-200 border-r border-base-300/60 is-drawer-close:w-16 is-drawer-open:w-64 transition-[width] duration-200">
 
                     {{-- BRAND --}}
                     <div class="w-full px-3 pt-5 pb-2 border-b border-base-300/60">
@@ -160,7 +195,7 @@
         </div>
 
         {{-- Toast --}}
-        <x-mary-toast />
+        <x-ui.toast />
 
     </div>
 

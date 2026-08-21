@@ -49,6 +49,10 @@
                         </li>
                         <li><a href="{{ route('faq') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
+                        <li><a href="{{ route('about-us') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
+                        <li><a href="{{ route('data-privacy') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
                     @elseif($variant === 'osa')
                         <li><a href="/admin/dashboard" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -59,6 +63,10 @@
                         </li>
                         <li><a href="{{ route('faq') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
+                        <li><a href="{{ route('about-us') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
+                        <li><a href="{{ route('data-privacy') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
                     @elseif($variant === 'gso')
                         <li><a href="{{ route('gso.dashboard') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -69,6 +77,10 @@
                         </li>
                         <li><a href="{{ route('faq') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
+                        <li><a href="{{ route('about-us') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
+                        <li><a href="{{ route('data-privacy') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
                     @elseif($variant === 'superadmin')
                         <li><a href="{{ route('superadmin.dashboard') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
@@ -80,6 +92,10 @@
                         </li>
                         <li><a href="{{ route('faq') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
+                        <li><a href="{{ route('about-us') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
+                        <li><a href="{{ route('data-privacy') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
                     @else
                         <li><a href="/" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Home</a></li>
@@ -87,6 +103,8 @@
                                 class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
                         <li><a href="{{ route('about-us') }}" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
+                        <li><a href="{{ route('data-privacy') }}" wire:navigate
+                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
                         <li><a href="/login" wire:navigate
                                 class="text-base-content/70 hover:text-primary transition-colors">Login</a></li>
                     @endif
@@ -98,15 +116,15 @@
                 <h4 class="font-heading font-semibold text-base-content mb-4">Contact & Support</h4>
                 <ul class="space-y-2 text-sm text-base-content/70">
                     <li class="flex items-center gap-2">
-                        <x-mary-icon name="o-building-office-2" class="w-4 h-4" />
+                        <x-ui.icon name="o-building-office-2" class="w-4 h-4" />
                         <span>Office of Student Affairs</span>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-mary-icon name="o-map-pin" class="w-4 h-4" />
+                        <x-ui.icon name="o-map-pin" class="w-4 h-4" />
                         <span>Pamantasan ng Lungsod ng Valenzuela</span>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-mary-icon name="o-envelope" class="w-4 h-4" />
+                        <x-ui.icon name="o-envelope" class="w-4 h-4" />
                         <span>plv.osa.official@gmail.com</span>
                     </li>
                 </ul>
@@ -122,7 +140,7 @@
                 </p>
                 <div class="flex items-center gap-4 text-sm text-base-content/60">
                     <span class="flex items-center gap-1">
-                        <x-mary-icon name="o-code-bracket" class="w-4 h-4" />
+                        <x-ui.icon name="o-code-bracket" class="w-4 h-4" />
                         Built with TALL Stack
                     </span>
                 </div>

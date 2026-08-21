@@ -7,14 +7,15 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketStatusUpdatedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class Details extends Component
 {
@@ -22,21 +23,22 @@ class Details extends Component
 
     #[Title('Ticket Details - GSO')]
     #[Layout('components.layouts.gso-layout')]
-
     public Ticket $ticket;
+
     public $approvalRemarks = '';
+
     public $revisionRemarks = '';
 
     public function mount($ticketNumber)
     {
         $this->ticket = Ticket::with([
-            'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+            'user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
             'events.eventSchedules',
             'attachments',
-            'osaApprovals.user' => fn($q) => $q->withTrashed(),
+            'osaApprovals.user' => fn ($q) => $q->withTrashed(),
             'officeApprovals.office',
-            'officeApprovals.user' => fn($q) => $q->withTrashed(),
-            'approvalHistory.user' => fn($q) => $q->withTrashed(),
+            'officeApprovals.user' => fn ($q) => $q->withTrashed(),
+            'approvalHistory.user' => fn ($q) => $q->withTrashed(),
             'approvalHistory.office',
         ])->where('ticket_number', $ticketNumber)->firstOrFail();
     }
@@ -57,7 +59,7 @@ class Details extends Component
         $currentUser = Auth::user();
         $officeId = $currentUser?->office_id;
 
-        if (!$officeId) {
+        if (! $officeId) {
             return [
                 'status' => 'pending',
                 'status_label' => 'Pending',
@@ -70,7 +72,7 @@ class Details extends Component
             ->where('office_id', $officeId)
             ->first();
 
-        if (!$officeApproval) {
+        if (! $officeApproval) {
             return [
                 'status' => 'pending',
                 'status_label' => 'Pending Review',
@@ -100,12 +102,12 @@ class Details extends Component
     {
         $currentUser = Auth::user();
 
-        if (!$currentUser || !$currentUser->isGSO()) {
+        if (! $currentUser || ! $currentUser->isGSO()) {
             return [];
         }
 
         $officeId = $currentUser->office_id;
-        if (!$officeId) {
+        if (! $officeId) {
             return [];
         }
 
@@ -141,7 +143,7 @@ class Details extends Component
         try {
             // Lock the ticket to prevent concurrent modifications
             $this->ticket = Ticket::with([
-                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
             ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
@@ -182,7 +184,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has approved your ticket and it is now awaiting final OSA approval."
+                'GSO has approved your ticket and it is now awaiting final OSA approval.'
             ));
 
             $osaRoleId = User::getRoleId('osa');
@@ -199,13 +201,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
                 'events.eventSchedules',
                 'attachments',
-                'osaApprovals.user' => fn($q) => $q->withTrashed(),
+                'osaApprovals.user' => fn ($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user' => fn($q) => $q->withTrashed(),
-                'approvalHistory.user' => fn($q) => $q->withTrashed(),
+                'officeApprovals.user' => fn ($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn ($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 
@@ -226,7 +228,7 @@ class Details extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to approve ticket: ' . $e->getMessage());
+            $this->error('Failed to approve ticket: '.$e->getMessage());
         }
     }
 
@@ -245,7 +247,7 @@ class Details extends Component
         try {
             // Lock the ticket to prevent concurrent modifications
             $this->ticket = Ticket::with([
-                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
             ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
@@ -286,7 +288,7 @@ class Details extends Component
                 $this->ticket,
                 $oldStatus,
                 'pending_osa_approval',
-                "GSO has reviewed your ticket and forwarded it to OSA for a final decision."
+                'GSO has reviewed your ticket and forwarded it to OSA for a final decision.'
             ));
 
             $osaRoleId = User::getRoleId('osa');
@@ -303,13 +305,13 @@ class Details extends Component
             );
 
             $this->ticket->load([
-                'user' => fn($q) => $q->withTrashed()->with('studentOrganization'),
+                'user' => fn ($q) => $q->withTrashed()->with('studentOrganization'),
                 'events.eventSchedules',
                 'attachments',
-                'osaApprovals.user' => fn($q) => $q->withTrashed(),
+                'osaApprovals.user' => fn ($q) => $q->withTrashed(),
                 'officeApprovals.office',
-                'officeApprovals.user' => fn($q) => $q->withTrashed(),
-                'approvalHistory.user' => fn($q) => $q->withTrashed(),
+                'officeApprovals.user' => fn ($q) => $q->withTrashed(),
+                'approvalHistory.user' => fn ($q) => $q->withTrashed(),
                 'approvalHistory.office',
             ]);
 
@@ -330,7 +332,7 @@ class Details extends Component
                 'ticket_id' => $this->ticket->ticket_id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to request revision: ' . $e->getMessage());
+            $this->error('Failed to request revision: '.$e->getMessage());
         }
     }
 
@@ -378,7 +380,7 @@ class Details extends Component
     {
         $routeName = $forceDownload ? 'attachments.download' : 'attachments.preview';
 
-        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             $routeName,
             now()->addMinutes(5),
             ['attachment' => $attachmentId]

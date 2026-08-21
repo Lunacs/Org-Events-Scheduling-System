@@ -4,16 +4,15 @@ namespace App\Livewire\Superadmin\AdminTools;
 
 use App\Models\Transaction_Logs;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class Index extends Component
 {
@@ -21,8 +20,8 @@ class Index extends Component
 
     #[Title('Admin Tools - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
-
     public $systemStatus = [];
+
     public $maintenanceMode = false;
 
     public function mount()
@@ -56,13 +55,13 @@ class Index extends Component
     {
         try {
             $dbName = config('database.connections.mysql.database');
-            $size = DB::select("
+            $size = DB::select('
                 SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
                 FROM information_schema.TABLES
                 WHERE table_schema = ?
-            ", [$dbName]);
+            ', [$dbName]);
 
-            return ($size[0]->size_mb ?? 0) . ' MB';
+            return ($size[0]->size_mb ?? 0).' MB';
         } catch (\Exception $e) {
             return 'N/A';
         }
@@ -76,7 +75,8 @@ class Index extends Component
             foreach ($files as $file) {
                 $size += Storage::size($file);
             }
-            return round($size / 1024 / 1024, 2) . ' MB';
+
+            return round($size / 1024 / 1024, 2).' MB';
         } catch (\Exception $e) {
             return 'N/A';
         }
@@ -99,7 +99,7 @@ class Index extends Component
             $this->success('Cache cleared successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to clear cache: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to clear cache: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -120,7 +120,7 @@ class Index extends Component
             $this->success('Cache optimized successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to optimize cache: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to optimize cache: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -138,14 +138,14 @@ class Index extends Component
 
             TransactionLogService::log(
                 'LOGS_CLEANUP',
-                "SuperAdmin cleaned up transaction logs (deleted " . $logsToDelete->count() . " entries)",
+                'SuperAdmin cleaned up transaction logs (deleted '.$logsToDelete->count().' entries)',
                 Auth::user()->user_id
             );
 
             $this->success('Logs cleaned up successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to cleanup logs: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to cleanup logs: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -163,7 +163,7 @@ class Index extends Component
             $this->success('Failed jobs retried successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to retry jobs: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to retry jobs: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -181,7 +181,7 @@ class Index extends Component
             $this->success('Failed jobs cleared successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to clear jobs: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to clear jobs: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -199,7 +199,7 @@ class Index extends Component
             $this->success('Database optimized successfully!', position: 'toast-top');
             $this->loadSystemStatus();
         } catch (\Exception $e) {
-            $this->error('Failed to optimize database: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to optimize database: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -217,7 +217,7 @@ class Index extends Component
                 $this->maintenanceMode = false;
                 $message = 'SuperAdmin disabled maintenance mode';
 
-                $this->success($message . '!', position: 'toast-top');
+                $this->success($message.'!', position: 'toast-top');
 
                 // Redirect to refresh the entire page and clear any cached state
                 return redirect()->route('superadmin.admin-tools');
@@ -226,12 +226,12 @@ class Index extends Component
                 // SuperAdmin can access by visiting: /superadmin?secret=superadmin-bypass-2025
                 Artisan::call('down', [
                     '--secret' => 'superadmin-bypass-2025',
-                    '--render' => 'errors.503'
+                    '--render' => 'errors.503',
                 ]);
                 $this->maintenanceMode = true;
                 $message = 'SuperAdmin enabled maintenance mode';
 
-                $this->success($message . '!', position: 'toast-top');
+                $this->success($message.'!', position: 'toast-top');
 
                 // Important: Inform SuperAdmin about bypass URL
                 $this->info('To access admin panel during maintenance, use: /superadmin?secret=superadmin-bypass-2025', position: 'toast-top', timeout: 10000);
@@ -243,7 +243,7 @@ class Index extends Component
                 Auth::user()->user_id
             );
         } catch (\Exception $e) {
-            $this->error('Failed to toggle maintenance mode: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to toggle maintenance mode: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -259,7 +259,7 @@ class Index extends Component
                 Auth::user()->user_id
             );
         } catch (\Exception $e) {
-            $this->error('Failed to generate backup: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to generate backup: '.$e->getMessage(), position: 'toast-top');
         }
     }
 

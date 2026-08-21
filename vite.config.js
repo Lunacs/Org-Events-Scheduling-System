@@ -3,6 +3,12 @@ import laravel from "laravel-vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+    esbuild: {
+        pure:
+            process.env.NODE_ENV === "production"
+                ? ["console.log", "console.debug"]
+                : [],
+    },
     plugins: [
         tailwindcss(),
         laravel({
@@ -12,6 +18,7 @@ export default defineConfig({
                 "resources/css/calendar.css",
                 "resources/js/app.js",
                 "resources/js/avatar.js",
+                "resources/js/filepond.js",
                 "resources/js/calendar.js",
                 "resources/js/charts.js",
                 "resources/js/libs/trix.js",

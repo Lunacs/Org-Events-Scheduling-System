@@ -7,11 +7,11 @@ use App\Models\Event;
 use App\Models\Event_Schedule;
 use App\Models\Ticket;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Mary\Traits\Toast;
 
 class Index extends ComponentsEventCalendar
 {
@@ -19,7 +19,6 @@ class Index extends ComponentsEventCalendar
 
     #[Title('Event Calendar - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
-
     protected function getRoleSpecificData(): array
     {
         return [];
@@ -488,4 +487,3 @@ class Index extends ComponentsEventCalendar
 //         return 's-calendar-days';
 //     }
 // }
-

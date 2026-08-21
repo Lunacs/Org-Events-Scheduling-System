@@ -92,7 +92,6 @@ class Faq extends Model
         Cache::forget('faqs_grouped_by_category');
         Cache::forget('faqs_active');
         Cache::forget('faqs_categories');
-        Cache::forget('faqs_all');
     }
 
     /**

@@ -6,16 +6,18 @@ use Illuminate\Support\Facades\Cache;
 
 class LayoutCacheService
 {
+    use SupportsTags;
+
     /**
      * Get or cache unread notification count for a user
      */
     public static function getUnreadNotificationCount(int $userId, callable $callback): int
     {
         $key = "notifications:{$userId}:unread_count";
-        
-        // Short TTL for notifications (2 minutes)
-        return Cache::tags(['layout', 'notifications', "user:{$userId}"])
-            ->remember($key, 120, $callback);
+
+        // Keep this high-frequency, per-user counter directly addressable so it can
+        // be invalidated without maintaining Redis tag metadata.
+        return Cache::remember($key, 120, $callback);
     }
 
     /**
@@ -32,9 +34,13 @@ class LayoutCacheService
     public static function getSystemSettings(string $settingKey, callable $callback)
     {
         $key = "settings:{$settingKey}";
-        
-        return Cache::tags(['layout', 'settings'])
-            ->remember($key, 3600 * 24, $callback); // Cache for 24 hours
+
+        if (self::supportsTags()) {
+            return Cache::tags(['layout', 'settings'])
+                ->remember($key, 3600 * 24, $callback); // Cache for 24 hours
+        }
+
+        return Cache::remember($key, 3600 * 24, $callback);
     }
 
     /**
@@ -50,6 +56,8 @@ class LayoutCacheService
      */
     public static function clearAllSettings(): void
     {
-        Cache::tags(['settings'])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['settings'])->flush();
+        }
     }
 }

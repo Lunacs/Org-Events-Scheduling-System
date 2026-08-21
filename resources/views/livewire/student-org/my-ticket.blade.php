@@ -17,25 +17,25 @@
                             <h1 class="text-3xl font-heading font-bold text-base-content">All Event Requests</h1>
                             <p class="text-base-content/70 mt-1">Track the progress of your organization's tickets</p>
                         </div>
-                        <x-mary-button label="Submit New Ticket" icon="s-document-plus"
+                        <x-ui.button label="Submit New Ticket" icon="s-document-plus"
                             class="btn-primary w-full sm:w-auto" link="/student-org/submit-ticket" wire:navigate />
                     </div>
                 </div>
             </section>
 
             {{-- Filter and Search --}}
-            <x-mary-card>
+            <x-ui.card>
                 <div class="relative grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-12 md:items-end">
 
                     <div class="min-w-0 md:col-span-12 lg:col-span-4">
-                        <x-mary-input label="Search Tickets" wire:model.live.debounce.300ms="search"
+                        <x-ui.input label="Search Tickets" wire:model.live.debounce.300ms="search"
                             wire:loading.class="opacity-70" wire:target="search"
                             placeholder="Search by title, ID, or description..." icon="s-magnifying-glass"
                             class="w-full" />
                     </div>
 
                     <div class="min-w-0 md:col-span-6 lg:col-span-3">
-                        <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
+                        <x-ui.select label="Status" wire:model.live="statusFilter" :options="[
                             ['id' => '', 'name' => 'All Status'],
                             ['id' => 'under_review', 'name' => 'Under Review'],
                             ['id' => 'approved', 'name' => 'Approved'],
@@ -45,7 +45,7 @@
                     </div>
 
                     <div class="min-w-0 md:col-span-6 lg:col-span-3">
-                        <x-mary-select label="Date range" wire:model.live="dateFilter" :options="[
+                        <x-ui.select label="Date range" wire:model.live="dateFilter" :options="[
                             ['id' => '', 'name' => 'All Time'],
                             ['id' => 'last_week', 'name' => 'Last Week'],
                             ['id' => 'last_month', 'name' => 'Last Month'],
@@ -57,17 +57,17 @@
 
                     @if ($search || $statusFilter || $dateFilter)
                         <div class="min-w-0 md:col-span-12 lg:col-span-2 flex items-end">
-                            <x-mary-button label="Clear Filters" icon="s-funnel"
+                            <x-ui.button label="Clear Filters" icon="s-funnel"
                                 class="btn-ghost w-full lg:w-auto whitespace-nowrap shrink-0 gap-2"
                                 wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters"
                                 tooltip="Clear filters" />
                         </div>
                     @endif
                 </div>
-            </x-mary-card>
+            </x-ui.card>
 
             {{-- Tickets List --}}
-            <x-mary-card>
+            <x-ui.card>
                 {{-- Skeleton Loading State --}}
                 <div wire:loading.delay wire:target="search,statusFilter,dateFilter,clearFilters"
                     class="space-y-4 w-full">
@@ -134,20 +134,20 @@
                         <x-tickets.ticket-pagination :tickets="$tickets" />
                     @endif
                 </div>
-            </x-mary-card>
+            </x-ui.card>
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <x-mary-stat title="Total Submitted" value="{{ $ticketStats['total'] }}" icon="s-document-text"
+                <x-ui.stat title="Total Submitted" value="{{ $ticketStats['total'] }}" icon="s-document-text"
                     color="text-primary" />
 
-                <x-mary-stat title="Under Review" value="{{ $ticketStats['under_review'] }}"
+                <x-ui.stat title="Under Review" value="{{ $ticketStats['under_review'] }}"
                     icon="s-clock" color="text-warning" />
 
-                <x-mary-stat title="Approved" value="{{ $ticketStats['approved'] }}"
+                <x-ui.stat title="Approved" value="{{ $ticketStats['approved'] }}"
                     icon="s-check-circle" color="text-success" />
 
-                <x-mary-stat title="Need Action" value="{{ $ticketStats['need_action'] }}"
+                <x-ui.stat title="Need Action" value="{{ $ticketStats['need_action'] }}"
                     icon="s-exclamation-triangle" color="text-error" />
             </div>
         </div>
@@ -155,7 +155,7 @@
 
     {{-- Edit Drawer - Keep for editing tickets from list view if needed --}}
 
-    <x-mary-drawer wire:model="showEditDrawer"
+    <x-ui.drawer wire:model="showEditDrawer"
         title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
         subtitle="Revise your event request" separator with-close-button close-on-escape right
         class="w-11/12 lg:w-2/3 overflow-hidden" @close="$wire.closeEditDrawer()">
@@ -183,7 +183,7 @@
         });">
             <div x-show="isLoading" class="flex items-center justify-center py-16">
                 <div class="flex flex-col items-center gap-3">
-                    <x-mary-loading class="loading-lg text-primary" />
+                    <x-ui.loading class="loading-lg text-primary" />
                     <p class="text-sm text-base-content/70">Loading form...</p>
                 </div>
             </div>
@@ -194,7 +194,7 @@
                 @endif
             </div>
         </div>
-    </x-mary-drawer>
+    </x-ui.drawer>
 
 
     {{-- Add JavaScript for handling attachment preview and download --}}

@@ -71,19 +71,19 @@
         </div>
 
         <div class="flex items-center space-x-1">
-            <x-mary-button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click.preserve-scroll="previousPage" :disabled="!$paginator->previousPageUrl()" />
+            <x-ui.button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click.preserve-scroll="previousPage" :disabled="!$paginator->previousPageUrl()" />
 
             @foreach ($pages as $page)
                 @if ($page === '...')
                     <span class="px-2 py-1 text-base-content/40 text-sm">...</span>
                 @else
-                    <x-mary-button :label="(string) $page"
+                    <x-ui.button :label="(string) $page"
                         class="btn-sm {{ $page == $currentPage ? 'btn-primary' : 'btn-ghost' }}"
                         wire:click.preserve-scroll="gotoPage({{ $page }})" />
                 @endif
             @endforeach
 
-            <x-mary-button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click.preserve-scroll="nextPage" :disabled="!$paginator->nextPageUrl()" />
+            <x-ui.button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click.preserve-scroll="nextPage" :disabled="!$paginator->nextPageUrl()" />
         </div>
     </div>
 @endif

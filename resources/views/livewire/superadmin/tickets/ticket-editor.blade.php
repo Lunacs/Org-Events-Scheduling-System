@@ -10,7 +10,7 @@
                     class="hover:text-primary transition-colors">
                     Ticket Management
                 </a>
-                <x-mary-icon name="o-chevron-right" class="w-4 h-4 mx-2" />
+                <x-ui.icon name="o-chevron-right" class="w-4 h-4 mx-2" />
                 <span class="text-base-content font-medium">
                     {{ $isEditing ? 'Edit Ticket' : 'Create New Ticket' }}
                 </span>
@@ -18,7 +18,7 @@
 
             <div class="flex items-center gap-4 relative z-10">
                 <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                    <x-mary-icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
+                    <x-ui.icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
                         class="w-6 h-6 text-primary" />
                 </span>
                 <div>
@@ -37,12 +37,12 @@
     <form wire:submit.prevent="save" class="space-y-6">
 
         {{-- Section: Organization & Event Info --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-information-circle" class="w-4 h-4" />
+                            <x-ui.icon name="o-information-circle" class="w-4 h-4" />
                             Organization & Event Info
                         </span>
                     </label>
@@ -100,15 +100,15 @@
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Section: Schedule --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-calendar" class="w-4 h-4" />
+                            <x-ui.icon name="o-calendar" class="w-4 h-4" />
                             Schedule
                         </span>
                     </label>
@@ -137,15 +137,15 @@
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Section: Venue --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-map-pin" class="w-4 h-4" />
+                            <x-ui.icon name="o-map-pin" class="w-4 h-4" />
                             Venue
                         </span>
                     </label>
@@ -194,15 +194,15 @@
                     @endif
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Section: Participants --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-user-group" class="w-4 h-4" />
+                            <x-ui.icon name="o-user-group" class="w-4 h-4" />
                             Participants
                         </span>
                     </label>
@@ -223,15 +223,15 @@
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Section: Budget --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-banknotes" class="w-4 h-4" />
+                            <x-ui.icon name="o-banknotes" class="w-4 h-4" />
                             Budget
                         </span>
                     </label>
@@ -255,22 +255,22 @@
                         @error('fund_source_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="md:col-span-2">
-                        <label for="budget_breakdown" class="block text-sm font-medium text-base-content/70 mb-1">Budget Breakdown</label>
+                        <label for="budget_breakdown" class="block text-sm font-medium text-base-content/70 mb-1">{{ (int) $fund_source_id === 1 ? 'Budget Proposal Breakdown' : 'Request Details' }}</label>
                         <textarea id="budget_breakdown" wire:model="budget_breakdown" class="textarea textarea-bordered w-full" rows="2"
                             placeholder="Itemize the budget..."></textarea>
                         @error('budget_breakdown') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Section: Additional Information --}}
-        <x-mary-card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
             <div class="space-y-5">
                 <div class="pb-3 border-b border-slate-200 dark:border-base-300">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <span class="flex items-center gap-2">
-                            <x-mary-icon name="o-clipboard-document-list" class="w-4 h-4" />
+                            <x-ui.icon name="o-clipboard-document-list" class="w-4 h-4" />
                             Additional Information
                         </span>
                     </label>
@@ -291,12 +291,12 @@
                     </div>
                 </div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
 
         {{-- Form Actions --}}
         <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-            <x-mary-button label="Cancel" wire:click="cancel" class="btn-ghost" icon="o-x-mark" />
-            <x-mary-button type="submit" label="{{ $isEditing ? 'Save Changes' : 'Create Ticket' }}"
+            <x-ui.button label="Cancel" wire:click="cancel" class="btn-ghost" icon="o-x-mark" />
+            <x-ui.button type="submit" label="{{ $isEditing ? 'Save Changes' : 'Create Ticket' }}"
                 class="btn-primary" spinner="save"
                 icon="{{ $isEditing ? 'o-check' : 'o-plus' }}" />
         </div>

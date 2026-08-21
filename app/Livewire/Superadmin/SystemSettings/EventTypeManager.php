@@ -4,11 +4,11 @@ namespace App\Livewire\Superadmin\SystemSettings;
 
 use App\Models\Event_Type;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class EventTypeManager extends Component
 {
@@ -16,8 +16,11 @@ class EventTypeManager extends Component
 
     // Delete data
     public $deletingEventTypeId = null;
+
     public $deletingEventTypeName = '';
+
     public $hasAssociatedEvents = false;
+
     public $deleteModalOpen = false;
 
     // Cache duration
@@ -58,14 +61,16 @@ class EventTypeManager extends Component
     {
         $eventType = Event_Type::find($this->deletingEventTypeId);
 
-        if (!$eventType) {
+        if (! $eventType) {
             $this->error('Event type not found!', position: 'toast-top');
+
             return;
         }
 
         // Check if event type is being used
         if ($eventType->events()->count() > 0) {
             $this->error('Cannot delete event type that is being used by events!', position: 'toast-top');
+
             return;
         }
 
@@ -85,7 +90,7 @@ class EventTypeManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Event type deletion failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to delete event type: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete event type: '.$e->getMessage(), position: 'toast-top');
         }
     }
 

@@ -23,20 +23,23 @@
     }
 
     $isRichText = $requirements instanceof \Tonysm\RichTextLaravel\Models\RichText;
+    
+    // Check if the rich text actually has content (not just empty tags)
+    $hasContent = false;
+    if ($isRichText && trim(strip_tags((string) $requirements)) !== '') {
+        $hasContent = true;
+    }
 @endphp
 
 <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
     <div class="flex items-start space-x-2">
-        <x-mary-icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
+        <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
         <div class="text-sm flex-1">
             <p class="font-medium mb-1">Required Documents:</p>
-            @if ($isRichText)
+            @if ($hasContent)
                 {{-- Rich text from Event_Type --}}
                 <div class="prose prose-sm prose-slate dark:prose-invert max-w-none text-base-content/80">
-                    <ul class="list-disc list-inside space-y-1">
-                        {{-- <li>Document containing the Rationale</li> --}}
-                    </ul>
-                    {{ h((string) $requirements) }}
+                    {!! $requirements !!}
                 </div>
             @elseif ($resolvedEventType)
                 {{-- Fallback to config if no rich text set --}}

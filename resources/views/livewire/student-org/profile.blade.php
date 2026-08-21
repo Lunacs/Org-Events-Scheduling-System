@@ -1,27 +1,7 @@
 <div class="py-6">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         {{-- Page Header --}}
-        <div class="bg-gradient-to-r from-primary to-secondary rounded-box shadow-lg p-6 text-primary-content">
-            <div class="flex items-center gap-4">
-                <div wire:key="profile-header-avatar-{{ $user->avatar_style }}-{{ $user->avatar_seed }}">
-                    <x-ui.avatar :user="$user" size="2xl" class="ring-4 ring-base-100" nav="false" />
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-3xl font-bold break-words">{{ $user->name }}</h1>
-                    <p class="text-primary-content/80 mt-1 text-sm sm:text-base break-words">{{ $user->email }}</p>
-                    <div class="flex gap-2 mt-2">
-                        <span class="badge badge-lg bg-base-100/20 text-primary-content border-0">
-                            {{ $user->role_display }}
-                        </span>
-                        @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success text-white">
-                                <i class="fa-solid fa-check-circle mr-1"></i> Verified
-                            </span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-profile.identity-header :user="$user" />
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Main Content --}}
@@ -30,7 +10,7 @@
                 <livewire:avatar-selector />
 
                 {{-- Profile Information --}}
-                <x-mary-card title="Profile Information" subtitle="Update your account details" x-data="{
+                <x-ui.card title="Profile Information" subtitle="Update your account details" x-data="{
                     initialName: {{ Js::from($name) }},
                     initialEmail: {{ Js::from($email) }},
                     initialPhone: {{ Js::from($phone ?? '') }},
@@ -46,123 +26,206 @@
                         initialPhone = $wire.phone;
                     ">
                     <x-slot:menu>
-                        <x-mary-icon name="o-user-circle" class="w-6 h-6 text-primary" />
+                        <x-ui.icon name="o-user-circle" class="w-6 h-6 text-primary" />
                     </x-slot:menu>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @if ($pending_email)
                             <div
                                 class="md:col-span-2 flex items-center gap-3 p-3 bg-info/10 border border-info/30 rounded-lg text-sm">
-                                <x-mary-icon name="o-envelope" class="w-5 h-5 text-info shrink-0" />
+                                <x-ui.icon name="o-envelope" class="w-5 h-5 text-info shrink-0" />
                                 <span class="flex-1 text-info-content dark:text-info">
                                     Verification sent to <strong>{{ $pending_email }}</strong>. Check your inbox.
                                 </span>
-                                <x-mary-button wire:click="cancelEmailChange" icon="o-x-mark"
+                                <x-ui.button wire:click="cancelEmailChange" icon="o-x-mark"
                                     class="btn-ghost btn-xs text-error" tooltip="Cancel email change" />
                             </div>
                         @endif
-                        <x-mary-input wire:model.live="name" label="Full Name" placeholder="Your name" icon="o-user"
+                        <x-ui.input wire:model.live="name" label="Full Name" placeholder="Your name" icon="o-user"
                             required />
 
-                        <x-mary-input wire:model.live="email" label="Email Address" type="email"
+                        <x-ui.input wire:model.live="email" label="Email Address" type="email"
                             placeholder="you@example.com" icon="o-envelope" required />
 
-                        <x-mary-input wire:model.live="phone" label="Phone Number" placeholder="09123456789"
+                        <x-ui.input wire:model.live="phone" label="Phone Number" placeholder="09123456789"
                             icon="o-phone" />
 
-                        <x-mary-input wire:model="organization" label="Organization" placeholder="Your organization"
+                        <x-ui.input wire:model="organization" label="Organization" placeholder="Your organization"
                             icon="o-building-office" readonly />
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updateProfile" icon="o-check"
+                        <x-ui.button wire:click="updateProfile" icon="o-check"
                             class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
                             x-show="hasChanges" spinner>
                             Save Changes
-                        </x-mary-button>
+                        </x-ui.button>
                     </x-slot:actions>
-                </x-mary-card>
+                </x-ui.card>
 
                 {{-- Password Change --}}
                 <form wire:submit.prevent="updatePassword">
-                    <x-mary-card title="Change Password" subtitle="Update your password to keep your account secure"
+                    <x-ui.card title="Change Password" subtitle="Update your password to keep your account secure"
                         x-data="{
+                            showCurrent: false,
+                            showNew: false,
+                            showConfirm: false,
                             get hasPasswordInput() {
                                 return ($wire.current_password && $wire.current_password.length > 0) ||
                                     ($wire.new_password && $wire.new_password.length > 0) ||
                                     ($wire.new_password_confirmation && $wire.new_password_confirmation.length > 0);
+                            },
+                            get passwordStrength() {
+                                const pw = $wire.new_password || '';
+                                if (!pw) return { score: 0, label: '', color: '' };
+                                let score = 0;
+                                if (pw.length >= 8) score++;
+                                if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+                                if (/\d/.test(pw)) score++;
+                                if (/[^a-zA-Z0-9]/.test(pw)) score++;
+                                if (pw.length >= 12) score++;
+
+                                const levels = [
+                                    { label: '', color: '' },
+                                    { label: 'Weak', color: 'bg-error' },
+                                    { label: 'Fair', color: 'bg-warning' },
+                                    { label: 'Good', color: 'bg-info' },
+                                    { label: 'Strong', color: 'bg-success' },
+                                    { label: 'Very Strong', color: 'bg-success' },
+                                ];
+                                return { score, label: levels[score].label, color: levels[score].color };
+                            },
+                            get passwordsMatch() {
+                                const pw = $wire.new_password || '';
+                                const confirm = $wire.new_password_confirmation || '';
+                                if (!pw || !confirm) return null;
+                                return pw === confirm;
                             }
                         }">
                         <x-slot:menu>
-                            <x-mary-icon name="o-lock-closed" class="w-6 h-6 text-warning" />
+                            <x-ui.icon name="o-lock-closed" class="w-6 h-6 text-warning" />
                         </x-slot:menu>
 
                         <div class="space-y-4">
                             {{-- Current Password with Toggle --}}
-                            <div x-data="{ show: false }" class="relative">
-                                <x-mary-input wire:model="current_password" label="Current Password"
-                                    x-bind:type="show ? 'text' : 'password'" placeholder="Enter current password"
-                                    icon="o-key" autocomplete="current-password" />
-                                <button type="button" @click="show = !show"
-                                    class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                            <div class="relative">
+                                <x-ui.input wire:model="current_password" label="Current Password" ::type="showCurrent ? 'text' : 'password'"
+                                    placeholder="Enter current password" icon="o-key"
+                                    autocomplete="current-password" />
+                                <button type="button" @click="showCurrent = !showCurrent"
+                                    class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
                                     tabindex="-1">
-                                    <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
-                                    <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
+                                    <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showCurrent" x-cloak />
+                                    <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showCurrent" />
                                 </button>
                             </div>
 
                             {{-- New Password Fields --}}
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div x-data="{ show: false }" class="relative">
-                                    <x-mary-input wire:model="new_password" label="New Password"
-                                        x-bind:type="show ? 'text' : 'password'" placeholder="Enter new password"
-                                        icon="o-lock-closed" autocomplete="new-password" />
-                                    <button type="button" @click="show = !show"
-                                        class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                <div class="relative">
+                                    <x-ui.input wire:model.live.debounce.300ms="new_password" label="New Password"
+                                        ::type="showNew ? 'text' : 'password'" placeholder="Enter new password" icon="o-lock-closed"
+                                        autocomplete="new-password" />
+                                    <button type="button" @click="showNew = !showNew"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
-                                        <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
-                                        <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
+                                        <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showNew" x-cloak />
+                                        <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showNew" />
                                     </button>
                                 </div>
 
-                                <div x-data="{ show: false }" class="relative">
-                                    <x-mary-input wire:model="new_password_confirmation" label="Confirm New Password"
-                                        x-bind:type="show ? 'text' : 'password'" placeholder="Confirm new password"
-                                        icon="o-lock-closed" autocomplete="new-password" />
-                                    <button type="button" @click="show = !show"
-                                        class="absolute right-3 top-[2.6rem] text-gray-400 hover:text-gray-600 transition-colors"
+                                <div class="relative">
+                                    <x-ui.input wire:model.live.debounce.300ms="new_password_confirmation"
+                                        label="Confirm New Password" ::type="showConfirm ? 'text' : 'password'"
+                                        placeholder="Confirm new password" icon="o-lock-closed"
+                                        autocomplete="new-password" />
+                                    <button type="button" @click="showConfirm = !showConfirm"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
-                                        <x-mary-icon name="o-eye" class="w-5 h-5" x-show="show" />
-                                        <x-mary-icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
+                                        <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showConfirm" x-cloak />
+                                        <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirm" />
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="alert alert-info">
-                                <x-mary-icon name="o-information-circle" class="w-5 h-5" />
-                                <div class="text-sm">
-                                    <p class="font-medium">Password Requirements:</p>
-                                    <ul class="list-disc list-inside mt-1">
-                                        <li>At least 8 characters long</li>
-                                        <li>Contains uppercase and lowercase letters</li>
-                                        <li>Contains at least one number</li>
+                            {{-- Password Strength Indicator --}}
+                            <div x-show="$wire.new_password && $wire.new_password.length > 0" x-collapse x-cloak>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="font-medium text-base-content/70">Password Strength</span>
+                                        <span class="font-semibold"
+                                            :class="{
+                                                'text-error': passwordStrength.score <= 1,
+                                                'text-warning': passwordStrength.score === 2,
+                                                'text-info': passwordStrength.score === 3,
+                                                'text-success': passwordStrength.score >= 4
+                                            }"
+                                            x-text="passwordStrength.label"></span>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <template x-for="i in 5" :key="i">
+                                            <div class="h-1.5 flex-1 rounded-full transition-all duration-300"
+                                                :class="i <= passwordStrength.score ? passwordStrength.color : 'bg-base-300'">
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <ul class="text-xs space-y-1 text-base-content/70">
+                                        <li :class="($wire.new_password || '').length >= 8 ? 'text-success' : ''">
+                                            <i class="fa-solid fa-fw"
+                                                :class="($wire.new_password || '').length >= 8 ? 'fa-check' :
+                                                    'fa-circle text-[6px] align-middle'"></i>
+                                            At least 8 characters
+                                        </li>
+                                        <li
+                                            :class="/[a-z]/.test($wire.new_password || '') && /[A-Z]/.test($wire.new_password ||
+                                                '') ? 'text-success' : ''">
+                                            <i class="fa-solid fa-fw"
+                                                :class="/[a-z]/.test($wire.new_password || '') && /[A-Z]/.test($wire
+                                                        .new_password || '') ? 'fa-check' :
+                                                    'fa-circle text-[6px] align-middle'"></i>
+                                            Uppercase and lowercase letters
+                                        </li>
+                                        <li :class="/\d/.test($wire.new_password || '') ? 'text-success' : ''">
+                                            <i class="fa-solid fa-fw"
+                                                :class="/\d/.test($wire.new_password || '') ? 'fa-check' :
+                                                    'fa-circle text-[6px] align-middle'"></i>
+                                            At least one number
+                                        </li>
+                                        <li
+                                            :class="/[^a-zA-Z0-9]/.test($wire.new_password || '') ? 'text-success' : ''">
+                                            <i class="fa-solid fa-fw"
+                                                :class="/[^a-zA-Z0-9]/.test($wire.new_password || '') ? 'fa-check' :
+                                                    'fa-circle text-[6px] align-middle'"></i>
+                                            At least one special character
+                                        </li>
                                     </ul>
+                                </div>
+                            </div>
+
+                            {{-- Password Match Indicator --}}
+                            <div x-show="($wire.new_password_confirmation || '').length > 0" x-collapse x-cloak>
+                                <div class="flex items-center gap-2 text-sm"
+                                    :class="passwordsMatch === true ? 'text-success' : 'text-error'">
+                                    <i class="fa-solid"
+                                        :class="passwordsMatch === true ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                                    <span
+                                        x-text="passwordsMatch === true ? 'Passwords match' : 'Passwords do not match'"></span>
                                 </div>
                             </div>
                         </div>
 
                         <x-slot:actions>
-                            <x-mary-button type="submit" icon="o-shield-check"
+                            <x-ui.button type="submit" icon="o-shield-check"
                                 class="btn-warning data-loading:opacity-50 data-loading:pointer-events-none"
                                 x-show="hasPasswordInput" spinner>
                                 Update Password
-                            </x-mary-button>
+                            </x-ui.button>
                         </x-slot:actions>
-                    </x-mary-card>
+                    </x-ui.card>
                 </form>
 
                 {{-- Notification Preferences --}}
-                <x-mary-card title="Notification Preferences" subtitle="Manage how you receive updates"
+                <x-ui.card title="Notification Preferences" subtitle="Manage how you receive updates"
                     x-data="{
                         initialEmailNotifications: Boolean({{ Js::from($email_notifications) }}),
                         initialTicketUpdates: Boolean({{ Js::from($ticket_updates) }}),
@@ -176,55 +239,55 @@
                         initialTicketUpdates = Boolean($wire.ticket_updates);
                     ">
                     <x-slot:menu>
-                        <x-mary-icon name="o-bell" class="w-6 h-6 text-info" />
+                        <x-ui.icon name="o-bell" class="w-6 h-6 text-info" />
                     </x-slot:menu>
 
                     <div class="space-y-4">
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <div class="bg-success/10 p-2 rounded-full">
-                                    <x-mary-icon name="o-envelope" class="w-5 h-5 text-success" />
+                                    <x-ui.icon name="o-envelope" class="w-5 h-5 text-success" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Email Notifications</h4>
                                     <p class="text-sm text-base-content/70">Receive email for all activities</p>
                                 </div>
                             </div>
-                            <x-mary-toggle wire:model.live="email_notifications" class="toggle-success" />
+                            <x-ui.toggle wire:model.live="email_notifications" class="toggle-success" />
                         </div>
 
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <div class="bg-primary/10 p-2 rounded-full">
-                                    <x-mary-icon name="o-ticket" class="w-5 h-5 text-primary" />
+                                    <x-ui.icon name="o-ticket" class="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Ticket Updates</h4>
                                     <p class="text-sm text-base-content/70">Get notified on ticket changes</p>
                                 </div>
                             </div>
-                            <x-mary-toggle wire:model.live="ticket_updates" class="toggle-primary" />
+                            <x-ui.toggle wire:model.live="ticket_updates" class="toggle-primary" />
                         </div>
                     </div>
 
                     <x-slot:actions>
-                        <x-mary-button wire:click="updatePreferences" icon="o-check"
+                        <x-ui.button wire:click="updatePreferences" icon="o-check"
                             class="btn-info data-loading:opacity-50 data-loading:pointer-events-none"
                             x-show="hasChanges" spinner>
                             Save Preferences
-                        </x-mary-button>
+                        </x-ui.button>
                     </x-slot:actions>
-                </x-mary-card>
+                </x-ui.card>
             </div>
 
             {{-- Sidebar --}}
             <div class="space-y-6">
                 {{-- Account Stats --}}
-                <x-mary-card title="Account Overview" class="shadow-lg">
+                <x-ui.card title="Account Overview" class="shadow-lg">
                     <div class="space-y-4">
                         <div class="stat bg-base-200 rounded-lg">
                             <div class="stat-figure text-primary">
-                                <x-mary-icon name="o-calendar" class="w-8 h-8" />
+                                <x-ui.icon name="o-calendar" class="w-8 h-8" />
                             </div>
                             <div class="stat-title">Member Since</div>
                             <div class="stat-value text-lg">{{ $user->created_at->format('M Y') }}</div>
@@ -233,7 +296,7 @@
 
                         <div class="stat bg-base-200 rounded-lg">
                             <div class="stat-figure text-success">
-                                <x-mary-icon name="o-clock" class="w-8 h-8" />
+                                <x-ui.icon name="o-clock" class="w-8 h-8" />
                             </div>
                             <div class="stat-title">Last Login</div>
                             @if ($user->last_login)
@@ -244,14 +307,14 @@
 
                         <div class="stat bg-base-200 rounded-lg">
                             <div class="stat-figure text-info">
-                                <x-mary-icon name="o-shield-check" class="w-8 h-8" />
+                                <x-ui.icon name="o-shield-check" class="w-8 h-8" />
                             </div>
                             <div class="stat-title">Account Status</div>
                             <div class="stat-value text-lg">Active</div>
                             <div class="stat-desc">Verified account</div>
                         </div>
                     </div>
-                </x-mary-card>
+                </x-ui.card>
             </div>
         </div>
     </div>

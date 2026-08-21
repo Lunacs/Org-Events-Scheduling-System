@@ -45,8 +45,6 @@
 @endphp
 
 <div>
-    <x-mary-toast />
-
     <section
         class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
         <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
@@ -73,16 +71,16 @@
 
     <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <x-mary-input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
-                icon="o-magnifying-glass" clearable />
+            <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                icon="o-magnifying-glass" />
 
-            <x-mary-select wire:model.live="filterStatus" placeholder="Filter by Status" :options="$statusOptions"
+            <x-ui.select wire:model.live="filterStatus" placeholder="Filter by Status" :options="$statusOptions"
                 option-value="id" option-label="name" />
 
-            <x-mary-select wire:model.live="filterOrganization" placeholder="Filter by Organization" :options="$organizations"
+            <x-ui.select wire:model.live="filterOrganization" placeholder="Filter by Organization" :options="$organizations"
                 option-value="org_id" option-label="org_name" />
 
-            <x-mary-select wire:model.live="filterPriority" placeholder="Filter by Priority" :options="$priorityOptions"
+            <x-ui.select wire:model.live="filterPriority" placeholder="Filter by Priority" :options="$priorityOptions"
                 option-value="id" option-label="name" />
         </div>
     </div>

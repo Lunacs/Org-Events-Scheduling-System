@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Async;
@@ -11,7 +12,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
 class Notifications extends Component
 {
@@ -54,7 +54,7 @@ class Notifications extends Component
 
         // Optimize: Load all counts in a single query with aggregations
         $counts = Cache::remember(
-            "osa_notifications_counts_{$user->user_id}",
+            "gso_notifications_counts_{$user->user_id}",
             60, // 1 minute cache
             function () use ($user) {
                 $today = today();
@@ -245,7 +245,7 @@ class Notifications extends Component
     {
         $user = auth()->user();
         if ($user) {
-            Cache::forget("osa_notifications_counts_{$user->user_id}");
+            Cache::forget("gso_notifications_counts_{$user->user_id}");
         }
         $this->loadCounts();
     }

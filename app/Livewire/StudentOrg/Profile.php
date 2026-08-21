@@ -2,15 +2,16 @@
 
 namespace App\Livewire\StudentOrg;
 
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class Profile extends Component
 {
@@ -24,18 +25,25 @@ class Profile extends Component
 
     // Profile Information
     public $name;
+
     public $email;
+
     public $phone;
+
     public $organization;
+
     public $pending_email;
 
     // Password Change
     public $current_password;
+
     public $new_password;
+
     public $new_password_confirmation;
 
     // Preferences
     public $email_notifications = true;
+
     public $ticket_updates = true;
 
     public function mount()
@@ -76,7 +84,7 @@ class Profile extends Component
                     'required',
                     'email:rfc,dns',
                     'max:255',
-                    'unique:users,email,' . Auth::id() . ',user_id',
+                    'unique:users,email,'.Auth::id().',user_id',
                     'regex:/^[a-zA-Z0-9._%+\-]+@plv\.edu\.ph$/',
                 ],
                 'phone' => [
@@ -116,10 +124,10 @@ class Profile extends Component
             }
 
             $this->dispatch('avatar-updated');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Failed to update profile: ' . $e->getMessage());
+            Log::error('Failed to update profile: '.$e->getMessage());
             $this->error('Failed to update profile. Please try again.', position: 'toast-top');
         }
     }
@@ -167,10 +175,10 @@ class Profile extends Component
             $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
 
             $this->success('Password updated successfully!', position: 'toast-top');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Failed to update password: ' . $e->getMessage());
+            Log::error('Failed to update password: '.$e->getMessage());
             $this->error('Failed to update password. Please try again.', position: 'toast-top');
         }
     }

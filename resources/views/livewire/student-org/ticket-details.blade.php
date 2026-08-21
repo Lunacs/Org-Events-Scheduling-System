@@ -27,7 +27,7 @@
                 <div class="relative p-6 sm:p-8">
                     <div class="flex items-center gap-2 text-sm text-base-content/60 mb-3">
                         <a href="{{ route('student-org.my-tickets') }}" class="hover:text-primary transition-colors inline-flex items-center gap-1" wire:navigate>
-                            <x-mary-icon name="o-arrow-left" class="w-3.5 h-3.5" />
+                            <x-ui.icon name="o-arrow-left" class="w-3.5 h-3.5" />
                             My Tickets
                         </a>
                         <span>/</span>
@@ -177,7 +177,7 @@
                             <h2 class="text-lg font-semibold text-base-content mb-4">Actions</h2>
                             <div class="space-y-3">
                                 <button class="btn btn-primary w-full" wire:click="openEditDrawer">
-                                    <x-mary-icon name="s-pencil" class="w-4 h-4" />
+                                    <x-ui.icon name="s-pencil" class="w-4 h-4" />
                                     Revise Ticket
                                 </button>
                             </div>
@@ -197,7 +197,7 @@
     </div>
 
     {{-- Edit Drawer --}}
-    <x-mary-drawer wire:model="showEditDrawer" title="{{ 'Edit Ticket - ' . $ticket->ticket_number }}"
+    <x-ui.drawer wire:model="showEditDrawer" title="{{ 'Edit Ticket - ' . $ticket->ticket_number }}"
         subtitle="Revise your event request" separator with-close-button close-on-escape right
         class="w-11/12 lg:w-2/3 overflow-hidden" @close="$wire.closeEditDrawer()">
 
@@ -224,7 +224,7 @@
         });">
             <div x-show="isLoading" class="flex items-center justify-center py-16">
                 <div class="flex flex-col items-center gap-3">
-                    <x-mary-loading class="loading-lg text-primary" />
+                    <x-ui.loading class="loading-lg text-primary" />
                     <p class="text-sm text-base-content/70">Loading form...</p>
                 </div>
             </div>
@@ -235,7 +235,7 @@
                 @endif
             </div>
         </div>
-    </x-mary-drawer>
+    </x-ui.drawer>
 
     {{-- JavaScript for attachment handling --}}
     <script>

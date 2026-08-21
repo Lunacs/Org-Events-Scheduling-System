@@ -4,24 +4,23 @@ namespace App\Livewire\Superadmin;
 
 use App\Models\Transaction_Logs;
 use App\Services\TransactionLogService;
-use Livewire\Component;
-use Livewire\Attributes\Url;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\Lazy;
-use Livewire\WithPagination;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
-use Mary\Traits\Toast;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Lazy]
 class Logs extends Component
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     #[Title('Superadmin - Transaction Logs')]
     #[Layout('components.layouts.superadmin')]
-
     public function placeholder()
     {
         return view('livewire.superadmin.placeholders.logs');
@@ -44,11 +43,11 @@ class Logs extends Component
             ->with(['user:user_id,name,email'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('action', 'like', '%' . $this->search . '%')
-                        ->orWhere('details', 'like', '%' . $this->search . '%')
+                    $q->where('action', 'like', '%'.$this->search.'%')
+                        ->orWhere('details', 'like', '%'.$this->search.'%')
                         ->orWhereHas('user', function ($userQuery) {
-                            $userQuery->where('name', 'like', '%' . $this->search . '%')
-                                ->orWhere('email', 'like', '%' . $this->search . '%');
+                            $userQuery->where('name', 'like', '%'.$this->search.'%')
+                                ->orWhere('email', 'like', '%'.$this->search.'%');
                         });
                 });
             })
@@ -73,7 +72,6 @@ class Logs extends Component
         ];
     }
 
-
     public function clearLogs()
     {
         // Use the manual cleanup method to keep only recent logs
@@ -91,12 +89,12 @@ class Logs extends Component
         // This would typically generate a CSV or Excel file
         $this->success('Logs export initiated! Check your downloads.', position: 'toast-top');
     }
+
     public function updatedSearch()
     {
         $this->resetPage();
         unset($this->logs); // Clear computed cache
     }
-
 
     public function updatedDateFrom()
     {

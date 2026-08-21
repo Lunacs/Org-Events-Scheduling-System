@@ -3,11 +3,11 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Ticket;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class TicketDetails extends Component
 {
@@ -15,7 +15,6 @@ class TicketDetails extends Component
 
     #[Title('Ticket Details - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
-
     public Ticket $ticket;
 
     public $showEditDrawer = false;
@@ -61,7 +60,7 @@ class TicketDetails extends Component
             'created_at',
             'updated_at',
         ])->with([
-            'user' => fn($q) => $q->withTrashed()
+            'user' => fn ($q) => $q->withTrashed()
                 ->select(['user_id', 'name', 'email', 'role_id', 'org_id', 'position_id', 'avatar_style', 'avatar_seed']),
             'user.role:role_id,role_name',
             'user.studentOrganization:org_id,org_name,org_code,course_id,adviser_name,logo',
@@ -73,16 +72,16 @@ class TicketDetails extends Component
             'eventType:event_type_id,type_name',
             'fundSource:source_id,source_name',
             'comments:id,ticket_id,user_id,content,created_at',
-            'comments.user' => fn($q) => $q->withTrashed()
+            'comments.user' => fn ($q) => $q->withTrashed()
                 ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'comments.user.role:role_id,role_name',
             'osaApprovals:osa_approval_id,ticket_id,user_id,decision,remarks,created_at',
-            'osaApprovals.user' => fn($q) => $q->withTrashed()
+            'osaApprovals.user' => fn ($q) => $q->withTrashed()
                 ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'osaApprovals.user.role:role_id,role_name',
             'officeApprovals:id,ticket_id,office_id,user_id,decision,remarks,created_at',
             'officeApprovals.office:office_id,office_name',
-            'officeApprovals.user' => fn($q) => $q->withTrashed()
+            'officeApprovals.user' => fn ($q) => $q->withTrashed()
                 ->select(['user_id', 'name', 'role_id', 'avatar_style', 'avatar_seed']),
             'officeApprovals.user.role:role_id,role_name',
         ])->where('ticket_number', $ticketNumber);
@@ -118,6 +117,7 @@ class TicketDetails extends Component
 
         if (! $attachment) {
             $this->warning('Attachment not found.');
+
             return;
         }
 
@@ -134,6 +134,7 @@ class TicketDetails extends Component
 
         if (! $attachment) {
             $this->warning('Attachment not found.');
+
             return;
         }
 

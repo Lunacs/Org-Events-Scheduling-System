@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardCacheService
 {
+    use SupportsTags;
+
     /**
      * Cache TTL in seconds (5 minutes for stats)
      */
@@ -29,9 +31,15 @@ class DashboardCacheService
             $tags[] = "org:{$orgId}";
         }
 
-        $key .= ":stats";
+        $key .= ':stats';
 
-        return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags($tags)->remember($key, self::TTL_SECONDS, $callback);
+        }
+
+        self::trackKey('dashboard:known_keys', $key);
+
+        return Cache::remember($key, self::TTL_SECONDS, $callback);
     }
 
     /**
@@ -54,7 +62,13 @@ class DashboardCacheService
 
         $key .= ":widget:{$widgetName}";
 
-        return Cache::tags($tags)->remember($key, $ttl, $callback);
+        if (self::supportsTags()) {
+            return Cache::tags($tags)->remember($key, $ttl, $callback);
+        }
+
+        self::trackKey('dashboard:known_keys', $key);
+
+        return Cache::remember($key, $ttl, $callback);
     }
 
     /**
@@ -63,23 +77,29 @@ class DashboardCacheService
     public static function clearRoleStats(string $role, ?int $userId = null, ?int $orgId = null): void
     {
         $tags = ['dashboard', "role:{$role}"];
-        
+
         if ($userId) {
             $tags[] = "user:{$userId}";
         }
-        
+
         if ($orgId) {
             $tags[] = "org:{$orgId}";
         }
 
-        // We can just flush by the role tag if we want to clear all dashboards for this role
-        // But better to forget the specific key to be precise if we know it.
         $key = "dashboard:{$role}";
-        if ($userId) $key .= ":user:{$userId}";
-        if ($orgId) $key .= ":org:{$orgId}";
-        $key .= ":stats";
+        if ($userId) {
+            $key .= ":user:{$userId}";
+        }
+        if ($orgId) {
+            $key .= ":org:{$orgId}";
+        }
+        $key .= ':stats';
 
-        Cache::forget($key);
+        if (self::supportsTags()) {
+            Cache::tags($tags)->flush();
+        } else {
+            Cache::forget($key);
+        }
     }
 
     /**
@@ -87,6 +107,10 @@ class DashboardCacheService
      */
     public static function clearAllDashboards(): void
     {
-        Cache::tags(['dashboard'])->flush();
+        if (self::supportsTags()) {
+            Cache::tags(['dashboard'])->flush();
+        } else {
+            self::clearTrackedKeys('dashboard:known_keys');
+        }
     }
 }

@@ -4,7 +4,9 @@ namespace App\Livewire\Superadmin\Archive;
 
 use App\Models\Event;
 use App\Models\Ticket;
+use App\Services\Cache\ArchiveCacheService;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -12,7 +14,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
 class Index extends Component
 {
@@ -23,14 +24,20 @@ class Index extends Component
 
     // Filters
     public $search = '';
+
     public $typeFilter = 'all'; // all, events, tickets
+
     public $dateFrom;
+
     public $dateTo;
 
     // Selected items
     public $selectedItems = [];
+
     public $showRestoreModal = false;
+
     public $showDeleteModal = false;
+
     public $itemToAction = null;
 
     public function mount()
@@ -43,7 +50,7 @@ class Index extends Component
     #[Computed]
     public function archivedItems()
     {
-        return \App\Services\Cache\ArchiveCacheService::getSuperadminArchives(
+        return ArchiveCacheService::getSuperadminArchives(
             $this->search,
             $this->typeFilter,
             $this->dateFrom,
@@ -94,6 +101,7 @@ class Index extends Component
                         ->get()
                         ->map(function ($ticket) {
                             $orgDeleted = $ticket->user?->studentOrganization?->trashed();
+
                             return [
                                 'id' => $ticket->ticket_id,
                                 'type' => 'ticket',
@@ -141,8 +149,9 @@ class Index extends Component
 
     public function restoreItem()
     {
-        if (!$this->itemToAction) {
+        if (! $this->itemToAction) {
             $this->error('No item selected!', position: 'toast-top');
+
             return;
         }
 
@@ -171,21 +180,22 @@ class Index extends Component
             );
 
             DB::commit();
-            \App\Services\Cache\ArchiveCacheService::clearAllArchives();
+            ArchiveCacheService::clearAllArchives();
             $this->success('Item restored successfully!', position: 'toast-top');
             $this->showRestoreModal = false;
             $this->itemToAction = null;
             unset($this->archivedItems);
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error('Failed to restore item: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to restore item: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
     public function permanentlyDelete()
     {
-        if (!$this->itemToAction) {
+        if (! $this->itemToAction) {
             $this->error('No item selected!', position: 'toast-top');
+
             return;
         }
 
@@ -227,14 +237,14 @@ class Index extends Component
             );
 
             DB::commit();
-            \App\Services\Cache\ArchiveCacheService::clearAllArchives();
+            ArchiveCacheService::clearAllArchives();
             $this->success('Item permanently deleted!', position: 'toast-top');
             $this->showDeleteModal = false;
             $this->itemToAction = null;
             unset($this->archivedItems);
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error('Failed to delete item: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete item: '.$e->getMessage(), position: 'toast-top');
         }
     }
 

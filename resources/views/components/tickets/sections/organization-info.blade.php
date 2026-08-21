@@ -8,7 +8,7 @@
 <div class="bg-base-100 rounded-box shadow-lg p-4 md:p-6 overflow-hidden">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <h2 class="text-lg md:text-xl font-bold text-base-content flex items-center gap-2">
-            <x-mary-icon name="o-building-office-2" class="w-5 h-5 flex-shrink-0" />
+            <x-ui.icon name="o-building-office-2" class="w-5 h-5 flex-shrink-0" />
             <span class="break-words">Organization Information</span>
             @if ($userDeleted || $orgDeleted)
                 <span class="badge badge-warning badge-sm">Archived</span>
@@ -21,7 +21,7 @@
         @elseif ($orgDeleted)
             <div
                 class="w-16 h-16 md:w-20 md:h-20 bg-base-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                <x-mary-icon name="o-building-office" class="w-8 h-8 text-base-content/30" />
+                <x-ui.icon name="o-building-office" class="w-8 h-8 text-base-content/30" />
             </div>
         @endif
     </div>

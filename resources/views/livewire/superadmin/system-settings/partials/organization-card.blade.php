@@ -7,7 +7,7 @@
                 <img src="{{ $organization->logo_url }}" alt="{{ $organization->org_name }}"
                     class="w-full h-full object-cover">
             @else
-                <x-mary-icon name="o-user-group" class="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 dark:text-slate-500" />
+                <x-ui.icon name="o-user-group" class="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 dark:text-slate-500" />
             @endif
 
             {{-- Status indicator dot --}}
@@ -40,13 +40,13 @@
         </div>
     </div>
     <div class="flex gap-1 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-        <x-mary-button size="xs" icon="o-pencil-square"
+        <x-ui.button size="xs" icon="o-pencil-square"
             class="btn-ghost btn-sm text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400"
             wire:click="openEditOrgModal({{ $organization->org_id }})" wire:loading.attr="disabled">
-        </x-mary-button>
-        <x-mary-button size="xs" icon="o-trash"
+        </x-ui.button>
+        <x-ui.button size="xs" icon="o-trash"
             class="btn-ghost btn-sm text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400"
             wire:click="openDeleteOrgModal({{ $organization->org_id }})" wire:loading.attr="disabled">
-        </x-mary-button>
+        </x-ui.button>
     </div>
 </div>

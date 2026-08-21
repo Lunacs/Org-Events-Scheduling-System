@@ -19,7 +19,7 @@
                     </div>
                     <div class="chat-header">
                         {{ $comment->user->name }}
-                        <x-mary-badge value="{{ $comment->user->role_display }}" class="badge-primary text-xs ml-2" />
+                        <x-ui.badge value="{{ $comment->user->role_display }}" class="badge-primary text-xs ml-2" />
                         <time class="text-xs opacity-50">{{ $comment->created_at->diffForHumans() }}</time>
                     </div>
                     <div class="chat-bubble">{{ $comment->content }}</div>

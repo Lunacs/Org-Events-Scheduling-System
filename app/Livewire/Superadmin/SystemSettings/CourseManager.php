@@ -4,11 +4,11 @@ namespace App\Livewire\Superadmin\SystemSettings;
 
 use App\Models\Course;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class CourseManager extends Component
 {
@@ -95,7 +95,7 @@ class CourseManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Course creation failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to create course: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to create course: '.$e->getMessage(), position: 'toast-top');
         }
     }
 
@@ -121,7 +121,7 @@ class CourseManager extends Component
     public function editCourse()
     {
         $this->validate([
-            'courseCode' => 'required|string|max:50|unique:courses,course_code,' . $this->editingCourseId . ',course_id',
+            'courseCode' => 'required|string|max:50|unique:courses,course_code,'.$this->editingCourseId.',course_id',
             'courseName' => 'required|string|max:255',
             'department' => 'nullable|string|max:255',
         ], messages: [
@@ -204,12 +204,14 @@ class CourseManager extends Component
 
         if (! $course) {
             $this->error('Course not found!', position: 'toast-top');
+
             return;
         }
 
         // Check if course has organizations
         if ($course->studentOrganizations()->count() > 0) {
             $this->error('Cannot delete course that has associated organizations!', position: 'toast-top');
+
             return;
         }
 
@@ -229,7 +231,7 @@ class CourseManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Course deletion failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to delete course: ' . $e->getMessage(), position: 'toast-top');
+            $this->error('Failed to delete course: '.$e->getMessage(), position: 'toast-top');
         }
     }
 

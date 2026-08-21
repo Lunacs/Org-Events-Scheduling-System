@@ -7,6 +7,7 @@ use App\Models\Student_Organization;
 use App\Models\User;
 use App\Notifications\OrganizationCreatedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,6 @@ use Intervention\Image\Laravel\Facades\Image;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Mary\Traits\Toast;
 
 class OrganizationManager extends Component
 {

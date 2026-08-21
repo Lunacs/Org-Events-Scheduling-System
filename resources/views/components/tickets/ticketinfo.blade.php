@@ -23,18 +23,18 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-calendar" class="w-4 h-4 text-base-content/40" />
+                    <x-ui.icon name="s-calendar" class="w-4 h-4 text-base-content/40" />
                     <span class="text-sm">{{ \Carbon\Carbon::parse($tickets->date_from)->format('M j, Y') }} •
                         {{ \Carbon\Carbon::parse($tickets->time_from)->format('h:i A') }}</span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-map-pin" class="w-4 h-4 text-base-content/40" />
+                    <x-ui.icon name="s-map-pin" class="w-4 h-4 text-base-content/40" />
                     <span class="text-sm">
                         {{ $tickets->venue_display_name ?? 'Venue TBD' }}
                     </span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <x-mary-icon name="s-users" class="w-4 h-4 text-base-content/40" />
+                    <x-ui.icon name="s-users" class="w-4 h-4 text-base-content/40" />
                     <span class="text-sm">{{ $tickets->total_participants }} attendees expected</span>
                 </div>
             </div>

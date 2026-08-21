@@ -20,7 +20,7 @@
 
         <h1 class="text-3xl font-bold font-heading text-primary flex items-center gap-2">
             @if ($icon)
-                <x-mary-icon :name="$icon" class="w-8 h-8" />
+                <x-ui.icon :name="$icon" class="w-8 h-8" />
             @endif
             {{ $title }}
         </h1>

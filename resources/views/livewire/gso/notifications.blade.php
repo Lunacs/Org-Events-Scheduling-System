@@ -58,9 +58,9 @@
                                 </p>
                             </div>
                             <div class="flex flex-col md:flex-row items-center gap-2 relative z-10">
-                                <x-mary-button label="Mark All as Read" icon="s-check"
+                                <x-ui.button label="Mark All as Read" icon="s-check"
                                     class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
-                                <x-mary-button label="Clear All Read" icon="s-trash"
+                                <x-ui.button label="Clear All Read" icon="s-trash"
                                     class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
                                     wire:click="clearAllRead" :disabled="$readCount === 0"
                                     wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
@@ -74,7 +74,7 @@
                     <div class="bg-base-100 rounded-box shadow-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-error/20 rounded-full flex items-center justify-center">
-                                <x-mary-icon name="s-bell" class="w-6 h-6 text-error" />
+                                <x-ui.icon name="s-bell" class="w-6 h-6 text-error" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-base-content">{{ $unreadCount }}</p>
@@ -86,7 +86,7 @@
                     <div class="bg-base-100 rounded-box shadow-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-info/20 rounded-full flex items-center justify-center">
-                                <x-mary-icon name="s-clock" class="w-6 h-6 text-info" />
+                                <x-ui.icon name="s-clock" class="w-6 h-6 text-info" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-base-content">{{ $todayCount }}</p>
@@ -98,7 +98,7 @@
                     <div class="bg-base-100 rounded-box shadow-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
-                                <x-mary-icon name="s-calendar-days" class="w-6 h-6 text-success" />
+                                <x-ui.icon name="s-calendar-days" class="w-6 h-6 text-success" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-base-content">{{ $weekCount }}</p>
@@ -110,7 +110,7 @@
                     <div class="bg-base-100 rounded-box shadow-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center">
-                                <x-mary-icon name="s-archive-box" class="w-6 h-6 text-secondary" />
+                                <x-ui.icon name="s-archive-box" class="w-6 h-6 text-secondary" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-base-content">{{ $totalCount }}</p>
@@ -257,7 +257,7 @@
                                 <div class="shrink-0">
                                     <div
                                         class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
-                                        <x-mary-icon name="s-bell" class="w-5 h-5 {{ $iconTextClass }}" />
+                                        <x-ui.icon name="s-bell" class="w-5 h-5 {{ $iconTextClass }}" />
                                     </div>
                                 </div>
                                 <a href="{{ $url }}" wire:navigate
@@ -281,18 +281,18 @@
                                             @if (isset($data['ticket_number']))
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
                                                     <span class="flex items-center gap-1">
-                                                        <x-mary-icon name="s-ticket" class="w-3 h-3" />
+                                                        <x-ui.icon name="s-ticket" class="w-3 h-3" />
                                                         <span>{{ $data['ticket_number'] }}</span>
                                                     </span>
                                                     <span class="flex items-center gap-1">
-                                                        <x-mary-icon name="s-clock" class="w-3 h-3" />
+                                                        <x-ui.icon name="s-clock" class="w-3 h-3" />
                                                         <span>{{ $timeAgo }}</span>
                                                     </span>
                                                 </div>
                                             @else
                                                 <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
                                                     <span class="flex items-center gap-1">
-                                                        <x-mary-icon name="s-clock" class="w-3 h-3" />
+                                                        <x-ui.icon name="s-clock" class="w-3 h-3" />
                                                         <span>{{ $timeAgo }}</span>
                                                     </span>
                                                 </div>
@@ -311,7 +311,7 @@
                                         wire:confirm="Delete this notification? This action cannot be undone."
                                         class="btn btn-ghost btn-sm btn-circle text-error hover:bg-error/10"
                                         title="Delete notification">
-                                        <x-mary-icon name="s-trash" class="w-4 h-4" />
+                                        <x-ui.icon name="s-trash" class="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -321,7 +321,7 @@
                             @endif
                         @empty
                             <div class="text-center py-12">
-                                <x-mary-icon name="s-bell-slash"
+                                <x-ui.icon name="s-bell-slash"
                                     class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                                 <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
                                 <p class="text-base-content/50 text-sm mt-2">

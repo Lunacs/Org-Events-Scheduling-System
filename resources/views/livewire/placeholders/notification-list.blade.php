@@ -1,7 +1,7 @@
 {{-- Reusable Notification List Skeleton --}}
 <div class="space-y-4 animate-pulse w-full">
     @for ($i = 0; $i < 6; $i++)
-        <div class="flex items-start gap-4 p-4 bg-base-200/30 rounded-lg border-l-4 border-base-300 w-full">
+        <div class="flex items-start gap-4 p-4 bg-base-200/30 border border-base-300 rounded-lg w-full">
             <div class="shrink-0">
                 <div class="w-10 h-10 bg-base-300 rounded-full"></div>
             </div>

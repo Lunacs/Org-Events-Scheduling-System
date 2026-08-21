@@ -20,7 +20,7 @@
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <x-mary-button label="Submit New Event" icon="s-document-plus"
+                            <x-ui.button label="Submit New Event" icon="s-document-plus"
                                 class="btn-primary btn-sm text-white" link="/student-org/submit-ticket" wire:navigate />
                         </div>
                     </div>
@@ -29,22 +29,22 @@
 
             {{-- Analytics Summary --}}
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <x-mary-stat title="Total Events" description="Approved & Needs Revision" :value="$this->stats['total']"
+                <x-ui.stat title="Total Events" description="Approved & Needs Revision" :value="$this->stats['total']"
                     icon="s-calendar-days" color="text-primary" />
 
-                <x-mary-stat title="Approved" :description="'Success rate: ' . $this->stats['approved']['percentage'] . '%'" :value="$this->stats['approved']['count']" icon="s-check-circle"
+                <x-ui.stat title="Approved" :description="'Success rate: ' . $this->stats['approved']['percentage'] . '%'" :value="$this->stats['approved']['count']" icon="s-check-circle"
                     color="text-success" />
 
-                <x-mary-stat title="Needs Revision" :description="$this->stats['for_revision']['percentage'] . '% of submissions'" :value="$this->stats['for_revision']['count']" icon="s-x-circle"
+                <x-ui.stat title="Needs Revision" :description="$this->stats['for_revision']['percentage'] . '% of submissions'" :value="$this->stats['for_revision']['count']" icon="s-x-circle"
                     color="text-error" />
 
-                <x-mary-stat title="Avg. Processing" description="Days to approval" :value="$this->stats['avgProcessingDays']" icon="s-clock"
+                <x-ui.stat title="Avg. Processing" description="Days to approval" :value="$this->stats['avgProcessingDays']" icon="s-clock"
                     color="text-info" />
             </div>
 
             {{-- Performance Analytics --}}
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <x-mary-card title="Event Type Mix" subtitle="Most frequent approved categories">
+                <x-ui.card title="Event Type Mix" subtitle="Most frequent approved categories">
                     @if (count($this->eventTypeDistribution) > 0)
                         <div class="space-y-3">
                             @foreach ($this->eventTypeDistribution as $type)
@@ -65,13 +65,13 @@
                         </div>
                     @else
                         <div class="py-8 text-center text-base-content/60">
-                            <x-mary-icon name="o-chart-bar" class="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <x-ui.icon name="o-chart-bar" class="w-12 h-12 mx-auto mb-2 opacity-50" />
                             <p class="text-sm">No approved events yet</p>
                         </div>
                     @endif
-                </x-mary-card>
+                </x-ui.card>
 
-                <x-mary-card title="Monthly Activity" subtitle="Submissions in the last 6 months">
+                <x-ui.card title="Monthly Activity" subtitle="Submissions in the last 6 months">
                     @if (count($this->monthlyActivity) > 0)
                         <div class="space-y-3">
                             @foreach ($this->monthlyActivity as $month)
@@ -88,24 +88,24 @@
                         </div>
                     @else
                         <div class="py-8 text-center text-base-content/60">
-                            <x-mary-icon name="o-calendar" class="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <x-ui.icon name="o-calendar" class="w-12 h-12 mx-auto mb-2 opacity-50" />
                             <p class="text-sm">No events submitted in the last 6 months</p>
                         </div>
                     @endif
-                </x-mary-card>
+                </x-ui.card>
             </div>
 
             {{-- Filter and Search --}}
-            <x-mary-card>
+            <x-ui.card>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-5">
-                        <x-mary-input label="Search Events" wire:model.live.debounce.500ms="search"
+                        <x-ui.input label="Search Events" wire:model.live.debounce.500ms="search"
                             x-data="{ placeholder: window.innerWidth < 768 ? 'Title, Description or Venue' : 'Search by title, description, or venue...' }" x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, description, or venue...' })" ::placeholder="placeholder"
                             icon="s-magnifying-glass" />
                     </div>
 
                     <div wire:loading.class="opacity-50" class="md:col-span-2">
-                        <x-mary-select label="Status" wire:model.live="statusFilter" :options="[
+                        <x-ui.select label="Status" wire:model.live="statusFilter" :options="[
                             ['id' => '', 'name' => 'All Status'],
                             ['id' => 'approved', 'name' => 'Approved'],
                             ['id' => 'for_revision', 'name' => 'Needs Revision'],
@@ -114,22 +114,22 @@
                     </div>
 
                     <div wire:loading.class="opacity-50" class="md:col-span-2">
-                        <x-mary-select label="Event Type" wire:model.live="typeFilter" :options="$this->eventTypes" />
+                        <x-ui.select label="Event Type" wire:model.live="typeFilter" :options="$this->eventTypes" />
                     </div>
 
                     <div wire:loading.class="opacity-50" class="md:col-span-2">
-                        <x-mary-select label="Year" wire:model.live="yearFilter" :options="$this->years" />
+                        <x-ui.select label="Year" wire:model.live="yearFilter" :options="$this->years" />
                     </div>
 
                     <div class="md:col-span-1 flex md:justify-end">
-                        <x-mary-button icon="s-arrow-path" class="btn-ghost w-full md:w-auto" wire:click="resetFilters"
+                        <x-ui.button icon="s-arrow-path" class="btn-ghost w-full md:w-auto" wire:click="resetFilters"
                             tooltip="Reset Filters" />
                     </div>
                 </div>
-            </x-mary-card>
+            </x-ui.card>
 
             {{-- Event History List --}}
-            <x-mary-card title="Event History" subtitle="Complete record of your organization's events">
+            <x-ui.card title="Event History" subtitle="Complete record of your organization's events">
                 <div wire:loading.delay class="flex justify-center items-center py-8">
                     <span class="loading loading-spinner loading-md"></span>
                     <span class="ml-2 text-base-content/60">Loading events...</span>
@@ -159,14 +159,14 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2 mb-2">
                                         @if ($isApproved)
-                                            <x-mary-badge value="Approved" class="badge-success text-white" />
+                                            <x-ui.badge value="Approved" class="badge-success text-white" />
                                             @if ($isComplete)
-                                                <x-mary-badge value="Completed" class="badge-info text-white" />
+                                                <x-ui.badge value="Completed" class="badge-info text-white" />
                                             @endif
                                         @elseif($isForRevision)
-                                            <x-mary-badge value="For Revision" class="badge-warning text-white" />
+                                            <x-ui.badge value="For Revision" class="badge-warning text-white" />
                                         @elseif($isCancelled)
-                                            <x-mary-badge value="Cancelled" class="badge-error text-white" />
+                                            <x-ui.badge value="Cancelled" class="badge-error text-white" />
                                         @endif
                                         <span class="text-xs text-base-content/50">
                                             Ticket #{{ $ticket->ticket_number ?? $ticket->ticket_id }}
@@ -237,12 +237,12 @@
                                 </div>
 
                                 <div class="flex flex-row lg:flex-col gap-2 lg:ml-4">
-                                    <x-mary-button icon="s-eye" class="btn-sm btn-ghost flex-1 lg:flex-none"
+                                    <x-ui.button icon="s-eye" class="btn-sm btn-ghost flex-1 lg:flex-none"
                                         tooltip="View Details"
                                         wire:click="openDetailsModal({{ $ticket->ticket_id }})" />
                                     @if ($isForRevision)
-                                        <x-mary-button icon="s-arrow-path"
-                                            class="btn-sm btn-ghost flex-1 lg:flex-none" tooltip="Resubmit Modified"
+                                        <x-ui.button icon="s-arrow-path" class="btn-sm btn-ghost flex-1 lg:flex-none"
+                                            tooltip="Resubmit Modified"
                                             wire:click="resubmitTicket({{ $ticket->ticket_id }})" />
                                     @endif
                                 </div>
@@ -263,34 +263,34 @@
                             @endphp
 
                             @if ($isForRevision && $for_revisionRemarks)
-                                <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400">
+                                <div class="bg-warning/10 p-4 rounded-lg border border-warning/30">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-exclamation-triangle"
-                                            class="w-5 h-5 text-orange-600 mt-0.5" />
+                                        <x-ui.icon name="s-exclamation-triangle"
+                                            class="w-5 h-5 text-warning mt-0.5" />
                                         <div class="flex-1">
-                                            <h5 class="font-medium text-orange-900">Revision Reasons</h5>
-                                            <p class="text-sm text-orange-700 mt-1">{{ $for_revisionRemarks }}</p>
+                                            <h5 class="font-medium text-base-content">Revision Reasons</h5>
+                                            <p class="text-sm text-base-content/70 mt-1">{{ $for_revisionRemarks }}</p>
                                         </div>
                                     </div>
                                 </div>
                             @elseif($isComplete && $completionRemarks)
-                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                                <div class="bg-success/10 p-4 rounded-lg border border-success/30">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-chart-bar" class="w-5 h-5 text-green-600 mt-0.5" />
+                                        <x-ui.icon name="s-chart-bar" class="w-5 h-5 text-success mt-0.5" />
                                         <div class="flex-1">
-                                            <h5 class="font-medium text-green-900">Event Results & Feedback</h5>
-                                            <p class="text-sm text-green-700 mt-1">{{ $completionRemarks }}</p>
+                                            <h5 class="font-medium text-base-content">Event Results & Feedback</h5>
+                                            <p class="text-sm text-base-content/70 mt-1">{{ $completionRemarks }}</p>
                                         </div>
                                     </div>
                                 </div>
                             @elseif($isCancelled && $cancellationRemarks)
-                                <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <div class="bg-error/10 p-4 rounded-lg border border-error/30">
                                     <div class="flex items-start space-x-3">
-                                        <x-mary-icon name="s-exclamation-triangle"
-                                            class="w-5 h-5 text-yellow-600 mt-0.5" />
+                                        <x-ui.icon name="s-exclamation-triangle"
+                                            class="w-5 h-5 text-error mt-0.5" />
                                         <div class="flex-1">
-                                            <h5 class="font-medium text-yellow-900">Event Cancelled</h5>
-                                            <p class="text-sm text-yellow-700 mt-1">{{ $cancellationRemarks }}</p>
+                                            <h5 class="font-medium text-base-content">Event Cancelled</h5>
+                                            <p class="text-sm text-base-content/70 mt-1">{{ $cancellationRemarks }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -310,21 +310,27 @@
                         {{ $this->tickets->links() }}
                     </div>
                 @endif
-            </x-mary-card>
+            </x-ui.card>
         </div>
     </div>
 
     {{-- Ticket Details Modal --}}
-    <x-mary-modal wire:model="showDetailsModal" title="Event Details" class="backdrop-blur"
-        box-class="max-w-7xl max-h-[85vh] overflow-y-auto">
-        @if ($loadingDetails)
-            <div class="flex justify-center items-center py-12">
-                <span class="loading loading-spinner loading-lg"></span>
-            </div>
-        @elseif($selectedTicket)
-            <div class="grid grid-cols-1 gap-6">
-                <x-tickets.ticket-preview :ticket="$selectedTicket" />
-            </div>
-        @endif
-    </x-mary-modal>
+    <div x-data="{ show: @entangle('showDetailsModal') }" class="modal backdrop-blur" :class="{ 'modal-open': show }"
+        @keydown.escape.window="show = false" role="dialog" aria-modal="true">
+        <div class="modal-box max-w-7xl max-h-[85vh] overflow-y-auto">
+            <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
+                @click="show = false" aria-label="Close">✕</button>
+            <h3 class="text-lg font-bold mb-4">Event Details</h3>
+            @if ($loadingDetails)
+                <div class="flex justify-center items-center py-12">
+                    <span class="loading loading-spinner loading-lg"></span>
+                </div>
+            @elseif($selectedTicket)
+                <div class="grid grid-cols-1 gap-6">
+                    <x-tickets.ticket-preview :ticket="$selectedTicket" />
+                </div>
+            @endif
+        </div>
+        <label class="modal-backdrop" @click="show = false">Close</label>
+    </div>
 </div>

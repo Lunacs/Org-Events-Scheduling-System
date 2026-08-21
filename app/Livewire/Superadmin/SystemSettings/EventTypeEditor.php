@@ -4,28 +4,31 @@ namespace App\Livewire\Superadmin\SystemSettings;
 
 use App\Models\Event_Type;
 use App\Models\User;
+use App\Notifications\SystemSettingsUpdatedNotification;
 use App\Services\TransactionLogService;
+use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Mary\Traits\Toast;
 
 class EventTypeEditor extends Component
 {
     use Toast;
 
     public $eventTypeId = null;
+
     public $typeName = '';
+
     public $description = '';
+
     public $documentaryRequirements = '';
 
     public $isEditing = false;
 
     #[Title('Event Type Editor')]
     #[Layout('components.layouts.superadmin')]
-
     public function mount($id = null)
     {
         if ($id) {
@@ -53,7 +56,7 @@ class EventTypeEditor extends Component
 
         // Add unique validation for type name
         if ($this->isEditing) {
-            $rules['typeName'] .= '|unique:event__types,type_name,' . $this->eventTypeId . ',event_type_id';
+            $rules['typeName'] .= '|unique:event__types,type_name,'.$this->eventTypeId.',event_type_id';
         } else {
             $rules['typeName'] .= '|unique:event__types,type_name';
         }
@@ -76,10 +79,10 @@ class EventTypeEditor extends Component
                     $changes[] = "Name: {$originalName} → {$this->typeName}";
                 }
                 if ($originalDescription !== $this->description) {
-                    $changes[] = "Description updated";
+                    $changes[] = 'Description updated';
                 }
                 if ($originalRequirements !== $this->documentaryRequirements) {
-                    $changes[] = "Documentary requirements updated";
+                    $changes[] = 'Documentary requirements updated';
                 }
 
                 $eventType->type_name = $this->typeName;
@@ -87,7 +90,7 @@ class EventTypeEditor extends Component
                 $eventType->documentary_requirements = $this->documentaryRequirements;
                 $eventType->save();
 
-                if (!empty($changes)) {
+                if (! empty($changes)) {
                     TransactionLogService::logEventTypeOperation('updated', $eventType, $changes);
                 }
 
@@ -95,7 +98,7 @@ class EventTypeEditor extends Component
                 $this->clearCache();
                 $this->success('Event type updated successfully!', position: 'toast-bottom');
             } else {
-                $eventType = new Event_Type();
+                $eventType = new Event_Type;
                 $eventType->type_name = $this->typeName;
                 $eventType->description = $this->description ?: 'Event type description';
                 $eventType->documentary_requirements = $this->documentaryRequirements;
@@ -108,7 +111,7 @@ class EventTypeEditor extends Component
                 // Send notification to superadmins
                 $superadmins = User::where('role_id', User::getRoleId('superadmin'))->get();
                 foreach ($superadmins as $admin) {
-                    $admin->notify(new \App\Notifications\SystemSettingsUpdatedNotification(
+                    $admin->notify(new SystemSettingsUpdatedNotification(
                         'event_type',
                         $eventType->type_name,
                         'created',
@@ -124,7 +127,7 @@ class EventTypeEditor extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Event type operation failed', ['error' => $e->getMessage()]);
-            $this->error('Failed to save event type: ' . $e->getMessage(), position: 'toast-bottom');
+            $this->error('Failed to save event type: '.$e->getMessage(), position: 'toast-bottom');
         }
     }
 

@@ -5,8 +5,7 @@ use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Cache;
 
-new class extends Component
-{
+new class extends Component {
     #[Computed(persist: true, seconds: 120)]
     public function recentActivity(): array
     {
@@ -34,27 +33,26 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <x-mary-card title="Recent Activity" subtitle="Latest system activity" shadow>
+        <x-ui.card title="Recent Activity" subtitle="Latest system activity" shadow>
             <div class="animate-pulse space-y-3">
                 <div class="h-4 bg-base-300 rounded w-full"></div>
                 <div class="h-4 bg-base-300 rounded w-5/6"></div>
                 <div class="h-4 bg-base-300 rounded w-3/4"></div>
                 <div class="h-4 bg-base-300 rounded w-4/5"></div>
             </div>
-        </x-mary-card>
+        </x-ui.card>
         HTML;
     }
 };
 ?>
 
-<x-mary-card title="Recent Activity" subtitle="Latest system activity" shadow>
+<x-ui.card title="Recent Activity" subtitle="Latest system activity" shadow>
     @if (count($this->recentActivity) > 0)
         <div class="space-y-1">
             @foreach ($this->recentActivity as $activity)
                 <div class="flex items-start gap-3 p-3 hover:bg-base-200/50 rounded-lg transition-colors">
-                    <div
-                        class="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <x-mary-icon name="o-user" class="w-4 h-4 text-primary" />
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <x-ui.icon name="o-user" class="w-4 h-4 text-primary" />
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm">
@@ -70,9 +68,9 @@ new class extends Component
     @else
         <div class="text-center py-12">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                <x-mary-icon name="o-document-text" class="w-8 h-8 text-base-content/40" />
+                <x-ui.icon name="o-document-text" class="w-8 h-8 text-base-content/40" />
             </div>
             <p class="text-sm text-base-content/60 font-medium">No recent activity</p>
         </div>
     @endif
-</x-mary-card>
+</x-ui.card>

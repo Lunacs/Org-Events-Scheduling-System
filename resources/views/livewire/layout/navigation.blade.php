@@ -78,17 +78,21 @@ new class extends Component {
             <!-- Right Side -->
             <div class="flex items-center gap-1 sm:gap-3">
                 <!-- Theme Toggle -->
-                <div>
-                    <x-mary-theme-toggle lightTheme="emerald" darkTheme="emeraldDark"
-                        class="btn btn-ghost btn-sm btn-circle" />
-                </div>
+                <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle theme">
+                    <input id="theme-toggle" type="checkbox" value="emeraldDark" class="theme-controller opacity-0"
+                        onchange="window.__themeToggleChange(this)" />
+                    {{-- moon = shown in light mode → click to go dark --}}
+                    <x-ui.icon name="o-moon" class="swap-off" />
+                    {{-- sun = shown in dark mode → click to go light --}}
+                    <x-ui.icon name="o-sun" class="swap-on" />
+                </label>
 
                 @auth
                     <!-- Notifications Dropdown -->
                     <livewire:notification-dropdown />
 
                     <!-- Profile Dropdown -->
-                    <x-mary-dropdown right wire:key="nav-profile-dropdown">
+                    <x-ui.dropdown right width="w-72" wire:key="nav-profile-dropdown">
                         {{-- Trigger Button --}}
                         <x-slot:trigger>
                             <div class="btn btn-ghost btn-sm gap-2 hover:bg-base-200 transition-colors">
@@ -107,7 +111,7 @@ new class extends Component {
                         </x-slot:trigger>
 
                         {{-- Dropdown Content --}}
-                        <div class="w-72 bg-base-100 rounded-box border border-base-300">
+                        <div class="bg-base-100 rounded-box border border-base-300">
                             {{-- User Info Header --}}
                             @if ($this->user)
                                 <div class="px-4 py-3 bg-base-200 rounded-t-box border-b border-base-300">
@@ -160,7 +164,7 @@ new class extends Component {
                                 </button>
                             </div>
                         </div>
-                    </x-mary-dropdown>
+                    </x-ui.dropdown>
                 @endauth
 
                 @guest

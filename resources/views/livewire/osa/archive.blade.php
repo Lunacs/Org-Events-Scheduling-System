@@ -27,62 +27,38 @@
         </section>
 
         {{-- Filters --}}
-        <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+        <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <input wire:model.defer="search" type="text" placeholder="Search events..."
-                    class="input input-bordered w-full col-span-2" />
+                <x-ui.input wire:model.defer="search" placeholder="Search events..." icon="s-magnifying-glass"
+                    class="md:col-span-2" />
 
-                <select wire:model.defer="organizationFilter" class="select select-bordered w-full">
-                    <option value="">Organization</option>
-                    @foreach ($organizations as $org)
-                        <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
-                    @endforeach
-                </select>
+                <x-ui.select wire:model.defer="organizationFilter" placeholder="Organization" :options="$organizations"
+                    option-value="org_id" option-label="org_name" />
 
-                <select wire:model.defer="yearFilter" class="select select-bordered w-full">
-                    <option value="">Year</option>
-                    @foreach ($availableYears as $year)
-                        <option value="{{ $year }}">{{ $year }}</option>
-                    @endforeach
-                </select>
+                <x-ui.select wire:model.defer="yearFilter" placeholder="Year" :options="$availableYears->map(fn($year) => ['id' => $year, 'name' => $year])" />
 
-                <button wire:click="applyFilters" type="button" class="btn btn-primary">Apply</button>
-
-                @if ($search !== '' || $statusFilter !== '' || $organizationFilter !== '' || $yearFilter != \Carbon\Carbon::now()->year)
-                    <button wire:click="clearFilters" type="button" class="btn btn-ghost">Clear Filters</button>
-                @endif
+                <div class="flex gap-2">
+                    <x-ui.button wire:click="applyFilters" class="btn-primary flex-1" label="Apply" />
+                    @if ($search !== '' || $statusFilter !== '' || $organizationFilter !== '' || $yearFilter != \Carbon\Carbon::now()->year)
+                        <x-ui.button wire:click="clearFilters" class="btn-ghost" icon="s-x-mark"
+                            tooltip="Clear Filters" />
+                    @endif
+                </div>
             </div>
-        </div>
+        </x-ui.card>
 
         {{-- Archive Statistics --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-base-100 rounded-box shadow-lg p-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-primary/10 p-2 rounded-full"></div>
-                    <div>
-                        <div class="text-lg font-bold">
-                            {{ $archivedEvents->where('ticket.status', 'completed')->count() }}
-                        </div>
-                        <div class="text-sm text-base-content/70">Completed</div>
-                    </div>
-                </div>
-            </div>
+            <x-ui.metric-card label="Completed" value="{{ $archivedEvents->where('ticket.status', 'completed')->count() }}"
+                icon="s-check-circle" color="primary" />
 
-            <div class="bg-base-100 rounded-box shadow-lg p-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-info/10 p-2 rounded-full"></div>
-                    <div>
-                        <div class="text-lg font-bold">
-                            {{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}
-                        </div>
-                        <div class="text-sm text-base-content/70">Organizations</div>
-                    </div>
-                </div>
-            </div>
+            <x-ui.metric-card label="Organizations"
+                value="{{ $archivedEvents->pluck('ticket.user.org_id')->filter()->unique()->count() }}"
+                icon="s-building-office" color="info" />
         </div>
 
         {{-- Archived Events List --}}
-        <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden">
             {{-- Skeleton Loading State during filter operations --}}
             <div wire:loading.delay
                 wire:target="applyFilters,clearFilters,search,statusFilter,organizationFilter,yearFilter,eventTypeFilter">

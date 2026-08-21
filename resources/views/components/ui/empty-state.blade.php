@@ -24,7 +24,7 @@
 
 <div class="text-center py-12">
     <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 {{ $toneClass }}">
-        <x-mary-icon :name="$icon" class="w-10 h-10 {{ $iconColor }}" />
+        <x-ui.icon :name="$icon" class="w-10 h-10 {{ $iconColor }}" />
     </div>
     <h3 class="text-lg font-semibold text-base-content mb-2">{{ $title }}</h3>
 
@@ -33,6 +33,6 @@
     @endif
 
     @if ($actionLabel && $actionLink)
-        <x-mary-button :label="$actionLabel" :link="$actionLink" class="btn-primary btn-sm" wire:navigate />
+        <x-ui.button :label="$actionLabel" :link="$actionLink" class="btn-primary btn-sm" wire:navigate />
     @endif
 </div>

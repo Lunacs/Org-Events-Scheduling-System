@@ -64,7 +64,7 @@
             }
         }
     }">
-    <x-mary-card title="Select Your Avatar" subtitle="Choose from {{ count($avatarOptions) }} unique avatars">
+    <x-ui.card title="Select Your Avatar" subtitle="Choose from {{ count($avatarOptions) }} unique avatars">
         <div class="space-y-6">
             {{-- Current Avatar Preview --}}
             <div class="flex flex-col items-center gap-4 p-6 bg-base-200 rounded-lg">
@@ -131,14 +131,14 @@
                 {{-- Upload hint or Preview actions --}}
                 @if ($photo)
                     <div class="flex gap-2 mt-3 justify-center">
-                        <x-mary-button wire:click="saveUploadedPhoto" icon="o-check"
+                        <x-ui.button wire:click="saveUploadedPhoto" icon="o-check"
                             class="btn-success btn-sm data-loading:opacity-50 data-loading:pointer-events-none"
                             spinner>
                             Save Photo
-                        </x-mary-button>
-                        <x-mary-button wire:click="cancelPhotoUpload" icon="o-x-mark" class="btn-ghost btn-sm">
+                        </x-ui.button>
+                        <x-ui.button wire:click="cancelPhotoUpload" icon="o-x-mark" class="btn-ghost btn-sm">
                             Cancel
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                     <p class="text-xs text-info mt-2">Preview - Click Save to keep this photo</p>
                 @elseif (!$this->getProfilePhotoUrl())
@@ -153,11 +153,11 @@
                 {{-- Delete button - only show when uploaded photo is selected in the grid --}}
                 @if ($this->getProfilePhotoUrl())
                     <div x-show="selectedType === 'uploaded'" x-cloak>
-                        <x-mary-button wire:click="deleteProfilePhoto" icon="o-trash"
+                        <x-ui.button wire:click="deleteProfilePhoto" icon="o-trash"
                             class="btn-error btn-outline btn-xs mt-3"
                             wire:confirm="Are you sure you want to delete your profile photo?">
                             Remove Photo
-                        </x-mary-button>
+                        </x-ui.button>
                     </div>
                 @endif
             </div>
@@ -195,7 +195,7 @@
                             <template x-if="selectedType === 'uploaded'">
                                 <div
                                     class="absolute -top-1 -right-1 bg-primary text-primary-content rounded-full p-1 shadow-lg">
-                                    <x-mary-icon name="o-check" class="w-4 h-4" />
+                                    <x-ui.icon name="o-check" class="w-4 h-4" />
                                 </div>
                             </template>
                         </div>
@@ -222,7 +222,7 @@
                             <template x-if="isSelected('{{ $option['style'] }}', '{{ $option['seed'] }}')">
                                 <div
                                     class="absolute -top-1 -right-1 bg-primary text-primary-content rounded-full p-1 shadow-lg">
-                                    <x-mary-icon name="o-check" class="w-4 h-4" />
+                                    <x-ui.icon name="o-check" class="w-4 h-4" />
                                 </div>
                             </template>
                         </div>
@@ -234,13 +234,13 @@
 
 {{-- Save Button --}}
 <x-slot:actions>
-    <x-mary-button @click="saveAvatar()"
+    <x-ui.button @click="saveAvatar()"
         class="btn-primary btn-block sm:btn-wide data-loading:opacity-50 data-loading:pointer-events-none"
         icon="o-check" x-bind:disabled="isUnchanged()" spinner>
         Save Avatar
-    </x-mary-button>
+    </x-ui.button>
 </x-slot:actions>
-</x-mary-card>
+</x-ui.card>
 
 {{-- Reinitialize avatars --}}
 <script>
