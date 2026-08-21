@@ -27,6 +27,7 @@ Homestead.yaml
 Thumbs.db
 .cursor/
 .kiro
+.claude
 
 *.md
 !README.md
