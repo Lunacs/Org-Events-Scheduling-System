@@ -47,10 +47,12 @@
                         offices, or time conflicts. Submit another ticket and try again.</p>
                 @endif
                 <p class="text-xs text-base-content/50 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
+                    @can('tickets.create')
                     <x-ui.button label="Submit Revision" icon="s-arrow-up"
                                    class="btn-sm btn-primary mt-2"
                                    tooltip="Revise Event"
                                    wire:click="$dispatch('resubmit-ticket', { ticketId: {{ $ticket->ticket_id }} })"/>
+                    @endcan
             </div>
         </div>
     </div>

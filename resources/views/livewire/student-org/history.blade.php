@@ -240,7 +240,7 @@
                                     <x-ui.button icon="s-eye" class="btn-sm btn-ghost flex-1 lg:flex-none"
                                         tooltip="View Details"
                                         wire:click="openDetailsModal({{ $ticket->ticket_id }})" />
-                                    @if ($isForRevision)
+                                    @if ($isForRevision && auth()->user()?->can('tickets.create'))
                                         <x-ui.button icon="s-arrow-path" class="btn-sm btn-ghost flex-1 lg:flex-none"
                                             tooltip="Resubmit Modified"
                                             wire:click="resubmitTicket({{ $ticket->ticket_id }})" />

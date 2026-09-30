@@ -3,6 +3,7 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Ticket;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -68,6 +69,8 @@ class MyTicket extends Component
     #[On('resubmit-ticket')]
     public function resubmitTicket($ticketId)
     {
+        Gate::authorize('tickets.create');
+
         $ticket = Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
             ->whereHas('user', function ($q) {

@@ -760,7 +760,7 @@
 
                         <div class="flex justify-center items-center mt-6">
                             {{-- View Full Info Link (OSA/SuperAdmin/GSO only) --}}
-                            @if (Auth::check() && (Auth::user()->isOSA() || Auth::user()->isGSO()))
+                            @if (Auth::check() && Auth::user()->can('tickets.view') && (Auth::user()->isOSA() || Auth::user()->isGSO()))
                                 <template x-if="data?.ticketNumber">
                                     <x-ui.button label="View Full Info" icon-right="o-arrow-right"
                                         class="btn-sm btn-block btn-outline" link="#"

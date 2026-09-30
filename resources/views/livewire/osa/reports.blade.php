@@ -16,10 +16,12 @@
                         organization participation</p>
                 </div>
                 <div class="flex items-center gap-2 relative z-10">
+                    @can('reports.export')
                     <x-ui.button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
                         spinner>
                         Generate Report
                     </x-ui.button>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -286,10 +288,12 @@
                         option-label="name" />
 
                     <div class="flex-row gap-2 sm:flex-col">
+                        @can('reports.export')
                         <x-ui.button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
                             spinner>
                             Generate & Download
                         </x-ui.button>
+                        @endcan
                         <x-ui.button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark">
                             Clear Filters
                         </x-ui.button>

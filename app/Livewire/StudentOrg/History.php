@@ -6,6 +6,7 @@ use App\Models\Event_Type;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -63,6 +64,8 @@ class History extends Component
 
     public function exportReport()
     {
+        Gate::authorize('reports.export');
+
         // Implement export logic
     }
 
@@ -288,6 +291,8 @@ class History extends Component
 
     public function resubmitTicket($ticketId)
     {
+        Gate::authorize('tickets.create');
+
         $ticket = Ticket::query()
             ->with(['eventType', 'fundSource', 'venue'])
             ->whereHas('user', function ($q) {

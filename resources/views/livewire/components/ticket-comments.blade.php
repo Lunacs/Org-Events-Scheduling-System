@@ -53,7 +53,7 @@
                 </div>
             </div>
         </div>
-    @else
+    @elseif (auth()->user()?->can('tickets.comment'))
         <div class="space-y-3 mt-4">
             <div>
                 <textarea wire:model.defer="comment"

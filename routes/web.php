@@ -44,14 +44,19 @@ use App\Livewire\Superadmin\Dashboard;
 use App\Livewire\Superadmin\FaqEditor;
 use App\Livewire\Superadmin\FaqManager;
 use App\Livewire\Superadmin\Logs;
+use App\Livewire\Superadmin\Permissions\Index as PermissionsIndex;
 use App\Livewire\Superadmin\Profile as SuperadminProfile;
 use App\Livewire\Superadmin\Roles\Index as RolesIndex;
+use App\Livewire\Superadmin\Roles\Permissions as RolePermissions;
 use App\Livewire\Superadmin\SystemSettings\ContentSectionEditor;
 use App\Livewire\Superadmin\SystemSettings\EventTypeEditor;
 use App\Livewire\Superadmin\SystemSettings\Index as SystemSettingsIndex;
 use App\Livewire\Superadmin\SystemSettings\VenueEditor;
 use App\Livewire\Superadmin\Tickets\TicketEditor;
 use App\Livewire\Superadmin\Users\Index as UsersIndex;
+use App\Livewire\Viewer\Calendar as ViewerCalendar;
+use App\Livewire\Viewer\Notifications as ViewerNotifications;
+use App\Livewire\Viewer\Profile as ViewerProfile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -93,21 +98,17 @@ Route::get('/debug/schedule-list', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Generic profile route - redirects based on user role
     Route::get('/profile', function () {
-        $user = Auth::user();
-
-        // Load role relationship if not already loaded
-        if (! $user->relationLoaded('role')) {
-            $user->load('role');
-        }
-
-        return redirect()->route(match ($user->role?->role_name) {
+        return redirect()->route(match (Auth::user()->portal()) {
             'superadmin' => 'superadmin.profile',
             'osa' => 'admin.profile',
             'gso' => 'gso.profile',
             'student-org' => 'student-org.profile',
-            default => 'admin.profile',
+            default => 'portal.profile',
         });
     })->name('profile');
+
+    // Shown when a user's role has no permitted pages in its portal
+    Route::view('/no-access', 'no-access')->name('no-access');
 
     // Generic dashboard route - redirects based on user role
     Route::get('/dashboard', function () {
@@ -158,14 +159,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::prefix('admin')
     ->middleware(['auth', 'verified', 'role:osa'])
     ->group(function () {
-        Route::get('/dashboard', OsaDashboard::class)->name('admin.dashboard');
-        Route::get('/tickets', TicketManagement::class)->name('admin.ticket');
-        Route::get('/ticket-review', TicketReviewIndex::class)->name('osa.ticket-review.index');
-        Route::get('/ticket-review/{ticketNumber}', TicketReviewShow::class)->name('osa.ticket-review.show');
-        Route::get('/calendar', EventCalendar::class)->name('admin.calendar');
-        Route::get('/notifications', OsaNotifications::class)->name('admin.notifications');
-        Route::get('/reports', Reports::class)->name('admin.reports');
-        Route::get('/archive', Archive::class)->name('admin.archive');
+        Route::get('/dashboard', OsaDashboard::class)->name('admin.dashboard')->middleware('can:dashboard.view');
+        Route::get('/tickets', TicketManagement::class)->name('admin.ticket')->middleware('can:tickets.view');
+        Route::get('/ticket-review', TicketReviewIndex::class)->name('osa.ticket-review.index')->middleware('can:tickets.view');
+        Route::get('/ticket-review/{ticketNumber}', TicketReviewShow::class)->name('osa.ticket-review.show')->middleware('can:tickets.view');
+        Route::get('/calendar', EventCalendar::class)->name('admin.calendar')->middleware('can:calendar.view');
+        Route::get('/notifications', OsaNotifications::class)->name('admin.notifications')->middleware('can:notifications.view');
+        Route::get('/reports', Reports::class)->name('admin.reports')->middleware('can:reports.view');
+        Route::get('/archive', Archive::class)->name('admin.archive')->middleware('can:archive.view');
         Route::get('/profile', OsaProfile::class)->name('admin.profile');
     });
 
@@ -176,6 +177,8 @@ Route::prefix('superadmin')
         Route::get('/dashboard', Dashboard::class)->name('superadmin.dashboard');
         Route::get('/users', UsersIndex::class)->name('superadmin.users');
         Route::get('/roles', RolesIndex::class)->name('superadmin.roles');
+        Route::get('/roles/{roleId}/permissions', RolePermissions::class)->name('superadmin.roles.permissions');
+        Route::get('/permissions', PermissionsIndex::class)->name('superadmin.permissions');
         Route::get('/calendar', Index::class)->name('superadmin.calendar');
         Route::get('/tickets', App\Livewire\Superadmin\Tickets\Index::class)->name('superadmin.tickets');
         Route::get('/tickets/create', TicketEditor::class)->name('superadmin.ticket.create');
@@ -202,33 +205,46 @@ Route::prefix('superadmin')
 Route::prefix('gso')
     ->middleware(['auth', 'verified', 'role:gso'])
     ->group(function () {
-        Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard');
-        Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review');
+        Route::get('/dashboard', GsoDashboard::class)->name('gso.dashboard')->middleware('can:dashboard.view');
+        Route::get('/ticket-review', GsoTicketReview::class)->name('gso.ticket-review')->middleware('can:tickets.view');
         Route::get('/tickets/{ticketNumber}', GsoDetails::class)
-            ->name('gso.ticket-details');
-        Route::get('/calendar', GsoCalendar::class)->name('gso.calendar');
-        Route::get('/notifications', GsoNotifications::class)->name('gso.notifications');
-        Route::view('/communication', 'gso.communication')->name('gso.communication');
-        Route::get('/reports', GsoReports::class)->name('gso.reports');
+            ->name('gso.ticket-details')
+            ->middleware('can:tickets.view');
+        Route::get('/calendar', GsoCalendar::class)->name('gso.calendar')->middleware('can:calendar.view');
+        Route::get('/notifications', GsoNotifications::class)->name('gso.notifications')->middleware('can:notifications.view');
+        Route::view('/communication', 'gso.communication')->name('gso.communication')->middleware('can:tickets.view');
+        Route::get('/reports', GsoReports::class)->name('gso.reports')->middleware('can:reports.view');
         Route::get('/reports/export', [ReportsExportController::class, 'export'])
             ->name('gso.reports.export')
-            ->middleware('signed');
+            ->middleware(['signed', 'can:reports.export']);
         Route::get('/profile', GsoProfile::class)->name('gso.profile');
     });
 
 // Student Organization routes
 Route::prefix('student-org')
-    ->middleware(['auth', 'verified', 'role:student_org'])
+    ->middleware(['auth', 'verified', 'role:student-org'])
     ->group(function () {
-        Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard');
-        Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket');
-        Route::get('/my-tickets', MyTicket::class)->name('student-org.my-tickets');
-        Route::get('/tickets/{ticketNumber}', TicketDetails::class)->name('student-org.ticket-details');
-        Route::get('/calendar', Calendar::class)->name('student-org.calendar');
-        Route::get('/reschedule', Reschedule::class)->name('student-org.reschedule');
-        Route::get('/notifications', Notifications::class)->name('student-org.notifications');
-        Route::get('/history', History::class)->name('student-org.history');
+        Route::get('/dashboard', StudentOrgDashboard::class)->name('student-org.dashboard')->middleware('can:dashboard.view');
+        Route::get('/submit-ticket', SubmitTicket::class)->name('student-org.submit-ticket')->middleware('can:tickets.create');
+        Route::get('/my-tickets', MyTicket::class)->name('student-org.my-tickets')->middleware('can:tickets.view');
+        Route::get('/tickets/{ticketNumber}', TicketDetails::class)->name('student-org.ticket-details')->middleware('can:tickets.view');
+        Route::get('/calendar', Calendar::class)->name('student-org.calendar')->middleware('can:calendar.view');
+        Route::get('/reschedule', Reschedule::class)->name('student-org.reschedule')->middleware('can:tickets.reschedule');
+        Route::get('/notifications', Notifications::class)->name('student-org.notifications')->middleware('can:notifications.view');
+        Route::get('/history', History::class)->name('student-org.history')->middleware('can:tickets.view');
         Route::get('/profile', StudentOrgProfile::class)->name('student-org.profile');
+    });
+
+// Viewer portal (custom read-only roles, e.g. security staff)
+Route::prefix('portal')
+    ->middleware(['auth', 'verified', 'role:viewer'])
+    ->group(function () {
+        Route::get('/', function () {
+            return redirect()->route(Auth::user()->getDashboardRoute());
+        })->name('portal.dashboard');
+        Route::get('/calendar', ViewerCalendar::class)->name('portal.calendar')->middleware('can:calendar.view');
+        Route::get('/notifications', ViewerNotifications::class)->name('portal.notifications')->middleware('can:notifications.view');
+        Route::get('/profile', ViewerProfile::class)->name('portal.profile');
     });
 
 require __DIR__.'/auth.php';

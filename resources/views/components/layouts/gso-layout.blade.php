@@ -115,38 +115,7 @@
 
                     {{-- MENU --}}
                     @php
-                        $menuItems = [
-                            [
-                                'title' => 'Dashboard',
-                                'icon' => 'fa-solid fa-table-columns',
-                                'link' => route('gso.dashboard'),
-                                'pattern' => 'gso/dashboard*',
-                            ],
-                            [
-                                'title' => 'Ticket Review',
-                                'icon' => 'fa-solid fa-calendar-days',
-                                'link' => route('gso.ticket-review'),
-                                'pattern' => 'gso/ticket-review*',
-                            ],
-                            [
-                                'title' => 'Event Calendar',
-                                'icon' => 'fa-solid fa-calendar',
-                                'link' => route('gso.calendar'),
-                                'pattern' => 'gso/calendar*',
-                            ],
-                            [
-                                'title' => 'Notification',
-                                'icon' => 'fa-solid fa-bell',
-                                'link' => route('gso.notifications'),
-                                'pattern' => 'gso/notifications*',
-                            ],
-                            [
-                                'title' => 'Reports',
-                                'icon' => 'fa-solid fa-chart-bar',
-                                'link' => '/gso/reports',
-                                'pattern' => 'gso/reports*',
-                            ],
-                        ];
+                        $menuItems = \App\Support\PortalNavigation::itemsFor(auth()->user());
                     @endphp
 
                     <ul class="menu w-full grow font-heading mt-2 gap-2">

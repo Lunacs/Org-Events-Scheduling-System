@@ -104,15 +104,21 @@
         @persist('quick-actions')
             <x-ui.card title="Quick Actions" subtitle="Frequently used features" shadow>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    @can('tickets.view')
                     <x-ui.quick-action label="Review Tickets" description="Manage event requests" icon="o-ticket"
                         color="primary" link="{{ route('osa.ticket-review.index') }}"
                         :badge="$stats['pending'] > 0 ? $stats['pending'] . ' pending' : null" />
+                    @endcan
 
+                    @can('calendar.view')
                     <x-ui.quick-action label="Event Calendar" description="View schedule" icon="o-calendar-days"
                         color="accent" link="/admin/calendar" />
+                    @endcan
 
+                    @can('reports.view')
                     <x-ui.quick-action label="Reports" description="Generate insights" icon="o-document-chart-bar"
                         color="info" link="/admin/reports" />
+                    @endcan
                 </div>
             </x-ui.card>
         @endpersist

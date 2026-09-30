@@ -750,7 +750,7 @@ class SubmitTicket extends Component
             TransactionLogService::logTicketOperation('created', $ticket);
 
             // Notify OSA admins about the new ticket
-            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
             Notification::send($osaUsers, new TicketSubmittedNotification($ticket));
 
             \DB::commit();

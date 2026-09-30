@@ -6,8 +6,11 @@ use App\Notifications\CustomResetPassword;
 use App\Notifications\CustomVerifyEmail;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyNewEmail;
+use App\Support\PortalNavigation;
+use App\Support\RolePortals;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -133,6 +136,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Clear the in-memory role ID lookup cache after role names change.
+     */
+    public static function clearRoleIdCache(): void
+    {
+        static::$roleIdCache = [];
+    }
+
+    /**
      * Preload commonly used role IDs to prevent duplicate cache queries
      * Call this method early in the request lifecycle (e.g., in middleware or service provider)
      *
@@ -151,7 +162,31 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRole(string $roleName): bool
     {
-        return $this->role_id === self::getRoleId($roleName);
+        return $this->role_id !== null && $this->role_id === self::getRoleId($roleName);
+    }
+
+    /**
+     * The portal the user's role works in (`superadmin`, `osa`, `gso`, `student-org` or `viewer`).
+     */
+    public function portal(): string
+    {
+        return app(RolePortals::class)->portalFor($this->role_id === null ? null : (int) $this->role_id);
+    }
+
+    /**
+     * Determine whether the user's role works in the given portal.
+     */
+    public function inPortal(string $portal): bool
+    {
+        return $this->portal() === $portal;
+    }
+
+    /**
+     * Limit the query to users whose role works in the given portal.
+     */
+    public function scopeInPortal(Builder $query, string $portal): void
+    {
+        $query->whereIn('role_id', app(RolePortals::class)->roleIdsFor($portal));
     }
 
     /**
@@ -163,46 +198,35 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user is an OSA admin
+     * Check if user works in the OSA portal (the built-in role or a custom role based on it)
      */
     public function isOSA(): bool
     {
-        return $this->hasRole('osa');
+        return $this->inPortal('osa');
     }
 
     /**
-     * Check if user is a GSO admin
+     * Check if user works in the GSO portal (the built-in role or a custom role based on it)
      */
     public function isGSO(): bool
     {
-        return $this->hasRole('gso');
+        return $this->inPortal('gso');
     }
 
     /**
-     * Check if user is a student organization member
+     * Check if user works in the student organization portal (the built-in role or a custom role based on it)
      */
     public function isStudentOrg(): bool
     {
-        return $this->hasRole('student-org');
+        return $this->inPortal('student-org');
     }
 
     /**
-     * Get the user's dashboard route based on their role
+     * Get the route name of the first page the user may open in their portal.
      */
     public function getDashboardRoute(): string
     {
-        // Load role relationship if not already loaded
-        if (! $this->relationLoaded('role')) {
-            $this->load('role');
-        }
-
-        return match ($this->role?->role_name) {
-            'superadmin' => 'superadmin.dashboard',
-            'osa' => 'admin.dashboard',
-            'gso' => 'gso.dashboard',
-            'student-org' => 'student-org.dashboard',
-            default => 'admin.dashboard',
-        };
+        return PortalNavigation::landingRouteFor($this);
     }
 
     /**

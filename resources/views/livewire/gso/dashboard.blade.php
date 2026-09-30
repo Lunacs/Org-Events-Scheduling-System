@@ -312,14 +312,20 @@
                 <p class="text-sm text-base-content/60">Frequently used features</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                @can('tickets.view')
                 <x-ui.quick-action label="Ticket Review" description="Process office approvals"
                     icon="o-clipboard-document-check" color="primary" link="{{ route('gso.ticket-review') }}" />
+                @endcan
 
+                @can('calendar.view')
                 <x-ui.quick-action label="Event Calendar" description="View schedule" icon="o-calendar-days"
                     color="accent" link="{{ route('gso.calendar') }}" />
+                @endcan
 
+                @can('reports.view')
                 <x-ui.quick-action label="Reports" description="Download insights" icon="o-document-chart-bar"
                     color="info" link="{{ route('gso.reports') }}" />
+                @endcan
             </div>
         </div>
     </div>
