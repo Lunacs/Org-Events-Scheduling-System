@@ -547,7 +547,9 @@ class SubmitTicket extends Component
 
         // Create temporary attachment objects for preview
         // Fetch the authoritative list of current attachments via the IDs managed by FilePond.
-        $draftAttachments = TicketDraftAttachment::whereIn('id', $this->uploadedFileIds)->get();
+        $draftAttachments = TicketDraftAttachment::whereIn('id', $this->uploadedFileIds)
+            ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
+            ->get();
 
         $previewAttachments = $draftAttachments->map(function ($file, int $index) {
             $attachment = new Attachment;
@@ -1046,7 +1048,12 @@ class SubmitTicket extends Component
     public function updated(string $property): void
     {
         // Skip file upload properties — they are managed by FilePond/Alpine
-        if (in_array($property, ['uploadedFileIds', 'attachments', 'draftId'])) {
+        if (in_array($property, ['uploadedFileIds', 'attachments', 'draftId', 'isProcessing'])) {
+            return;
+        }
+
+        // Don't auto-save while a submission is in flight
+        if ($this->isProcessing) {
             return;
         }
 
@@ -1106,7 +1113,9 @@ class SubmitTicket extends Component
      */
     protected function draftAttachmentFileList(): array
     {
+        // Scope to the current user's draft — uploadedFileIds is client-controlled
         return TicketDraftAttachment::whereIn('id', $this->uploadedFileIds ?? [])
+            ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
             ->get()
             ->map(fn ($attachment) => $attachment->toArray())
             ->all();
