@@ -114,50 +114,7 @@
 
                     {{-- MENU --}}
                     @php
-                        $menuItems = [
-                            [
-                                'title' => 'Dashboard',
-                                'icon' => 'fa-solid fa-table-columns',
-                                'link' => '/student-org/dashboard',
-                                'pattern' => 'student-org/dashboard*',
-                            ],
-                            [
-                                'title' => 'My Tickets',
-                                'icon' => 'fa-solid fa-ticket',
-                                'link' => '/student-org/my-tickets',
-                                'pattern' => 'student-org/my-tickets*',
-                            ],
-                            [
-                                'title' => 'Submit Ticket',
-                                'icon' => 'fa-solid fa-file-circle-plus',
-                                'link' => '/student-org/submit-ticket',
-                                'pattern' => 'student-org/submit-ticket*',
-                            ],
-                            [
-                                'title' => 'Event Calendar',
-                                'icon' => 'fa-solid fa-calendar-days',
-                                'link' => '/student-org/calendar',
-                                'pattern' => 'student-org/calendar*',
-                            ],
-                            [
-                                'title' => 'Reschedule Request',
-                                'icon' => 'fa-solid fa-arrow-rotate-left',
-                                'link' => '/student-org/reschedule',
-                                'pattern' => 'student-org/reschedule*',
-                            ],
-                            [
-                                'title' => 'Notifications',
-                                'icon' => 'fa-solid fa-bell',
-                                'link' => '/student-org/notifications',
-                                'pattern' => 'student-org/notifications*',
-                            ],
-                            [
-                                'title' => 'History',
-                                'icon' => 'fa-solid fa-box-archive',
-                                'link' => '/student-org/history',
-                                'pattern' => 'student-org/history*',
-                            ],
-                        ];
+                        $menuItems = \App\Support\PortalNavigation::itemsFor(auth()->user());
                     @endphp
 
                     <ul class="menu w-full grow font-heading mt-2 gap-2">

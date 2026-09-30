@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Forms;
 
-use Livewire\Attributes\Validate;
-use Livewire\Form;
+use App\Models\Roles;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
 
 class EditUserForm extends Form
 {
@@ -41,7 +42,7 @@ class EditUserForm extends Form
             'phone' => 'required|regex:/^09\d{9}$/',
         ];
 
-        if ($this->role === 'student-org') {
+        if ($this->portal() === 'student-org') {
             $rules['email'][] = 'ends_with:plv.edu.ph';
         }
 
@@ -54,11 +55,19 @@ class EditUserForm extends Form
         // Only add role validation if not editing a superadmin
         if (! $this->is_superadmin) {
             $rules['role'] = 'required|exists:roles,role_name';
-            $rules['org_name'] = 'required_if:role,student-org|exists:student__organizations,org_id';
-            $rules['position'] = 'required_if:role,student-org|exists:positions,position_id';
+            $rules['org_name'] = [Rule::requiredIf(fn (): bool => $this->portal() === 'student-org'), 'exists:student__organizations,org_id'];
+            $rules['position'] = [Rule::requiredIf(fn (): bool => $this->portal() === 'student-org'), 'exists:positions,position_id'];
         }
 
         return $rules;
+    }
+
+    /**
+     * The portal of the selected role, which decides the role-specific fields.
+     */
+    public function portal(): ?string
+    {
+        return Roles::portalForName($this->role);
     }
 
     public function messages()
@@ -81,9 +90,9 @@ class EditUserForm extends Form
             'password_confirmation.same' => 'Password confirmation does not match.',
             'role.required' => 'Role is required.',
             'role.exists' => 'Selected role is invalid.',
-            'org_name.required_if' => 'Organization is required for student org role.',
+            'org_name.required' => 'Organization is required for student org role.',
             'org_name.exists' => 'Selected organization is invalid.',
-            'position.required_if' => 'Position is required for student org role.',
+            'position.required' => 'Position is required for student org role.',
             'position.exists' => 'Selected position is invalid.',
             'phone.required' => 'Contact number is required.',
         ];

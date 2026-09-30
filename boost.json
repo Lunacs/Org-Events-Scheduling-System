@@ -3,8 +3,7 @@
         "kiro"
     ],
     "cloud": false,
-    "guidelines": true,
-    "packages": [
-        "tonysm/rich-text-laravel"
-    ]
+    "mcp": true,
+    "nightwatch": true,
+    "sail": false
 }

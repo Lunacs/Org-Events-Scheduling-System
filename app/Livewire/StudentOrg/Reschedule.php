@@ -583,7 +583,7 @@ class Reschedule extends Component
 
     private function notifyOSAAdmins(Ticket $ticket): void
     {
-        $osaUsers = User::where('role_id', User::getRoleId('osa'))
+        $osaUsers = User::query()->inPortal('osa')
             ->get();
 
         foreach ($osaUsers as $osaUser) {

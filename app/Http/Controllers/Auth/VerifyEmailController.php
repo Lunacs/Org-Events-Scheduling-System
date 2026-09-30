@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Http\RedirectResponse;
 use App\Services\TransactionLogService;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\RedirectResponse;
 
 class VerifyEmailController extends Controller
 {
@@ -35,13 +34,7 @@ class VerifyEmailController extends Controller
      */
     public function getRedirectRoute($user, $verified = false): RedirectResponse
     {
-        $routeName = match ($user->role_id) {
-            User::getRoleId('superadmin') => 'superadmin.dashboard',
-            User::getRoleId('osa') => 'admin.dashboard',
-            User::getRoleId('gso') => 'gso.dashboard',
-            User::getRoleId('student-org') => 'student-org.dashboard',
-            default => 'dashboard',
-        };
+        $routeName = $user->getDashboardRoute();
 
         $redirect = redirect()->intended(route($routeName, [], false));
 

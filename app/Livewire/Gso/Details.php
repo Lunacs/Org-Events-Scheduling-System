@@ -187,8 +187,7 @@ class Details extends Component
                 'GSO has approved your ticket and it is now awaiting final OSA approval.'
             ));
 
-            $osaRoleId = User::getRoleId('osa');
-            $osaUsers = User::where('role_id', $osaRoleId)->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
 
             Notification::sendNow(
                 $osaUsers,
@@ -291,8 +290,7 @@ class Details extends Component
                 'GSO has reviewed your ticket and forwarded it to OSA for a final decision.'
             ));
 
-            $osaRoleId = User::getRoleId('osa');
-            $osaUsers = User::where('role_id', $osaRoleId)->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
 
             Notification::sendNow(
                 $osaUsers,
@@ -341,6 +339,8 @@ class Details extends Component
      */
     public function previewAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {
@@ -359,6 +359,8 @@ class Details extends Component
      */
     public function downloadAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {

@@ -45,10 +45,7 @@
 
                 <x-ui.select label="Filter by Role" wire:model.live="roleFilter" :options="[
                     ['id' => 'all', 'name' => 'All Roles'],
-                    ['id' => 'superadmin', 'name' => 'Super Admin'],
-                    ['id' => 'osa', 'name' => 'OSA Staff'],
-                    ['id' => 'gso', 'name' => 'GSO Staff'],
-                    ['id' => 'student-org', 'name' => 'Student Organization'],
+                    ...$availableRoles->map(fn ($role) => ['id' => $role->role_name, 'name' => $role->role_name])->all(),
                 ]" option-value="id"
                     option-label="name" />
 
@@ -68,21 +65,23 @@
                 <x-ui.table :headers="$headers" :rows="$users" :sortBy="$sortBy" :per-page-values="[10, 25, 50]" :paginate="false"
                     class="rounded-lg">
                     @foreach ($users as $user)
-                        @php
-                            $roleString = $user->role?->role_name ?? 'unknown';
-                        @endphp
                         <tr wire:key="user-{{ $user->user_id }}">
                             <x-ui.table-column>{{ $user->name }}</x-ui.table-column>
                             <x-ui.table-column>{{ $user->email }}</x-ui.table-column>
                             <x-ui.table-column>
-                                <x-ui.badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
-                                    'superadmin'
-                                        => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
-                                    'osa' => 'badge-primary text-base-200 dark:text-white',
-                                    'gso' => 'badge-info text-base-200 dark:text-white',
-                                    'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
-                                    default => 'badge-ghost text-base-200 dark:text-white',
-                                }" />
+                                <div class="flex min-w-72 items-end gap-2">
+                                    <div class="min-w-0 grow">
+                                        <x-ui.select id="user-role-{{ $user->user_id }}"
+                                            wire:model.live="selectedRoleIds.{{ $user->user_id }}" :options="$availableRoles"
+                                            option-value="role_id" option-label="role_name"
+                                            aria-label="Role for {{ $user->name }}" />
+                                    </div>
+                                    <x-ui.button size="sm" class="btn-primary shrink-0"
+                                        wire:click="saveUserRole({{ $user->user_id }})" spinner="saveUserRole"
+                                        aria-label="Save role for {{ $user->name }}">
+                                        Save role
+                                    </x-ui.button>
+                                </div>
                             </x-ui.table-column>
                             <x-ui.table-column>
                                 @if ($user->email_verified_at)
@@ -198,7 +197,7 @@
                             option-value="role_name" option-label="role_name" placeholder="Select user role"
                             icon="o-shield-check" required />
 
-                        @if ($createForm->role === 'student-org')
+                        @if ($createForm->portal() === 'student-org')
                             <x-ui.select label="Organization Name"
                                 wire:model.live.debounce.300ms="createForm.org_name" :options="$organizations"
                                 option-value="org_id" option-label="org_name" placeholder="Select organization"
@@ -209,7 +208,7 @@
                                 placeholder="Select organization position" required />
                         @endif
 
-                        @if (in_array($createForm->role, ['osa', 'gso']))
+                        @if (in_array($createForm->portal(), ['osa', 'gso'], true))
                             <div class="alert alert-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     class="stroke-current shrink-0 w-6 h-6">
@@ -293,7 +292,7 @@
                                 option-value="role_name" option-label="role_name" placeholder="Select user role"
                                 icon="o-shield-check" required />
 
-                            @if ($editForm->role === 'student-org')
+                            @if ($editForm->portal() === 'student-org')
                                 <x-ui.select label="Organization Name"
                                     wire:model.live.debounce.300ms="editForm.org_name" :options="$organizations"
                                     option-value="org_id" option-label="org_name" placeholder="Select organization"
@@ -304,7 +303,7 @@
                                     placeholder="Select organization position" required />
                             @endif
 
-                            @if (in_array($editForm->role, ['osa', 'gso']))
+                            @if (in_array($editForm->portal(), ['osa', 'gso'], true))
                                 <div class="alert alert-info">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         class="stroke-current shrink-0 w-6 h-6">
@@ -330,6 +329,63 @@
             </div>
         </div>
     </div>
+
+    {{-- Self Role Change Confirmation Modal --}}
+    <dialog
+        x-data="{
+            isOpen: $wire.entangle('showSelfRoleChangeConfirmation').live,
+            previousFocus: null,
+            dismiss() {
+                $wire.cancelSelfRoleChange();
+            },
+            restoreFocus() {
+                this.$nextTick(() => this.previousFocus?.focus());
+            },
+        }"
+        x-effect="
+            if (isOpen && ! $el.open) {
+                previousFocus = document.activeElement;
+                $el.showModal();
+                $nextTick(() => $refs.cancelButton.focus());
+            }
+
+            if (! isOpen && $el.open) {
+                $el.close();
+            }
+        "
+        x-on:cancel.prevent="dismiss()"
+        x-on:close="if (isOpen) { dismiss(); } restoreFocus()"
+        class="modal"
+        aria-labelledby="self-role-change-title"
+        aria-describedby="self-role-change-description"
+    >
+        <div class="modal-box max-w-lg">
+            <h2 id="self-role-change-title" class="text-lg font-semibold text-base-content">Confirm your role change</h2>
+            <p id="self-role-change-description" class="mt-2 text-sm text-base-content/70">
+                You are about to change the role assigned to your own account. Review this change carefully before
+                continuing.
+            </p>
+
+            <div class="alert alert-warning mt-5" role="alert">
+                <span>Confirming may change the access available to you on your next request.</span>
+            </div>
+
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost" x-ref="cancelButton" wire:click="cancelSelfRoleChange"
+                    wire:target="cancelSelfRoleChange" wire:loading.attr="disabled">
+                    Keep current role
+                </button>
+                <button type="button" class="btn btn-primary" wire:click="confirmSelfRoleChange"
+                    wire:target="confirmSelfRoleChange" wire:loading.attr="disabled">
+                    Confirm role change
+                </button>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button type="button" @click="dismiss()" aria-label="Close role change confirmation">Close</button>
+        </form>
+    </dialog>
 
     {{-- Delete Confirmation Modal --}}
     @if ($deletingUserName)
