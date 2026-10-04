@@ -11,7 +11,7 @@
     {{-- CMS-powered Terms & Conditions --}}
     <div class="overflow-hidden">
         {{-- Alert Banner --}}
-        <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
+        <div class="bg-warning/10 border border-warning/30 p-3 md:p-4 rounded-field mb-4">
             <div class="flex items-start gap-3">
                 <x-ui.icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div class="flex-1 min-w-0">
@@ -52,7 +52,7 @@
     {{-- Fallback: Hardcoded Terms & Conditions --}}
     <div class="overflow-hidden">
         {{-- Alert Banner --}}
-        <div class="bg-warning/10 border-l-4 border-warning p-3 md:p-4 rounded-r-lg mb-4">
+        <div class="bg-warning/10 border border-warning/30 p-3 md:p-4 rounded-field mb-4">
             <div class="flex items-start gap-3">
                 <x-ui.icon name="o-exclamation-triangle" class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div class="flex-1 min-w-0">
@@ -180,7 +180,7 @@
 
         {{-- Certification Statement --}}
         <div class="mt-4 pt-4 border-t-2 border-base-content/10">
-            <div class="bg-info/10 border-l-4 border-info p-3 md:p-4 rounded-r-lg">
+            <div class="bg-info/10 border border-info/30 p-3 md:p-4 rounded-field">
                 <div class="flex gap-3">
                     <x-ui.icon name="o-shield-check" class="w-5 h-5 text-info flex-shrink-0 mt-1" />
                     <div class="flex-1 min-w-0">

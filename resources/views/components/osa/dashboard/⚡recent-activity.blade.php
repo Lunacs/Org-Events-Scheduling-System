@@ -34,10 +34,11 @@ new class extends Component
 
                     $iconClass = match (true) {
                         str_contains($log->action, 'Approved') => 'text-success',
-                        str_contains($log->action, 'Rejected'), str_contains($log->action, 'Revision') => 'text-error',
+                        str_contains($log->action, 'Rejected') => 'text-error',
+                        str_contains($log->action, 'Revision') => 'text-warning',
                         str_contains($log->action, 'Forwarded') => 'text-info',
                         str_contains($log->action, 'Submitted') => 'text-primary',
-                        default => 'text-base-content/50',
+                        default => 'text-base-content/60',
                     };
 
                     return [
@@ -56,7 +57,7 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-6 mt-6">
+        <div class="rounded-box border border-base-300 bg-base-100 p-4 sm:p-5">
             <div class="animate-pulse space-y-4">
                 <div class="h-5 bg-base-300 rounded w-1/3"></div>
                 <div class="h-4 bg-base-300 rounded w-full"></div>
@@ -69,11 +70,11 @@ new class extends Component
 };
 ?>
 
-<div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-6 mt-6">
-    <div class="flex items-center justify-between mb-5">
+<div class="rounded-box border border-base-300 bg-base-100 p-4 sm:p-5">
+    <div class="mb-4 flex items-center justify-between">
         <div>
-            <h3 class="text-lg font-bold text-base-content">Recent Activity</h3>
-            <p class="text-sm text-base-content/60">Latest updates and changes</p>
+            <h2 class="text-base font-semibold text-base-content">Recent activity</h2>
+            <p class="mt-0.5 text-sm text-base-content/70">Latest decisions and changes across all tickets.</p>
         </div>
     </div>
     @if (count($this->recentActivity) > 0)
@@ -91,7 +92,7 @@ new class extends Component
                     <div class="flex-1 pb-4">
                         <p class="text-sm font-medium text-base-content">{{ $activity['action'] }}</p>
                         <p class="text-xs text-base-content/60">{{ $activity['details'] }}</p>
-                        <p class="text-xs text-base-content/40 mt-1">{{ $activity['time_ago'] }}</p>
+                        <p class="text-xs text-base-content/60 mt-1">{{ $activity['time_ago'] }}</p>
                     </div>
                 </div>
             @endforeach

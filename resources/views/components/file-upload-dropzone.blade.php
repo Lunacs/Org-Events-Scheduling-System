@@ -43,7 +43,7 @@
             x-bind:class="isDragging
                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                 : 'border-base-300 hover:border-primary/50 hover:bg-base-200/50'"
-            class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-base-100 px-4 py-8 sm:py-10 cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary"
+            class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-base-100 px-4 py-8 sm:py-10 cursor-pointer transition duration-200 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary"
         >
             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <x-ui.icon name="o-cloud-arrow-up" class="h-6 w-6 text-primary" />
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    <div id="{{ $constraintsId }}" class="rounded-lg border-l-4 border-info bg-info/10 p-4">
+    <div id="{{ $constraintsId }}" class="rounded-lg border border-info/30 bg-info/10 p-4">
         <div class="flex items-start gap-2">
             <x-ui.icon name="s-information-circle" class="mt-0.5 h-5 w-5 shrink-0 text-info" />
             <div class="text-sm text-base-content/80">

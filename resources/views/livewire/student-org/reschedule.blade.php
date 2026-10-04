@@ -1,26 +1,9 @@
 <div>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-base-content leading-tight">
-            {{ __('Reschedule Request') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-8 sm:py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div>
+        <div class="w-full">
             {{-- Header --}}
-            <section
-                class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-warning/10 shadow-sm">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-warning/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-3xl font-heading font-bold text-base-content">Reschedule a Ticket</h1>
-                            <p class="text-base-content/70 mt-1">Submit a schedule change request for an existing
-                                approved event.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <x-ui.page-heading title="Reschedule a ticket" subtitle="Submit a schedule change request for an existing approved event." />
 
             @if ($errors->any())
                 <div class="mb-6 rounded-xl border border-error/30 bg-error/10 p-4">
@@ -110,9 +93,9 @@
                     {{-- Important Notice (CMS-driven) --}}
                     <x-reschedule_guidelines :guidelines="$rescheduleGuidelines" />
 
-                    <x-ui.card title="Select Event to Reschedule" subtitle="Choose from your approved events">
+                    <x-ui.card title="Select event to reschedule" subtitle="Choose from your approved events">
                         <div class="space-y-4">
-                            <x-ui.select label="Select Event" wire:model.live="selectedEventId" :options="$approvedEvents"
+                            <x-ui.select label="Select event" wire:model.live="selectedEventId" :options="$approvedEvents"
                                 placeholder="Select an event to reschedule" required />
 
                             @if ($selectedEventId)
@@ -158,9 +141,9 @@
                     @if ($selectedEventId)
                         <x-ui.card title="What needs to be changed?" subtitle="Select the type of change you need">
                             <div class="space-y-3">
-                                <x-ui.checkbox label="Change Date" wire:model.live="changeDate" />
-                                <x-ui.checkbox label="Change Time" wire:model.live="changeTime" />
-                                <x-ui.checkbox label="Change Venue" wire:model.live="changeVenue" />
+                                <x-ui.checkbox label="Change date" wire:model.live="changeDate" />
+                                <x-ui.checkbox label="Change time" wire:model.live="changeTime" />
+                                <x-ui.checkbox label="Change venue" wire:model.live="changeVenue" />
                             </div>
                         </x-ui.card>
                     @endif
@@ -168,20 +151,20 @@
 
                 {{-- Step 2: New Schedule Details --}}
                 @if ($currentStep === 2)
-                    <x-ui.card title="New Schedule Details" subtitle="Provide your preferred new schedule">
+                    <x-ui.card title="New schedule details" subtitle="Provide your preferred new schedule">
                         <div class="space-y-4">
                             @if ($changeDate)
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-ui.datetime label="New Start Date" wire:model="newStartDate" required />
-                                    <x-ui.datetime label="New End Date" wire:model="newEndDate" required />
+                                    <x-ui.datetime label="New start date" wire:model="newStartDate" required />
+                                    <x-ui.datetime label="New end date" wire:model="newEndDate" required />
                                 </div>
                             @endif
 
                             @if ($changeTime)
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <x-ui.datetime label="New Start Time" type="time" wire:model="newStartTime"
+                                    <x-ui.datetime label="New start time" type="time" wire:model="newStartTime"
                                         required />
-                                    <x-ui.datetime label="New End Time" type="time" wire:model="newEndTime"
+                                    <x-ui.datetime label="New end time" type="time" wire:model="newEndTime"
                                         required />
                                 </div>
                             @endif
@@ -193,7 +176,7 @@
                                         showOtherPreferred: @entangle('newVenue').live === 'other',
                                         venues: @js($venues)
                                     }">
-                                        <x-ui.select label="New Preferred Venue" wire:model.live="newVenue"
+                                        <x-ui.select label="New preferred venue" wire:model.live="newVenue"
                                             :options="[
                                                 ...$venues,
                                                 ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -212,7 +195,7 @@
                                         showOtherAlternative: @entangle('alternativeVenue').live === 'other',
                                         venues: @js($venues)
                                     }">
-                                        <x-ui.select label="Alternative Venue" wire:model.live="alternativeVenue"
+                                        <x-ui.select label="Alternative venue" wire:model.live="alternativeVenue"
                                             :options="[
                                                 ...$venues,
                                                 ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -240,7 +223,7 @@
 
                 {{-- Step 3: Supporting Documents --}}
                 @if ($currentStep === 3)
-                    <x-ui.card title="Supporting Documents"
+                    <x-ui.card title="Supporting documents"
                         subtitle="Upload any relevant supporting documents (optional)">
                         <div class="space-y-4">
                             <div class="bg-info/10 p-4 rounded-lg border border-info/30">
@@ -269,7 +252,7 @@
                                     @foreach ($supportingDocuments as $index => $file)
                                         <div class="flex items-center justify-between bg-base-200 p-2 rounded">
                                             <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
-                                            <x-ui.button icon="o-x-mark"
+                                            <x-ui.button icon="o-x-mark" aria-label="Remove file"
                                                 wire:click="removeAttachment({{ $index }})"
                                                 class="btn-ghost btn-sm" spinner />
                                         </div>
@@ -282,12 +265,12 @@
 
                 {{-- Step 4: Preview & Agreement --}}
                 @if ($currentStep === 4)
-                    <x-ui.card title="Review & Submit" subtitle="Please review your reschedule request">
+                    <x-ui.card title="Review & submit" subtitle="Please review your reschedule request">
                         @if ($this->previewTicket)
                             <x-tickets.ticket-preview :ticket="$this->previewTicket" />
                         @endif
 
-                        <x-ui.card title="Agreement and Submission" subtitle="Please review and agree to the terms">
+                        <x-ui.card title="Agreement and submission" subtitle="Please review and agree to the terms">
                             <div class="space-y-4">
                                 <x-terms_and_conditions />
 
@@ -325,7 +308,7 @@
                             class="btn-primary w-full sm:w-auto data-loading:opacity-50 data-loading:pointer-events-none"
                             spinner :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />
                     @else
-                        <x-ui.button label="Submit Reschedule Request" icon="s-paper-airplane"
+                        <x-ui.button label="Submit reschedule request" icon="s-paper-airplane"
                             wire:click="submitReschedule"
                             class="btn-primary w-full sm:w-auto data-loading:opacity-50 data-loading:pointer-events-none"
                             spinner :disabled="$isProcessing || (!$changeDate && !$changeTime && !$changeVenue)" />

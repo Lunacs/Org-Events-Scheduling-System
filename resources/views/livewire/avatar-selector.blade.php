@@ -143,7 +143,7 @@
                     <p class="text-xs text-info mt-2">Preview - Click Save to keep this photo</p>
                 @elseif (!$this->getProfilePhotoUrl())
                     {{-- Only show upload hint if no photo exists --}}
-                    <p class="text-xs text-base-content/50 mt-2">Click to upload photo</p>
+                    <p class="text-xs text-base-content/60 mt-2">Click to upload photo</p>
                 @endif
 
                 @error('photo')
@@ -169,7 +169,7 @@
                 <span>Choose Your Avatar</span>
                 <span class="badge badge-neutral badge-sm">
                     <a href="https://www.dicebear.com/" target="_blank"
-                        class="underline decoration-transparent transition-all duration-300 ease-in-out hover:decoration-current">
+                        class="underline decoration-transparent transition duration-300 ease-in-out hover:decoration-current">
                         from dicebear
                     </a>
 
@@ -179,12 +179,13 @@
             <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-3">
                 {{-- Uploaded Photo as first option - clicking only selects, doesn't save --}}
                 @if ($this->getProfilePhotoUrl())
-                    <div @click="selectUploadedPhoto()" class="cursor-pointer group">
+                    <button type="button" @click="selectUploadedPhoto()" class="group w-full cursor-pointer rounded-full"
+                        :aria-pressed="selectedType === 'uploaded'" aria-label="Use your uploaded photo">
                         <div class="relative">
-                            <div :class="`avatar w-full transition-all duration-200 ${
+                            <div :class="`avatar w-full transition duration-200 ${
                                                                                         selectedType === 'uploaded'
-                                                                                            ? 'ring-4 ring-primary ring-offset-2 ring-offset-base-100 scale-110'
-                                                                                            : 'hover:ring-2 hover:ring-base-300 hover:scale-105'
+                                                                                            ? 'ring-4 ring-primary ring-offset-2 ring-offset-base-100'
+                                                                                            : 'hover:ring-2 hover:ring-base-300'
                                                                                     }`"
                                 title="Your uploaded photo">
                                 <div class="rounded-full w-full aspect-square">
@@ -199,18 +200,20 @@
                                 </div>
                             </template>
                         </div>
-                    </div>
+                    </button>
                 @endif
 
                 {{-- DiceBear Avatars --}}
                 @foreach ($avatarOptions as $option)
-                    <div @click="selectAvatar('{{ $option['style'] }}', '{{ $option['seed'] }}')"
-                        class="cursor-pointer group">
+                    <button type="button" @click="selectAvatar('{{ $option['style'] }}', '{{ $option['seed'] }}')"
+                        class="group w-full cursor-pointer rounded-full"
+                        :aria-pressed="isSelected('{{ $option['style'] }}', '{{ $option['seed'] }}')"
+                        aria-label="Avatar {{ ucfirst($option['seed']) }}">
                         <div class="relative">
-                            <div :class="`avatar placeholder w-full transition-all duration-200 ${
+                            <div :class="`avatar placeholder w-full transition duration-200 ${
                                                                                         isSelected('{{ $option['style'] }}', '{{ $option['seed'] }}')
-                                                                                            ? 'ring-4 ring-primary ring-offset-2 ring-offset-base-100 scale-110'
-                                                                                            : 'hover:ring-2 hover:ring-base-300 hover:scale-105'
+                                                                                            ? 'ring-4 ring-primary ring-offset-2 ring-offset-base-100'
+                                                                                            : 'hover:ring-2 hover:ring-base-300'
                                                                                     }`"
                                 :title="'{{ $option['seed'] }}'.charAt(0).toUpperCase() + '{{ $option['seed'] }}'.slice(1)">
                                 <div class="rounded-full w-full aspect-square bg-base-200">
@@ -226,7 +229,7 @@
                                 </div>
                             </template>
                         </div>
-                    </div>
+                    </button>
                 @endforeach
             </div>
         </div>

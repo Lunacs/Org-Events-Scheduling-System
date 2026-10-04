@@ -13,186 +13,154 @@
         }
     }
 }">
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-base-content leading-tight">
-            {{ __('Ticket Details') }}
-        </h2>
-    </x-slot>
+    @php
+        $status = strtolower((string) $ticket->status);
+        $userDeleted = $ticket->user?->trashed();
+        $forwarded = $ticket->officeApprovals()->exists();
+        $remark = $ticket->latestOsaApproval?->remarks;
+        $needsRevision = in_array($status, ['for_revision', 'needs_revision'], true);
+        $nextStep = \App\Support\TicketStatus::nextStepForOrganization($status);
+    @endphp
 
-    <div class="py-8 sm:py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            {{-- Header --}}
-            <section class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex items-center gap-2 text-sm text-base-content/60 mb-3">
-                        <a href="{{ route('student-org.my-tickets') }}" class="hover:text-primary transition-colors inline-flex items-center gap-1" wire:navigate>
-                            <x-ui.icon name="o-arrow-left" class="w-3.5 h-3.5" />
-                            My Tickets
-                        </a>
-                        <span>/</span>
-                        <span class="text-base-content/80">#{{ $ticket->ticket_number }}</span>
-                    </div>
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-3xl font-bold text-base-content font-heading">{{ $ticket->title }}</h1>
-                            <p class="text-base-content/70 mt-1">Ticket #{{ $ticket->ticket_number }}</p>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            @php
-                                $statusClasses = [
-                                    'received' => 'badge-info',
-                                    'gso_review' => 'badge-secondary',
-                                    'pending_osa_approval' => 'badge-warning',
-                                    'amended' => 'badge-info',
-                                    'approved' => 'badge-success',
-                                    'for_revision' => 'badge-warning',
-                                    'completed' => 'badge-neutral',
-                                ];
-                                $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
-                                $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
-                            @endphp
-                            <span class="badge {{ $ticketBadgeClass }} badge-lg">
-                                {{ $ticketStatusLabel }}
-                            </span>
-                        </div>
-                    </div>
+    <div class="space-y-6">
+        <x-ui.page-heading :breadcrumbs="[
+            ['label' => 'My tickets', 'link' => route('student-org.my-tickets')],
+            ['label' => $ticket->ticket_number],
+        ]">
+            <x-slot:heading>{{ $ticket->title }}</x-slot:heading>
+            <x-slot:meta>
+                <x-tickets.progress-badge :status="$ticket->status" />
+            </x-slot:meta>
+            <x-slot:subtitle>
+                <span class="font-mono">{{ $ticket->ticket_number }}</span>
+                &middot; Submitted {{ $ticket->created_at?->timezone('Asia/Manila')->format('M j, Y') }}
+            </x-slot:subtitle>
+        </x-ui.page-heading>
+
+        {{-- Where it stands: status, next step, and the decision that matters --}}
+        <section aria-labelledby="status-heading" class="rounded-box border border-base-300 bg-base-100 p-4 sm:p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <h2 id="status-heading" class="text-base font-semibold text-base-content">Where it stands</h2>
+                    @if ($nextStep)
+                        <p class="mt-0.5 text-sm text-base-content/70">{{ $nextStep }}</p>
+                    @endif
                 </div>
-            </section>
+                @if ($needsRevision)
+                    <button type="button" class="btn btn-primary btn-sm" wire:click="openEditDrawer">
+                        <x-ui.icon name="o-pencil-square" class="size-4" aria-hidden="true" />
+                        Revise and resubmit
+                    </button>
+                @endif
+            </div>
 
-            {{-- Main Content --}}
+            <x-tickets.status-timeline :status="$ticket->status" :forwarded="$forwarded" class="mt-5" />
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {{-- Ticket Details --}}
-                <div class="lg:col-span-2 space-y-6">
-                    {{-- Organization Information --}}
-                    <x-tickets.sections.organization-info :ticket="$ticket" />
-
-                    {{-- Event Details --}}
-                    <x-tickets.sections.event-details :ticket="$ticket" />
-
-                    {{-- Schedule & Venue --}}
-                    <x-tickets.sections.schedule-venue :ticket="$ticket" />
-
-                    {{-- Budget Information --}}
-                    <x-tickets.sections.budget-info :ticket="$ticket" />
-
-                    {{-- Additional Information --}}
-                    <x-tickets.sections.additional-info :ticket="$ticket" />
-
-                    {{-- Attachments --}}
-                    <x-tickets.sections.attachments-list :ticket="$ticket" />
-
-                    {{-- Comments Section --}}
-                    <div id="comments" class="scroll-mt-24">
-                        <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
-                    </div>
+            @if (($needsRevision || $status === 'approved' || $status === 'rejected') && $remark)
+                <div @class([
+                    'mt-5 rounded-field border p-3 text-sm',
+                    'border-warning/30 bg-warning/[0.06]' => $needsRevision,
+                    'border-success/30 bg-success/[0.06]' => $status === 'approved',
+                    'border-error/30 bg-error/[0.06]' => $status === 'rejected',
+                ])>
+                    <p class="font-medium text-base-content">Remarks from OSA</p>
+                    <p class="mt-1 whitespace-pre-line text-base-content/80">{{ $remark }}</p>
+                    <p class="mt-2 text-xs text-base-content/70">{{ $ticket->updated_at?->diffForHumans() }}</p>
                 </div>
+            @elseif ($needsRevision)
+                <p class="mt-5 rounded-field border border-warning/30 bg-warning/[0.06] p-3 text-sm text-base-content/80">
+                    OSA asked for changes. Check the comments below for details, then revise and resubmit your request.
+                </p>
+            @endif
+        </section>
 
-                {{-- Sidebar --}}
-                <div class="space-y-6">
-                    {{-- Ticket Info --}}
-                    <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
-                        <h2 class="text-lg font-semibold text-base-content mb-4">Ticket Details</h2>
-                        @php $userDeleted = $ticket->user?->trashed(); @endphp
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-sm font-medium text-base-content/70">Ticket Number</label>
-                                <p class="text-base-content font-mono">{{ $ticket->ticket_number }}</p>
-                            </div>
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            {{-- Request details --}}
+            <div class="space-y-6 lg:col-span-2">
+                <x-tickets.sections.organization-info :ticket="$ticket" />
+                <x-tickets.sections.event-details :ticket="$ticket" />
+                <x-tickets.sections.schedule-venue :ticket="$ticket" />
+                <x-tickets.sections.budget-info :ticket="$ticket" />
+                <x-tickets.sections.additional-info :ticket="$ticket" />
+                <x-tickets.sections.attachments-list :ticket="$ticket" />
 
-                            <div>
-                                <label class="text-sm font-medium text-base-content/70">Submitted By</label>
-                                <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
-                                    {{ $userDeleted ? 'Deleted User' : $ticket->user?->name }}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label class="text-sm font-medium text-base-content/70">Email</label>
-                                <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
-                                    {{ $userDeleted ? 'N/A' : $ticket->user?->email }}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label class="text-sm font-medium text-base-content/70">Submitted</label>
-                                <p class="text-base-content">
-                                    {{ $ticket->created_at ? $ticket->created_at->format('F d, Y g:i A') : 'TBD' }}</p>
-                            </div>
-
-                            <div>
-                                <label class="text-sm font-medium text-base-content/70">Last Updated</label>
-                                <p class="text-base-content">
-                                    {{ $ticket->updated_at ? $ticket->updated_at->format('F d, Y g:i A') : 'TBD' }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Event Status --}}
-                    @if ($ticket->events->isNotEmpty())
-                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
-                            <h2 class="text-lg font-semibold text-base-content mb-4">Event Created</h2>
-                            @php
-                                $event = $ticket->events->first();
-                                $schedule = $event->eventSchedules->first();
-                            @endphp
-                            @if ($schedule)
-                                <div class="space-y-3">
-                                    <div class="alert alert-success">
-                                        <div class="flex-1">
-                                            <p class="font-medium">Event is scheduled!</p>
-                                            <p class="text-sm mt-1">
-                                                {{ $schedule->start_date ? $schedule->start_date->format('F d, Y') : 'TBD' }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-base-content/70">Venue</label>
-                                        <p class="text-base-content">{{ $schedule->venue ?? 'TBD' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-base-content/70">Time</label>
-                                        <p class="text-base-content">
-                                            {{ $schedule->start_time ? \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') : 'TBD' }}
-                                            -
-                                            {{ $schedule->end_time ? \Carbon\Carbon::parse($schedule->end_time)->format('g:i A') : 'TBD' }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-base-content/70">Status</label>
-                                        <span
-                                            class="badge {{ $schedule->status === 'approved' ? 'badge-success' : 'badge-info' }}">{{ ucfirst($schedule->status) }}</span>
-                                    </div>
-                                </div>
-                            @else
-                                <p class="text-sm text-base-content/70">Event created but schedule is pending.</p>
-                            @endif
-                        </div>
-                    @endif
-
-                    {{-- Actions --}}
-                    @if ($ticket->status === 'for_revision')
-                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
-                            <h2 class="text-lg font-semibold text-base-content mb-4">Actions</h2>
-                            <div class="space-y-3">
-                                <button class="btn btn-primary w-full" wire:click="openEditDrawer">
-                                    <x-ui.icon name="s-pencil" class="w-4 h-4" />
-                                    Revise Ticket
-                                </button>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Latest Remark --}}
-                    @if (in_array(strtolower($ticket->status), ['approved', 'for_revision']))
-                        <div class="bg-base-100 rounded-box shadow-sm border border-base-300/60 p-6">
-                            <h2 class="text-lg font-semibold text-base-content mb-4">Latest Decision</h2>
-                            <x-tickets.latest-remark :status="$ticket->status" :ticket="$ticket" />
-                        </div>
-                    @endif
+                <div id="comments" class="scroll-mt-24">
+                    <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
                 </div>
             </div>
+
+            {{-- Sidebar --}}
+            <aside class="space-y-6 lg:sticky lg:top-24">
+                <x-ui.card title="Request details">
+                    <dl class="space-y-3 text-sm">
+                        <div>
+                            <dt class="text-base-content/70">Ticket number</dt>
+                            <dd class="font-mono text-base-content">{{ $ticket->ticket_number }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-base-content/70">Submitted by</dt>
+                            <dd @class(['text-base-content', 'italic text-base-content/70' => $userDeleted])>
+                                {{ $userDeleted ? 'Deleted user' : $ticket->user?->name }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-base-content/70">Email</dt>
+                            <dd @class(['break-all text-base-content', 'italic text-base-content/70' => $userDeleted])>
+                                {{ $userDeleted ? 'Not available' : $ticket->user?->email }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-base-content/70">Submitted</dt>
+                            <dd class="text-base-content">
+                                {{ $ticket->created_at ? $ticket->created_at->timezone('Asia/Manila')->format('M j, Y g:i A') : 'Not set' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-base-content/70">Last updated</dt>
+                            <dd class="text-base-content">
+                                {{ $ticket->updated_at ? $ticket->updated_at->timezone('Asia/Manila')->format('M j, Y g:i A') : 'Not set' }}
+                            </dd>
+                        </div>
+                    </dl>
+                </x-ui.card>
+
+                @if ($ticket->events->isNotEmpty())
+                    @php
+                        $event = $ticket->events->first();
+                        $schedule = $event->eventSchedules->first();
+                    @endphp
+                    <x-ui.card title="On the calendar">
+                        @if ($schedule)
+                            <dl class="space-y-3 text-sm">
+                                <div>
+                                    <dt class="text-base-content/70">Date</dt>
+                                    <dd class="text-base-content">
+                                        {{ $schedule->start_date ? $schedule->start_date->format('l, M j, Y') : 'To be announced' }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-base-content/70">Time</dt>
+                                    <dd class="text-base-content">
+                                        {{ $schedule->start_time ? \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') : 'TBA' }}
+                                        &ndash;
+                                        {{ $schedule->end_time ? \Carbon\Carbon::parse($schedule->end_time)->format('g:i A') : 'TBA' }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-base-content/70">Venue</dt>
+                                    <dd class="text-base-content">{{ $schedule->venue ?? 'To be announced' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-base-content/70">Schedule status</dt>
+                                    <dd class="mt-0.5"><x-tickets.progress-badge :status="$schedule->status" size="sm" /></dd>
+                                </div>
+                            </dl>
+                        @else
+                            <p class="text-sm text-base-content/70">The event was created; OSA is finalizing its schedule.</p>
+                        @endif
+                    </x-ui.card>
+                @endif
+            </aside>
         </div>
     </div>
 
@@ -225,7 +193,7 @@
             <div x-show="isLoading" class="flex items-center justify-center py-16">
                 <div class="flex flex-col items-center gap-3">
                     <x-ui.loading class="loading-lg text-primary" />
-                    <p class="text-sm text-base-content/70">Loading form...</p>
+                    <p class="text-sm text-base-content/70">Loading form…</p>
                 </div>
             </div>
 

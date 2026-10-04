@@ -17,31 +17,21 @@
         }
 }"
     @user-drawer-close.window="document.getElementById('create-user-drawer-toggle').checked = false; document.getElementById('edit-user-drawer-toggle').checked = false">
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">User Management</h1>
-                        <p class="text-sm text-base-content/70 mt-1">Add, update, and manage system users and roles</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-ui.button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
-                            Create User
-                        </x-ui.button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="User Management" subtitle="Add, update, and manage system users and roles">
+            <x-slot:actions>
+                <x-ui.button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
+                    Create User
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         <!-- Search and Filter Section -->
         <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <x-ui.input label="Search Users" wire:model.live.debounce.300ms="search"
-                    placeholder="Search by name or email..." icon="o-magnifying-glass" />
+                    placeholder="Search by name or email…" icon="o-magnifying-glass" />
 
                 <x-ui.select label="Filter by Role" wire:model.live="roleFilter" :options="[
                     ['id' => 'all', 'name' => 'All Roles'],
@@ -85,10 +75,10 @@
                             </x-ui.table-column>
                             <x-ui.table-column>
                                 @if ($user->email_verified_at)
-                                    <x-ui.badge value="Verified" class="badge-success text-base-200 dark:text-white" />
+                                    <x-ui.badge value="Verified" class="badge-success text-base-200" />
                                 @else
                                     <x-ui.badge value="Unverified"
-                                        class="badge-warning text-base-200 dark:text-white" />
+                                        class="badge-warning text-base-200" />
                                 @endif
                             </x-ui.table-column>
                             <x-ui.table-column>
@@ -97,7 +87,7 @@
                                 @elseif($user->office)
                                     <span class="text-sm">{{ $user->office->office_name }}</span>
                                 @else
-                                    <span class="text-sm text-gray-500">N/A</span>
+                                    <span class="text-sm text-base-content/60">N/A</span>
                                 @endif
                             </x-ui.table-column>
                             <x-ui.table-column class="text-center">
@@ -107,7 +97,7 @@
                                         Edit
                                     </x-ui.button>
                                     @if (!$user->isSuperAdmin())
-                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
                                             wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
                                         </x-ui.button>
                                     @endif
@@ -120,7 +110,7 @@
                         <div class="flex flex-col items-center justify-center py-12 text-center">
                             <x-ui.icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
                             <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
-                            <p class="text-base-content/50 max-w-sm mx-auto mt-2">
+                            <p class="text-base-content/60 max-w-sm mx-auto mt-2">
                                 @if ($this->hasActiveFilters())
                                     We couldn't find any users matching "<span
                                         class="font-semibold text-base-content/80">{{ $search }}</span>" or your
@@ -186,7 +176,7 @@
                                 wire:model.live.debounce.300ms="createForm.password_confirmation" ::type="showConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm password" icon="o-lock-closed" required />
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                class="absolute right-3 top-9 h-10 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                 tabindex="-1">
                                 <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showConfirmPassword" />
                                 <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirmPassword" />
@@ -276,7 +266,7 @@
                                 wire:model.live.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm new password" icon="o-lock-closed" />
                             <button type="button" @click="showEditConfirmPassword = !showEditConfirmPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                class="absolute right-3 top-9 h-10 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                 tabindex="-1">
                                 <i class="fas fa-eye-slash text-sm" x-show="!showEditConfirmPassword"></i>
                                 <i class="fas fa-eye text-sm" x-show="showEditConfirmPassword"
@@ -392,26 +382,26 @@
         <x-ui.modal-dialog wire:model="showDeleteModal" title="Delete User Confirmation"
             subtitle="This action cannot be undone">
             <div class="space-y-4">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="bg-error/10 border border-error/30 rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor"
+                        <svg class="w-5 h-5 text-error mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
                         </svg>
-                        <p class="text-red-800 font-medium">Warning: This action is permanent</p>
+                        <p class="text-error font-medium">Warning: This action is permanent</p>
                     </div>
                 </div>
 
-                <p class="text-gray-700">
+                <p class="text-base-content/80">
                     Are you sure you want to delete the user
-                    <strong class="text-gray-900">{{ $deletingUserName }}</strong>?
+                    <strong class="text-base-content">{{ $deletingUserName }}</strong>?
                     <br><br>
                     This will permanently remove:
                 </p>
 
-                <ul class="list-disc list-inside text-sm text-gray-600 ml-4">
+                <ul class="list-disc list-inside text-sm text-base-content/70 ml-4">
                     <li>User account and login access</li>
                     <li>All associated data and permissions</li>
                     <li>Event submissions and history</li>

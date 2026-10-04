@@ -1,5 +1,5 @@
-<div class="py-6">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+<div>
+    <div class="space-y-6">
         {{-- Page Header --}}
         <x-profile.identity-header :user="$user" />
 
@@ -113,7 +113,7 @@
                                     placeholder="Enter current password" icon="o-key"
                                     autocomplete="current-password" />
                                 <button type="button" @click="showCurrent = !showCurrent"
-                                    class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
+                                    class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                     tabindex="-1">
                                     <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showCurrent" x-cloak />
                                     <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showCurrent" />
@@ -127,7 +127,7 @@
                                         ::type="showNew ? 'text' : 'password'" placeholder="Enter new password" icon="o-lock-closed"
                                         autocomplete="new-password" />
                                     <button type="button" @click="showNew = !showNew"
-                                        class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
                                         <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showNew" x-cloak />
                                         <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showNew" />
@@ -140,7 +140,7 @@
                                         placeholder="Confirm new password" icon="o-lock-closed"
                                         autocomplete="new-password" />
                                     <button type="button" @click="showConfirm = !showConfirm"
-                                        class="absolute right-3 top-[38px] flex items-center text-base-content/40 hover:text-base-content/70 transition-colors"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
                                         <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showConfirm" x-cloak />
                                         <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirm" />
@@ -164,7 +164,7 @@
                                     </div>
                                     <div class="flex gap-1">
                                         <template x-for="i in 5" :key="i">
-                                            <div class="h-1.5 flex-1 rounded-full transition-all duration-300"
+                                            <div class="h-1.5 flex-1 rounded-full transition duration-300"
                                                 :class="i <= passwordStrength.score ? passwordStrength.color : 'bg-base-300'">
                                             </div>
                                         </template>

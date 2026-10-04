@@ -5,6 +5,7 @@ namespace App\Livewire\Osa;
 use App\Models\Student_Organization;
 use App\Models\Ticket;
 use App\Services\Cache\ReportCacheService;
+use App\Support\TicketStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -338,24 +339,15 @@ class Reports extends Component
             ->groupBy('status')
             ->get();
 
-        // Define status colors and labels
-        $statusConfig = [
-            'approved' => ['label' => 'Approved', 'color' => 'rgb(34, 197, 94)'],
-            'pending' => ['label' => 'Pending', 'color' => 'rgb(251, 191, 36)'],
-            'under_review' => ['label' => 'Under Review', 'color' => 'rgb(59, 130, 246)'],
-            'for_revision' => ['label' => 'For Revision', 'color' => 'rgb(239, 68, 68)'],
-            'cancelled' => ['label' => 'Cancelled', 'color' => 'rgb(156, 163, 175)'],
-        ];
-
+        // Same labels and tones as the status badges (App\Support\TicketStatus).
         $labels = [];
         $data = [];
         $colors = [];
 
         foreach ($tickets as $ticket) {
-            $config = $statusConfig[$ticket->status] ?? ['label' => ucfirst(str_replace('_', ' ', $ticket->status)), 'color' => 'rgb(168, 85, 247)'];
-            $labels[] = $config['label'];
+            $labels[] = TicketStatus::label($ticket->status);
             $data[] = $ticket->count;
-            $colors[] = $config['color'];
+            $colors[] = TicketStatus::chartColor($ticket->status);
         }
 
         return [

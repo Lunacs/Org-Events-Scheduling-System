@@ -106,6 +106,9 @@
                     // View-specific options
                     views: {
                         dayGridMonth: {
+                            // Rows fill the fixed height; without this FullCalendar measures the grid
+                            // narrower than its container and leaves an empty band under the last week.
+                            expandRows: true,
                             dayMaxEvents: 3, // Show max 3 events, rest in "more" link
                             eventMaxStack: 3,
                             moreLinkText: 'more',
@@ -297,6 +300,9 @@
                 });
 
                 this.calendar.render();
+                // Re-measure once layout settles and web fonts are in, so the grid spans its container.
+                requestAnimationFrame(() => this.calendar.updateSize());
+                document.fonts?.ready.then(() => this.calendar.updateSize());
                 // expose for other parts (e.g., filterPanel) and stability
                 window.fullCalendar = this.calendar;
                 window.osaCalendarInstance = this; // Expose component instance for event updates
@@ -347,6 +353,19 @@
                         handleResize();
                     }, 100);
                 });
+
+                // Keep the grid filling its container when the layout changes without a window
+                // resize (web fonts finishing loading, the sidebar collapsing or expanding).
+                if (window.ResizeObserver && this.calendar.el?.parentElement) {
+                    let observedWidth = 0;
+                    new ResizeObserver(([entry]) => {
+                        const width = Math.round(entry.contentRect.width);
+                        if (width !== observedWidth) {
+                            observedWidth = width;
+                            this.calendar.updateSize();
+                        }
+                    }).observe(this.calendar.el.parentElement);
+                }
 
                 // Re-render FullCalendar when theme changes so dark/light CSS vars are picked up
                 window.addEventListener('theme-changed', () => {

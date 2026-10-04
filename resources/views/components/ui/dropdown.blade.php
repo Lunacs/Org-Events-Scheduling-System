@@ -33,11 +33,11 @@ $widthClass = match ($width) {
 @endphp
 
 <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false"
-    @keydown.escape.window="open = false">
+    @keydown.escape.window="if (open) { open = false; $refs.trigger.focus() }">
     {{-- Trigger: preserves any Livewire bindings placed inside the trigger slot verbatim.
          Consumers pass a `trigger` slot; MaryUI-style consumers pass a `label` prop. --}}
-    <div @click="open = ! open" @keydown.enter.prevent="open = ! open" @keydown.space.prevent="open = ! open" role="button"
-        tabindex="0" aria-haspopup="true" :aria-expanded="open">
+    <div x-ref="trigger" @click="open = ! open" @keydown.enter.prevent="open = ! open" @keydown.space.prevent="open = ! open"
+        role="button" tabindex="0" aria-haspopup="true" :aria-expanded="open" class="rounded-field">
         @isset($trigger)
             {{ $trigger }}
         @else
@@ -46,11 +46,11 @@ $widthClass = match ($width) {
     </div>
 
     {{-- Menu panel: DaisyUI menu styling with reduced-motion-aware transitions --}}
-    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200 motion-reduce:transition-none"
+    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150 motion-reduce:transition-none"
         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-75 motion-reduce:transition-none"
         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-        {{ $attributes->merge(['class' => "menu bg-base-100 rounded-box shadow absolute z-50 mt-2 {$widthClass} {$alignmentClasses} {$contentClasses}"]) }}>
+        {{ $attributes->merge(['class' => "absolute z-40 mt-2 max-w-[calc(100vw-1rem)] rounded-box bg-base-100 shadow-float {$widthClass} {$alignmentClasses} {$contentClasses}"]) }}>
         {{-- Breeze consumers pass a `content` slot; MaryUI/new consumers use the default slot.
              Livewire bindings inside either slot are preserved verbatim. --}}
         {{ $content ?? $slot }}

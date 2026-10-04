@@ -146,8 +146,11 @@ it('renders x-ui.card with title, subtitle and body content plus DaisyUI classes
         </x-ui.card>
     BLADE);
 
+    // Panels are flat at rest (DESIGN.md "Flat-at-Rest"): a hairline border, never a shadow.
+    // The legacy `shadow` prop is still accepted so existing call sites keep working.
     expect($html)->toContain('card bg-base-100')
-        ->and($html)->toContain('shadow-xs')
+        ->and($html)->toContain('border-base-300')
+        ->and($html)->not->toContain('shadow-')
         ->and($html)->toContain('lg:col-span-2')
         ->and($html)->toContain('Monthly Report')
         ->and($html)->toContain('September')

@@ -1,9 +1,9 @@
-<div class="p-4 sm:p-6 max-w-4xl mx-auto">
+<div class="mx-auto max-w-4xl">
     {{-- Header with Breadcrumb --}}
-    <section
-        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
-        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-        <div class="relative p-6 sm:p-8">
+    <x-ui.page-heading>
+        <x-slot:heading>{{ $isEditing ? 'Edit FAQ' : 'Add New FAQ' }}</x-slot:heading>
+        <x-slot:subtitle>{{ $isEditing ? 'Update the FAQ details below.' : 'Create a new frequently asked question.' }}</x-slot:subtitle>
+        <x-slot:actions>
             {{-- Breadcrumb --}}
             <nav class="flex items-center text-sm text-base-content/60 mb-4 relative z-10">
                 <a href="{{ route('superadmin.dashboard') }}" wire:navigate
@@ -20,31 +20,16 @@
                     {{ $isEditing ? 'Edit FAQ' : 'Add New FAQ' }}
                 </span>
             </nav>
-
-            <div class="flex items-center gap-4 relative z-10">
-                <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                    <x-ui.icon name="{{ $isEditing ? 's-pencil-square' : 's-plus' }}"
-                        class="w-6 h-6 text-primary" />
-                </span>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-base-content">
-                        {{ $isEditing ? 'Edit FAQ' : 'Add New FAQ' }}
-                    </h1>
-                    <p class="text-sm text-base-content/70 mt-1">
-                        {{ $isEditing ? 'Update the FAQ details below.' : 'Create a new frequently asked question.' }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+        </x-slot:actions>
+    </x-ui.page-heading>
 
     {{-- Main Form Card --}}
     <form wire:submit.prevent="save">
-        <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
+        <x-ui.card shadow class="bg-base-100 dark:bg-base-200 border-none">
             <div class="space-y-6">
                 {{-- Section 1: Question & Answer --}}
-                <div class="pb-6 border-b border-slate-200 dark:border-base-300">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
+                <div class="pb-6 border-b border-base-300 dark:border-base-300">
+                    <label class="block text-sm font-semibold text-base-content/80 mb-4">
                         <span class="flex items-center gap-2">
                             <x-ui.icon name="o-question-mark-circle" class="w-4 h-4" />
                             Question & Answer
@@ -57,7 +42,7 @@
                             <x-ui.input wire:model="question" label="Question"
                                 placeholder="e.g., How long does the approval process take?" icon="o-chat-bubble-left"
                                 required />
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                            <p class="text-xs text-base-content/60 mt-1">
                                 Enter a clear, concise question that users commonly ask.
                             </p>
                         </div>
@@ -65,8 +50,8 @@
                         {{-- Answer --}}
                         <div>
                             <x-ui.textarea wire:model="answer" label="Answer"
-                                placeholder="Provide a detailed answer to the question..." rows="6" required />
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                placeholder="Provide a detailed answer to the question…" rows="6" required />
+                            <p class="text-xs text-base-content/60 mt-1">
                                 HTML formatting is supported. Provide a helpful, complete answer.
                             </p>
                         </div>
@@ -74,8 +59,8 @@
                 </div>
 
                 {{-- Section 2: Organization --}}
-                <div class="pb-6 border-b border-slate-200 dark:border-base-300">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
+                <div class="pb-6 border-b border-base-300 dark:border-base-300">
+                    <label class="block text-sm font-semibold text-base-content/80 mb-4">
                         <span class="flex items-center gap-2">
                             <x-ui.icon name="o-tag" class="w-4 h-4" />
                             Organization
@@ -94,8 +79,8 @@
                             <div class="relative">
                                 <input type="text" wire:model.live.debounce.300ms="categorySearch"
                                     wire:focus="openCategoryDropdown" @focus="open = true"
-                                    placeholder="Search or type new category..."
-                                    class="input input-bordered w-full bg-white dark:bg-base-300 pr-10" />
+                                    placeholder="Search or type new category…"
+                                    class="input input-bordered w-full bg-base-100 dark:bg-base-300 pr-10" />
 
                                 {{-- Clear button --}}
                                 @if ($categorySearch)
@@ -113,7 +98,7 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute z-50 mt-1 w-full bg-white dark:bg-base-300 border border-base-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                class="absolute z-50 mt-1 w-full bg-base-100 dark:bg-base-300 border border-base-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
 
                                 {{-- Filtered Categories List --}}
                                 @if (count($this->filteredCategories) > 0)
@@ -126,7 +111,7 @@
                                                     <input type="text" wire:model="editCategoryName"
                                                         wire:keydown.enter.prevent="saveEditCategory"
                                                         wire:keydown.escape="cancelEditCategory"
-                                                        class="input input-bordered input-sm flex-1 bg-white dark:bg-base-200"
+                                                        class="input input-bordered input-sm flex-1 bg-base-100 dark:bg-base-200"
                                                         autofocus />
                                                     <button type="button" wire:click="saveEditCategory"
                                                         class="btn btn-xs btn-success btn-square">
@@ -178,14 +163,14 @@
 
                                 {{-- Empty State --}}
                                 @if (count($this->filteredCategories) === 0 && !$categorySearch)
-                                    <div class="px-3 py-4 text-center text-sm text-slate-400">
+                                    <div class="px-3 py-4 text-center text-sm text-base-content/60">
                                         <x-ui.icon name="o-inbox" class="w-6 h-6 mx-auto mb-1 opacity-50" />
                                         <p>No categories yet</p>
                                     </div>
                                 @endif
                             </div>
 
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                            <p class="text-xs text-base-content/60 mt-1">
                                 Type to search or create new. Hover items to edit/delete.
                             </p>
                         </div>
@@ -199,7 +184,7 @@
                             </label>
                             <input type="number" class="input w-full" required placeholder="0" min="1"
                                 title="Must be between be 1 to 10" wire:model="displayOrder" label="Display Order" />
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                            <p class="text-xs text-base-content/60 mt-1">
                                 Lower numbers appear first. Use to control FAQ ordering.
                             </p>
                         </div>
@@ -208,19 +193,19 @@
 
                 {{-- Section 3: Status --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                    <label class="block text-sm font-semibold text-base-content/80 mb-3">
                         <span class="flex items-center gap-2">
                             <x-ui.icon name="o-cog-6-tooth" class="w-4 h-4" />
                             Status
                         </span>
                     </label>
 
-                    <div class="bg-slate-50 dark:bg-base-300 rounded-xl p-4">
+                    <div class="bg-base-200 dark:bg-base-300 rounded-xl p-4">
                         <x-ui.toggle wire:model="isActive" label="Active FAQ"
                             hint="Only active FAQs are displayed on the public FAQ page" />
 
                         @if ($isEditing && !$isActive)
-                            <div class="mt-4 bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg">
+                            <div class="mt-4 bg-warning/10 border border-warning/30 p-4 rounded-field">
                                 <div class="flex items-start gap-3">
                                     <x-ui.icon name="o-exclamation-triangle"
                                         class="w-5 h-5 text-warning shrink-0 mt-0.5" />
@@ -251,23 +236,23 @@
     {{-- Preview Card (for editing) --}}
     @if ($question || $answer)
         <div class="mt-6">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
+            <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                 <x-ui.icon name="o-eye" class="w-4 h-4" />
                 Preview
             </h3>
-            <x-ui.card shadow class="bg-white dark:bg-base-200 border-none">
+            <x-ui.card shadow class="bg-base-100 dark:bg-base-200 border-none">
                 <div class="collapse collapse-plus bg-base-100 dark:bg-base-300 border border-base-300 rounded-xl">
                     <input type="checkbox" checked />
                     <div class="collapse-title text-base font-semibold text-base-content pr-12">
                         <span class="flex items-start gap-3">
                             <x-ui.icon name="o-question-mark-circle"
                                 class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                            {{ $question ?: 'Your question will appear here...' }}
+                            {{ $question ?: 'Your question will appear here…' }}
                         </span>
                     </div>
                     <div class="collapse-content">
                         <div class="pt-2 pl-8 text-base-content/80 prose prose-sm max-w-none">
-                            {!! $answer ?: '<em class="text-slate-400">Your answer will appear here...</em>' !!}
+                            {!! $answer ?: '<em class="text-base-content/60">Your answer will appear here…</em>' !!}
                         </div>
                     </div>
                 </div>

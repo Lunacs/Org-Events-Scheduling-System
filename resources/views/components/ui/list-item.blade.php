@@ -50,7 +50,7 @@
                 @endif
 
                 @if (filled($subtitle))
-                    <div class="text-base-content/50 text-sm truncate">{{ $subtitle }}</div>
+                    <div class="text-base-content/60 text-sm truncate">{{ $subtitle }}</div>
                 @endif
             </div>
 

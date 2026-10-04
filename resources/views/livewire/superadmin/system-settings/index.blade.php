@@ -1,27 +1,16 @@
 <div x-data="{}" class="p-4 sm:p-6 space-y-4 sm:space-y-6">
     {{-- Header --}}
-    <section
-        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
-        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-        <div class="relative p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-heading font-bold text-base-content">System Settings</h1>
-                    <p class="text-sm text-base-content/70 mt-1 font-sans">Manage core system configurations,
-                        organizations, and workflows.</p>
-                </div>
-                <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                    <x-ui.button icon="o-arrow-path" label="Refresh System Cache"
-                        class="btn-outline btn-sm bg-base-100 w-full sm:w-auto" wire:click="refreshCache"
-                        spinner="refreshCache" />
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-ui.page-heading title="System Settings" subtitle="Manage core system configurations, organizations, and workflows.">
+        <x-slot:actions>
+            <x-ui.button icon="o-arrow-path" label="Refresh System Cache"
+            class="btn-outline btn-sm bg-base-100 w-full sm:w-auto" wire:click="refreshCache"
+            spinner="refreshCache" />
+        </x-slot:actions>
+    </x-ui.page-heading>
 
     {{-- Tabs Interface (inline DaisyUI tabs; activeTab entangled to Livewire) --}}
     <div x-data="{ tab: @entangle('activeTab') }"
-        class="bg-white dark:bg-base-200 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+        class="bg-base-100 dark:bg-base-200 rounded-xl border border-base-300">
         <div role="tablist" class="tabs tabs-bordered flex-wrap px-2 pt-2">
             <button type="button" role="tab" class="tab gap-2" :class="{ 'tab-active': tab === 'organizations' }"
                 @click="tab = 'organizations'">
@@ -87,7 +76,7 @@
         <div x-show="tab === 'config'" x-cloak>
             <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <x-ui.card title="Office Settings" separator shadow class="dark:bg-base-200">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Set default office and institutional
+                    <p class="text-sm text-base-content/60 mb-4">Set default office and institutional
                         approval behavior.</p>
                     <form wire:submit="updateSettings">
                         <div class="space-y-4">
@@ -111,7 +100,7 @@
                 </x-ui.card>
 
                 <x-ui.card title="Approval Workflows" separator shadow class="dark:bg-base-200">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Current sequential approval process for
+                    <p class="text-sm text-base-content/60 mb-4">Current sequential approval process for
                         event requests.</p>
                     <div class="space-y-4">
                         <x-ui.timeline-item title="Student Organization" subtitle="Submit Event Request"
@@ -121,11 +110,11 @@
                             icon="o-check-badge" last />
 
                         <div
-                            class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-xl">
+                            class="mt-4 p-4 bg-info/10  border border-info/30  rounded-xl">
                             <div class="flex items-start">
                                 <x-ui.icon name="o-information-circle"
-                                    class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5" />
-                                <div class="text-blue-800 dark:text-blue-200 text-sm">
+                                    class="w-5 h-5 text-info  mr-3 mt-0.5" />
+                                <div class="text-info  text-sm">
                                     <p class="font-bold mb-1">Workflow Note</p>
                                     <p>
                                         This sequence is hardcoded based on institutional policy. Changes require

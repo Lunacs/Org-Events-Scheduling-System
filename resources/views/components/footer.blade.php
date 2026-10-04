@@ -1,150 +1,80 @@
 @props([
-    'variant' => 'default', // default, osa, gso, student-org, superadmin
+    'variant' => 'default', // default, osa, gso, student-org, superadmin, viewer
+    // Compact: the one-line app-shell footer. Full: the public-site footer.
+    'compact' => false,
 ])
 
+{{--
+    x-footer — DESIGN.md "App Shell": inside the portals the footer is one quiet line;
+    it never repeats the sidebar. Public pages get the fuller office/contact footer.
+--}}
 @php
-    $portalNames = [
-        'osa' => 'OSA Admin',
-        'gso' => 'GSO Admin',
-        'student-org' => 'Student Organization Portal',
-        'superadmin' => 'SuperAdmin',
-        'default' => '',
+    $links = [
+        ['label' => 'FAQ', 'href' => route('faq')],
+        ['label' => 'About OSA', 'href' => route('about-us')],
+        ['label' => 'Data privacy', 'href' => route('data-privacy')],
     ];
-
-    $portalName = $portalNames[$variant] ?? $portalNames['default'];
 @endphp
 
-<footer class="bg-base-200 border-t border-base-300 mt-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{-- Main Footer Content --}}
-        <div class="py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {{-- Brand Section --}}
-            <div class="flex flex-col items-start">
-                <div class="flex items-center gap-3 mb-4">
-                    <img src="{{ asset('images/osa-logo.jpg') }}" alt="PLV Logo" class="h-12 w-12" loading="lazy">
-                    <div>
-                        <h3 class="font-heading font-bold text-lg text-base-content">PLV Event Scheduling</h3>
-                        @if ($portalName)
-                            <span class="text-sm text-base-content/70">{{ $portalName }}</span>
-                        @endif
+@if ($compact)
+    <footer class="border-t border-base-300">
+        <div
+            class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-base-content/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <p>&copy; {{ date('Y') }} Office of Student Affairs &middot; Pamantasan ng Lungsod ng Valenzuela</p>
+            <nav aria-label="Footer" class="flex flex-wrap gap-x-4 gap-y-1">
+                @foreach ($links as $link)
+                    <a href="{{ $link['href'] }}" wire:navigate class="hover:text-base-content hover:underline">{{ $link['label'] }}</a>
+                @endforeach
+                <a href="mailto:plv.osa.official@gmail.com" class="hover:text-base-content hover:underline">Contact OSA</a>
+            </nav>
+        </div>
+    </footer>
+@else
+    <footer class="border-t border-base-300 bg-base-200">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 gap-8 py-10 md:grid-cols-[2fr_1fr_1fr]">
+                <div>
+                    <div class="mb-3 flex items-center gap-3">
+                        <img src="{{ asset('images/optimized/osa-logo.webp') }}" alt="" class="size-10 rounded-field"
+                            width="200" height="200" loading="lazy">
+                        <div>
+                            <p class="font-semibold text-base-content">PLV Event Scheduling</p>
+                            <p class="text-sm text-base-content/70">Office of Student Affairs</p>
+                        </div>
                     </div>
+                    <p class="max-w-sm text-sm text-base-content/70">
+                        Submit, track, and approve student organization events at Pamantasan ng Lungsod ng Valenzuela.
+                    </p>
                 </div>
-                <p class="text-sm text-base-content/60 max-w-xs">
-                    A digital event scheduling and approval system for Pamantasan ng Lungsod ng Valenzuela student
-                    organizations.
-                </p>
-            </div>
 
-            {{-- Quick Links --}}
-            <div>
-                <h4 class="font-heading font-semibold text-base-content mb-4">Quick Links</h4>
-                <ul class="space-y-2 text-sm">
-                    @if ($variant === 'student-org')
-                        <li><a href="/student-org/dashboard" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
-                        <li><a href="/student-org/submit-ticket" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Submit Ticket</a></li>
-                        <li><a href="/student-org/calendar" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
-                        </li>
-                        <li><a href="{{ route('faq') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
-                        <li><a href="{{ route('about-us') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="{{ route('data-privacy') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
-                    @elseif($variant === 'osa')
-                        <li><a href="/admin/dashboard" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
-                        <li><a href="/admin/ticket-review" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Ticket Review</a></li>
-                        <li><a href="/admin/calendar" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
-                        </li>
-                        <li><a href="{{ route('faq') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
-                        <li><a href="{{ route('about-us') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="{{ route('data-privacy') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
-                    @elseif($variant === 'gso')
-                        <li><a href="{{ route('gso.dashboard') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
-                        <li><a href="{{ route('gso.ticket-review') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Ticket Review</a></li>
-                        <li><a href="{{ route('gso.calendar') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
-                        </li>
-                        <li><a href="{{ route('faq') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
-                        <li><a href="{{ route('about-us') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="{{ route('data-privacy') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
-                    @elseif($variant === 'superadmin')
-                        <li><a href="{{ route('superadmin.dashboard') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Dashboard</a></li>
-                        <li><a href="{{ route('superadmin.users') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">User Management</a>
-                        </li>
-                        <li><a href="{{ route('superadmin.calendar') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Event Calendar</a>
-                        </li>
-                        <li><a href="{{ route('faq') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
-                        <li><a href="{{ route('about-us') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="{{ route('data-privacy') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
-                    @else
-                        <li><a href="/" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Home</a></li>
-                        <li><a href="{{ route('faq') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">FAQ</a></li>
-                        <li><a href="{{ route('about-us') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">About Us</a></li>
-                        <li><a href="{{ route('data-privacy') }}" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Data Privacy</a></li>
-                        <li><a href="/login" wire:navigate
-                                class="text-base-content/70 hover:text-primary transition-colors">Login</a></li>
-                    @endif
-                </ul>
-            </div>
+                <div>
+                    <h2 class="mb-3 text-sm font-semibold text-base-content">Information</h2>
+                    <ul class="space-y-2 text-sm">
+                        @foreach ($links as $link)
+                            <li><a href="{{ $link['href'] }}" wire:navigate
+                                    class="text-base-content/70 transition-colors hover:text-base-content">{{ $link['label'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
 
-            {{-- Contact & Support --}}
-            <div>
-                <h4 class="font-heading font-semibold text-base-content mb-4">Contact & Support</h4>
-                <ul class="space-y-2 text-sm text-base-content/70">
-                    <li class="flex items-center gap-2">
-                        <x-ui.icon name="o-building-office-2" class="w-4 h-4" />
-                        <span>Office of Student Affairs</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <x-ui.icon name="o-map-pin" class="w-4 h-4" />
-                        <span>Pamantasan ng Lungsod ng Valenzuela</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <x-ui.icon name="o-envelope" class="w-4 h-4" />
-                        <span>plv.osa.official@gmail.com</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        {{-- Bottom Bar --}}
-        <div class="border-t border-base-300 py-4">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p class="text-sm text-base-content/60">
-                    © {{ date('Y') }} PLV Event Scheduling System. All
-                    rights reserved.
-                </p>
-                <div class="flex items-center gap-4 text-sm text-base-content/60">
-                    <span class="flex items-center gap-1">
-                        <x-ui.icon name="o-code-bracket" class="w-4 h-4" />
-                        Built with TALL Stack
-                    </span>
+                <div>
+                    <h2 class="mb-3 text-sm font-semibold text-base-content">Contact</h2>
+                    <ul class="space-y-2 text-sm text-base-content/70">
+                        <li class="flex items-center gap-2">
+                            <x-ui.icon name="o-building-office-2" class="size-4 shrink-0" aria-hidden="true" />
+                            Office of Student Affairs, PLV
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <x-ui.icon name="o-envelope" class="size-4 shrink-0" aria-hidden="true" />
+                            <a href="mailto:plv.osa.official@gmail.com" class="hover:text-base-content hover:underline">plv.osa.official@gmail.com</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
+
+            <div class="border-t border-base-300 py-4 text-xs text-base-content/70">
+                &copy; {{ date('Y') }} Office of Student Affairs &middot; Pamantasan ng Lungsod ng Valenzuela
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
+@endif

@@ -11,35 +11,42 @@
 ])
 
 {{--
-    x-ui.modal-dialog — replaces MaryUI's `x-mary-modal` (wire:model-bound DaisyUI modal).
+    x-ui.modal-dialog — wire:model-bound DaisyUI modal (replaces MaryUI's x-mary-modal).
 
-    The existing x-ui.modal is an event-driven (open-modal/close-modal) Breeze-style
-    modal, which is incompatible with MaryUI's boolean wire:model API. This component
-    reproduces MaryUI's contract: a boolean Livewire property is entangled into Alpine
-    `open`, the DaisyUI `.modal`/`.modal-box` markup renders the title/subtitle/body/
-    actions, and closing (backdrop click, escape, close button) sets the property false.
+    A boolean Livewire property is entangled into Alpine `open`. Focus is trapped inside
+    while open and returned to the trigger on close; Escape and backdrop click close it
+    unless `persistent`. Titled dialogs are labelled for assistive tech.
 
-    Props: title, subtitle, separator, boxClass, withCloseButton, persistent (disables
-    backdrop-click close). Slots: default (body), actions (footer buttons).
+    Props: title, subtitle, separator, boxClass, withCloseButton, persistent,
+    closeOnEscape. Slots: default (body), actions (footer buttons).
 --}}
-<div x-data="{ open: @entangle($attributes->wire('model')) }" x-cloak x-show="open" x-transition.opacity.duration.200ms class="modal"
-    :class="{ 'modal-open': open }" @keydown.escape.window="open = false" role="dialog" aria-modal="true">
-    <div class="modal-box {{ $boxClass }}">
+@php
+    $dialogId = 'dialog-' . \Illuminate\Support\Str::random(6);
+@endphp
+
+<div x-data="{ open: @entangle($attributes->wire('model')) }" x-cloak x-show="open"
+    x-transition.opacity.duration.150ms class="modal overscroll-contain" :class="{ 'modal-open': open }"
+    @if ($closeOnEscape && ! $persistent) @keydown.escape.window="open = false" @endif role="dialog" aria-modal="true"
+    @if (filled($title)) aria-labelledby="{{ $dialogId }}-title" @endif>
+    <div class="modal-box rounded-box border border-base-300 p-5 shadow-overlay sm:p-6 {{ $boxClass }}"
+        x-trap.noscroll="open">
         @if ($withCloseButton)
-            <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3" @click="open = false"
-                aria-label="Close">✕</button>
+            <button type="button" class="btn btn-ghost btn-sm btn-square absolute end-3 top-3" @click="open = false"
+                aria-label="Close dialog">
+                <x-ui.icon name="o-x-mark" class="size-5" aria-hidden="true" />
+            </button>
         @endif
 
         @if (filled($title))
-            <h3 class="text-lg font-bold text-base-content">{{ $title }}</h3>
+            <h2 id="{{ $dialogId }}-title" class="pe-8 text-lg font-semibold text-base-content">{{ $title }}</h2>
         @endif
 
         @if (filled($subtitle))
-            <p class="text-sm text-base-content/60 mt-1">{{ $subtitle }}</p>
+            <p class="mt-1 text-sm text-base-content/70">{{ $subtitle }}</p>
         @endif
 
         @if ($separator)
-            <hr class="my-4 border-base-content/10" />
+            <hr class="my-4 border-base-300" />
         @endif
 
         <div class="py-2">
@@ -47,11 +54,11 @@
         </div>
 
         @if (filled($actions))
-            <div class="modal-action">
+            <div class="modal-action mt-5 flex-wrap gap-2">
                 {{ $actions }}
             </div>
         @endif
     </div>
 
-    <div class="modal-backdrop" @if (!$persistent) @click="open = false" @endif></div>
+    <div class="modal-backdrop bg-neutral/40" @if (! $persistent) @click="open = false" @endif></div>
 </div>

@@ -34,7 +34,7 @@
                     <button
                         @click="dismissed.push('{{ $announcement->section_key }}'); localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed))"
                         class="btn btn-ghost btn-sm btn-circle shrink-0" title="Dismiss announcement">
-                        <x-ui.icon name="o-x-mark" class="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                        <x-ui.icon name="o-x-mark" class="w-4 h-4 text-base-content/80" />
                     </button>
                 </div>
             </div>

@@ -45,7 +45,7 @@
         }
 
         if ($start > 2) {
-            $pages->push('...');
+            $pages->push('…');
         }
 
         for ($i = $start; $i <= $end; $i++) {
@@ -55,7 +55,7 @@
         }
 
         if ($end < $lastPage - 1) {
-            $pages->push('...');
+            $pages->push('…');
         }
 
         $pages->push($lastPage);
@@ -64,26 +64,27 @@
 
 {{-- Pagination --}}
 @if ($paginator !== null && $paginator->hasPages())
-    <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
-        <div class="text-sm text-base-content/70">
+    <nav aria-label="Pagination" class="mt-6 flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
+        <p class="text-sm tabular-nums text-base-content/70">
             Showing {{ $paginator->firstItem() ?? 0 }} to {{ $paginator->lastItem() ?? 0 }}
             of {{ $paginator->total() }} {{ $label }}
-        </div>
+        </p>
 
         <div class="flex items-center space-x-1">
-            <x-ui.button icon="s-chevron-left" class="btn-sm btn-ghost" wire:click.preserve-scroll="previousPage" :disabled="!$paginator->previousPageUrl()" />
+            <x-ui.button icon="s-chevron-left" class="btn-sm btn-ghost btn-square" aria-label="Previous page" wire:click.preserve-scroll="previousPage" :disabled="!$paginator->previousPageUrl()" />
 
             @foreach ($pages as $page)
-                @if ($page === '...')
-                    <span class="px-2 py-1 text-base-content/40 text-sm">...</span>
+                @if ($page === '…')
+                    <span class="px-2 py-1 text-sm text-base-content/60" aria-hidden="true">…</span>
                 @else
-                    <x-ui.button :label="(string) $page"
-                        class="btn-sm {{ $page == $currentPage ? 'btn-primary' : 'btn-ghost' }}"
+                    <x-ui.button :label="(string) $page" aria-label="Page {{ $page }}"
+                        :aria-current="$page == $currentPage ? 'page' : null"
+                        class="btn-sm min-w-8 tabular-nums {{ $page == $currentPage ? 'btn-primary' : 'btn-ghost' }}"
                         wire:click.preserve-scroll="gotoPage({{ $page }})" />
                 @endif
             @endforeach
 
-            <x-ui.button icon="s-chevron-right" class="btn-sm btn-ghost" wire:click.preserve-scroll="nextPage" :disabled="!$paginator->nextPageUrl()" />
+            <x-ui.button icon="s-chevron-right" class="btn-sm btn-ghost btn-square" aria-label="Next page" wire:click.preserve-scroll="nextPage" :disabled="!$paginator->nextPageUrl()" />
         </div>
-    </div>
+    </nav>
 @endif

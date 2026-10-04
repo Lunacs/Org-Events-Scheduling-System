@@ -81,27 +81,24 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-8 text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 text-secondary rounded-full mb-4">
-            <i class="fas fa-envelope-open-text text-2xl"></i>
-        </div>
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Verify Email</h1>
-        <p class="text-base text-gray-500 dark:text-gray-400">
-            {{ __('Thanks for signing up! Please verify your email address by clicking on the link we just emailed to you.') }}
+    <div class="mb-7">
+        <h1 class="text-2xl font-semibold tracking-[-0.015em] text-base-content">Check your email</h1>
+        <p class="mt-1.5 text-sm text-base-content/70">
+            {{ __('Open the verification link we emailed to you to finish setting up your account. The link can take a few minutes to arrive; check your spam folder too.') }}
         </p>
     </div>
 
     @if (session('status') == 'verification-link-sent')
-        <div
-            class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm font-medium text-green-600 dark:text-green-400 flex items-center">
-            <i class="fas fa-check-circle mr-2"></i>
+        <div role="status"
+            class="mb-5 flex items-center rounded-field border border-success/30 bg-success/[0.08] px-3 py-2.5 text-sm text-success">
+            <i class="fas fa-check-circle mr-2" aria-hidden="true"></i>
             {{ __('A new verification link has been sent to your email address.') }}
         </div>
     @endif
 
     @if (session('error'))
         <div
-            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 flex items-center">
+            class="mb-5 rounded-field border border-error/30 bg-error/[0.08] px-3 py-2.5 text-sm text-error" role="alert">
             <i class="fas fa-exclamation-circle mr-2"></i>
             {{ session('error') }}
         </div>
@@ -109,14 +106,14 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
     <div class="space-y-4">
         <button wire:click="sendVerification" wire:loading.attr="disabled"
-            class="relative w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-base font-bold text-white bg-primary hover:bg-primary/85 active:bg-primary/70 focus:outline-none focus:ring-4 focus:ring-accent/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
+            class="btn btn-primary btn-block h-11">
             <span wire:loading.remove wire:target="sendVerification" class="flex items-center">
-                {{ __('Resend Verification Email') }}
+                {{ __('Resend verification email') }}
                 <i
                     class="fas fa-paper-plane ml-2 text-sm group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
             </span>
             <span wire:loading wire:target="sendVerification" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 " xmlns="http://www.w3.org/2000/svg"
                     fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                         stroke-width="4"></circle>
@@ -124,14 +121,13 @@ new #[Layout('components.layouts.guest')] class extends Component {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                     </path>
                 </svg>
-                Sending...
+                Sending…
             </span>
         </button>
 
-        <button wire:click="logout"
-            class="w-full flex justify-center items-center py-3 px-6 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-all duration-200">
-            <i class="fas fa-sign-out-alt mr-2"></i>
-            {{ __('Log Out') }}
+        <button type="button" wire:click="logout" class="btn btn-ghost btn-block">
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+            {{ __('Log out') }}
         </button>
     </div>
 </div>

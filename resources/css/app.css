@@ -2,40 +2,47 @@
 @plugin '@tailwindcss/forms';
 @plugin "daisyui";
 
+/*
+ * Design tokens — see DESIGN.md ("The Well-Run Office").
+ * Every text/background pair below is verified for WCAG 2.2 AA (4.5:1 text,
+ * 3:1 focus rings) in both themes. Theme names are historical ("emerald" is
+ * the OSA navy light theme); they are kept so stored preferences keep working.
+ */
 @plugin "daisyui/theme" {
     name: "emerald";
     default: true;
     prefersdark: false;
     color-scheme: light;
     --color-base-100: oklch(100% 0 0);
-    --color-base-200: oklch(96% 0.006 258);
-    --color-base-300: oklch(90% 0.01 258);
+    --color-base-200: oklch(97.2% 0.006 258);
+    --color-base-300: oklch(91% 0.012 258);
     --color-base-content: oklch(24% 0.045 258);
-    --color-primary: oklch(28% 0.075 258);
-    --color-primary-content: oklch(97% 0.01 258);
-    --color-secondary: oklch(28% 0.075 258);
-    --color-secondary-content: oklch(97% 0.01 258);
+    --color-primary: oklch(30% 0.08 258);
+    --color-primary-content: oklch(98.5% 0.005 258);
+    --color-secondary: oklch(45% 0.06 258);
+    --color-secondary-content: oklch(98.5% 0.005 258);
     --color-accent: oklch(74% 0.12 220);
-    --color-accent-content: oklch(20% 0.05 220);
+    --color-accent-content: oklch(22% 0.05 230);
     --color-neutral: oklch(24% 0.045 258);
     --color-neutral-content: oklch(97% 0.01 258);
-    --color-info: oklch(72.06% 0.191 231.6);
-    --color-info-content: oklch(0% 0 0);
-    --color-success: oklch(64.8% 0.15 160);
-    --color-success-content: oklch(0% 0 0);
-    --color-warning: oklch(84.71% 0.199 83.87);
-    --color-warning-content: oklch(0% 0 0);
-    --color-error: oklch(71.76% 0.221 22.18);
-    --color-error-content: oklch(0% 0 0);
+    --color-info: oklch(52% 0.14 245);
+    --color-info-content: oklch(100% 0 0);
+    --color-success: oklch(50% 0.12 155);
+    --color-success-content: oklch(100% 0 0);
+    --color-warning: oklch(53.5% 0.115 68);
+    --color-warning-content: oklch(100% 0 0);
+    --color-error: oklch(53% 0.19 25);
+    --color-error-content: oklch(100% 0 0);
     --color-gold: oklch(80% 0.11 85);
     --color-gold-content: oklch(22% 0.03 85);
-    --radius-selector: 1rem;
+    --color-focus: oklch(55% 0.14 235);
+    --radius-selector: 0.5rem;
     --radius-field: 0.5rem;
-    --radius-box: 1rem;
+    --radius-box: 0.75rem;
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
     --border: 1px;
-    --depth: 1;
+    --depth: 0;
     --noise: 0;
 }
 
@@ -43,50 +50,60 @@
     name: "emeraldDark";
     prefersdark: true;
     color-scheme: dark;
-    --color-base-100: oklch(20% 0.035 258);
-    --color-base-200: oklch(16% 0.035 258);
-    --color-base-300: oklch(12% 0.035 258);
-    --color-base-content: oklch(92% 0.012 258);
-    --color-primary: oklch(74% 0.12 220);
-    --color-primary-content: oklch(16% 0.035 258);
-    --color-secondary: oklch(74% 0.12 220);
-    --color-secondary-content: oklch(16% 0.035 258);
-    --color-accent: oklch(74% 0.12 220);
-    --color-accent-content: oklch(16% 0.035 258);
-    --color-neutral: oklch(88% 0.012 258);
-    --color-neutral-content: oklch(18% 0.035 258);
-    --color-info: oklch(72.06% 0.191 231.6);
-    --color-info-content: oklch(15% 0.02 231.6);
-    --color-success: oklch(64.8% 0.15 160);
-    --color-success-content: oklch(15% 0.02 160);
-    --color-warning: oklch(84.71% 0.199 83.87);
-    --color-warning-content: oklch(15% 0.02 83.87);
-    --color-error: oklch(71.76% 0.221 22.18);
-    --color-error-content: oklch(15% 0.02 22.18);
+    --color-base-100: oklch(21.5% 0.03 258);
+    --color-base-200: oklch(18% 0.028 258);
+    --color-base-300: oklch(30% 0.03 258);
+    --color-base-content: oklch(93% 0.01 258);
+    --color-primary: oklch(78% 0.11 220);
+    --color-primary-content: oklch(20% 0.04 258);
+    --color-secondary: oklch(72% 0.05 258);
+    --color-secondary-content: oklch(20% 0.04 258);
+    --color-accent: oklch(78% 0.11 220);
+    --color-accent-content: oklch(20% 0.04 258);
+    --color-neutral: oklch(30% 0.03 258);
+    --color-neutral-content: oklch(93% 0.01 258);
+    --color-info: oklch(76% 0.11 240);
+    --color-info-content: oklch(20% 0.035 258);
+    --color-success: oklch(76% 0.13 155);
+    --color-success-content: oklch(20% 0.035 258);
+    --color-warning: oklch(82% 0.13 80);
+    --color-warning-content: oklch(20% 0.035 258);
+    --color-error: oklch(73% 0.16 25);
+    --color-error-content: oklch(20% 0.035 258);
     --color-gold: oklch(80% 0.11 85);
     --color-gold-content: oklch(18% 0.03 85);
-    --radius-selector: 1rem;
+    --color-focus: oklch(78% 0.11 220);
+    --radius-selector: 0.5rem;
     --radius-field: 0.5rem;
-    --radius-box: 1rem;
+    --radius-box: 0.75rem;
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
     --border: 1px;
-    --depth: 1;
+    --depth: 0;
     --noise: 0;
 }
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source './storage/framework/views/*.php';
 @source './resources/views/**/*.blade.php';
+@source '../../app/Support/TicketStatus.php';
 
 /* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
     --font-sans:
-        ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+        "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
         "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-heading: "Poppins", sans-serif;
+    /* Legacy alias: headings use the same family (DESIGN.md "The One Family Rule"). */
+    --font-heading: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* Floating layers only (DESIGN.md "Elevation"). */
+    --shadow-float: 0 4px 12px -2px oklch(24% 0.045 258 / 0.12), 0 2px 4px -2px oklch(24% 0.045 258 / 0.08);
+    --shadow-overlay: 0 16px 32px -12px oklch(24% 0.045 258 / 0.25);
+
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @layer base {
@@ -95,117 +112,178 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentcolor);
+        border-color: var(--color-base-300, currentcolor);
+    }
+
+    html {
+        -webkit-tap-highlight-color: transparent;
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        background-color: var(--color-base-200);
+        color: var(--color-base-content);
+    }
+
+    h1,
+    h2,
+    h3 {
+        text-wrap: balance;
+    }
+
+    p {
+        text-wrap: pretty;
+    }
+
+    /* Anchor targets clear the sticky top bar. */
+    [id] {
+        scroll-margin-top: 5rem;
+    }
+
+    ::selection {
+        background-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
     }
 
     /* Alpine.js cloak - hide elements until Alpine is ready */
     [x-cloak] {
         display: none !important;
     }
+
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    summary,
+    label[for] {
+        cursor: pointer;
+    }
 }
 
-@layer utilities {
-    /* Project utility overrides can go here */
+/*
+ * Focus: one visible ring for every control (WCAG 2.4.7 / 2.4.11).
+ * Unlayered on purpose so page-level `focus:outline-none` utilities can't hide it.
+ */
+:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
 }
 
-/* More specific targeting for input elements */
-input:focus,
-input:focus-visible,
-select:focus,
-select:focus-visible,
-textarea:focus,
-textarea:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    ring: none !important;
+/* Programmatic focus targets (skip-link destination, dialogs) don't need a ring. */
+[tabindex="-1"]:focus-visible {
+    outline: none;
 }
 
-/* Remove Tailwind focus ring classes */
-.focus\:ring-2:focus,
-.focus\:ring:focus,
-.focus\:outline-none:focus,
-[class*="focus:ring"]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    ring: none !important;
+/* Swap toggles (theme switch) hide their checkbox; ring the visible wrapper instead. */
+.swap:has(input:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
 }
 
-/* Ensure white text on solid navy-backed components (primary/secondary are dark
-   navy in both themes). Opacity-tinted backgrounds (e.g. bg-primary/10 icon chips)
-   are excluded via :not([class*="/"]) — those need the normal token text color,
-   not forced white, since the tint is a light wash, not a solid navy fill. */
-.bg-primary:not([class*="/"]),
-[class*="btn-primary"],
-.bg-secondary:not([class*="/"]),
-[class*="btn-secondary"] {
-    color: white !important;
+.swap input:focus-visible {
+    outline: none;
 }
 
-/* Accent is bright cyan — needs dark text for contrast, not white */
-.bg-accent:not([class*="/"]),
-[class*="btn-accent"] {
-    color: var(--color-accent-content) !important;
+/* DaisyUI field wrappers draw the ring; the inner native control stays clean. */
+.input:focus,
+.input:focus-within,
+.select:focus,
+.select:focus-within,
+.textarea:focus,
+.textarea:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 0;
+    border-color: var(--color-focus);
+    box-shadow: none;
 }
 
-/* Make toast text white */
-.alert,
-[class*="alert-"],
-.alert-info,
-.alert-success,
-.alert-warning,
-.alert-error {
-    color: white !important;
+:is(.input, .select) :is(input, select, textarea):focus,
+:is(.input, .select) :is(input, select, textarea):focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
-.alert *,
-[class*="alert-"] *,
-.alert-info *,
-.alert-success *,
-.alert-warning *,
-.alert-error * {
-    color: white !important;
+/* @tailwindcss/forms adds a ring on mouse focus for checkboxes/radios; keep it keyboard-only. */
+:is([type="checkbox"], [type="radio"]):focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
 }
+
+/* Fields: 16px on phones (prevents iOS zoom-on-focus), 14px from sm up. */
+.input,
+.select,
+.textarea,
+.file-input {
+    font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+    .input,
+    .select,
+    .textarea,
+    .file-input {
+        font-size: 0.875rem;
+    }
+}
+
+:is(.input, .select) :is(input, select) {
+    font-size: inherit;
+}
+
+/* Field outlines need 3:1 against the surface (WCAG 1.4.11). */
+.input,
+.select,
+.textarea,
+.file-input {
+    border-color: color-mix(in oklab, var(--color-base-content) 28%, var(--color-base-100));
+}
+
+.input[readonly],
+.input:has(input[readonly]),
+.textarea[readonly] {
+    background-color: var(--color-base-200);
+    border-style: solid;
+}
+
+::placeholder {
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+    opacity: 1;
+}
+
 /* Hide number input arrows */
-/* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* Firefox */
 input[type="number"] {
     -moz-appearance: textfield;
 }
-/* Override MaryUI Dropdown padding */
+
+/* DaisyUI dropdown menus: items bring their own padding. */
 .dropdown .menu {
     padding: 0 !important;
 }
-/* Target the sidebar content wrapper */
-@media (min-width: 1024px) {
-    .drawer-side .w-\[270px\],
-    .drawer-side .w-\[62px\] {
-        margin-left: 40px;
+
+/* Reduced motion: state changes become instant; loading spinners keep turning. */
+@media (prefers-reduced-motion: reduce) {
+    *:not(.loading),
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 
-/* Or use a more reliable approach targeting the flex container */
-/* .drawer-side > label + div {
-    margin-left: 40px;
-} */
-/* FullCalendar styles moved to resources/css/calendar.css — loaded only on calendar pages */
+/* FullCalendar styles live in resources/css/calendar.css — loaded only on calendar pages */
 
-/* ===== Minimalistic Trix Editor Styles ===== */
+/* ===== Trix editor (superadmin content editors) ===== */
 trix-toolbar {
     border: none !important;
     background: transparent !important;
     padding: 0.5rem !important;
-    border-bottom: 1px solid oklch(86% 0 0) !important;
+    border-bottom: 1px solid var(--color-base-300) !important;
     border-radius: 0.5rem 0.5rem 0 0 !important;
-}
-
-.dark trix-toolbar {
-    border-bottom-color: oklch(30% 0.015 262.988) !important;
 }
 
 trix-toolbar .trix-button-row {
@@ -232,26 +310,18 @@ trix-toolbar .trix-button {
     height: 2rem !important;
     padding: 0 !important;
     margin: 0 !important;
-    opacity: 0.7;
-    transition: all 0.15s ease;
+    opacity: 0.75;
+    transition: background-color 150ms var(--ease-out-quart), opacity 150ms var(--ease-out-quart);
 }
 
 trix-toolbar .trix-button:hover {
-    background: oklch(93% 0 0) !important;
+    background: var(--color-base-200) !important;
     opacity: 1;
 }
 
 trix-toolbar .trix-button.trix-active {
-    background: oklch(86% 0 0) !important;
+    background: var(--color-base-300) !important;
     opacity: 1;
-}
-
-.dark trix-toolbar .trix-button:hover {
-    background: oklch(30% 0.015 262.988) !important;
-}
-
-.dark trix-toolbar .trix-button.trix-active {
-    background: oklch(35% 0.015 262.988) !important;
 }
 
 /* Dark mode icon colors */
@@ -264,7 +334,6 @@ trix-toolbar .trix-button-group--file-tools {
     display: none !important;
 }
 
-/* Editor container */
 trix-editor {
     border-top: none !important;
     border-radius: 0 0 0.5rem 0.5rem !important;
@@ -272,19 +341,14 @@ trix-editor {
 }
 
 trix-editor:empty::before {
-    color: oklch(60% 0 0);
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
 }
 
-.dark trix-editor:empty::before {
-    color: oklch(50% 0 0);
-}
-
-/* Trix content styling */
 trix-editor.trix-content {
     padding: 1rem !important;
 }
 
-/* ===== Prose List Styles (Fix DaisyUI Reset) ===== */
+/* ===== Prose list styles (restore bullets after DaisyUI reset) ===== */
 .prose ul {
     list-style-type: disc !important;
     padding-left: 1.5rem !important;

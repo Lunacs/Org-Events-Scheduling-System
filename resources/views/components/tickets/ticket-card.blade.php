@@ -4,7 +4,7 @@
     $orgDeleted = $ticket->user?->studentOrganization?->trashed();
 @endphp
 
-<div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
+<div class="flex flex-col bg-base-100 rounded-box overflow-hidden hover:ring-2 ring-primary/20 transition duration-200 border border-base-300"
     wire:key="ticket-review-{{ $ticket->ticket_id }}" x-data="{ isHovered: false }" @mouseenter="isHovered = true"
     @mouseleave="isHovered = false">
     <div class="p-6 flex-1 flex flex-col">
@@ -32,10 +32,7 @@
                     'completed' => 'border-neutral text-neutral',
                 ];
             @endphp
-            <span
-                class="badge-outline rounded-full border badge-sm {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }}">
-                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-            </span>
+            <x-tickets.progress-badge :status="$ticket->status" size="sm" />
         </div>
 
         {{-- Description --}}

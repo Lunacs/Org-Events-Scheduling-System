@@ -17,10 +17,13 @@ class MyTicket extends Component
 
     #[Title('My Ticket - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
+    #[\Livewire\Attributes\Url(except: '')]
     public $search = '';
 
+    #[\Livewire\Attributes\Url(as: 'status', except: '')]
     public $statusFilter = '';
 
+    #[\Livewire\Attributes\Url(as: 'date', except: '')]
     public $dateFilter = '';
 
     public $showDetailsModal = false;

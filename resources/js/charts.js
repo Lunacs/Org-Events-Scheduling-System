@@ -24,6 +24,8 @@ window.chartComponent = function (config) {
     return {
         settings: config && config.settings ? config.settings : null,
         chart: null,
+        // True when there is nothing to plot; the view shows a "no data" message instead.
+        empty: false,
         _navHandler: null,
 
         init() {
@@ -62,14 +64,21 @@ window.chartComponent = function (config) {
                 labels.length > 0 &&
                 datasets.some((dataset) => (dataset.data || []).length > 0);
 
-            if (!settings || !hasData) {
+            this.empty = !settings || !hasData;
+
+            if (this.empty) {
                 this.destroyChart();
                 return;
             }
 
             // Recreate cleanly each time to avoid duplicate canvases/leaks.
             this.destroyChart();
-            this.chart = new Chart(canvas, settings);
+
+            // Chart.js writes into the config object it is given. Handing it the reactive
+            // (Livewire-entangled) settings would trigger the $watch above on every draw and
+            // rebuild the chart forever, so it gets a plain, unwatched copy instead.
+            const raw = window.Alpine?.raw ? window.Alpine.raw(settings) : settings;
+            this.chart = new Chart(canvas, JSON.parse(JSON.stringify(raw)));
         },
 
         destroyChart() {

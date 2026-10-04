@@ -99,16 +99,16 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-6 text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Reset Password</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Enter your new password below</p>
+    <div class="mb-7">
+        <h1 class="text-2xl font-semibold tracking-[-0.015em] text-base-content">Choose a new password</h1>
+        <p class="mt-1.5 text-sm text-base-content/70">Use at least 8 characters with upper- and lowercase letters, a number, and a symbol.</p>
     </div>
 
     <form wire:submit="resetPassword" class="space-y-6">
         <!-- Email Address -->
         <div>
             <x-ui.input-label for="email" :value="__('Email')" />
-            <x-forms.text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email"
+            <x-forms.text-input wire:model="email" id="email" class="w-full" type="email" name="email"
                 required autofocus autocomplete="username" disabled />
             <x-ui.input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
@@ -118,11 +118,11 @@ new #[Layout('components.layouts.guest')] class extends Component {
             <x-ui.input-label for="password" :value="__('New Password')" />
             <div class="relative">
                 <x-forms.text-input wire:model.live.debounce.300ms="password" id="password"
-                    class="block mt-1 w-full pr-10" ::type="showPassword ? 'text' : 'password'" name="password" required
+                    class="w-full pr-10" ::type="showPassword ? 'text' : 'password'" name="password" required
                     autocomplete="new-password" placeholder="Enter new password" />
                 <button type="button" @click="showPassword = !showPassword"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
-                    tabindex="-1">
+                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-field p-1 text-base-content/60 transition-colors hover:text-base-content"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'">
                     <i class="fas fa-eye-slash text-sm" x-show="!showPassword"></i>
                     <i class="fas fa-eye text-sm" x-show="showPassword" style="display: none;"></i>
                 </button>
@@ -132,7 +132,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
             <div class="mt-2" x-data="{
                 strength: 0,
                 strengthText: 'Weak',
-                strengthColor: 'bg-red-500',
+                strengthColor: 'bg-error',
                 checkStrength() {
                     let pwd = $wire.password || '';
                     let score = 0;
@@ -145,71 +145,71 @@ new #[Layout('components.layouts.guest')] class extends Component {
                     this.strength = score;
                     if (score === 0) {
                         this.strengthText = 'Weak';
-                        this.strengthColor = 'bg-red-500';
+                        this.strengthColor = 'bg-error';
                     } else if (score <= 2) {
                         this.strengthText = 'Weak';
-                        this.strengthColor = 'bg-red-500';
+                        this.strengthColor = 'bg-error';
                     } else if (score === 3) {
                         this.strengthText = 'Fair';
-                        this.strengthColor = 'bg-yellow-500';
+                        this.strengthColor = 'bg-warning';
                     } else if (score === 4) {
                         this.strengthText = 'Good';
-                        this.strengthColor = 'bg-blue-500';
+                        this.strengthColor = 'bg-info';
                     } else {
                         this.strengthText = 'Strong';
-                        this.strengthColor = 'bg-green-500';
+                        this.strengthColor = 'bg-success';
                     }
                 }
             }" x-init="$watch('$wire.password', () => checkStrength())">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-gray-600 dark:text-gray-400">Password Strength:</span>
+                    <span class="text-xs text-base-content/70">Password Strength:</span>
                     <span class="text-xs font-medium"
                         :class="{
-                            'text-red-600 dark:text-red-400': strength <= 2,
-                            'text-yellow-600 dark:text-yellow-400': strength === 3,
-                            'text-blue-600 dark:text-blue-400': strength === 4,
-                            'text-green-600 dark:text-green-400': strength === 5
+                            'text-error ': strength <= 2,
+                            'text-warning ': strength === 3,
+                            'text-info ': strength === 4,
+                            'text-success ': strength === 5
                         }"
                         x-text="strengthText"></span>
                 </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div class="h-2 rounded-full transition-all duration-300" :class="strengthColor"
+                <div class="w-full bg-base-300 rounded-full h-2">
+                    <div class="h-2 rounded-full transition duration-300" :class="strengthColor"
                         :style="`width: ${strength * 20}%`"></div>
                 </div>
 
                 <!-- Password Requirements -->
                 <ul class="mt-2 space-y-1 text-xs">
                     <li class="flex items-center"
-                        :class="$wire.password && $wire.password.length >= 8 ? 'text-green-600 dark:text-green-400' :
-                            'text-gray-500 dark:text-gray-400'">
+                        :class="$wire.password && $wire.password.length >= 8 ? 'text-success ' :
+                            'text-base-content/60 '">
                         <i class="fas fa-check-circle mr-1" x-show="$wire.password && $wire.password.length >= 8"></i>
                         <i class="far fa-circle mr-1" x-show="!$wire.password || $wire.password.length < 8"></i>
                         At least 8 characters
                     </li>
                     <li class="flex items-center"
-                        :class="$wire.password && /[A-Z]/.test($wire.password) ? 'text-green-600 dark:text-green-400' :
-                            'text-gray-500 dark:text-gray-400'">
+                        :class="$wire.password && /[A-Z]/.test($wire.password) ? 'text-success ' :
+ 'text-base-content/60 '">
                         <i class="fas fa-check-circle mr-1" x-show="$wire.password && /[A-Z]/.test($wire.password)"></i>
                         <i class="far fa-circle mr-1" x-show="!$wire.password || !/[A-Z]/.test($wire.password)"></i>
                         One uppercase letter
                     </li>
                     <li class="flex items-center"
-                        :class="$wire.password && /[a-z]/.test($wire.password) ? 'text-green-600 dark:text-green-400' :
-                            'text-gray-500 dark:text-gray-400'">
+                        :class="$wire.password && /[a-z]/.test($wire.password) ? 'text-success ' :
+ 'text-base-content/60 '">
                         <i class="fas fa-check-circle mr-1" x-show="$wire.password && /[a-z]/.test($wire.password)"></i>
                         <i class="far fa-circle mr-1" x-show="!$wire.password || !/[a-z]/.test($wire.password)"></i>
                         One lowercase letter
                     </li>
                     <li class="flex items-center"
-                        :class="$wire.password && /[0-9]/.test($wire.password) ? 'text-green-600 dark:text-green-400' :
-                            'text-gray-500 dark:text-gray-400'">
+                        :class="$wire.password && /[0-9]/.test($wire.password) ? 'text-success ' :
+ 'text-base-content/60 '">
                         <i class="fas fa-check-circle mr-1" x-show="$wire.password && /[0-9]/.test($wire.password)"></i>
                         <i class="far fa-circle mr-1" x-show="!$wire.password || !/[0-9]/.test($wire.password)"></i>
                         One number
                     </li>
                     <li class="flex items-center"
-                        :class="$wire.password && /[^A-Za-z0-9]/.test($wire.password) ? 'text-green-600 dark:text-green-400' :
-                            'text-gray-500 dark:text-gray-400'">
+                        :class="$wire.password && /[^A-Za-z0-9]/.test($wire.password) ? 'text-success ' :
+ 'text-base-content/60 '">
                         <i class="fas fa-check-circle mr-1"
                             x-show="$wire.password && /[^A-Za-z0-9]/.test($wire.password)"></i>
                         <i class="far fa-circle mr-1"
@@ -226,11 +226,11 @@ new #[Layout('components.layouts.guest')] class extends Component {
             <x-ui.input-label for="password_confirmation" :value="__('Confirm Password')" />
             <div class="relative">
                 <x-forms.text-input wire:model.live.debounce.300ms="password_confirmation" id="password_confirmation"
-                    class="block mt-1 w-full pr-10" ::type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation" required
+                    class="w-full pr-10" ::type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation" required
                     autocomplete="new-password" placeholder="Confirm new password" />
                 <button type="button" @click="showConfirmPassword = !showConfirmPassword"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
-                    tabindex="-1">
+                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-field p-1 text-base-content/60 transition-colors hover:text-base-content"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'">
                     <i class="fas fa-eye-slash text-sm" x-show="!showConfirmPassword"></i>
                     <i class="fas fa-eye text-sm" x-show="showConfirmPassword" style="display: none;"></i>
                 </button>

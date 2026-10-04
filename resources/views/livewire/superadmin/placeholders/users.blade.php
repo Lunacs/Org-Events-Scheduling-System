@@ -1,5 +1,5 @@
 {{-- Users Skeleton --}}
-<div class="p-6 space-y-6">
+<div class="space-y-6">
     {{-- Header --}}
     <div class="flex items-center justify-between animate-pulse">
         <div class="h-8 bg-base-300 rounded w-48"></div>

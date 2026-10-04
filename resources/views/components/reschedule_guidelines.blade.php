@@ -2,7 +2,7 @@
 
 @if ($guidelines && $guidelines->is_active)
     <x-ui.card>
-        <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
+        <div class="bg-warning/10 p-4 rounded-lg border border-warning/30">
             <div class="flex items-start space-x-3">
                 <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">
@@ -16,7 +16,7 @@
     </x-ui.card>
 @else
     <x-ui.card>
-        <div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
+        <div class="bg-warning/10 p-4 rounded-lg border border-warning/30">
             <div class="flex items-start space-x-3">
                 <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
                 <div class="text-sm">

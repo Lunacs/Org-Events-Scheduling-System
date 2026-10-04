@@ -16,7 +16,7 @@
 @if ($section && $section->is_active)
     <div {{ $attributes->merge(['class' => 'content-section ' . $class]) }}>
         @if ($showTitle && $section->title)
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+            <h3 class="text-lg font-semibold text-base-content mb-3">
                 {{ $section->title }}
             </h3>
         @endif
