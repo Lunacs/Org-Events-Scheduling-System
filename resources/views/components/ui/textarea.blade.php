@@ -9,10 +9,15 @@
     // Resolve the bound Livewire field so the inline error can be driven from it.
     $field = $attributes->whereStartsWith('wire:model')->first();
 
-    // Ensure a stable id so the label can be associated via for/id.
-    $textareaId = $id ?? 'ui-textarea-' . \Illuminate\Support\Str::random(8);
+    // Stable id so the label stays associated across Livewire re-renders.
+    $textareaId =
+        $id ??
+        ($field ? 'ui-textarea-' . \Illuminate\Support\Str::slug($field) : 'ui-textarea-' . \Illuminate\Support\Str::random(8));
 
     $hasError = $field && $errors->has($field);
+    $describedBy = collect([$hasError ? $textareaId . '-error' : null, $hint ? $textareaId . '-hint' : null])
+        ->filter()
+        ->implode(' ');
 @endphp
 
 {{--
@@ -20,30 +25,32 @@
 
     DaisyUI `textarea` with an associated label. Forwards wire:model (+ modifiers),
     placeholder, required, and rows verbatim. Renders an inline @error message
-    adjacent to the control and an optional hint.
+    adjacent to the control and an optional hint, both wired via aria-describedby.
 --}}
 <div>
     @if ($label)
-        <label for="{{ $textareaId }}" class="block text-sm font-medium mb-1">
+        <label for="{{ $textareaId }}" class="mb-1.5 block text-[0.8125rem] font-medium text-base-content">
             {{ $label }}
             @if ($attributes->get('required'))
-                <span class="text-error">*</span>
+                <span class="text-error" aria-hidden="true">*</span>
+                <span class="sr-only">(required)</span>
             @endif
         </label>
     @endif
 
-    <textarea id="{{ $textareaId }}" rows="{{ $rows }}"
-        {{ $attributes->whereDoesntStartWith('id')->class(['textarea textarea-bordered w-full', 'textarea-error' => $hasError]) }}></textarea>
+    <textarea id="{{ $textareaId }}" rows="{{ $rows }}" @if ($hasError) aria-invalid="true" @endif
+        @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
+        {{ $attributes->whereDoesntStartWith('id')->class(['textarea w-full text-sm', 'textarea-error' => $hasError]) }}></textarea>
 
     {{-- INLINE VALIDATION ERROR --}}
     @if ($field)
         @error($field)
-            <x-ui.input-error :messages="$message" class="mt-1" />
+            <x-ui.input-error :messages="$message" id="{{ $textareaId }}-error" class="mt-1.5" />
         @enderror
     @endif
 
     {{-- HINT --}}
     @if ($hint)
-        <p class="text-xs opacity-60 mt-1">{{ $hint }}</p>
+        <p id="{{ $textareaId }}-hint" class="mt-1.5 text-xs text-base-content/70">{{ $hint }}</p>
     @endif
 </div>

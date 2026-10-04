@@ -1,42 +1,34 @@
-@push('head')
+{{-- This component is #[Lazy]: its view renders in a follow-up request where @push stacks never
+     reach the page, so Chart.js is registered with @assets (loaded once, on any request). --}}
+@assets
     @vite('resources/js/charts.js')
-@endpush
+@endassets
 
 <div>
-    <div class="p-6 space-y-6" wire:loading.class="opacity-50 pointer-events-none"
+    <div class="space-y-6" wire:loading.class="opacity-50 pointer-events-none"
         wire:target="dateFrom, dateTo, selectedOffices, selectedEventTypes, searchTerm">
 
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Reports & Analytics</h1>
-                        <p class="text-sm text-base-content/70 mt-1">Generate and export system reports</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        {{-- Filter Toggle Button --}}
-                        <button class="btn btn-outline bg-base-100 gap-2 border-base-300"
-                            wire:click="$toggle('showFilterDrawer')">
-                            <x-ui.icon name="o-adjustments-horizontal" class="w-4 h-4" />
-                            Filter
-                            @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
-                                <span
-                                    class="badge badge-primary badge-sm">{{ count($selectedOffices) + count($selectedEventTypes) }}</span>
-                            @endif
-                        </button>
+        <x-ui.page-heading title="Reports & Analytics" subtitle="Generate and export system reports">
+            <x-slot:actions>
+                {{-- Filter Toggle Button --}}
+                <button class="btn btn-outline bg-base-100 gap-2 border-base-300"
+                    wire:click="$toggle('showFilterDrawer')">
+                    <x-ui.icon name="o-adjustments-horizontal" class="w-4 h-4" />
+                    Filter
+                    @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0)
+                        <span
+                            class="badge badge-primary badge-sm">{{ count($selectedOffices) + count($selectedEventTypes) }}</span>
+                    @endif
+                </button>
 
-                        <button class="btn btn-primary gap-2"
-                            onclick="document.getElementById('exportModal').showModal()">
-                            <x-ui.icon name="o-arrow-down-tray" class="w-4 h-4" />
-                            Export Report
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+                <button class="btn btn-primary gap-2"
+                    onclick="document.getElementById('exportModal').showModal()">
+                    <x-ui.icon name="o-arrow-down-tray" class="w-4 h-4" />
+                    Export Report
+                </button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         {{-- Filter Drawer (Right Side) — inline DaisyUI slide-over --}}
         <div x-data="{ open: @entangle('showFilterDrawer') }" x-cloak x-show="open" x-transition.opacity class="fixed inset-0 z-50">
@@ -60,7 +52,7 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-base font-medium">Date range</span>
-                                <button class="text-teal-600 font-medium text-sm hover:underline"
+                                <button class="text-secondary font-medium text-sm hover:underline"
                                     wire:click="resetDateRange">Reset</button>
                             </div>
                             <div class="flex items-center gap-4">
@@ -83,7 +75,7 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-base font-medium">Organizations</span>
-                                <button class="text-teal-600 font-medium text-sm hover:underline"
+                                <button class="text-secondary font-medium text-sm hover:underline"
                                     wire:click="resetOffices">Reset</button>
                             </div>
                             <div class="max-h-48 overflow-y-auto space-y-1 border border-base-200 rounded-lg p-2">
@@ -109,7 +101,7 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-base font-medium">Event types</span>
-                                <button class="text-teal-600 font-medium text-sm hover:underline"
+                                <button class="text-secondary font-medium text-sm hover:underline"
                                     wire:click="resetEventTypes">Reset</button>
                             </div>
                             <div class="max-h-48 overflow-y-auto space-y-1 border border-base-200 rounded-lg p-2">
@@ -143,8 +135,8 @@
         {{-- Active Filters Display Bar --}}
         @if (count($selectedOffices) > 0 || count($selectedEventTypes) > 0 || $searchTerm)
             <div
-                class="flex flex-wrap items-center gap-3 p-4 bg-base-100 rounded-xl border border-base-200 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
-                <span class="text-sm text-base-content/50 font-medium flex items-center gap-2">
+                class="flex flex-wrap items-center gap-3 p-4 bg-base-100 rounded-xl border border-base-200 animate-in fade-in slide-in-from-top-4 duration-300">
+                <span class="text-sm text-base-content/60 font-medium flex items-center gap-2">
                     <x-ui.icon name="o-funnel" class="w-4 h-4" />
                     Active Filters:
                 </span>
@@ -167,7 +159,7 @@
                             {{ $org->org_name }}
                             <button
                                 wire:click="$set('selectedOffices', {{ json_encode(array_values(array_diff($selectedOffices, [$orgId]))) }})"
-                                class="btn btn-ghost btn-xs btn-circle hover:bg-primary-focus transition-colors">
+                                class="btn btn-ghost btn-xs btn-circle hover:bg-base-200 transition-colors">
                                 <x-ui.icon name="o-x-mark" class="w-3.5 h-3.5" />
                             </button>
                         </div>
@@ -182,7 +174,7 @@
                             {{ $type->type_name }}
                             <button
                                 wire:click="$set('selectedEventTypes', {{ json_encode(array_values(array_diff($selectedEventTypes, [$typeId]))) }})"
-                                class="btn btn-ghost btn-xs btn-circle hover:bg-secondary-focus transition-colors">
+                                class="btn btn-ghost btn-xs btn-circle hover:bg-base-200 transition-colors">
                                 <x-ui.icon name="o-x-mark" class="w-3.5 h-3.5" />
                             </button>
                         </div>
@@ -198,68 +190,15 @@
 
         {{-- Overview Stats --}}
         @island(name: 'charts')
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="stats shadow-lg border-primary border-2 bg-primary/10 text-primary-content">
-                    <div class="stat">
-                        <div class="stat-figure text-primary">
-                            <x-ui.icon name="o-calendar" class="w-8 h-8" />
-                        </div>
-                        <div class="stat-title text-primary-content opacity-90 dark:text-base-content">Total
-                            Events</div>
-                        <div class="stat-value text-primary-content dark:text-white">
-                            {{ $chartData['overview']['total_events'] ?? 0 }}
-                        </div>
-                        <div class="stat-desc text-primary-content opacity-50 dark:text-base-content">In
-                            selected period
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats shadow-lg border-primary border-2 bg-success/10">
-                    <div class="stat">
-                        <div class="stat-figure text-success">
-                            <x-ui.icon name="o-check-circle" class="w-8 h-8" />
-                        </div>
-                        <div class="stat-title text-success-content opacity-90 dark:text-base-content">Approved
-                            Events
-                        </div>
-                        <div class="stat-value text-success-content dark:text-white">
-                            {{ $chartData['overview']['approved_events'] ?? 0 }}
-                        </div>
-                        <div class="stat-desc text-success-content opacity-50 dark:text-base-content">
-                            Successfully approved
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats shadow-lg border-info border-2 bg-info/10 text-info-content">
-                    <div class="stat">
-                        <div class="stat-figure text-info">
-                            <x-ui.icon name="o-ticket" class="w-8 h-8" />
-                        </div>
-                        <div class="stat-title text-info-content opacity-90 dark:text-base-content">Total
-                            Tickets</div>
-                        <div class="stat-value text-info-content dark:text-white">
-                            {{ $chartData['overview']['total_tickets'] ?? 0 }}</div>
-                        <div class="stat-desc text-info-content opacity-50 dark:text-base-content">All
-                            submissions</div>
-                    </div>
-                </div>
-
-                <div class="stats shadow-lg border-accent border-2 bg-accent/10 text-accent-content">
-                    <div class="stat">
-                        <div class="stat-figure text-accent">
-                            <x-ui.icon name="o-user-group" class="w-8 h-8" />
-                        </div>
-                        <div class="stat-title text-accent-content opacity-90 dark:text-base-content">Active
-                            Organizations
-                        </div>
-                        <div class="stat-value text-accent-content dark:text-white">
-                            {{ $chartData['overview']['active_orgs'] ?? 0 }}</div>
-                        <div class="stat-desc text-accent-content opacity-50 dark:text-base-content">With
-                            events</div>
-                    </div>
-                </div>
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                <x-ui.metric-card label="Total events" value="{{ number_format($chartData['overview']['total_events'] ?? 0) }}"
+                    meta="In the selected period" icon="o-calendar" />
+                <x-ui.metric-card label="Approved events" value="{{ number_format($chartData['overview']['approved_events'] ?? 0) }}"
+                    meta="In the selected period" icon="o-check-circle" color="success" />
+                <x-ui.metric-card label="Total tickets" value="{{ number_format($chartData['overview']['total_tickets'] ?? 0) }}"
+                    meta="All submissions" icon="o-ticket" color="info" />
+                <x-ui.metric-card label="Active organizations" value="{{ number_format($chartData['overview']['active_orgs'] ?? 0) }}"
+                    meta="With events in the period" icon="o-user-group" />
             </div>
 
             {{-- Charts Grid --}}
@@ -269,7 +208,7 @@
                     @if (!empty($eventsByMonthChart))
                         <x-ui.chart wire:model="eventsByMonthChart" class="h-80" />
                     @else
-                        <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <div class="flex items-center justify-center h-80 text-base-content/60">
                             <span>No data available</span>
                         </div>
                     @endif
@@ -280,7 +219,7 @@
                     @if (!empty($eventsByTypeChart))
                         <x-ui.chart wire:model="eventsByTypeChart" class="h-80" />
                     @else
-                        <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <div class="flex items-center justify-center h-80 text-base-content/60">
                             <span>No data available</span>
                         </div>
                     @endif
@@ -291,7 +230,7 @@
                     @if (!empty($eventsByOfficeChart))
                         <x-ui.chart wire:model="eventsByOfficeChart" class="h-80" />
                     @else
-                        <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <div class="flex items-center justify-center h-80 text-base-content/60">
                             <span>No data available</span>
                         </div>
                     @endif
@@ -302,7 +241,7 @@
                     @if (!empty($ticketStatusChart))
                         <x-ui.chart wire:model="ticketStatusChart" class="h-80" />
                     @else
-                        <div class="flex items-center justify-center h-80 text-base-content/50">
+                        <div class="flex items-center justify-center h-80 text-base-content/60">
                             <span>No data available</span>
                         </div>
                     @endif
@@ -314,7 +253,7 @@
                 @if (!empty($usersByRoleChart))
                     <x-ui.chart wire:model="usersByRoleChart" class="h-72" />
                 @else
-                    <div class="flex items-center justify-center h-72 text-base-content/50">
+                    <div class="flex items-center justify-center h-72 text-base-content/60">
                         <span>No data available</span>
                     </div>
                 @endif

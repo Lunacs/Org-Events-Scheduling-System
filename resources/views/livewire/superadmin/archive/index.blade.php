@@ -1,29 +1,19 @@
 <div>
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Archive Management</h1>
-                        <p class="text-sm text-base-content/70 mt-1">View and manage archived events and tickets</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-ui.button icon="o-arrow-path" class="btn-outline bg-base-100" wire:click.async="$refresh">
-                            Refresh
-                        </x-ui.button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="Archive Management" subtitle="View and manage archived events and tickets">
+            <x-slot:actions>
+                <x-ui.button icon="o-arrow-path" class="btn-outline bg-base-100" wire:click.async="$refresh">
+                    Refresh
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         {{-- Filters --}}
         <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <x-ui.input label="Search" wire:model.live.debounce.300ms="search"
-                    placeholder="Search by title or ID..." icon="o-magnifying-glass" />
+                    placeholder="Search by title or ID…" icon="o-magnifying-glass" />
 
                 <x-ui.select label="Type" wire:model.live="typeFilter" :options="[
                     ['id' => 'all', 'name' => 'All Items'],
@@ -71,7 +61,7 @@
                                     <td>
                                         <div class="text-sm">
                                             <div>{{ $item['archived_at']->format('M d, Y') }}</div>
-                                            <div class="text-gray-500">{{ $item['archived_at']->format('g:i A') }}</div>
+                                            <div class="text-base-content/60">{{ $item['archived_at']->format('g:i A') }}</div>
                                         </div>
                                     </td>
                                     <td>
@@ -80,7 +70,7 @@
                                                 wire:click="openRestoreModal({{ $item['id'] }}, '{{ $item['type'] }}')">
                                                 Restore
                                             </x-ui.button>
-                                            <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                            <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
                                                 wire:click="openDeleteModal({{ $item['id'] }}, '{{ $item['type'] }}')">
                                                 Delete
                                             </x-ui.button>

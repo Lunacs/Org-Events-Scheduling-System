@@ -1,38 +1,27 @@
-<div class="py-12" x-data="eventCalendar()">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <section
-            class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Event Calendar</h1>
-                        <p class="text-base-content/70 mt-1">View all approved and scheduled events</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+<div x-data="eventCalendar()">
+    <div>
+        <x-ui.page-heading title="Event Calendar" subtitle="View all approved and scheduled events" />
         <!-- Calendar Controls -->
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-            <div class="p-6">
+        <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div>
                 <div class="flex flex-wrap justify-between items-center gap-4">
         </div>
 
         <!-- Calendar Controls -->
-        <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+        <div class="bg-base-100 rounded-box p-6 mb-6 border border-base-300">
             <div class="flex flex-wrap justify-between items-center gap-4">
                     <div class="flex items-center space-x-4">
-                        <button class="btn btn-circle btn-emerald" @click="goPrevious()">
+                        <button class="btn btn-circle btn-ghost" @click="goPrevious()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7"></path>
                             </svg>
                         </button>
 
-                        <h3 class="text-2xl font-bold text-emerald-700 dark:text-emerald-300" x-text="currentMonthYear">
+                        <h3 class="text-2xl font-bold text-base-content" x-text="currentMonthYear">
                         </h3>
 
-                        <button class="btn btn-circle btn-emerald" @click="goNext()">
+                        <button class="btn btn-circle btn-ghost" @click="goNext()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
                                 </path>
@@ -41,12 +30,12 @@
                     </div>
 
                     <div class="flex items-center space-x-4">
-                        <button class="btn btn-outline btn-emerald" @click="goToToday()">
+                        <button class="btn" @click="goToToday()">
                             Today
                         </button>
 
                         <div class="dropdown dropdown-end">
-                            <label tabindex="0" class="btn btn-emerald">
+                            <label tabindex="0" class="btn btn-primary">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z">
@@ -66,67 +55,67 @@
                             <span class="text-sm text-base-content/70">View:</span>
                             <div class="btn-group">
                                 <button class="btn btn-sm"
-                                    :class="viewMode === 'month' ? 'btn-emerald' : 'btn-outline'"
+                                    :class="viewMode === 'month' ? 'btn-primary' : 'btn-outline'"
                                     @click="setViewMode('month')">Month</button>
                                 <button class="btn btn-sm"
-                                    :class="viewMode === 'week' ? 'btn-emerald' : 'btn-outline'"
+                                    :class="viewMode === 'week' ? 'btn-primary' : 'btn-outline'"
                                     @click="setViewMode('week')">Week</button>
                                 <button class="btn btn-sm"
-                                    :class="viewMode === 'list' ? 'btn-emerald' : 'btn-outline'"
+                                    :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline'"
                                     @click="setViewMode('list')">List</button>
                             </div>
                         </div>
                     </div>
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+        <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-4">
                 <div class="flex flex-wrap items-center gap-4">
 
         <!-- Legend -->
-        <div class="bg-base-100 rounded-box shadow-lg p-4 mb-6">
+        <div class="bg-base-100 rounded-box p-4 mb-6 border border-base-300">
             <div class="flex flex-wrap items-center gap-4">
                     <span class="text-sm font-medium text-base-content/70">Legend:</span>
                     <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-emerald-500 rounded"></div>
+                        <div class="w-3 h-3 bg-primary rounded"></div>
                         <span class="text-sm text-base-content/70">Approved</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+                        <div class="w-3 h-3 bg-warning rounded"></div>
                         <span class="text-sm text-base-content/70">Pending</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-red-500 rounded"></div>
+                        <div class="w-3 h-3 bg-error rounded"></div>
                         <span class="text-sm text-base-content/70">For Revision</span>
                     </div>
-        <div class="bg-base-100 rounded-box shadow-lg p-6">
+        <div class="bg-base-100 rounded-box p-6 border border-base-300">
             <!-- Month View -->
                     </div>
                 </div>
             </div>
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <!-- Month View -->
         <!-- Calendar View -->
-        <div class="bg-base-100 rounded-box shadow-lg p-6">
+        <div class="bg-base-100 rounded-box p-6 border border-base-300">
             <!-- Month View -->
                 <div x-show="viewMode === 'month'" class="calendar-grid">
                     <!-- Days of Week Header -->
                     <div class="grid grid-cols-7 gap-px mb-2">
                         <template x-for="day in daysOfWeek" :key="day">
-                            <div class="bg-emerald-50 dark:bg-emerald-900/20 p-2 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300"
+                            <div class="bg-base-200 p-2 text-center text-sm font-medium text-base-content"
                                 x-text="day"></div>
                         </template>
                     </div>
 
                     <!-- Calendar Days -->
-                    <div class="grid grid-cols-7 gap-px border border-gray-200 dark:border-gray-600">
+                    <div class="grid grid-cols-7 gap-px border border-base-300">
                         <template x-for="day in days" :key="day.date">
-                            <div class="bg-white dark:bg-gray-800 min-h-24 p-1 border-r border-b border-gray-200 dark:border-gray-600"
-                                :class="day.isCurrentMonth ? '' : 'bg-gray-50 dark:bg-gray-700'">
+                            <div class="bg-base-100 min-h-24 p-1 border-r border-b border-base-300"
+                                :class="day.isCurrentMonth ? '' : 'bg-base-200 '">
                                 <div class="flex justify-between items-start mb-1">
                                     <span class="text-xs font-medium"
-                                        :class="day.isToday ? 'text-emerald-600 dark:text-emerald-400 font-bold' :
+                                        :class="day.isToday ? 'text-primary font-bold' :
                                             day.isCurrentMonth ? 'text-base-content' :
-                                            'text-base-content/40'"
+                                            'text-base-content/60'"
                                         x-text="day.dayNumber"></span>
                                 </div>
 
@@ -146,7 +135,7 @@
                 <div x-show="viewMode === 'week'" x-cloak>
                     <div class="overflow-x-auto">
                         <div class="flex items-center justify-between mb-4">
-                            <button class="btn btn-outline btn-sm btn-emerald" @click="goPrevious()">
+                            <button class="btn btn-sm" @click="goPrevious()">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 19l-7-7 7-7"></path>
@@ -154,10 +143,10 @@
                                 <span class="ml-1">Previous Week</span>
                             </button>
 
-                            <div class="text-lg font-semibold text-emerald-700 dark:text-emerald-300"
+                            <div class="text-lg font-semibold text-base-content"
                                 x-text="weekRangeLabel"></div>
 
-                            <button class="btn btn-outline btn-sm btn-emerald" @click="goNext()">
+                            <button class="btn btn-sm" @click="goNext()">
                                 <span class="mr-1">Next Week</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -166,29 +155,29 @@
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-8 min-w-full border border-gray-200 dark:border-gray-600">
+                        <div class="grid grid-cols-8 min-w-full border border-base-300">
                             <div
-                                class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300 border-r border-gray-200 dark:border-gray-700">
+                                class="bg-base-200 p-3 text-center text-sm font-medium text-base-content border-r border-base-300">
                                 Time
                             </div>
                             <template x-for="day in weekDays" :key="`week-header-${day.date}`">
                                 <div
-                                    class="bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center border-l border-gray-200 dark:border-gray-700">
-                                    <div class="text-sm font-medium text-emerald-700 dark:text-emerald-300"
+                                    class="bg-base-200 p-3 text-center border-l border-base-300">
+                                    <div class="text-sm font-medium text-base-content"
                                         x-text="day.dayName"></div>
-                                    <div class="text-xs text-emerald-600 dark:text-emerald-400" x-text="day.date">
+                                    <div class="text-xs text-primary" x-text="day.date">
                                     </div>
                                 </div>
                             </template>
                         </div>
 
                         <div
-                            class="grid grid-cols-8 min-w-full border border-t-0 border-gray-200 dark:border-gray-600 relative">
-                            <div class="relative bg-white dark:bg-gray-800 pt-6">
+                            class="grid grid-cols-8 min-w-full border border-t-0 border-base-300 relative">
+                            <div class="relative bg-base-100 pt-6">
                                 <div class="grid" :style="weekGridTemplateStyle()">
                                     <template x-for="hour in timeSlots" :key="`time-label-${hour}`">
                                         <div
-                                            class="border-b border-gray-200 dark:border-gray-700 flex items-start justify-center text-xs text-base-content/70 pt-2">
+                                            class="border-b border-base-300 flex items-start justify-center text-xs text-base-content/70 pt-2">
                                             <span x-text="hour"></span>
                                         </div>
                                     </template>
@@ -197,10 +186,10 @@
 
                             <template x-for="day in weekDays" :key="`week-column-${day.date}`">
                                 <div
-                                    class="relative border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden pt-6">
+                                    class="relative border-l border-base-300 bg-base-100 overflow-hidden pt-6">
                                     <div class="grid h-full" :style="weekGridTemplateStyle()">
                                         <template x-for="hour in timeSlots" :key="`gridline-${day.date}-${hour}`">
-                                            <div class="border-b border-gray-200 dark:border-gray-700"></div>
+                                            <div class="border-b border-base-300"></div>
                                         </template>
                                     </div>
 
@@ -268,13 +257,13 @@
             </div>
 
             <div
-                class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                class="inline-block align-bottom bg-base-100 rounded-lg text-left overflow-hidden transform transition sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-base-300">
+                <div class="bg-base-100 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium text-base-content" x-text="selectedEvent?.title">
                         </h3>
                         <button @click="showEventModal = false"
-                            class="text-base-content/40 hover:text-base-content/60">
+                            class="text-base-content/60 hover:text-base-content/60">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12"></path>
@@ -343,8 +332,8 @@
                     </template>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" class="btn btn-emerald" @click="showEventModal = false">
+                <div class="bg-base-200 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="btn btn-primary" @click="showEventModal = false">
                         Close
                     </button>
                 </div>
@@ -374,14 +363,14 @@
             ],
 
             eventPalette: [
-                'bg-emerald-500',
-                'bg-blue-500',
-                'bg-sky-500',
-                'bg-amber-500',
-                'bg-rose-500',
-                'bg-lime-500',
-                'bg-indigo-500',
-                'bg-cyan-500'
+                'bg-primary',
+                'bg-info',
+                'bg-info',
+                'bg-warning',
+                'bg-error',
+                'bg-secondary',
+                'bg-primary',
+                'bg-info'
             ],
 
             events: [],
@@ -686,13 +675,13 @@
 
             getEventClass(event) {
                 const baseClass = 'text-white text-xs p-1 rounded truncate cursor-pointer';
-                const colorClass = event.colorClass || 'bg-emerald-500';
-                const emphasis = event.office_involved ? ' ring-2 ring-offset-1 ring-purple-200' : '';
+                const colorClass = event.colorClass || 'bg-primary';
+                const emphasis = event.office_involved ? ' ring-2 ring-offset-1 ring-secondary/40' : '';
                 return `${baseClass} ${colorClass}${emphasis}`;
             },
 
             getEventColorClass(event) {
-                return event.colorClass || 'bg-emerald-500';
+                return event.colorClass || 'bg-primary';
             },
 
             parseTimeToMinutes(value) {
@@ -756,7 +745,7 @@
             getPaletteColor(event, index) {
                 const palette = this.eventPalette;
                 if (!palette.length) {
-                    return 'bg-emerald-500';
+                    return 'bg-primary';
                 }
 
                 const key = event.id ?? `${event.title ?? ''}-${index}`;

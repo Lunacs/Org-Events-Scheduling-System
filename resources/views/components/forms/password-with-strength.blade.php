@@ -15,7 +15,7 @@
         <x-ui.input :label="$label" wire:model.live.blur="{{ $model }}" x-bind:type="show ? 'text' : 'password'"
             :placeholder="$placeholder" icon="o-lock-closed" :hint="$hint" :required="$required" />
         <button type="button" x-on:click="show = !show"
-            class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            class="absolute right-3 top-9 h-10 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
             tabindex="-1">
             <x-ui.icon name="o-eye" class="w-5 h-5" x-show="show" />
             <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!show" />
@@ -36,33 +36,33 @@
                 x-text="strengthLabel"></span>
         </div>
         <div class="w-full bg-base-200 rounded-full h-2 overflow-hidden">
-            <div class="h-full transition-all duration-300" x-bind:class="strengthColor"
+            <div class="h-full transition duration-300" x-bind:class="strengthColor"
                 x-bind:style="`width: ${(strength / 5) * 100}%`"></div>
         </div>
 
         {{-- Requirements Checklist --}}
         <div class="grid grid-cols-1 gap-1 text-xs mt-2">
-            <div class="flex items-center gap-2" x-bind:class="hasMinLength ? 'text-success' : 'text-base-content/50'">
+            <div class="flex items-center gap-2" x-bind:class="hasMinLength ? 'text-success' : 'text-base-content/60'">
                 <i class="fas fa-check-circle text-xs" x-show="hasMinLength"></i>
                 <i class="fas fa-circle text-xs" x-show="!hasMinLength"></i>
                 <span>At least 8 characters</span>
             </div>
-            <div class="flex items-center gap-2" x-bind:class="hasUpperCase ? 'text-success' : 'text-base-content/50'">
+            <div class="flex items-center gap-2" x-bind:class="hasUpperCase ? 'text-success' : 'text-base-content/60'">
                 <i class="fas fa-check-circle text-xs" x-show="hasUpperCase"></i>
                 <i class="fas fa-circle text-xs" x-show="!hasUpperCase"></i>
                 <span>One uppercase letter</span>
             </div>
-            <div class="flex items-center gap-2" x-bind:class="hasLowerCase ? 'text-success' : 'text-base-content/50'">
+            <div class="flex items-center gap-2" x-bind:class="hasLowerCase ? 'text-success' : 'text-base-content/60'">
                 <i class="fas fa-check-circle text-xs" x-show="hasLowerCase"></i>
                 <i class="fas fa-circle text-xs" x-show="!hasLowerCase"></i>
                 <span>One lowercase letter</span>
             </div>
-            <div class="flex items-center gap-2" x-bind:class="hasNumber ? 'text-success' : 'text-base-content/50'">
+            <div class="flex items-center gap-2" x-bind:class="hasNumber ? 'text-success' : 'text-base-content/60'">
                 <i class="fas fa-check-circle text-xs" x-show="hasNumber"></i>
                 <i class="fas fa-circle text-xs" x-show="!hasNumber"></i>
                 <span>One number</span>
             </div>
-            <div class="flex items-center gap-2" x-bind:class="hasSymbol ? 'text-success' : 'text-base-content/50'">
+            <div class="flex items-center gap-2" x-bind:class="hasSymbol ? 'text-success' : 'text-base-content/60'">
                 <i class="fas fa-check-circle text-xs" x-show="hasSymbol"></i>
                 <i class="fas fa-circle text-xs" x-show="!hasSymbol"></i>
                 <span>One symbol (!@#$%^&*...)</span>

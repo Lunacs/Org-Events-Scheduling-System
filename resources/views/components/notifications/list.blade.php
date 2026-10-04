@@ -25,7 +25,7 @@
         <x-ui.input
             label="Search Notifications"
             wire:model.live="search"
-            placeholder="Search by content, event, or type..."
+            placeholder="Search by content, event, or type…"
             icon="s-magnifying-glass"
             class="flex-1 min-w-64" />
 
@@ -90,7 +90,7 @@
             @endphp
 
             <a href="{{ $url }}" wire:navigate wire:click="markAsRead('{{ $notification->id }}')" 
-                class="flex items-start gap-4 p-4 bg-{{ $color }}/5 rounded-lg border-l-4 border-{{ $color }} hover:shadow-md transition-shadow {{ !$isUnread ? 'opacity-75' : '' }} block">
+                class="flex items-start gap-4 p-4 bg-{{ $color }}/5 rounded-lg border border-{{ $color }}/30 hover:shadow-md transition-shadow {{ !$isUnread ? 'opacity-75' : '' }} block">
                 <div class="flex-shrink-0">
                     <div class="w-10 h-10 bg-{{ $color }}/20 rounded-full flex items-center justify-center">
                         <x-ui.icon name="s-bell" class="w-5 h-5 text-{{ $color }}" />
@@ -135,7 +135,7 @@
             <div class="text-center py-12">
                 <x-ui.icon name="s-bell" class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                 <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
-                <p class="text-base-content/50 text-sm mt-2">You're all caught up!</p>
+                <p class="text-base-content/60 text-sm mt-2">You're all caught up!</p>
             </div>
         @endforelse
     </div>

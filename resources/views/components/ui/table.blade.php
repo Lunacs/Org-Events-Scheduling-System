@@ -76,10 +76,10 @@
 @endphp
 
 <div class="overflow-x-auto">
-    <table {{ $attributes->merge(['class' => 'table']) }}>
+    <table {{ $attributes->merge(['class' => 'table tabular-nums']) }}>
         @if (count($normalizedHeaders) > 0)
             <thead>
-                <tr>
+                <tr class="border-base-300 bg-base-200/60 text-[0.8125rem] font-medium text-base-content/70">
                     @foreach ($normalizedHeaders as $header)
                         @php
                             $isActive = $header['key'] !== null && $header['key'] === $currentColumn;
@@ -90,15 +90,15 @@
                                     : 'o-chevron-down')
                                 : 'o-chevron-up-down';
                         @endphp
-                        <th @class([$header['class']])
+                        <th scope="col" @class(['font-medium', $header['class']])
                             @if ($isActive) aria-sort="{{ $currentDirection === 'asc' ? 'ascending' : 'descending' }}" @endif>
                             @if ($header['sortable'] && $header['key'])
                                 <button type="button"
-                                    class="inline-flex items-center gap-1 font-semibold cursor-pointer hover:text-primary transition-colors"
+                                    class="inline-flex cursor-pointer items-center gap-1 font-medium transition-colors hover:text-base-content"
                                     x-on:click="$wire.set('{{ $sortProperty }}', { column: '{{ $header['key'] }}', direction: '{{ $nextDirection }}' })"
                                     wire:click="$set('{{ $sortProperty }}', { column: '{{ $header['key'] }}', direction: '{{ $nextDirection }}' })">
                                     <span>{{ $header['label'] }}</span>
-                                    <x-ui.icon :name="$sortIcon" class="w-4 h-4 opacity-70" />
+                                    <x-ui.icon :name="$sortIcon" class="size-3.5 opacity-70" aria-hidden="true" />
                                 </button>
                             @else
                                 {{ $header['label'] }}
@@ -116,7 +116,7 @@
                         @isset($empty)
                             {{ $empty }}
                         @else
-                            <div class="text-center text-base-content/60 py-6">{{ $emptyText }}</div>
+                            <div class="py-8 text-center text-sm text-base-content/70">{{ $emptyText }}</div>
                         @endisset
                     </td>
                 </tr>

@@ -1,4 +1,4 @@
-<div x-data="{ firstLoad: true, isOpen: false, currentId: @entangle('selectedEventId'), cached: {} }" x-init="$nextTick(() => firstLoad = false)">
+<div x-data="{ firstLoad: false, isOpen: false, currentId: @entangle('selectedEventId'), cached: {} }" >
 
     {{-- Skeleton Loading State (First Load Only) --}}
     <div x-show="firstLoad" x-cloak>
@@ -6,30 +6,19 @@
     </div>
 
     {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    <div x-show="!firstLoad">
 
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Archive Access</h1>
-                        <p class="text-base-content/70 mt-1">View past events and historical decisions</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10">
-                        <span class="badge badge-neutral">{{ $archivedEvents->total() }} Archived Events</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="Archive Access" subtitle="View past events and historical decisions">
+            <x-slot:actions>
+                <span class="badge badge-neutral">{{ $archivedEvents->total() }} Archived Events</span>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         {{-- Filters --}}
         <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <x-ui.input wire:model.defer="search" placeholder="Search events..." icon="s-magnifying-glass"
+                <x-ui.input wire:model.defer="search" placeholder="Search events…" icon="s-magnifying-glass"
                     class="md:col-span-2" />
 
                 <x-ui.select wire:model.defer="organizationFilter" placeholder="Organization" :options="$organizations"
@@ -58,7 +47,7 @@
         </div>
 
         {{-- Archived Events List --}}
-        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden">
+        <div class="bg-base-100 border border-base-300 rounded-box overflow-hidden">
             {{-- Skeleton Loading State during filter operations --}}
             <div wire:loading.delay
                 wire:target="applyFilters,clearFilters,search,statusFilter,organizationFilter,yearFilter,eventTypeFilter">
@@ -159,7 +148,7 @@
                                                 {{ $event->eventSchedules->first()->start_time }}
                                             </div>
                                         @else
-                                            <span class="text-base-content/50">TBD</span>
+                                            <span class="text-base-content/60">TBD</span>
                                         @endif
                                     </td>
                                     <td>
@@ -170,8 +159,7 @@
                                                 'completed' => 'badge-primary',
                                             ];
                                         @endphp
-                                        <span
-                                            class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
+                                        <x-tickets.progress-badge :status="$event->ticket->status" size="sm" />
                                     </td>
                                     <td>
                                         <div>{{ $event->ticket->updated_at->format('M d, Y') }}</div>
@@ -197,7 +185,7 @@
                                     <td colspan="6" class="text-center py-8">
                                         <div class="flex flex-col items-center gap-2">
                                             <span class="text-base-content/70">No archived events found</span>
-                                            <span class="text-sm text-base-content/50">Try adjusting your
+                                            <span class="text-sm text-base-content/60">Try adjusting your
                                                 filters</span>
                                         </div>
                                     </td>

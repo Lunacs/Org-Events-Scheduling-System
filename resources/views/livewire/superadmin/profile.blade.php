@@ -1,4 +1,4 @@
-<div class="py-6" x-data="{
+<div x-data="{
     scrollToSection(section) {
         const element = document.getElementById(section);
         if (element) {
@@ -6,7 +6,7 @@
         }
     }
 }">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="space-y-6">
         {{-- Page Header --}}
         <div class="bg-gradient-to-r from-primary to-secondary rounded-box shadow-lg p-6 text-primary-content">
             <div class="flex items-center gap-4">
@@ -21,7 +21,7 @@
                             {{ $user->role_display }}
                         </span>
                         @if ($user->email_verified_at)
-                            <span class="badge badge-lg badge-success text-white">
+                            <span class="badge badge-lg badge-success">
                                 <i class="fa-solid fa-check-circle mr-1"></i> Verified
                             </span>
                         @endif
@@ -142,7 +142,7 @@
                                     placeholder="Enter current password" icon="o-key"
                                     autocomplete="current-password" />
                                 <button type="button" @click="showCurrent = !showCurrent"
-                                    class="absolute right-3 top-[38px] flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                    class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                     tabindex="-1">
                                     <i class="fas fa-eye" x-show="showCurrent" x-cloak></i>
                                     <i class="fas fa-eye-slash" x-show="!showCurrent"></i>
@@ -156,7 +156,7 @@
                                         ::type="showNew ? 'text' : 'password'" placeholder="Enter new password" icon="o-lock-closed"
                                         autocomplete="new-password" />
                                     <button type="button" @click="showNew = !showNew"
-                                        class="absolute right-3 top-[38px] flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
                                         <i class="fas fa-eye" x-show="showNew" x-cloak></i>
                                         <i class="fas fa-eye-slash" x-show="!showNew"></i>
@@ -169,7 +169,7 @@
                                         placeholder="Confirm new password" icon="o-lock-closed"
                                         autocomplete="new-password" />
                                     <button type="button" @click="showConfirm = !showConfirm"
-                                        class="absolute right-3 top-[38px] flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                        class="absolute right-3 top-[38px] flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                         tabindex="-1">
                                         <i class="fas fa-eye" x-show="showConfirm" x-cloak></i>
                                         <i class="fas fa-eye-slash" x-show="!showConfirm"></i>
@@ -193,7 +193,7 @@
                                     </div>
                                     <div class="flex gap-1">
                                         <template x-for="i in 5" :key="i">
-                                            <div class="h-1.5 flex-1 rounded-full transition-all duration-300"
+                                            <div class="h-1.5 flex-1 rounded-full transition duration-300"
                                                 :class="i <= passwordStrength.score ? passwordStrength.color : 'bg-base-300'">
                                             </div>
                                         </template>

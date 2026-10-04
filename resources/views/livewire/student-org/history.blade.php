@@ -1,31 +1,14 @@
 <div>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-base-content leading-tight">
-            {{ __('Event History') }}
-        </h2>
-    </x-slot>
 
-    <div class="py-8 sm:py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div>
+        <div class="space-y-6">
             {{-- Header --}}
-            <section
-                class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-3xl font-heading font-bold text-base-content">Event History</h1>
-                            <p class="text-base-content/70 mt-1">
-                                Track approved, revised, completed, and cancelled event requests in one place.
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <x-ui.button label="Submit New Event" icon="s-document-plus"
-                                class="btn-primary btn-sm text-white" link="/student-org/submit-ticket" wire:navigate />
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <x-ui.page-heading title="Event History" subtitle="Track approved, revised, completed, and cancelled event requests in one place.">
+                <x-slot:actions>
+                    <x-ui.button label="Submit New Event" icon="s-document-plus"
+                    class="btn-primary btn-sm text-primary-content" link="/student-org/submit-ticket" wire:navigate />
+                </x-slot:actions>
+            </x-ui.page-heading>
 
             {{-- Analytics Summary --}}
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -100,7 +83,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-12 md:items-end">
                     <div class="md:col-span-5">
                         <x-ui.input label="Search Events" wire:model.live.debounce.500ms="search"
-                            x-data="{ placeholder: window.innerWidth < 768 ? 'Title, Description or Venue' : 'Search by title, description, or venue...' }" x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search...' : 'Search by title, description, or venue...' })" ::placeholder="placeholder"
+                            x-data="{ placeholder: window.innerWidth < 768 ? 'Title, Description or Venue' : 'Search by title, description, or venue…' }" x-init="window.addEventListener('resize', () => { placeholder = window.innerWidth < 768 ? 'Search…' : 'Search by title, description, or venue…' })" ::placeholder="placeholder"
                             icon="s-magnifying-glass" />
                     </div>
 
@@ -132,7 +115,7 @@
             <x-ui.card title="Event History" subtitle="Complete record of your organization's events">
                 <div wire:loading.delay class="flex justify-center items-center py-8">
                     <span class="loading loading-spinner loading-md"></span>
-                    <span class="ml-2 text-base-content/60">Loading events...</span>
+                    <span class="ml-2 text-base-content/60">Loading events…</span>
                 </div>
 
                 <div class="space-y-6" wire:loading.remove.delay>
@@ -154,21 +137,21 @@
                         @endphp
 
                         <article
-                            class="rounded-xl border border-base-300 bg-base-100 p-5 sm:p-6 transition-all hover:shadow-md {{ $isCancelled ? 'opacity-75' : '' }}">
+                            class="rounded-xl border border-base-300 bg-base-100 p-5 sm:p-6 transition {{ $isCancelled ? 'opacity-75' : '' }}">
                             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2 mb-2">
                                         @if ($isApproved)
-                                            <x-ui.badge value="Approved" class="badge-success text-white" />
+                                            <x-ui.badge value="Approved" class="badge-success" />
                                             @if ($isComplete)
-                                                <x-ui.badge value="Completed" class="badge-info text-white" />
+                                                <x-ui.badge value="Completed" class="badge-info" />
                                             @endif
                                         @elseif($isForRevision)
-                                            <x-ui.badge value="For Revision" class="badge-warning text-white" />
+                                            <x-ui.badge value="For Revision" class="badge-warning" />
                                         @elseif($isCancelled)
-                                            <x-ui.badge value="Cancelled" class="badge-error text-white" />
+                                            <x-ui.badge value="Cancelled" class="badge-error" />
                                         @endif
-                                        <span class="text-xs text-base-content/50">
+                                        <span class="text-xs text-base-content/60">
                                             Ticket #{{ $ticket->ticket_number ?? $ticket->ticket_id }}
                                         </span>
                                     </div>
@@ -181,7 +164,7 @@
 
                                     <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                                         <div>
-                                            <p class="text-xs text-base-content/50 uppercase tracking-wide">
+                                            <p class="text-xs text-base-content/60 uppercase tracking-wide">
                                                 {{ $isForRevision ? 'Proposed Date' : 'Event Date' }}
                                             </p>
                                             <p class="text-sm font-semibold text-base-content">
@@ -201,20 +184,20 @@
                                             </p>
                                         </div>
                                         <div>
-                                            <p class="text-xs text-base-content/50 uppercase tracking-wide">Venue</p>
+                                            <p class="text-xs text-base-content/60 uppercase tracking-wide">Venue</p>
                                             <p class="text-sm font-semibold text-base-content wrap-break-word">
                                                 {{ $ticket->schedule_venue ?? $ticket->venue_display_name }}
                                             </p>
                                         </div>
                                         <div>
-                                            <p class="text-xs text-base-content/50 uppercase tracking-wide">Expected
+                                            <p class="text-xs text-base-content/60 uppercase tracking-wide">Expected
                                             </p>
                                             <p class="text-sm font-semibold text-base-content">
                                                 {{ $ticket->total_participants ?? $ticket->plv_participants }}
                                                 attendees</p>
                                         </div>
                                         <div>
-                                            <p class="text-xs text-base-content/50 uppercase tracking-wide">Type</p>
+                                            <p class="text-xs text-base-content/60 uppercase tracking-wide">Type</p>
                                             <p class="text-sm font-semibold text-base-content">
                                                 {{ $ticket->eventType->type_name }}</p>
                                         </div>
@@ -222,13 +205,13 @@
 
                                     <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
                                         <div class="rounded-lg bg-base-200 px-3 py-2">
-                                            <p class="text-xs uppercase tracking-wide text-base-content/50">Submitted
+                                            <p class="text-xs uppercase tracking-wide text-base-content/60">Submitted
                                             </p>
                                             <p class="font-semibold text-base-content">
                                                 {{ \Carbon\Carbon::parse($ticket->created_at)->format('M d, Y') }}</p>
                                         </div>
                                         <div class="rounded-lg bg-base-200 px-3 py-2">
-                                            <p class="text-xs uppercase tracking-wide text-base-content/50">
+                                            <p class="text-xs uppercase tracking-wide text-base-content/60">
                                                 {{ $decisionLabel }}</p>
                                             <p class="font-semibold text-base-content">
                                                 {{ \Carbon\Carbon::parse($ticket->updated_at)->format('M d, Y') }}</p>

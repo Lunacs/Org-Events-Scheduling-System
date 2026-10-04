@@ -1,9 +1,12 @@
 @props([
     'title' => null,
     'subtitle' => null,
+    // Kept for backwards compatibility; panels are flat at rest (DESIGN.md "Flat-at-Rest").
     'shadow' => false,
     'separator' => false,
     'bodyClass' => '',
+    // Heading level for the title (h2 under a page h1; h3 when nested in a section).
+    'headingLevel' => 2,
     // Slots
     'menu' => null,
     'actions' => null,
@@ -11,42 +14,45 @@
 ])
 
 {{--
-    x-ui.card — replaces `x-mary-card`.
+    x-ui.card — the standard panel (DESIGN.md "Panels / Cards").
 
-    DaisyUI `card bg-base-100` container. Renders an optional figure, a header
-    (title/subtitle with an optional `menu` slot), the default slot as the card body,
-    and an optional `actions` slot. `shadow` toggles the drop shadow and `separator`
-    draws divider lines around the header/actions. Any pass-through class (e.g.
-    lg:col-span-2) is forwarded verbatim to the root element.
+    Paper-white surface, 1px hairline border, 12px radius, 16–20px padding, no shadow.
+    Optional figure, a header (title/subtitle + `menu` slot for panel actions), the
+    default slot as the body, and an optional `actions` footer. Pass-through classes
+    (e.g. lg:col-span-2) go to the root element.
 --}}
-<div {{ $attributes->class(['card bg-base-100 p-5', 'shadow-xs' => $shadow]) }}>
+@php
+    $headingTag = 'h' . max(2, min(4, (int) $headingLevel));
+@endphp
+
+<section {{ $attributes->class(['card bg-base-100 rounded-box border border-base-300 p-4 sm:p-5']) }}>
     @if (filled($figure))
-        <figure {{ $figure->attributes->class(['mb-5 -m-5']) }}>
+        <figure {{ $figure->attributes->class(['-m-4 mb-4 sm:-m-5 sm:mb-5']) }}>
             {{ $figure }}
         </figure>
     @endif
 
-    @if (filled($title) || filled($subtitle))
-        <div class="pb-5">
-            <div class="flex gap-3 justify-between items-center w-full">
-                <div class="grow">
+    @if (filled($title) || filled($subtitle) || filled($menu))
+        <div class="pb-4">
+            <div class="flex w-full items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
                     @if (filled($title))
-                        <div class="card-title text-xl font-bold">{{ $title }}</div>
+                        <{{ $headingTag }} class="text-base font-semibold leading-snug text-base-content">{{ $title }}</{{ $headingTag }}>
                     @endif
                     @if (filled($subtitle))
-                        <div class="text-base-content/50 text-sm mt-1">{{ $subtitle }}</div>
+                        <p class="mt-0.5 text-sm text-base-content/70">{{ $subtitle }}</p>
                     @endif
                 </div>
 
                 @if (filled($menu))
-                    <div {{ $menu->attributes->class(['flex items-center gap-2']) }}>
+                    <div {{ $menu->attributes->class(['-me-2 -mt-1 flex shrink-0 items-center gap-2']) }}>
                         {{ $menu }}
                     </div>
                 @endif
             </div>
 
             @if ($separator)
-                <hr class="mt-3 border-t-(length:--border) border-base-content/10" />
+                <hr class="mt-4 border-base-300" />
             @endif
         </div>
     @endif
@@ -57,11 +63,11 @@
 
     @if (filled($actions))
         @if ($separator)
-            <hr class="mt-5 border-t-(length:--border) border-base-content/10" />
+            <hr class="mt-5 border-base-300" />
         @endif
 
-        <div {{ $actions->attributes->class(['flex w-full items-end justify-end gap-3 pt-5']) }}>
+        <div {{ $actions->attributes->class(['flex w-full flex-wrap items-center justify-end gap-3 pt-5']) }}>
             {{ $actions }}
         </div>
     @endif
-</div>
+</section>

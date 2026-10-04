@@ -1,34 +1,29 @@
 <div>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-base-content leading-tight">
-            {{ __('Submit Event Ticket (Digital Proposal)') }}
-        </h2>
-    </x-slot>
+    @php
+        $stepLabels = [
+            1 => 'Organization',
+            2 => 'Event details',
+            3 => 'Schedule and venue',
+            4 => 'Budget',
+            5 => 'Attachments',
+            6 => 'Review and submit',
+        ];
+    @endphp
 
-    <div class="py-6 md:py-10 overflow-x-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            {{-- Header --}}
-            <section
-                class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-info/10 shadow-sm">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-info/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-3xl font-heading font-bold text-base-content">Submit Ticket</h1>
-                            <p class="text-base-content/70 mt-1">Create a new event proposal request and track its
-                                approval progress.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <div class="mx-auto w-full max-w-4xl overflow-x-hidden">
+        <div class="space-y-6">
+            <x-ui.page-heading title="Submit a ticket"
+                subtitle="Request approval for an event. Your progress is saved as a draft, so you can finish later." />
 
             @if ($errors->any())
-                <div class="mb-6 rounded-xl border border-error/30 bg-error/10 p-4">
+                <div role="alert" class="rounded-box border border-error/30 bg-error/[0.06] p-4">
                     <div class="flex items-start gap-3">
-                        <x-ui.icon name="s-exclamation-circle" class="w-5 h-5 text-error mt-0.5" />
+                        <x-ui.icon name="s-exclamation-circle" class="mt-0.5 size-5 shrink-0 text-error" aria-hidden="true" />
                         <div>
-                            <p class="font-semibold text-error">Please review the required fields in this step.</p>
-                            <ul class="mt-2 list-disc list-inside text-sm text-base-content/80 space-y-1">
+                            <p class="text-sm font-semibold text-base-content">
+                                Fix {{ $errors->count() === 1 ? 'this field' : 'these ' . $errors->count() . ' fields' }} to continue
+                            </p>
+                            <ul class="mt-1.5 list-disc space-y-1 ps-5 text-sm text-base-content/80">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -39,80 +34,90 @@
             @endif
 
             <form wire:submit="save" wire:ref="submitForm">
-                {{-- Progress Indicator --}}
-                <div class="mb-6 md:mb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory" id="progress-container">
-                    <div class="flex justify-between items-center min-w-max md:min-w-0">
-                        @php
-                            $stepLabels = [
-                                1 => ['full' => 'Organization', 'short' => 'Org'],
-                                2 => ['full' => 'Event Details', 'short' => 'Event'],
-                                3 => ['full' => 'Schedule', 'short' => 'Schedule'],
-                                4 => ['full' => 'Budget', 'short' => 'Budget'],
-                                5 => ['full' => 'Attachments', 'short' => 'Files'],
-                                6 => ['full' => 'Review', 'short' => 'Review'],
-                            ];
-                        @endphp
-                        @for ($i = 1; $i <= $totalSteps; $i++)
-                            <div class="flex flex-col items-center flex-1 min-w-15 md:min-w-0 snap-center"
-                                id="step-{{ $i }}">
-                                <button type="button" wire:click="goToStep({{ $i }})"
-                                    aria-label="Step {{ $i }}: {{ $stepLabels[$i]['full'] }}"
-                                    aria-current="{{ $currentStep === $i ? 'step' : 'false' }}"
-                                    class="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-1.5 text-sm font-medium transition-all duration-200 shrink-0
-                                        {{ $currentStep === $i ? 'bg-primary text-primary-content shadow-sm ring-2 ring-primary/30' : '' }}
-                                        {{ $currentStep > $i ? 'bg-success text-success-content' : '' }}
-                                        {{ $currentStep < $i ? 'bg-base-300 text-base-content/50' : '' }}"
-                                    @if ($i > $currentStep + 1) disabled @endif>
-                                    @if ($currentStep > $i)
-                                        <x-ui.icon name="o-check" class="w-4 h-4" />
-                                    @else
-                                        {{ $i }}
-                                    @endif
-                                </button>
-
-                                <span
-                                    class="text-xs text-center whitespace-nowrap px-1 hidden md:block {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
-                                    {{ $stepLabels[$i]['full'] }}
-                                </span>
-                                <span
-                                    class="text-xs text-center whitespace-nowrap px-1 md:hidden {{ $currentStep === $i ? 'font-medium text-primary' : ($currentStep > $i ? 'text-base-content/70' : 'text-base-content/40') }}">
-                                    {{ $stepLabels[$i]['short'] }}
-                                </span>
-                            </div>
-                            @if ($i < $totalSteps)
-                                <div
-                                    class="flex-1 h-0.5 {{ $currentStep > $i ? 'bg-success' : 'bg-base-300' }} mx-1 md:mx-2 min-w-4 rounded-full transition-colors duration-200">
-                                </div>
-                            @endif
-                        @endfor
+                {{-- Progress (Goal-Gradient): full stepper on desktop, compact on mobile --}}
+                <nav aria-label="Ticket steps" class="mb-6" id="progress-container">
+                    <div class="sm:hidden">
+                        <div class="flex items-baseline justify-between text-sm">
+                            <p class="font-semibold text-base-content">{{ $stepLabels[$currentStep] }}</p>
+                            <p class="tabular-nums text-base-content/70">Step {{ $currentStep }} of {{ $totalSteps }}</p>
+                        </div>
+                        <progress class="progress progress-primary mt-2 h-1.5 w-full" value="{{ $currentStep }}"
+                            max="{{ $totalSteps }}" aria-label="Form progress: step {{ $currentStep }} of {{ $totalSteps }}"></progress>
                     </div>
-                </div>
 
+                    <ol class="hidden items-center sm:flex">
+                        @for ($i = 1; $i <= $totalSteps; $i++)
+                            <li @class(['flex items-center', 'flex-1' => $i < $totalSteps]) id="step-{{ $i }}">
+                                <button type="button" wire:click="goToStep({{ $i }})"
+                                    @if ($i > $currentStep + 1) disabled @endif
+                                    @if ($currentStep === $i) aria-current="step" @endif
+                                    class="group flex items-center gap-2 rounded-field py-1 pe-2 text-start disabled:cursor-not-allowed">
+                                    <span @class([
+                                        'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-colors',
+                                        'bg-primary text-primary-content' => $currentStep === $i,
+                                        'bg-success text-success-content' => $currentStep > $i,
+                                        'border border-base-300 bg-base-100 text-base-content/70' => $currentStep < $i,
+                                    ])>
+                                        @if ($currentStep > $i)
+                                            <x-ui.icon name="o-check" class="size-4" aria-hidden="true" />
+                                            <span class="sr-only">Completed:</span>
+                                        @else
+                                            {{ $i }}
+                                        @endif
+                                    </span>
+                                    <span @class([
+                                        'hidden whitespace-nowrap text-sm md:inline',
+                                        'font-semibold text-base-content' => $currentStep === $i,
+                                        'text-base-content/80 group-hover:text-base-content' => $currentStep > $i,
+                                        'text-base-content/60' => $currentStep < $i,
+                                    ])>{{ $stepLabels[$i] }}</span>
+                                    <span class="sr-only md:hidden">{{ $stepLabels[$i] }}</span>
+                                </button>
+                                @if ($i < $totalSteps)
+                                    <span @class([
+                                        'mx-2 h-px min-w-3 flex-1 transition-colors',
+                                        'bg-success' => $currentStep > $i,
+                                        'bg-base-300' => $currentStep <= $i,
+                                    ]) aria-hidden="true"></span>
+                                @endif
+                            </li>
+                        @endfor
+                    </ol>
+                </nav>
 
                 {{-- Step 1: Organization Information --}}
                 @if ($currentStep === 1)
-                    {{-- Instructions Card --}}
-                    <x-ui.card title="Event Request Guidelines" subtitle="Please read before submitting your proposal"
-                        class="mb-1">
-                        <x-submit_guidelines :guidelines="$ticketGuidelines" />
-                    </x-ui.card>
-                    <div class="bg-warning/10 p-4 rounded-lg border border-warning/30 mb-4">
-                        <x-ui.checkbox label="Check this box if the proposal is amended from a previous submission."
-                            wire:model.live="is_amended" />
-                    </div>
+                    <details class="group mb-4 rounded-box border border-base-300 bg-base-100 open:pb-4" open>
+                        <summary
+                            class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-box px-4 py-3 sm:px-5 [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-2 text-sm font-semibold text-base-content">
+                                <x-ui.icon name="o-information-circle" class="size-5 text-info" aria-hidden="true" />
+                                Before you start
+                            </span>
+                            <x-ui.icon name="o-chevron-down" class="size-4 text-base-content/60 transition-transform group-open:rotate-180" aria-hidden="true" />
+                        </summary>
+                        <div class="px-4 sm:px-5">
+                            <x-submit_guidelines :guidelines="$ticketGuidelines" />
+                        </div>
+                    </details>
 
-                    <x-ui.card title="Organization Information" subtitle="Details about your student organization">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-ui.input label="Organization Name" wire:model="organizationName" readonly />
-                            <x-ui.input label="Organization Course" wire:model="organizationCourse" readonly />
-                            <x-ui.input label="Name of Proponent" wire:model="proponentName" readonly />
-                            <x-ui.input label="Contact Email" type="email" wire:model="contactEmail" readonly />
-                            <x-ui.input label="Proponent Position" wire:model="proponentPosition" readonly />
-                            <x-ui.input label="Organization Adviser" wire:model="adviser" readonly />
-                            <x-ui.input label="Contact of Proponent" wire:model="proponent_contact"
+                    <x-ui.card title="Organization" subtitle="Filled in from your account. Only the adviser's contact number is needed.">
+                        <div class="mb-5 rounded-field border border-base-300 p-3">
+                            <x-ui.checkbox label="This request is a revised version of a previous submission"
+                                wire:model.live="is_amended" />
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <x-ui.input label="Organization name" wire:model="organizationName" readonly />
+                            <x-ui.input label="Organization course" wire:model="organizationCourse" readonly />
+                            <x-ui.input label="Name of proponent" wire:model="proponentName" readonly />
+                            <x-ui.input label="Contact email" type="email" wire:model="contactEmail" readonly />
+                            <x-ui.input label="Proponent position" wire:model="proponentPosition" readonly />
+                            <x-ui.input label="Organization adviser" wire:model="adviser" readonly />
+                            <x-ui.input label="Proponent contact number" wire:model="proponent_contact"
                                 placeholder="0999 999 9999" readonly />
-                            <x-ui.input label="Contact of Adviser" wire:model.live.debounce.300ms="adviser_contact"
-                                required maxlength="11" inputmode="numeric" placeholder="09XXXXXXXXX"
+                            <x-ui.input label="Adviser contact number" wire:model.live.debounce.300ms="adviser_contact"
+                                required maxlength="11" inputmode="numeric" autocomplete="off" placeholder="09XXXXXXXXX"
+                                hint="11-digit mobile number, for example 09171234567."
                                 x-on:input="$el.value = $el.value.replace(/\D/g, '').slice(0, 11); $wire.set('adviser_contact', $el.value)" />
                         </div>
                     </x-ui.card>
@@ -120,19 +125,19 @@
 
                 {{-- Step 2: Event Details --}}
                 @if ($currentStep === 2)
-                    <x-ui.card title="Event Details" subtitle="Information about your proposed event">
+                    <x-ui.card title="Event details" subtitle="Information about your proposed event">
                         <div class="space-y-4">
-                            <x-ui.input label="Event Title" wire:model.live.debounce.300ms="eventTitle"
+                            <x-ui.input label="Event title" wire:model.live.debounce.300ms="eventTitle"
                                 placeholder="Enter your event title" required maxlength="255" />
-                            <x-ui.textarea label="Event Description" wire:model.live.debounce.300ms="eventDescription"
+                            <x-ui.textarea label="Event description" wire:model.live.debounce.300ms="eventDescription"
                                 rows="4" required maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
-                            <x-ui.select label="Event Type" wire:model.live="eventType" :options="$eventTypes"
+                            <x-ui.select label="Event type" wire:model.live="eventType" :options="$eventTypes"
                                 option-value="event_type_id" option-label="type_name" required />
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <x-ui.input label="PLV Participants" type="number"
+                                <x-ui.input label="PLV participants" type="number"
                                     wire:model.live="expectedPLVParticipants" required />
-                                <x-ui.input label="Non-PLV Participants" type="number"
+                                <x-ui.input label="Non-PLV participants" type="number"
                                     wire:model.live="expectedNonPLVParticipants" />
                                 <x-ui.input label="Total" type="number" value="{{ $this->expectedParticipants }}"
                                     readonly />
@@ -143,18 +148,18 @@
 
                 {{-- Step 3: Schedule & Venue --}}
                 @if ($currentStep === 3)
-                    <x-ui.card title="Schedule & Venue" subtitle="When and where your event will take place">
+                    <x-ui.card title="Schedule & venue" subtitle="When and where your event will take place">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-ui.datetime label="Event Start Date" wire:model.live.debounce.300ms="eventStartDate"
+                            <x-ui.datetime label="Event start date" wire:model.live.debounce.300ms="eventStartDate"
                                 required min="{{ now()->format('Y-m-d') }}" />
 
-                            <x-ui.datetime label="Event End Date" wire:model.live.debounce.300ms="eventEndDate" required
+                            <x-ui.datetime label="Event end date" wire:model.live.debounce.300ms="eventEndDate" required
                                 min="{{ $eventStartDate ?: now()->format('Y-m-d') }}" />
 
-                            <x-ui.datetime label="Event Start Time" wire:model.live="eventStartTime" type="time"
+                            <x-ui.datetime label="Event start time" wire:model.live="eventStartTime" type="time"
                                 required />
 
-                            <x-ui.datetime label="Event End Time" wire:model.live="eventEndTime" type="time"
+                            <x-ui.datetime label="Event end time" wire:model.live="eventEndTime" type="time"
                                 required
                                 min="{{ $eventStartDate === $eventEndDate && $eventStartTime ? $eventStartTime : '' }}" />
 
@@ -163,7 +168,7 @@
                                 showOtherPreferred: @entangle('preferredVenue').live === 'other',
                                 venues: @js($venues)
                             }">
-                                <x-ui.select label="Preferred Venue" wire:model.live="preferredVenue"
+                                <x-ui.select label="Preferred venue" wire:model.live="preferredVenue"
                                     :options="[
                                         ...$venues,
                                         ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -182,7 +187,7 @@
                                 showOtherAlternative: @entangle('alternativeVenue').live === 'other',
                                 venues: @js($venues)
                             }">
-                                <x-ui.select label="Alternative Venue" wire:model.live="alternativeVenue"
+                                <x-ui.select label="Alternative venue" wire:model.live="alternativeVenue"
                                     :options="[
                                         ...$venues,
                                         ['venue_id' => 'other', 'venue_name' => 'Others (Please Specify)'],
@@ -198,7 +203,7 @@
                         </div>
 
                         <div class="mt-4">
-                            <x-ui.textarea label="Special Requirements"
+                            <x-ui.textarea label="Special requirements"
                                 wire:model.live.debounce.300ms="specialRequirements"
                                 placeholder="Audio/visual equipment, seating arrangement, catering, etc."
                                 rows="3" maxlength="2000"
@@ -213,15 +218,15 @@
 
                             <div x-show="open" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-ui.textarea label="Accommodation Provider (if any)"
+                                    <x-ui.textarea label="Accommodation provider (if any)"
                                         wire:model.live.debounce.300ms="oc_accommodation"
-                                        placeholder="Accommodation Provider Details" rows="2" maxlength="2000"
+                                        placeholder="Accommodation provider details" rows="2" maxlength="2000"
                                         x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                                 </div>
 
                                 <div x-data="{ tsp: @entangle('oc_tsp') }">
                                     <div class="mb-4">
-                                        <x-ui.radio label="Transportation Service Provider" wire:model.live="oc_tsp"
+                                        <x-ui.radio label="Transportation service provider" wire:model.live="oc_tsp"
                                             :options="[
                                                 ['id' => 'in-house', 'name' => 'In-house'],
                                                 ['id' => 'outsourced', 'name' => 'Outsourced'],
@@ -230,21 +235,21 @@
 
                                     <div x-show="tsp === 'outsourced'" x-collapse x-cloak>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <x-ui.input label="Name of Driver"
+                                            <x-ui.input label="Name of driver"
                                                 wire:model.live.debounce.300ms="oc_driver_name"
                                                 placeholder="Enter the driver name" maxlength="60" />
 
-                                            <x-ui.input label="Contact Details"
+                                            <x-ui.input label="Contact details"
                                                 wire:model.live.debounce.300ms="oc_driver_contact_number"
                                                 placeholder="Enter the driver's contact" maxlength="11"
                                                 inputmode="numeric"
                                                 x-on:input="$el.value = $el.value.replace(/[^0-9\s\-\+\(\)]/g, '').slice(0, 11); $wire.set('oc_driver_contact_number', $el.value)" />
 
-                                            <x-ui.input label="Type of Transportation"
+                                            <x-ui.input label="Type of transportation"
                                                 wire:model.live.debounce.300ms="oc_transportation_type"
                                                 placeholder="Enter the type of transportation" maxlength="50" />
 
-                                            <x-ui.input label="Plate Number"
+                                            <x-ui.input label="Plate number"
                                                 wire:model.live.debounce.300ms="oc_vehicle_plate_number"
                                                 placeholder="Enter the plate number" maxlength="100" />
                                         </div>
@@ -257,7 +262,7 @@
 
                 {{-- Step 4: Budget Information --}}
                 @if ($currentStep === 4)
-                    <x-ui.card title="Budget Information" subtitle="Financial details of your event">
+                    <x-ui.card title="Budget information" subtitle="Financial details of your event">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {{-- Inline DaisyUI input: x-ui.input has no `prefix` slot, so the ₱ prefix is rendered inline --}}
                             <div>
@@ -272,7 +277,7 @@
                                 @enderror
                             </div>
 
-                            <x-ui.select label="Funding Source" wire:model.live="fundingSource" :options="$fundSources"
+                            <x-ui.select label="Funding source" wire:model.live="fundingSource" :options="$fundSources"
                                 option-value="source_id" option-label="source_name"
                                 placeholder="Select funding source" required />
                         </div>
@@ -287,7 +292,7 @@
 
                         <div x-data="{ igp: @entangle('igp_requested') }">
                             <div class="mt-4">
-                                <x-ui.radio label="IGP (Income Generated Project) Request"
+                                <x-ui.radio label="IGP (income generated project) request"
                                     wire:model.live="igp_requested" :options="[
                                         ['id' => 'true', 'name' => 'Requested'],
                                         ['id' => 'false', 'name' => 'Not Requested'],
@@ -296,9 +301,9 @@
 
                             <div x-show="igp === 'true'" x-collapse x-cloak>
                                 <div class="mt-4">
-                                    <x-ui.textarea label="IGP (Income Generated Project) Brief Description"
+                                    <x-ui.textarea label="IGP (income generated project) brief description"
                                         wire:model.live.debounce.300ms="igp_details"
-                                        placeholder="List all descriptions for IGP (Income Generated Project) requested items"
+                                        placeholder="List all descriptions for IGP (income generated project) requested items"
                                         rows="4" maxlength="2000"
                                         x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
                                 </div>
@@ -321,9 +326,9 @@
                     </x-ui.card>
 
                     {{-- Additional Information --}}
-                    <x-ui.card title="Additional Information" subtitle="Any other relevant details">
+                    <x-ui.card title="Additional information" subtitle="Any other relevant details">
                         <div class="space-y-4">
-                            <x-ui.textarea label="Additional Notes" wire:model.live.debounce.300ms="additionalNotes"
+                            <x-ui.textarea label="Additional notes" wire:model.live.debounce.300ms="additionalNotes"
                                 placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
                                 rows="3" maxlength="2000"
                                 x-on:input="if($el.value.length > 2000) $el.value = $el.value.slice(0, 2000)" />
@@ -333,60 +338,58 @@
 
                 {{-- Step 6: Review & Submit --}}
                 @if ($currentStep === 6)
-                    <div class="overflow-x-hidden">
-                        <x-ui.card title="Review & Submit" subtitle="Please review your information"
+                    <div class="space-y-6 overflow-x-hidden">
+                        <x-ui.card title="Review your request"
+                            subtitle="Check every detail. Use Back or the steps above to change anything before you submit."
                             class="overflow-hidden">
-                            {{-- Show summary of all entered data --}}
                             <div class="overflow-hidden">
                                 <x-tickets.ticket-preview :ticket="$this->previewTicket" />
                             </div>
+                        </x-ui.card>
 
-                            {{-- Agreement & Submission --}}
-                            <div class="mt-6">
-                                <x-ui.card title="Terms and Conditions"
-                                    subtitle="Please review and agree to the terms" class="overflow-hidden">
-                                    <x-terms_and_conditions />
+                        <x-ui.card title="Terms and conditions" subtitle="Read and accept these to submit your request."
+                            class="overflow-hidden">
+                            <div class="max-h-80 overflow-y-auto rounded-field border border-base-300 p-4"
+                                tabindex="0" aria-label="Terms and conditions">
+                                <x-terms_and_conditions />
+                            </div>
 
-                                    {{-- Agreement Checkbox with Enhanced Styling --}}
-                                    <div class="mt-6 pt-4 border-t-2 border-base-content/10">
-                                        <div class="bg-success/5 border border-success/30 p-4 rounded-lg">
-                                            <x-ui.checkbox wire:model.live="agreeToTerms" required>
-                                                <x-slot:label>
-                                                    <span class="text-sm md:text-base font-semibold text-base-content">
-                                                        I have read, understood, and agree to all the terms and
-                                                        conditions stated above
-                                                    </span>
-                                                </x-slot:label>
-                                            </x-ui.checkbox>
-                                            <p class="text-xs text-base-content/60 mt-2 ml-6">
-                                                By checking this box, you acknowledge your responsibility to comply
-                                                with
-                                                all university policies
-                                            </p>
-                                        </div>
-                                    </div>
-                                </x-ui.card>
+                            <div class="mt-5 rounded-field border border-base-300 p-4">
+                                <x-ui.checkbox wire:model.live="agreeToTerms" required>
+                                    <x-slot:label>
+                                        <span class="text-sm font-medium text-base-content">
+                                            I have read and agree to the terms and conditions above
+                                        </span>
+                                    </x-slot:label>
+                                </x-ui.checkbox>
+                                <p class="mt-1.5 ps-8 text-xs text-base-content/70">
+                                    Your organization is responsible for following all university policies during the event.
+                                </p>
                             </div>
                         </x-ui.card>
                     </div>
                 @endif
 
-                {{-- Navigation Buttons --}}
-                <div class="flex justify-between items-center pt-6 border-t border-base-300/50 mt-2">
-                    @if ($currentStep > 1)
-                        <x-ui.button label="Previous" icon="o-arrow-left" wire:click="previousStep"
-                            class="btn-ghost data-loading:opacity-50 data-loading:pointer-events-none" spinner
-                            :disabled="$isProcessing" />
-                    @else
-                        <div></div>
-                    @endif
+                {{-- Step navigation: sticky so the next action is always within reach (Fitts's Law) --}}
+                <div
+                    class="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-base-300 bg-base-200/95 px-4 py-3 sm:mx-0 sm:rounded-box sm:border sm:bg-base-100 sm:px-5">
+                    <div>
+                        @if ($currentStep > 1)
+                            <x-ui.button label="Back" icon="o-arrow-left" wire:click="previousStep" class="btn-ghost"
+                                spinner :disabled="$isProcessing" />
+                        @endif
+                    </div>
+                    <p class="hidden text-sm tabular-nums text-base-content/70 sm:block">
+                        Step {{ $currentStep }} of {{ $totalSteps }}
+                    </p>
                     @if ($currentStep < $totalSteps)
-                        <x-ui.button label="Next" icon="o-arrow-right" wire:click="nextStep"
-                            class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
-                            :disabled="$isProcessing" spinner />
+                        <x-ui.button wire:click="nextStep" class="btn-primary" :disabled="$isProcessing" spinner
+                            icon-right="o-arrow-right">
+                            <span class="sm:hidden">Next</span>
+                            <span class="hidden sm:inline">Next: {{ $stepLabels[$currentStep + 1] }}</span>
+                        </x-ui.button>
                     @else
-                        <x-ui.button label="Submit Ticket" icon="s-paper-airplane" wire:click="save"
-                            class="btn-primary data-loading:opacity-50 data-loading:pointer-events-none"
+                        <x-ui.button label="Submit ticket" icon="o-paper-airplane" wire:click="save" class="btn-primary"
                             :disabled="!$agreeToTerms || $isProcessing" spinner />
                     @endif
                 </div>
@@ -584,7 +587,7 @@
 
                 const spinnerText = document.createElement('p');
                 spinnerText.className = 'text-sm font-medium';
-                spinnerText.textContent = 'Loading draft...';
+                spinnerText.textContent = 'Loading draft…';
 
                 spinnerContent.appendChild(spinner);
                 spinnerContent.appendChild(spinnerText);
@@ -706,9 +709,10 @@
     @endscript
 
     {{-- Add auto-save indicator to the form --}}
-    <div id="autosave-indicator" class="hidden fixed bottom-4 right-4 bg-base-200 px-4 py-2 rounded-lg shadow-lg">
-        <span class="text-sm flex items-center gap-2">
-            <x-ui.icon name="o-clock" class="w-4 h-4" />
+    <div id="autosave-indicator" role="status"
+        class="hidden fixed bottom-24 right-4 z-40 rounded-field border border-base-300 bg-base-100 px-3 py-2 shadow-float">
+        <span class="flex items-center gap-2 text-sm text-base-content">
+            <x-ui.icon name="o-check-circle" class="size-4 text-success" aria-hidden="true" />
             Draft saved
         </span>
     </div>

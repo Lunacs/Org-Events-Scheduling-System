@@ -1,242 +1,143 @@
-<div x-data="{
-    firstLoad: true,
-    showFilters: true,
-    hasActiveFilters: @entangle('search').live || @entangle('statusFilter').live || @entangle('organizationFilter').live
-}" x-init="$nextTick(() => firstLoad = false)">
+@php
+    $statusOptions = [
+        ['id' => '', 'name' => 'All active tickets'],
+        ['id' => 'received', 'name' => \App\Support\TicketStatus::label('received')],
+        ['id' => 'amended', 'name' => \App\Support\TicketStatus::label('amended')],
+        ['id' => 'gso_review', 'name' => \App\Support\TicketStatus::label('gso_review')],
+        ['id' => 'pending_osa_approval', 'name' => \App\Support\TicketStatus::label('pending_osa_approval')],
+        ['id' => 'for_revision', 'name' => \App\Support\TicketStatus::label('for_revision')],
+        ['id' => 'approved', 'name' => \App\Support\TicketStatus::label('approved')],
+        ['id' => 'completed', 'name' => \App\Support\TicketStatus::label('completed')],
+    ];
+    $filtering = 'search,statusFilter,organizationFilter,clearFilters';
+@endphp
 
-    {{-- Skeleton Loading State (First Load Only) --}}
-    <div x-show="firstLoad" x-cloak>
-        @include('livewire.osa.placeholders.ticket-review')
-    </div>
+<div class="space-y-6">
+    <x-ui.page-heading title="Ticket review"
+        subtitle="Open a request to approve it, forward it to GSO, or ask the organization for changes.">
+        <x-slot:meta>
+            <span class="badge badge-soft tabular-nums">
+                {{ number_format($tickets->total()) }} {{ Str::plural('ticket', $tickets->total()) }}
+            </span>
+        </x-slot:meta>
+    </x-ui.page-heading>
 
-    {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    {{-- Filters --}}
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+        <x-ui.input label="Search" wire:model.live.debounce.300ms="search" placeholder="Event title or ticket number…"
+            icon="o-magnifying-glass" type="search" autocomplete="off" />
 
-        {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Ticket Review & Approvals</h1>
-                        <p class="text-base-content/70 mt-1">Review event proposals and final approvals</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10">
-                        <span class="badge badge-primary">
-                            <span wire:loading.remove
-                                wire:target="search,statusFilter,organizationFilter">{{ $tickets->total() }}
-                                Tickets</span>
-                            <span wire:loading wire:target="search,statusFilter,organizationFilter"
-                                class="loading loading-spinner loading-xs"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.select label="Status" wire:model.live="statusFilter" :options="$statusOptions" />
 
-        {{-- Search Filter --}}
-        <x-ui.card>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
-                    icon="s-magnifying-glass" wire:loading.class="opacity-70" wire:target="search" />
+        <x-ui.select label="Organization" wire:model.live="organizationFilter" placeholder="All organizations"
+            :options="$this->organizations->map(fn($org) => [
+                'org_id' => $org->org_id,
+                'org_name' => $org->org_name . ($org->deleted_at ? ' (Deleted)' : ''),
+            ])" option-value="org_id" option-label="org_name" />
 
-                <x-ui.select wire:model.live="statusFilter" wire:loading.class="opacity-70"
-                    wire:target="statusFilter" :options="[
-                        ['id' => '', 'name' => 'Active Tickets'],
-                        ['id' => 'received', 'name' => 'Received'],
-                        ['id' => 'gso_review', 'name' => 'GSO Review'],
-                        ['id' => 'pending_osa_approval', 'name' => 'Pending Final Approval'],
-                        ['id' => 'amended', 'name' => 'Amended'],
-                        ['id' => 'approved', 'name' => 'Approved'],
-                        ['id' => 'for_revision', 'name' => 'For Revision'],
-                        ['id' => 'completed', 'name' => 'Completed'],
-                    ]" />
-
-                <x-ui.select wire:model.live="organizationFilter" wire:loading.class="opacity-70"
-                    wire:target="organizationFilter" placeholder="All Organizations" :options="$this->organizations->map(fn($org) => [
-                        'org_id' => $org->org_id,
-                        'org_name' => $org->org_name . ($org->deleted_at ? ' (Deleted)' : ''),
-                    ])" option-value="org_id" option-label="org_name" />
-
-                <x-ui.button label="Clear Filters" icon="s-x-mark" class="btn-ghost"
-                    x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter" x-transition
-                    wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters" />
-            </div>
-        </x-ui.card>
-
-        {{-- Tickets Grid --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative min-h-[400px]">
-            {{-- Skeleton Loader (Filtering/Searching) --}}
-            <div wire:loading wire:target="search,statusFilter,organizationFilter,clearFilters" class="col-span-full">
-                @include('livewire.osa.placeholders.ticket-cards')
-            </div>
-
-            <div wire:loading.remove wire:target="search,statusFilter,organizationFilter,clearFilters"
-                class="col-span-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                @forelse($tickets as $ticket)
-                    <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
-                        wire:key="ticket-review-{{ $ticket->ticket_id }}">
-                        <div class="p-6 flex-1 flex flex-col">
-                            {{-- Header --}}
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1 min-h-18">
-                                    <h3 class="font-bold text-lg text-base-content line-clamp-2">{{ $ticket->title }}
-                                    </h3>
-                                    @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
-                                    <p class="text-sm text-base-content/70 mt-1 {{ $orgDeleted ? 'italic' : '' }}">
-                                        {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
-                                    </p>
-                                </div>
-                                @php
-                                    $statusClasses = [
-                                        'received' => 'badge-info',
-                                        'gso_review' => 'badge-secondary',
-                                        'pending_osa_approval' => 'badge-warning',
-                                        'amended' => 'badge-info',
-                                        'approved' => 'badge-success',
-                                        'for_revision' => 'badge-warning',
-                                        'completed' => 'badge-neutral',
-                                    ];
-                                @endphp
-                                <span
-                                    class="badge badge-sm {{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white">
-                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                </span>
-                            </div>
-
-                            {{-- Description --}}
-                            <p class="text-sm text-base-content/80 mb-4 line-clamp-3">{{ $ticket->description }}</p>
-
-                            {{-- Event Details --}}
-                            <div class="space-y-2 mb-4">
-                                @if ($ticket->events->isNotEmpty() && $ticket->events->first()->eventSchedules->isNotEmpty())
-                                    {{-- Show approved event schedule --}}
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                        <span
-                                            class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->start_date?->format('M d, Y') ?? 'TBD' }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                            </path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        </svg>
-                                        <span
-                                            class="text-success font-medium">{{ $ticket->events->first()->eventSchedules->first()->venue ?? 'TBD' }}</span>
-                                    </div>
-                                @else
-                                    {{-- Show requested dates --}}
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <svg class="w-4 h-4 text-base-content/60" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                        <span
-                                            class="text-base-content/80">{{ $ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from)->format('M d, Y') : 'TBD' }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <svg class="w-4 h-4 text-base-content/60" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                            </path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        </svg>
-                                        <span
-                                            class="text-base-content/80">{{ $ticket->venue_display_name ?? 'TBD' }}</span>
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Spacer to push bottom content down --}}
-                            <div class="flex-1"></div>
-
-                            {{-- Bottom Section --}}
-                            <div class="space-y-4">
-                                {{-- Attachments Info --}}
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-base-content/60" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13">
-                                        </path>
-                                    </svg>
-                                    <span class="text-sm text-base-content/70">
-                                        {{ $ticket->attachments->count() }} attachment(s)
-                                    </span>
-                                </div>
-
-                                {{-- Actions --}}
-                                <div class="flex gap-2">
-                                    <a href="{{ route('osa.ticket-review.show', $ticket->ticket_number) }}"
-                                        class="btn btn-primary btn-sm flex-1 group" wire:navigate
-                                        title="Review Ticket">
-                                        <span>Review</span>
-                                        <svg class="w-4 h-4 transition duration-300 ease-in-out transform group-hover:translate-x-2"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Footer --}}
-                        <div class="bg-base-200 px-6 py-3 border-t border-base-300">
-                            <div class="flex items-center justify-between text-xs text-base-content/70">
-                                <span class="flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    {{ $ticket->created_at?->diffForHumans() ?? 'N/A' }}
-                                </span>
-                                <span class="font-mono text-xs">{{ $ticket->ticket_number }}</span>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-span-full text-center py-12">
-                        <div class="flex flex-col items-center gap-4">
-                            <svg class="w-16 h-16 text-base-content/20" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
-                                </path>
-                            </svg>
-                            <div>
-                                <h3 class="text-lg font-semibold text-base-content/70">No tickets found</h3>
-                                <p class="text-sm text-base-content/50 mt-1">
-                                    <span x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter">Try
-                                        adjusting your filters</span>
-                                    <span x-show="!$wire.search && !$wire.statusFilter && !$wire.organizationFilter">No
-                                        tickets have been submitted
-                                        yet</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @endforelse
-            </div>
-
-
+        <div class="flex items-end">
+            <x-ui.button label="Clear filters" icon="o-x-mark" class="btn-ghost"
+                x-cloak x-show="$wire.search || $wire.statusFilter || $wire.organizationFilter"
+                wire:click="clearFilters" wire:loading.attr="disabled" wire:target="clearFilters" />
         </div>
-        {{-- Pagination --}}
-        <x-tickets.ticket-pagination :tickets="$tickets" />
     </div>
+
+    {{-- Queue --}}
+    <section aria-label="Tickets" class="relative overflow-hidden rounded-box border border-base-300 bg-base-100"
+        wire:loading.class="opacity-60" wire:target="{{ $filtering }}">
+        <div wire:loading.flex wire:target="{{ $filtering }}"
+            class="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-base-200" aria-hidden="true">
+            <div class="h-full w-1/3 animate-pulse bg-accent"></div>
+        </div>
+
+        @if ($tickets->isEmpty())
+            <x-ui.empty-state icon="o-inbox" title="No tickets match"
+                description="Try a different search or clear the filters. New requests from organizations appear here automatically.">
+            </x-ui.empty-state>
+        @else
+            {{-- Desktop table --}}
+            <div class="hidden md:block">
+                <x-ui.table :headers="[
+                    ['key' => 'event', 'label' => 'Event'],
+                    ['key' => 'date', 'label' => 'Event date'],
+                    ['key' => 'venue', 'label' => 'Venue'],
+                    ['key' => 'status', 'label' => 'Status'],
+                    ['key' => 'submitted', 'label' => 'Submitted'],
+                    ['key' => 'action', 'label' => '', 'class' => 'w-0'],
+                ]" :paginate="false">
+                    @foreach ($tickets as $ticket)
+                        @php
+                            $orgDeleted = $ticket->user?->studentOrganization?->trashed();
+                            $organization = $orgDeleted ? 'Deleted organization' : ($ticket->user?->studentOrganization?->org_name ?? 'No organization');
+                            $schedule = $ticket->events->first()?->eventSchedules->first();
+                            $eventDate = $schedule?->start_date ?? ($ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from) : null);
+                            $venue = $schedule?->venue ?? $ticket->venue_display_name;
+                            $url = route('osa.ticket-review.show', $ticket->ticket_number);
+                        @endphp
+                        <tr wire:key="ticket-review-{{ $ticket->ticket_id }}" class="hover:bg-base-200/50">
+                            <td class="max-w-md">
+                                <a href="{{ $url }}" wire:navigate class="font-medium text-base-content hover:underline">
+                                    {{ $ticket->title }}
+                                </a>
+                                <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-base-content/70">
+                                    <span class="font-mono">{{ $ticket->ticket_number }}</span>
+                                    <span aria-hidden="true">&middot;</span>
+                                    <span @class(['truncate', 'italic' => $orgDeleted])>{{ $organization }}</span>
+                                    @if ($ticket->attachments->count() > 0)
+                                        <span aria-hidden="true">&middot;</span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <x-ui.icon name="o-paper-clip" class="size-3.5" aria-hidden="true" />
+                                            {{ $ticket->attachments->count() }}
+                                            <span class="sr-only">{{ Str::plural('attachment', $ticket->attachments->count()) }}</span>
+                                        </span>
+                                    @endif
+                                </p>
+                            </td>
+                            <td class="whitespace-nowrap">{{ $eventDate?->format('M j, Y') ?? 'Not set' }}</td>
+                            <td class="max-w-48 truncate text-base-content/80">{{ $venue ?? 'Not set' }}</td>
+                            <td><x-tickets.progress-badge :status="$ticket->status" size="sm" /></td>
+                            <td class="whitespace-nowrap text-base-content/70">
+                                <time datetime="{{ $ticket->created_at?->toIso8601String() }}"
+                                    title="{{ $ticket->created_at?->timezone('Asia/Manila')->format('M j, Y g:i A') }}">
+                                    {{ $ticket->created_at?->diffForHumans() ?? '—' }}
+                                </time>
+                            </td>
+                            <td class="text-end">
+                                <x-ui.button label="Review" link="{{ $url }}" class="btn-sm"
+                                    aria-label="Review {{ $ticket->title }}" />
+                            </td>
+                        </tr>
+                    @endforeach
+                </x-ui.table>
+            </div>
+
+            {{-- Mobile list --}}
+            <ul class="divide-y divide-base-300 md:hidden">
+                @foreach ($tickets as $ticket)
+                    @php
+                        $schedule = $ticket->events->first()?->eventSchedules->first();
+                        $eventDate = $schedule?->start_date ?? ($ticket->date_from ? \Carbon\Carbon::parse($ticket->date_from) : null);
+                    @endphp
+                    <li wire:key="ticket-review-m-{{ $ticket->ticket_id }}">
+                        <a href="{{ route('osa.ticket-review.show', $ticket->ticket_number) }}" wire:navigate
+                            class="block px-4 py-3 active:bg-base-200">
+                            <div class="flex items-start justify-between gap-3">
+                                <p class="min-w-0 text-sm font-medium text-base-content">{{ $ticket->title }}</p>
+                                <x-tickets.progress-badge :status="$ticket->status" size="sm" class="shrink-0" />
+                            </div>
+                            <p class="mt-1 text-xs text-base-content/70">
+                                {{ $ticket->user?->studentOrganization?->org_name ?? 'No organization' }}
+                            </p>
+                            <p class="mt-0.5 text-xs text-base-content/70">
+                                <span class="font-mono">{{ $ticket->ticket_number }}</span> &middot;
+                                {{ $eventDate?->format('M j, Y') ?? 'No date' }}
+                            </p>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </section>
+
+    <x-tickets.ticket-pagination :tickets="$tickets" />
 </div>

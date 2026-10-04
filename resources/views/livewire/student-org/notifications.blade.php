@@ -1,21 +1,21 @@
 <div x-data="{
-    firstLoad: true,
+    firstLoad: false,
     showFilters: true
-}" x-init="$nextTick(() => firstLoad = false)">
+}" >
 
     {{-- Skeleton Loading State (First Load Only) --}}
     <div x-show="firstLoad" x-cloak>
-        <div class="py-6 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto space-y-6">
+        <div>
+            <div class="space-y-6">
                 {{-- Header Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 animate-pulse">
+                <div class="bg-base-100 rounded-box p-6 animate-pulse border border-base-300">
                     <div class="h-8 bg-base-200 rounded w-1/4 mb-4"></div>
                     <div class="h-4 bg-base-200 rounded w-1/2"></div>
                 </div>
                 {{-- Stats Skeleton --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     @for ($i = 0; $i < 4; $i++)
-                        <div class="bg-base-100 rounded-box shadow-lg p-4 animate-pulse">
+                        <div class="bg-base-100 rounded-box p-4 animate-pulse border border-base-300">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 bg-base-200 rounded-full"></div>
                                 <div class="flex-1 space-y-2">
@@ -27,11 +27,11 @@
                     @endfor
                 </div>
                 {{-- Filters Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 animate-pulse">
+                <div class="bg-base-100 rounded-box p-6 animate-pulse border border-base-300">
                     <div class="h-12 bg-base-200 rounded w-full"></div>
                 </div>
                 {{-- List Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <div class="bg-base-100 rounded-box p-6 border border-base-300">
                     @include('livewire.placeholders.notification-list')
                 </div>
             </div>
@@ -39,37 +39,23 @@
     </div>
 
     {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95"
-        x-transition:enter-end="opacity-100 transform scale-100">
+    <div x-show="!firstLoad">
 
-        <div class="py-6 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto space-y-6">
+        <div>
+            <div class="space-y-6">
 
                 {{-- Header Section --}}
-                <section
-                    class="mb-8 relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                    <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                    <div class="relative p-6 sm:p-8">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h1 class="text-3xl font-heading font-bold text-base-content">Notifications Center</h1>
-                                <p class="text-base-content/70 mt-1">Stay updated on your organization's event requests and
-                                    university
-                                    announcements</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                                <x-ui.button label="Mark All as Read" icon="s-check"
-                                    class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto" wire:click="markAllAsRead"
-                                    :disabled="$unreadCount === 0" />
-                                <x-ui.button label="Clear All Read" icon="s-trash"
-                                    class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto {{ $readCount > 0 ? 'text-error' : '' }}"
-                                    wire:click="clearAllRead" :disabled="$readCount === 0"
-                                    wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <x-ui.page-heading title="Notifications Center" subtitle="Stay updated on your organization's event requests and university announcements">
+                    <x-slot:actions>
+                        <x-ui.button label="Mark All as Read" icon="s-check"
+                            class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto" wire:click="markAllAsRead"
+                            :disabled="$unreadCount === 0" />
+                        <x-ui.button label="Clear All Read" icon="s-trash"
+                            class="btn-ghost btn-sm cursor-pointer w-full sm:w-auto {{ $readCount > 0 ? 'text-error' : '' }}"
+                            wire:click="clearAllRead" :disabled="$readCount === 0"
+                            wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
+                    </x-slot:actions>
+                </x-ui.page-heading>
 
                 {{-- Notification Stats --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -87,7 +73,7 @@
                 {{-- Filters --}}
                 <x-ui.card>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search notifications..."
+                        <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search notifications…"
                             icon="s-magnifying-glass" wire:loading.class="opacity-70" wire:target="search" />
 
                         <x-ui.select wire:model.live="typeFilter" :options="[
@@ -166,7 +152,7 @@
                                         </div>
                                     @endif
 
-                                    <div class="flex items-center gap-4 mt-2 text-xs text-base-content/50">
+                                    <div class="flex items-center gap-4 mt-2 text-xs text-base-content/60">
                                         @if ($ticketNumber)
                                             <span class="flex items-center gap-1">
                                                 <x-ui.icon name="s-ticket" class="w-3 h-3" />

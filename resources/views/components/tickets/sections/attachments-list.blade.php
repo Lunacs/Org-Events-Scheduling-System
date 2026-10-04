@@ -1,32 +1,36 @@
 @props(['ticket'])
 
-<div class="bg-base-100 rounded-box shadow-lg p-6">
-    <h2 class="text-xl font-bold text-base-content mb-4 flex items-center gap-2">
-        <x-ui.icon name="o-paper-clip" class="w-5 h-5" />
+<div class="rounded-box border border-base-300 bg-base-100 p-4 sm:p-5">
+    <h2 class="mb-4 flex items-center gap-2 text-base font-semibold text-base-content">
+        <x-ui.icon name="o-paper-clip" class="size-4 shrink-0 text-base-content/60" aria-hidden="true" />
         Attachments
+        @if ($ticket->attachments->count() > 0)
+            <span class="badge badge-soft badge-sm tabular-nums">{{ $ticket->attachments->count() }}</span>
+        @endif
     </h2>
     @if ($ticket->attachments->count() > 0)
-        <div class="space-y-3">
+        <ul class="-my-1 divide-y divide-base-300">
             @foreach ($ticket->attachments as $attachment)
-                <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                    <div class="flex items-center gap-3">
-                        <div>
+                <li class="flex items-center justify-between gap-3 py-3">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <x-ui.icon name="o-document" class="size-5 shrink-0 text-base-content/60" aria-hidden="true" />
+                        <div class="min-w-0">
                             @if ($attachment->exists && $attachment->file_path)
                                 <button type="button"
-                                    class="hover:underline hover:cursor-pointer text-neutral font-medium transition-colors"
+                                    class="block max-w-full truncate text-left text-sm font-medium text-primary hover:underline" title="Preview"
                                     wire:click.renderless="previewAttachment({{ $attachment->attachment_id }})">
                                     {{ $attachment->file_name }}
                                 </button>
                             @elseif ($attachment->getAttribute('preview_upload_index') !== null)
                                 <button type="button"
-                                    class="hover:underline hover:cursor-pointer text-neutral font-medium transition-colors"
+                                    class="block max-w-full truncate text-left text-sm font-medium text-primary hover:underline" title="Preview"
                                     wire:click.renderless="previewDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})">
                                     {{ $attachment->file_name }}
                                 </button>
                             @else
-                                <span class="font-medium text-base-content">{{ $attachment->file_name }}</span>
+                                <span class="block truncate text-sm font-medium text-base-content">{{ $attachment->file_name }}</span>
                             @endif
-                            <p class="text-sm text-base-content/70">
+                            <p class="text-xs text-base-content/70">
                                 @php
                                     $ext = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
                                     if (!$ext && $attachment->file_type) {
@@ -49,23 +53,25 @@
                         </div>
                     </div>
                     @if ($attachment->exists && $attachment->file_path)
-                        <button type="button" class="btn btn-primary btn-sm"
-                            wire:click.renderless="downloadAttachment({{ $attachment->attachment_id }})">
-                            Download
+                        <button type="button" class="btn btn-ghost btn-sm shrink-0"
+                            wire:click.renderless="downloadAttachment({{ $attachment->attachment_id }})"
+                            aria-label="Download {{ $attachment->file_name }}">
+                            <x-ui.icon name="o-arrow-down-tray" class="size-4" aria-hidden="true" />
+                            <span class="hidden sm:inline">Download</span>
                         </button>
                     @elseif ($attachment->getAttribute('preview_upload_index') !== null)
-                        <button type="button" class="btn btn-primary btn-sm"
-                            wire:click.renderless="downloadDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})">
-                            Download
+                        <button type="button" class="btn btn-ghost btn-sm shrink-0"
+                            wire:click.renderless="downloadDraftAttachment({{ $attachment->getAttribute('preview_upload_index') }})"
+                            aria-label="Download {{ $attachment->file_name }}">
+                            <x-ui.icon name="o-arrow-down-tray" class="size-4" aria-hidden="true" />
+                            <span class="hidden sm:inline">Download</span>
                         </button>
                     @endif
-                </div>
+                </li>
             @endforeach
-        </div>
+        </ul>
     @else
-        <div class="text-center py-8">
-            <x-ui.icon name="o-document-text" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
-            <p class="text-base-content/70">No attachments uploaded</p>
-        </div>
+        <x-ui.empty-state compact icon="o-paper-clip" title="No attachments"
+            description="Required documents uploaded with the request appear here." />
     @endif
 </div>

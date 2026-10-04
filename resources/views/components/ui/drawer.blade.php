@@ -51,7 +51,7 @@
             {{ $attributes->except('wire:model')->whereDoesntStartWith('@')->class(['min-h-screen rounded-none px-8']) }}>
             @if ($withCloseButton)
                 <x-slot:menu>
-                    <x-ui.button icon="o-x-mark" class="btn-ghost btn-sm btn-circle" @click="close()" />
+                    <x-ui.button icon="o-x-mark" aria-label="Close panel" class="btn-ghost btn-sm btn-circle" @click="close()" />
                 </x-slot:menu>
             @endif
 

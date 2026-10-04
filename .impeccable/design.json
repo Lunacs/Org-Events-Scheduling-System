@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T00:00:00+08:00",
+  "title": "Design System: PLV Org Events Scheduling System",
+  "extensions": {
+    "colorMeta": {
+      "osa-navy": { "role": "primary", "displayName": "OSA Navy", "canonical": "oklch(30% 0.08 258)", "tonalRamp": ["oklch(18% 0.06 258)", "oklch(24% 0.07 258)", "oklch(30% 0.08 258)", "oklch(40% 0.08 258)", "oklch(52% 0.07 258)", "oklch(66% 0.05 258)", "oklch(80% 0.03 258)", "oklch(94% 0.012 258)"] },
+      "osa-cyan": { "role": "tertiary", "displayName": "OSA Cyan", "canonical": "oklch(74% 0.12 220)", "tonalRamp": ["oklch(22% 0.05 230)", "oklch(35% 0.08 225)", "oklch(48% 0.1 222)", "oklch(60% 0.11 220)", "oklch(74% 0.12 220)", "oklch(82% 0.09 220)", "oklch(90% 0.05 220)", "oklch(96% 0.02 220)"] },
+      "focus-blue": { "role": "tertiary", "displayName": "Focus Blue", "canonical": "oklch(55% 0.14 235)", "tonalRamp": [] },
+      "slate-secondary": { "role": "secondary", "displayName": "Slate Secondary", "canonical": "oklch(45% 0.06 258)", "tonalRamp": [] },
+      "plv-gold": { "role": "tertiary", "displayName": "PLV Gold", "canonical": "oklch(80% 0.11 85)", "tonalRamp": [] },
+      "paper-white": { "role": "neutral", "displayName": "Paper White", "canonical": "oklch(100% 0 0)", "tonalRamp": [] },
+      "office-mist": { "role": "neutral", "displayName": "Office Mist", "canonical": "oklch(97.2% 0.006 258)", "tonalRamp": [] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "oklch(91% 0.012 258)", "tonalRamp": [] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(24% 0.045 258)", "tonalRamp": [] },
+      "status-info": { "role": "status", "displayName": "Info Blue", "canonical": "oklch(52% 0.14 245)", "tonalRamp": [] },
+      "status-success": { "role": "status", "displayName": "Success Green", "canonical": "oklch(50% 0.12 155)", "tonalRamp": [] },
+      "status-warning": { "role": "status", "displayName": "Warning Ochre", "canonical": "oklch(53.5% 0.115 68)", "tonalRamp": [] },
+      "status-error": { "role": "status", "displayName": "Error Red", "canonical": "oklch(53% 0.19 25)", "tonalRamp": [] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The page title (h1) inside x-ui.page-heading. One per page." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings and modal titles." },
+      "title": { "displayName": "Title", "purpose": "Panel titles and table-row primary text." },
+      "body": { "displayName": "Body", "purpose": "Prose, descriptions, form help. Max 70ch." },
+      "body-sm": { "displayName": "Body small", "purpose": "Tables, lists, metadata. Tabular figures." },
+      "label": { "displayName": "Label", "purpose": "Form labels, buttons, nav items, table headers. Sentence case." },
+      "caption": { "displayName": "Caption", "purpose": "Timestamps, badges, footnotes. Never below 12px." },
+      "mono": { "displayName": "Mono", "purpose": "Ticket numbers, IDs, codes only." }
+    },
+    "shadows": [
+      { "name": "float", "value": "0 4px 12px -2px oklch(24% 0.045 258 / 0.12), 0 2px 4px -2px oklch(24% 0.045 258 / 0.08)", "purpose": "Dropdowns, popovers, notification panel, tooltips." },
+      { "name": "overlay", "value": "0 16px 32px -12px oklch(24% 0.045 258 / 0.25)", "purpose": "Modals, drawers, toasts." }
+    ],
+    "motion": [
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "State transitions (color, opacity, transform), 150–200ms." },
+      { "name": "reduced-motion", "value": "0.01ms", "purpose": "All transitions and animations under prefers-reduced-motion (spinners keep turning)." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Submit ticket</button>",
+      "css": ".ds-btn-primary { background: var(--color-primary); color: var(--color-primary-content); height: 40px; padding: 0 16px; border: 0; border-radius: 8px; font: 500 0.875rem/1 'IBM Plex Sans', system-ui, sans-serif; transition: background-color 150ms cubic-bezier(0.25,1,0.5,1); } .ds-btn-primary:hover { background: color-mix(in oklab, var(--color-primary) 88%, black); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Supporting actions next to a primary action.",
+      "html": "<button class=\"ds-btn-secondary\">Forward to GSO</button>",
+      "css": ".ds-btn-secondary { background: var(--color-base-100); color: var(--color-base-content); height: 40px; padding: 0 16px; border: 1px solid var(--color-base-300); border-radius: 8px; font: 500 0.875rem/1 'IBM Plex Sans', system-ui, sans-serif; transition: background-color 150ms cubic-bezier(0.25,1,0.5,1); } .ds-btn-secondary:hover { background: var(--color-base-200); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Label above, 40px field, hint or error below.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Event title</span><input class=\"ds-input\" placeholder=\"Leadership Training Workshop…\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: 'IBM Plex Sans', system-ui, sans-serif; } .ds-field-label { font-size: 0.8125rem; font-weight: 500; color: var(--color-base-content); } .ds-input { height: 40px; padding: 0 12px; border: 1px solid color-mix(in oklab, var(--color-base-content) 28%, var(--color-base-100)); border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content); font-size: 0.875rem; } .ds-input:focus { outline: 2px solid var(--color-focus); outline-offset: 0; border-color: var(--color-focus); }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Portal navigation; navy fill marks the current page.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item is-active\" aria-current=\"page\" href=\"#\">Dashboard</a><a class=\"ds-nav-item\" href=\"#\">My Tickets</a></nav>",
+      "css": ".ds-nav { display: grid; gap: 4px; width: 240px; font-family: 'IBM Plex Sans', system-ui, sans-serif; } .ds-nav-item { padding: 10px 12px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); text-decoration: none; transition: background-color 150ms; } .ds-nav-item:hover { background: var(--color-base-200); color: var(--color-base-content); } .ds-nav-item.is-active { background: var(--color-primary); color: var(--color-primary-content); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge-warning",
+      "description": "Ticket status: soft tint, status-colored label and icon. Never color alone.",
+      "html": "<span class=\"ds-badge ds-badge-warning\">&#9998; Needs revision</span> <span class=\"ds-badge ds-badge-success\">&#10003; Approved</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 8px; font: 500 0.75rem/1.4 'IBM Plex Sans', system-ui, sans-serif; } .ds-badge-warning { background: color-mix(in oklab, var(--color-warning) 10%, var(--color-base-100)); color: var(--color-warning); } .ds-badge-success { background: color-mix(in oklab, var(--color-success) 10%, var(--color-base-100)); color: var(--color-success); }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Flat paper-white panel with a hairline border; never a shadow at rest.",
+      "html": "<section class=\"ds-panel\"><h2>Needs your review</h2><p>Open a request to approve it, forward it to GSO, or ask for changes.</p></section>",
+      "css": ".ds-panel { background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: 12px; padding: 20px; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--color-base-content); } .ds-panel h2 { margin: 0; font-size: 1rem; font-weight: 600; } .ds-panel p { margin: 4px 0 0; font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content) 70%, transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Well-Run Office",
+    "overview": "The interface should feel like the best-run office on campus: every request is logged, every folder has a clearly labeled status, the person at the desk tells you exactly what happens next, and nothing on the wall is there for decoration. Authority comes from order and precision, not from ornament. Surfaces are flat and quiet, grouped by hairline borders on a softly tinted canvas; color is spent almost entirely on status and on the one primary action per screen.",
+    "keyCharacteristics": [
+      "Flat, bordered panels on a tinted canvas; shadows only on floating layers.",
+      "One typeface family (IBM Plex Sans) in four weights; IBM Plex Mono only for identifiers.",
+      "Navy for the single primary action and \"you are here\"; cyan only as a signal (focus, today, selection).",
+      "Status colors carry meaning and nothing else, always paired with a label and an icon.",
+      "Standard, familiar patterns everywhere: sidebar + top bar, tables, steppers, native controls.",
+      "150–200 ms state transitions; no entrance choreography; full prefers-reduced-motion support."
+    ],
+    "rules": [
+      { "name": "The One Navy Rule", "body": "Navy fills appear on at most one button per view (the primary action) plus the active navigation item.", "section": "colors" },
+      { "name": "The Status Owns Color Rule", "body": "Green, ochre, red, and info blue mean ticket state and feedback. They are forbidden as decoration.", "section": "colors" },
+      { "name": "The Never Color Alone Rule", "body": "Every status is shown as label + icon + color.", "section": "colors" },
+      { "name": "The Sixty Floor Rule", "body": "Text opacity never drops below base-content/60.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "IBM Plex Sans everywhere; Plex Mono only for identifiers.", "section": "typography" },
+      { "name": "The Sentence Case Rule", "body": "Labels, buttons, table headers, and headings are sentence case; no tiny uppercase eyebrows.", "section": "typography" },
+      { "name": "The Flat-at-Rest Rule", "body": "A panel either has a border or a shadow, never both, and panels at rest always use the border.", "section": "elevation" },
+      { "name": "The Z-Scale Rule", "body": "Sticky top bar 20, sidebar drawer 30, dropdown 40, modal 50, toast 60, tooltip 70.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do give each screen exactly one navy primary action and put it in the page header or at the end of the form.",
+      "Do show every ticket's status with the shared progress-badge (label + icon + color) and tell users the next step in words.",
+      "Do lead dashboards with the work queue.",
+      "Do keep panels flat: Paper White, 1px Hairline border, 12px radius, 20px padding.",
+      "Do keep :focus-visible rings on every control."
+    ],
+    "donts": [
+      "Don't build the generic SaaS/AI dashboard: no gradient blobs, hero banners, walls of KPI cards, or quick-action tiles that repeat the sidebar.",
+      "Don't drift into the dated government portal: no walls of instructions, low-contrast gray text, or status shown as plain text.",
+      "Don't use the dark hacker tool aesthetic: no neon accents, glassmorphism, or glowing borders.",
+      "Don't use border-left/right wider than 1px as a colored stripe.",
+      "Don't use raw Tailwind grays; use theme tokens."
+    ]
+  }
+}

@@ -31,7 +31,7 @@
     }
 @endphp
 
-<div class="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
+<div class="bg-warning/10 p-4 rounded-lg border border-warning/30">
     <div class="flex items-start space-x-2">
         <x-ui.icon name="s-exclamation-triangle" class="w-5 h-5 text-warning mt-0.5" />
         <div class="text-sm flex-1">
@@ -66,11 +66,11 @@
                         @endforeach
                     </ul>
                 @else
-                    <p class="text-base-content/50 italic">No specific requirements defined for this event type.</p>
+                    <p class="text-base-content/60 italic">No specific requirements defined for this event type.</p>
                 @endif
             @else
                 {{-- No event type provided --}}
-                <p class="text-base-content/50 italic">Select an event type to see required documents.</p>
+                <p class="text-base-content/60 italic">Select an event type to see required documents.</p>
             @endif
             {{ $slot ?? '' }}
         </div>

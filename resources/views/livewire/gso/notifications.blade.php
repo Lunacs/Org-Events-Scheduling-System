@@ -1,21 +1,21 @@
 <div x-data="{
-    firstLoad: true,
+    firstLoad: false,
     showFilters: true
-}" x-init="$nextTick(() => firstLoad = false)">
+}" >
 
     {{-- Skeleton Loading State (First Load Only) --}}
     <div x-show="firstLoad" x-cloak>
-        <div class="py-6 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto space-y-6">
+        <div>
+            <div class="space-y-6">
                 {{-- Header Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 animate-pulse">
+                <div class="bg-base-100 rounded-box p-6 animate-pulse border border-base-300">
                     <div class="h-8 bg-base-200 rounded w-1/4 mb-4"></div>
                     <div class="h-4 bg-base-200 rounded w-1/2"></div>
                 </div>
                 {{-- Stats Skeleton --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     @for ($i = 0; $i < 4; $i++)
-                        <div class="bg-base-100 rounded-box shadow-lg p-4 animate-pulse">
+                        <div class="bg-base-100 rounded-box p-4 animate-pulse border border-base-300">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 bg-base-200 rounded-full"></div>
                                 <div class="flex-1 space-y-2">
@@ -27,11 +27,11 @@
                     @endfor
                 </div>
                 {{-- Filters Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 animate-pulse">
+                <div class="bg-base-100 rounded-box p-6 animate-pulse border border-base-300">
                     <div class="h-12 bg-base-200 rounded w-full"></div>
                 </div>
                 {{-- List Skeleton --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <div class="bg-base-100 rounded-box p-6 border border-base-300">
                     @include('livewire.placeholders.notification-list')
                 </div>
             </div>
@@ -39,39 +39,26 @@
     </div>
 
     {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95"
-        x-transition:enter-end="opacity-100 transform scale-100">
+    <div x-show="!firstLoad">
 
-        <div class="py-6 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto space-y-6">
+        <div>
+            <div class="space-y-6">
 
                 {{-- Header Section --}}
-                <section
-                    class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                    <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                    <div class="relative p-6 sm:p-8">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h1 class="text-3xl font-bold text-base-content font-heading">Notifications Center</h1>
-                                <p class="text-base-content/70 mt-1">Stay updated on forwarded tickets and approval requests
-                                </p>
-                            </div>
-                            <div class="flex flex-col md:flex-row items-center gap-2 relative z-10">
-                                <x-ui.button label="Mark All as Read" icon="s-check"
-                                    class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
-                                <x-ui.button label="Clear All Read" icon="s-trash"
-                                    class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
-                                    wire:click="clearAllRead" :disabled="$readCount === 0"
-                                    wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <x-ui.page-heading title="Notifications Center" subtitle="Stay updated on forwarded tickets and approval requests">
+                    <x-slot:actions>
+                        <x-ui.button label="Mark All as Read" icon="s-check"
+                            class="btn-ghost btn-sm cursor-pointer" wire:click="markAllAsRead" :disabled="$unreadCount === 0" />
+                        <x-ui.button label="Clear All Read" icon="s-trash"
+                            class="btn-ghost btn-sm cursor-pointer {{ $readCount > 0 ? 'text-error' : '' }}"
+                            wire:click="clearAllRead" :disabled="$readCount === 0"
+                            wire:confirm="Are you sure you want to clear all read notifications? This cannot be undone." />
+                    </x-slot:actions>
+                </x-ui.page-heading>
 
                 {{-- Notification Stats --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-base-100 rounded-box shadow-lg p-4">
+                    <div class="bg-base-100 rounded-box p-4 border border-base-300">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-error/20 rounded-full flex items-center justify-center">
                                 <x-ui.icon name="s-bell" class="w-6 h-6 text-error" />
@@ -83,7 +70,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-100 rounded-box shadow-lg p-4">
+                    <div class="bg-base-100 rounded-box p-4 border border-base-300">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-info/20 rounded-full flex items-center justify-center">
                                 <x-ui.icon name="s-clock" class="w-6 h-6 text-info" />
@@ -95,7 +82,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-100 rounded-box shadow-lg p-4">
+                    <div class="bg-base-100 rounded-box p-4 border border-base-300">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
                                 <x-ui.icon name="s-calendar-days" class="w-6 h-6 text-success" />
@@ -107,7 +94,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-100 rounded-box shadow-lg p-4">
+                    <div class="bg-base-100 rounded-box p-4 border border-base-300">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center">
                                 <x-ui.icon name="s-archive-box" class="w-6 h-6 text-secondary" />
@@ -121,14 +108,14 @@
                 </div>
 
                 {{-- Filters --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6">
+                <div class="bg-base-100 rounded-box p-6 border border-base-300">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="relative">
                             <input wire:model.live.debounce.300ms="search" type="text"
-                                placeholder="Search notifications..." class="input input-bordered w-full pr-10" />
+                                placeholder="Search notifications…" class="input input-bordered w-full pr-10" />
                             <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                                 <span wire:loading.remove wire:target="search">
-                                    <svg class="w-5 h-5 text-base-content/40" fill="none" stroke="currentColor"
+                                    <svg class="w-5 h-5 text-base-content/60" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -176,7 +163,7 @@
                 </div>
 
                 {{-- Notifications List --}}
-                <div class="bg-base-100 rounded-box shadow-lg p-6 relative min-h-[400px]">
+                <div class="bg-base-100 rounded-box p-6 relative min-h-[400px] border border-base-300">
                     {{-- Skeleton Loader (Filtering/Searching) --}}
                     <div wire:loading wire:target="search,typeFilter,statusFilter,clearFilters" class="mb-4 w-full">
                         @include('livewire.placeholders.notification-list')
@@ -253,7 +240,7 @@
                             @endphp
 
                             <div
-                                class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border-l-4 hover:shadow-md transition-all {{ !$isUnread ? 'opacity-75' : '' }} group">
+                                class="flex items-start gap-4 p-4 {{ $bgClass }} rounded-lg border hover:shadow-md transition {{ !$isUnread ? 'opacity-75' : '' }} group">
                                 <div class="shrink-0">
                                     <div
                                         class="w-10 h-10 {{ $iconBgClass }} rounded-full flex items-center justify-center">
@@ -324,7 +311,7 @@
                                 <x-ui.icon name="s-bell-slash"
                                     class="w-16 h-16 text-base-content/20 mx-auto mb-4" />
                                 <p class="text-base-content/70 text-lg font-medium">No notifications found</p>
-                                <p class="text-base-content/50 text-sm mt-2">
+                                <p class="text-base-content/60 text-sm mt-2">
                                     <span x-show="$wire.search || $wire.typeFilter || $wire.statusFilter">Try adjusting
                                         your
                                         filters</span>

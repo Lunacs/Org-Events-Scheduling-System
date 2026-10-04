@@ -22,8 +22,7 @@
                             'completed' => 'badge-primary',
                         ];
                     @endphp
-                    <span
-                        class="badge {{ $statusClasses[$event->ticket->status] ?? 'badge-neutral' }} text-white">{{ ucfirst($event->ticket->status) }}</span>
+                    <x-tickets.progress-badge :status="$event->ticket->status" size="sm" />
                 </div>
             </div>
 

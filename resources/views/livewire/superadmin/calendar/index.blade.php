@@ -4,39 +4,29 @@
 
 <div>
     {{-- Header with Admin Actions --}}
-    <section
-        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-        <div class="relative p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-heading font-bold text-base-content">Event Calendar</h1>
-                    <p class="text-base-content/70 mt-1">Manage all events across all organizations</p>
-                </div>
-                <div class="flex items-center gap-2 relative z-10">
-                    <x-ui.badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
-                    <x-ui.button icon="o-arrow-path" class="btn-outline btn-sm bg-base-100" wire:click.async="$refresh">
-                        Refresh
-                    </x-ui.button>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-ui.page-heading title="Event Calendar" subtitle="Manage all events across all organizations">
+        <x-slot:actions>
+            <x-ui.badge value="{{ $uniqueEventsCount }} Events" class="badge-primary" />
+            <x-ui.button icon="o-arrow-path" class="btn-outline btn-sm bg-base-100" wire:click.async="$refresh">
+                Refresh
+            </x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-heading>
 
     {{-- Calendar Controls --}}
     <div x-data="osaCalendar()" x-init="init()" x-cloak
-        class="bg-base-100 rounded-box shadow-lg p-4 sm:p-6 mb-6">
+        class="bg-base-100 rounded-box p-4 sm:p-6 mb-6 border border-base-300">
         <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
             {{-- Navigation Section --}}
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {{-- Calendar Navigation --}}
                 <div class="flex items-center justify-center sm:justify-start gap-2">
-                    <x-ui.button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" />
+                    <x-ui.button @click="prev()" class="btn-ghost btn-sm" icon="o-chevron-left" aria-label="Previous period" />
                     <h2 class="text-base sm:text-lg font-semibold min-w-40 sm:min-w-[200px] text-center"
                         id="calendar-title" wire:ignore>
-                        Loading...
+                        Loading…
                     </h2>
-                    <x-ui.button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" />
+                    <x-ui.button @click="next()" class="btn-ghost btn-sm" icon="o-chevron-right" aria-label="Next period" />
                 </div>
 
                 {{-- Today Button --}}
@@ -105,7 +95,7 @@
         initialType: '{{ $eventTypeFilter }}'
     })" x-init="init()" x-on:open-filters.window="open = true" x-cloak
         x-on:clear-filters.window="clearAll()">
-        <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 ">
+        <div x-show="open" x-transition.opacity class="fixed inset-0 z-50">
             <div class="absolute inset-0 bg-black/40" @click="open = false"></div>
             <div
                 class="absolute right-0 top-0 h-full w-11/12 lg:w-1/3 bg-base-100 shadow-xl border-l border-base-300 flex flex-col rounded-l-2xl">
@@ -218,7 +208,7 @@
     <input type="hidden" id="calendar-initial-date" value="{{ $currentDate->format('Y-m-d') }}">
 
     {{-- FullCalendar --}}
-    <div id="osa-calendar" class="bg-base-100 rounded-box shadow-lg overflow-hidden p-3 sm:p-4 md:p-6">
+    <div id="osa-calendar" class="bg-base-100 rounded-box overflow-hidden p-3 sm:p-4 md:p-6 border border-base-300">
         <div x-ref="cal" wire:ignore class="min-h-[500px] md:min-h-[650px] lg:min-h-[750px]"></div>
     </div>
 
@@ -231,81 +221,81 @@
                     @php
                         $color = $event['color'];
                         $bgColor = match ($color) {
-                            'blue' => 'bg-blue-50',
-                            'green' => 'bg-green-50',
-                            'purple' => 'bg-purple-50',
-                            'yellow' => 'bg-yellow-50',
-                            'red' => 'bg-red-50',
-                            'cyan' => 'bg-cyan-50',
-                            'lime' => 'bg-lime-50',
-                            'orange' => 'bg-orange-50',
-                            default => 'bg-blue-50',
+                            'blue' => 'bg-info/10',
+                            'green' => 'bg-success/10',
+                            'purple' => 'bg-secondary/10',
+                            'yellow' => 'bg-warning/10',
+                            'red' => 'bg-error/10',
+                            'cyan' => 'bg-info/10',
+                            'lime' => 'bg-secondary/10',
+                            'orange' => 'bg-warning/10',
+                            default => 'bg-info/10',
                         };
                         $borderColor = match ($color) {
-                            'blue' => 'border-blue-400',
-                            'green' => 'border-green-400',
-                            'purple' => 'border-purple-400',
-                            'yellow' => 'border-yellow-400',
-                            'red' => 'border-red-400',
-                            'cyan' => 'border-cyan-400',
-                            'lime' => 'border-lime-400',
-                            'orange' => 'border-orange-400',
-                            default => 'border-blue-400',
+                            'blue' => 'border-info/30',
+                            'green' => 'border-success/30',
+                            'purple' => 'border-secondary/30',
+                            'yellow' => 'border-warning/30',
+                            'red' => 'border-error/30',
+                            'cyan' => 'border-info/30',
+                            'lime' => 'border-secondary/30',
+                            'orange' => 'border-warning/30',
+                            default => 'border-info/30',
                         };
                         $iconBg = match ($color) {
-                            'blue' => 'bg-blue-100',
-                            'green' => 'bg-green-100',
-                            'purple' => 'bg-purple-100',
-                            'yellow' => 'bg-yellow-100',
-                            'red' => 'bg-red-100',
-                            'cyan' => 'bg-cyan-100',
-                            'lime' => 'bg-lime-100',
-                            'orange' => 'bg-orange-100',
-                            default => 'bg-blue-100',
+                            'blue' => 'bg-info/10',
+                            'green' => 'bg-success/10',
+                            'purple' => 'bg-secondary/10',
+                            'yellow' => 'bg-warning/10',
+                            'red' => 'bg-error/10',
+                            'cyan' => 'bg-info/10',
+                            'lime' => 'bg-secondary/10',
+                            'orange' => 'bg-warning/10',
+                            default => 'bg-info/10',
                         };
                         $iconText = match ($color) {
-                            'blue' => 'text-blue-600',
-                            'green' => 'text-green-600',
-                            'purple' => 'text-purple-600',
-                            'yellow' => 'text-yellow-600',
-                            'red' => 'text-red-600',
-                            'cyan' => 'text-cyan-600',
-                            'lime' => 'text-lime-600',
-                            'orange' => 'text-orange-600',
-                            default => 'text-blue-600',
+                            'blue' => 'text-info',
+                            'green' => 'text-success',
+                            'purple' => 'text-secondary',
+                            'yellow' => 'text-warning',
+                            'red' => 'text-error',
+                            'cyan' => 'text-info',
+                            'lime' => 'text-secondary',
+                            'orange' => 'text-warning',
+                            default => 'text-info',
                         };
                         $titleColor = match ($color) {
-                            'blue' => 'text-blue-900',
-                            'green' => 'text-green-900',
-                            'purple' => 'text-purple-900',
-                            'yellow' => 'text-yellow-900',
-                            'red' => 'text-red-900',
-                            'cyan' => 'text-cyan-900',
-                            'lime' => 'text-lime-900',
-                            'orange' => 'text-orange-900',
-                            default => 'text-blue-900',
+                            'blue' => 'text-info',
+                            'green' => 'text-success',
+                            'purple' => 'text-secondary',
+                            'yellow' => 'text-warning',
+                            'red' => 'text-error',
+                            'cyan' => 'text-info',
+                            'lime' => 'text-secondary',
+                            'orange' => 'text-warning',
+                            default => 'text-info',
                         };
                         $textColor = match ($color) {
-                            'blue' => 'text-blue-700',
-                            'green' => 'text-green-700',
-                            'purple' => 'text-purple-700',
-                            'yellow' => 'text-yellow-700',
-                            'red' => 'text-red-700',
-                            'cyan' => 'text-cyan-700',
-                            'lime' => 'text-lime-700',
-                            'orange' => 'text-orange-700',
-                            default => 'text-blue-700',
+                            'blue' => 'text-info',
+                            'green' => 'text-success',
+                            'purple' => 'text-secondary',
+                            'yellow' => 'text-warning',
+                            'red' => 'text-error',
+                            'cyan' => 'text-info',
+                            'lime' => 'text-secondary',
+                            'orange' => 'text-warning',
+                            default => 'text-info',
                         };
                         $metaColor = match ($color) {
-                            'blue' => 'text-blue-600',
-                            'green' => 'text-green-600',
-                            'purple' => 'text-purple-600',
-                            'yellow' => 'text-yellow-600',
-                            'red' => 'text-red-600',
-                            'cyan' => 'text-cyan-600',
-                            'lime' => 'text-lime-600',
-                            'orange' => 'text-orange-600',
-                            default => 'text-blue-600',
+                            'blue' => 'text-info',
+                            'green' => 'text-success',
+                            'purple' => 'text-secondary',
+                            'yellow' => 'text-warning',
+                            'red' => 'text-error',
+                            'cyan' => 'text-info',
+                            'lime' => 'text-secondary',
+                            'orange' => 'text-warning',
+                            default => 'text-info',
                         };
                         $badgeClass = match ($color) {
                             'blue' => 'badge-info',
@@ -319,7 +309,7 @@
                             default => 'badge-info',
                         };
                     @endphp
-                    <div class="flex items-start space-x-4 p-4 {{ $bgColor }} rounded-lg border-l-4 {{ $borderColor }} hover:shadow-md transition-all cursor-pointer"
+                    <div class="flex items-start space-x-4 p-4 {{ $bgColor }} rounded-lg border {{ $borderColor }} hover:shadow-md transition cursor-pointer"
                         wire:key="upcoming-{{ $index }}"
                         onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
                         <div class="flex-shrink-0">
@@ -356,47 +346,47 @@
             </div>
         @else
             <div class="text-center py-12">
-                <x-ui.icon name="o-calendar-days" class="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                <p class="text-sm text-gray-500">No upcoming events scheduled for this month</p>
+                <x-ui.icon name="o-calendar-days" class="w-16 h-16 mx-auto mb-3 text-base-content/40" />
+                <p class="text-sm text-base-content/60">No upcoming events scheduled for this month</p>
             </div>
         @endif
 
         {{-- Completed This Month --}}
         @if (count($this->completedEventsThisMonth) > 0)
             @php $totalCompleted = count($this->completedEventsThisMonth); @endphp
-            <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-gray-200">
+            <div x-data="{ showCompleted: false }" class="mt-6 pt-6 border-t border-base-300">
                 <button type="button" @click="showCompleted = !showCompleted"
                     class="flex w-full items-center justify-between gap-2 text-left"
                     :aria-expanded="showCompleted.toString()">
                     <span class="flex items-center gap-2">
-                        <x-ui.icon name="o-check-circle" class="w-5 h-5 text-gray-400" />
-                        <span class="font-semibold text-gray-600">Completed This Month</span>
+                        <x-ui.icon name="o-check-circle" class="w-5 h-5 text-base-content/60" />
+                        <span class="font-semibold text-base-content/70">Completed This Month</span>
                         <x-ui.badge value="{{ $totalCompleted }}" class="badge-neutral badge-sm" />
                     </span>
                     <x-ui.icon name="o-chevron-down" x-bind:class="showCompleted ? 'rotate-180' : ''"
-                        class="w-4 h-4 text-gray-400 transition-transform duration-200" />
+                        class="w-4 h-4 text-base-content/60 transition-transform duration-200" />
                 </button>
 
                 <div x-show="showCompleted" x-collapse class="space-y-3 mt-4">
                     @foreach ($this->completedEventsThisMonth as $index => $event)
-                        <div class="flex items-start space-x-4 p-4 bg-gray-100 rounded-lg border-l-4 border-gray-300 hover:shadow-md transition-all cursor-pointer"
+                        <div class="flex items-start space-x-4 p-4 bg-base-200 rounded-lg border border-base-300 hover:shadow-md transition cursor-pointer"
                             wire:key="completed-{{ $index }}"
                             onclick="window.dispatchEvent(new CustomEvent('open-event', { detail: { id: {{ $event['event_id'] }} } }))">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                                    <x-ui.icon name="{{ $event['icon'] }}" class="w-6 h-6 text-gray-500" />
+                                <div class="w-12 h-12 bg-base-300 rounded-lg flex items-center justify-center">
+                                    <x-ui.icon name="{{ $event['icon'] }}" class="w-6 h-6 text-base-content/60" />
                                 </div>
                             </div>
                             <div class="flex-1">
                                 <div class="flex items-start justify-between gap-2">
-                                    <h4 class="font-semibold text-gray-600">{{ $event['title'] }}</h4>
+                                    <h4 class="font-semibold text-base-content/70">{{ $event['title'] }}</h4>
                                     <x-ui.badge value="Completed" class="badge-neutral" />
                                 </div>
                                 @if ($event['description'])
-                                    <p class="text-sm text-gray-500 mt-1">
+                                    <p class="text-sm text-base-content/60 mt-1">
                                         {{ Str::limit($event['description'], 80) }}</p>
                                 @endif
-                                <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
+                                <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-base-content/60">
                                     <span class="flex items-center space-x-1">
                                         <x-ui.icon name="o-calendar" class="w-4 h-4" />
                                         <span>{{ $event['datetime'] }}</span>
@@ -426,7 +416,7 @@
         <template x-if="open">
             <div class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="absolute inset-0 bg-black/40" @click="close()"></div>
-                <div class="relative bg-base-100 w-11/12 max-w-3xl rounded-box shadow-xl border border-base-300 p-6">
+                <div class="relative bg-base-100 w-11/12 max-w-3xl rounded-box border border-base-300 p-6">
                     <div class="flex items-start justify-between mb-4">
                         <div>
                             <h2 class="text-xl font-bold" x-text="data?.title || 'Event Details'"></h2>

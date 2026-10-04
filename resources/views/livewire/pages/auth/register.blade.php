@@ -19,25 +19,10 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="text-center py-8">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Registration Not Available</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Public registration is disabled. Accounts are created by administrators only.
-        </p>
-        <div class="space-y-2">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                • SuperAdmin creates OSA and GSO accounts
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                • OSA creates Student Organization accounts
-            </p>
-        </div>
-        <div class="mt-6">
-            <a href="{{ route('admin.login') }}"
-                class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
-                wire:navigate>
-                Go to Login
-            </a>
-        </div>
-    </div>
+    <h1 class="text-2xl font-semibold tracking-[-0.015em] text-base-content">Registration is not available</h1>
+    <p class="mt-2 text-sm text-base-content/70">
+        Accounts are created by the university: the SuperAdmin creates OSA and GSO accounts, and OSA creates
+        student organization accounts. Contact OSA if your organization needs access.
+    </p>
+    <a href="{{ route('login') }}" wire:navigate class="btn btn-primary btn-block mt-6">Go to sign in</a>
 </div>

@@ -30,10 +30,10 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <x-ui.card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
-            <div class="animate-pulse space-y-4">
-                <div class="h-20 bg-base-300 rounded"></div>
-                <div class="h-20 bg-base-300 rounded"></div>
+        <x-ui.card title="Upcoming events" subtitle="Your approved events in the next 30 days.">
+            <div class="animate-pulse space-y-3" aria-hidden="true">
+                <div class="h-11 rounded-field bg-base-200"></div>
+                <div class="h-11 rounded-field bg-base-200"></div>
             </div>
         </x-ui.card>
         HTML;
@@ -41,20 +41,19 @@ new class extends Component
 };
 ?>
 
-<x-ui.card title="Upcoming Approved Events" subtitle="Events scheduled for the next 30 days">
+<x-ui.card title="Upcoming events" subtitle="Your approved events in the next 30 days.">
     <x-slot:menu>
-        <x-ui.button label="View Calendar" link="/student-org/calendar" icon="s-calendar"
-            class="btn-sm btn-ghost" wire:navigate />
+        <x-ui.button label="Calendar" link="{{ route('student-org.calendar') }}" class="btn-sm btn-ghost" />
     </x-slot:menu>
 
-    <div class="space-y-4">
-        @forelse($this->upcomingEvents as $event)
-            <x-tickets.upc-events-card :ticket="$event" />
-        @empty
-            <x-ui.empty-state title="No upcoming approved events"
-                description="Approved events within the next 30 days will be listed here."
-                icon="o-calendar-days" tone="info" iconColor="text-info" actionLabel="Open Calendar"
-                actionLink="/student-org/calendar" />
-        @endforelse
-    </div>
+    @if ($this->upcomingEvents->isEmpty())
+        <x-ui.empty-state compact icon="o-calendar-days" title="Nothing scheduled yet"
+            description="Approved events in the next 30 days appear here." />
+    @else
+        <ul class="space-y-3">
+            @foreach ($this->upcomingEvents as $event)
+                <li wire:key="upcoming-{{ $event->ticket_id }}"><x-tickets.upc-events-card :ticket="$event" /></li>
+            @endforeach
+        </ul>
+    @endif
 </x-ui.card>

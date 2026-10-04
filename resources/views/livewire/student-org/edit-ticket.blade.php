@@ -23,67 +23,67 @@
             {{-- Copy the same form structure from submit-ticket.blade.php --}}
             {{-- But add conditional readonly based on isFieldEditable() --}}
 
-            <x-ui.card title="Organization Information" subtitle="Details about your student organization">
+            <x-ui.card title="Organization information" subtitle="Details about your student organization">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-ui.input label="Organization Name" wire:model="organizationName" readonly />
-                    <x-ui.input label="Organization Course" wire:model="organizationCourse" readonly />
-                    <x-ui.input label="Name of Proponent" wire:model="proponentName" readonly />
-                    <x-ui.input label="Contact Email" wire:model="contactEmail" readonly />
-                    <x-ui.input label="Proponent Position" wire:model="proponentPosition" readonly />
-                    <x-ui.input label="Organization Adviser" wire:model="adviser" readonly />
-                    <x-ui.input label="Contact of Proponent" wire:model="form.proponent_contact" :readonly="!$this->isFieldEditable('proponent_contact')" />
-                    <x-ui.input label="Contact of Adviser" wire:model="form.adviser_contact" :readonly="!$this->isFieldEditable('adviser_contact')" />
+                    <x-ui.input label="Organization name" wire:model="organizationName" readonly />
+                    <x-ui.input label="Organization course" wire:model="organizationCourse" readonly />
+                    <x-ui.input label="Name of proponent" wire:model="proponentName" readonly />
+                    <x-ui.input label="Contact email" wire:model="contactEmail" readonly />
+                    <x-ui.input label="Proponent position" wire:model="proponentPosition" readonly />
+                    <x-ui.input label="Organization adviser" wire:model="adviser" readonly />
+                    <x-ui.input label="Contact of proponent" wire:model="form.proponent_contact" :readonly="!$this->isFieldEditable('proponent_contact')" />
+                    <x-ui.input label="Contact of adviser" wire:model="form.adviser_contact" :readonly="!$this->isFieldEditable('adviser_contact')" />
                 </div>
             </x-ui.card>
 
             {{-- Event Details --}}
-            <x-ui.card title="Event Details" subtitle="Information about your proposed event">
+            <x-ui.card title="Event details" subtitle="Information about your proposed event">
                 <div class="space-y-4">
-                    <x-ui.input label="Event Title" wire:model="form.eventTitle" placeholder="Enter your event title"
+                    <x-ui.input label="Event title" wire:model="form.eventTitle" placeholder="Enter your event title"
                         :readonly="!$this->isFieldEditable('eventTitle')" />
 
-                    <x-ui.textarea label="Event Description" wire:model="form.eventDescription"
+                    <x-ui.textarea label="Event description" wire:model="form.eventDescription"
                         placeholder="Provide a detailed description of your event, including objectives and activities, or your rationale."
                         rows="4" :readonly="!$this->isFieldEditable('eventDescription')" />
 
                     <div class="grid grid-cols-1 gap-4">
-                        <x-ui.select label="Event Type" wire:model.live="form.eventType" :options="$eventTypes"
+                        <x-ui.select label="Event type" wire:model.live="form.eventType" :options="$eventTypes"
                             option-value="event_type_id" option-label="type_name" placeholder="Select event type"
                             :readonly="!$this->isFieldEditable('eventType')" />
 
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                        <x-ui.input label="Number of PLV Participants" type="number"
+                        <x-ui.input label="Number of PLV participants" type="number"
                             wire:model.live="form.expectedPLVParticipants" placeholder="Number of attendees"
                             :readonly="!$this->isFieldEditable('expectedPLVParticipants')" />
 
-                        <x-ui.input label="Number of non PLV Participants" type="number"
+                        <x-ui.input label="Number of non-PLV participants" type="number"
                             wire:model.live="form.expectedNonPLVParticipants" placeholder="Number of attendees"
                             :readonly="!$this->isFieldEditable('expectedNonPLVParticipants')" />
 
-                        <x-ui.input label="Expected Participants" type="number"
+                        <x-ui.input label="Expected participants" type="number"
                             value="{{ $this->expectedParticipants }}" placeholder="Number of attendees" readonly />
                     </div>
                 </div>
             </x-ui.card>
 
             {{-- Schedule & Venue --}}
-            <x-ui.card title="Schedule & Venue">
+            <x-ui.card title="Schedule & venue">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-ui.datetime label="Event Start Date" wire:model.live="form.eventStartDate" :readonly="!$this->isFieldEditable('eventStartDate')" />
-                    <x-ui.datetime label="Event End Date" wire:model.live="form.eventEndDate" :readonly="!$this->isFieldEditable('eventEndDate')" />
-                    <x-ui.datetime label="Event Start Time" wire:model.live="form.eventStartTime" type="time"
+                    <x-ui.datetime label="Event start date" wire:model.live="form.eventStartDate" :readonly="!$this->isFieldEditable('eventStartDate')" />
+                    <x-ui.datetime label="Event end date" wire:model.live="form.eventEndDate" :readonly="!$this->isFieldEditable('eventEndDate')" />
+                    <x-ui.datetime label="Event start time" wire:model.live="form.eventStartTime" type="time"
                         :readonly="!$this->isFieldEditable('eventStartTime')" />
-                    <x-ui.datetime label="Event End Time" wire:model.live="form.eventEndTime" type="time"
+                    <x-ui.datetime label="Event end time" wire:model.live="form.eventEndTime" type="time"
                         :readonly="!$this->isFieldEditable('eventEndTime')" />
-                    <x-ui.input label="Preferred Venue" wire:model="form.preferredVenue" :readonly="!$this->isFieldEditable('preferredVenue')" />
-                    <x-ui.input label="Alternative Venue" wire:model="form.alternativeVenue" :readonly="!$this->isFieldEditable('alternativeVenue')" />
+                    <x-ui.input label="Preferred venue" wire:model="form.preferredVenue" :readonly="!$this->isFieldEditable('preferredVenue')" />
+                    <x-ui.input label="Alternative venue" wire:model="form.alternativeVenue" :readonly="!$this->isFieldEditable('alternativeVenue')" />
                 </div>
             </x-ui.card>
 
             {{-- Budget Information --}}
-            <x-ui.card title="Budget Information" subtitle="Financial details of your event">
+            <x-ui.card title="Budget information" subtitle="Financial details of your event">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {{-- Inline DaisyUI input: x-ui.input has no `prefix` slot, so the ₱ prefix is rendered inline --}}
                     <div>
@@ -101,24 +101,24 @@
                         @enderror
                     </div>
 
-                    <x-ui.select label="Funding Source" wire:model="form.fundingSource" :options="$fundSources"
+                    <x-ui.select label="Funding source" wire:model="form.fundingSource" :options="$fundSources"
                         option-value="source_id" option-label="source_name" placeholder="Select funding source"
                         :readonly="!$this->isFieldEditable('fundingSource')" />
                 </div>
 
                 <div class="mt-4">
-                    <x-ui.textarea label="Budget Breakdown" wire:model="form.budgetBreakdown"
+                    <x-ui.textarea label="Budget breakdown" wire:model="form.budgetBreakdown"
                         placeholder="Itemized list of expenses (venue, equipment, materials, etc.)" rows="4"
                         :readonly="!$this->isFieldEditable('budgetBreakdown')" />
                 </div>
 
                 <div class="mt-4">
-                    <x-ui.radio label="IGP Request" wire:model.live="form.igp_requested" :options="[['id' => 'true', 'name' => 'Requested'], ['id' => 'false', 'name' => 'Not Requested']]" inline />
+                    <x-ui.radio label="IGP request" wire:model.live="form.igp_requested" :options="[['id' => 'true', 'name' => 'Requested'], ['id' => 'false', 'name' => 'Not Requested']]" inline />
                 </div>
 
                 @if ($form->igp_requested === 'true')
                     <div class="mt-4">
-                        <x-ui.textarea label="IGP Brief Description" wire:model="form.igp_details"
+                        <x-ui.textarea label="IGP brief description" wire:model="form.igp_details"
                             placeholder="List all descriptions for IGP requested items" rows="4"
                             :readonly="!$this->isFieldEditable('igp_details')" />
                     </div>
@@ -144,7 +144,7 @@
                                             <x-ui.icon name="o-document" class="w-4 h-4" />
                                             <span class="text-sm">{{ $attachment['file_name'] }}</span>
                                         </div>
-                                        <x-ui.button icon="o-trash" wire:click="removeAttachment({{ $index }})"
+                                        <x-ui.button icon="o-trash" aria-label="Remove attachment" wire:click="removeAttachment({{ $index }})"
                                             class="btn-ghost btn-sm btn-error" spinner />
                                     </div>
                                 @endforeach
@@ -157,7 +157,7 @@
                                 @foreach ($newAttachments as $index => $file)
                                     <div class="flex items-center justify-between bg-base-200 p-2 rounded">
                                         <span class="text-sm">{{ $file->getClientOriginalName() }}</span>
-                                        <x-ui.button icon="o-x-mark"
+                                        <x-ui.button icon="o-x-mark" aria-label="Remove file"
                                             wire:click="removeNewAttachment({{ $index }})"
                                             class="btn-ghost btn-sm" spinner />
                                     </div>
@@ -170,9 +170,9 @@
 
 
             {{-- Additional Information --}}
-            <x-ui.card title="Additional Information" subtitle="Any other relevant details">
+            <x-ui.card title="Additional information" subtitle="Any other relevant details">
                 <div class="space-y-4">
-                    <x-ui.textarea label="Additional Notes" wire:model="form.additionalNotes"
+                    <x-ui.textarea label="Additional notes" wire:model="form.additionalNotes"
                         placeholder="Any other information you'd like to share about your event (security, food service, parking etc.)"
                         rows="3" :readonly="!$this->isFieldEditable('additionalNotes')" />
                 </div>
@@ -181,9 +181,9 @@
             {{-- Form Actions --}}
             <div class="flex w-full flex-wrap items-center justify-end gap-3 pt-5">
                 <x-ui.button label="Cancel" @click="$wire.dispatch('close-edit-drawer')" />
-                <x-ui.button label="Preview Changes" icon="s-eye" class="btn-accent" wire:click="openPreviewModal"
+                <x-ui.button label="Preview changes" icon="s-eye" class="btn-accent" wire:click="openPreviewModal"
                     spinner="openPreviewModal" />
-                <x-ui.button label="Submit Revision" icon="s-paper-airplane" class="btn-primary" type="submit"
+                <x-ui.button label="Submit revision" icon="s-paper-airplane" class="btn-primary" type="submit"
                     spinner="updateTicket" />
             </div>
         </form>

@@ -1,5 +1,2 @@
-@extends('errors::minimal')
-
-@section('title', __('Payment Required'))
-@section('code', '402')
-@section('message', __('Payment Required'))
+<x-error-page code="402" icon="o-credit-card" title="Payment required"
+    message="This action is not available." />
