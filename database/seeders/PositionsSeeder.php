@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Positions;
 use Illuminate\Database\Seeder;
 
 class PositionsSeeder extends Seeder
@@ -20,7 +20,7 @@ class PositionsSeeder extends Seeder
         ];
 
         foreach ($positions as $position) {
-            \App\Models\Positions::create($position);
+            Positions::firstOrCreate($position);
         }
     }
 }

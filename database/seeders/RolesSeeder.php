@@ -9,18 +9,17 @@ class RolesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Built-in roles are created protected and attached to their own portal,
+     * matching what RbacSeeder enforces.
      */
     public function run(): void
     {
-        // All roles here
-        $roles = [
-            ['role_name' => 'superadmin'],
-            ['role_name' => 'osa'],
-            ['role_name' => 'gso'],
-            ['role_name' => 'student-org'],
-        ];
-        foreach ($roles as $role) {
-            Roles::firstOrCreate($role);
+        foreach (Roles::BUILT_IN_ROLE_NAMES as $roleName) {
+            Roles::firstOrCreate(
+                ['role_name' => $roleName],
+                ['is_protected' => true, 'base_portal' => $roleName],
+            );
         }
     }
 }

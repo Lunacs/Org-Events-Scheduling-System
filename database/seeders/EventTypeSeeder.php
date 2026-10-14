@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Event_Type;
 use Illuminate\Database\Seeder;
 
 class EventTypeSeeder extends Seeder
@@ -35,7 +36,7 @@ class EventTypeSeeder extends Seeder
         ];
 
         foreach ($eventTypes as $type) {
-            \App\Models\Event_Type::create($type);
+            Event_Type::updateOrCreate(['type_name' => $type['type_name']], $type);
         }
     }
 }
