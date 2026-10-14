@@ -54,17 +54,11 @@ use App\Models\User;
                 // Determine notification URL based on type and user role
                 $type = $data['type'] ?? '';
                 $ticketNumber = $data['ticket_number'] ?? null;
-                $url = $data['action_url'] ?? null;
-
-                if (!$url && str_starts_with($type, 'ticket_') && $ticketNumber) {
-                if (Auth::user()->isStudentOrg()) {
-                $url = route('student-org.ticket-details', ['ticketNumber' => $ticketNumber]);
-                } elseif (Auth::user()->isOSA() || Auth::user()->isSuperAdmin()) {
-                $url = route('osa.ticket-review.show', $ticketNumber);
-                } elseif (Auth::user()->isGSO()) {
-                $url = route('gso.ticket-details', ['ticketNumber' => $ticketNumber]);
-                }
-                }
+                // Ticket links are built for the reader's portal; older notifications may
+                // have stored a link into another portal.
+                $url = str_starts_with($type, 'ticket_') && $ticketNumber
+                    ? Auth::user()->ticketUrl($ticketNumber)
+                    : ($data['action_url'] ?? null);
 
                 // Fallback to notifications page
                 if (!$url) {

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,8 +16,11 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     use Queueable;
 
     public $ticket;
+
     public $oldStatus;
+
     public $newStatus;
+
     public $remarks;
 
     /**
@@ -39,7 +43,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     {
         $channels = ['database', 'broadcast'];
 
-        if ($notifiable instanceof \App\Models\User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
+        if ($notifiable instanceof User && $notifiable->shouldReceiveEmailNotification('ticket_updates')) {
             $channels[] = 'mail';
         }
 
@@ -52,10 +56,10 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     public function toMail(object $notifiable): MailMessage
     {
         $statusMessage = $this->getStatusMessage();
-        $actionUrl = $this->getActionUrl();
+        $actionUrl = $this->getActionUrl($notifiable);
 
         return (new MailMessage)
-            ->subject("Ticket {$this->ticket->ticket_number} - " . $this->getStatusTitle())
+            ->subject("Ticket {$this->ticket->ticket_number} - ".$this->getStatusTitle())
             ->view('emails.tickets.ticket-status-updated', [
                 'ticket' => $this->ticket,
                 'statusMessage' => $statusMessage,
@@ -82,10 +86,11 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,
             'new_status' => $this->newStatus,
-            'type' => 'ticket_status_' . $this->newStatus,
+            'type' => 'ticket_status_'.$this->newStatus,
             'icon' => $this->getStatusIcon(),
             'color' => $this->getStatusColor(),
             'remarks' => $this->remarks,
+            'action_url' => $this->getActionUrl($notifiable),
         ];
     }
 
@@ -101,7 +106,7 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
             'ticket_number' => $this->ticket->ticket_number,
             'old_status' => $this->oldStatus,
             'new_status' => $this->newStatus,
-            'type' => 'ticket_status_' . $this->newStatus,
+            'type' => 'ticket_status_'.$this->newStatus,
             'icon' => $this->getStatusIcon(),
             'color' => $this->getStatusColor(),
             'remarks' => $this->remarks,
@@ -184,11 +189,13 @@ class TicketStatusUpdatedNotification extends Notification implements ShouldBroa
     }
 
     /**
-     * Get the appropriate action URL based on user role
+     * Link to the ticket in the recipient's own portal (OSA staff also receive this
+     * notification after a GSO decision).
      */
-    private function getActionUrl(): string
+    private function getActionUrl(object $notifiable): string
     {
-        // You can customize this based on the notifiable user's role
-        return route('student-org.my-tickets');
+        return $notifiable instanceof User
+            ? $notifiable->ticketUrl($this->ticket->ticket_number)
+            : route('student-org.my-tickets');
     }
 }

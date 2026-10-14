@@ -195,10 +195,11 @@
                                 $ticketNumber = $data['ticket_number'] ?? null;
                                 $url = null;
 
+                                // This view is shared with the viewer portal, so link within the reader's own portal.
                                 if (str_starts_with($type, 'ticket_') && $ticketNumber) {
-                                    $url = route('gso.ticket-details', ['ticketNumber' => $ticketNumber]);
+                                    $url = auth()->user()->ticketUrl($ticketNumber);
                                 } else {
-                                    $url = route('gso.notifications');
+                                    $url = route(auth()->user()->portal() === 'gso' ? 'gso.notifications' : 'portal.notifications');
                                 }
 
                                 // Map colors to Tailwind classes

@@ -3,6 +3,8 @@
 namespace App\Livewire\Osa;
 
 use App\Models\Event;
+use App\Models\Student_Organization;
+use App\Services\Cache\ArchiveCacheService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -98,9 +100,9 @@ class Archive extends Component
     #[Computed]
     public function archivedEvents()
     {
-        $page = request()->get('page', 1);
+        $page = $this->getPage();
 
-        return \App\Services\Cache\ArchiveCacheService::getArchivedEvents(
+        return ArchiveCacheService::getArchivedEvents(
             'osa',
             $this->search,
             $this->statusFilter,
@@ -111,21 +113,21 @@ class Archive extends Component
             function () {
                 return Event::select(['event_id', 'ticket_id', 'event__type_id', 'notes', 'created_at'])
                     ->with([
-                        'ticket' => fn($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
+                        'ticket' => fn ($q) => $q->select(['ticket_id', 'title', 'description', 'status', 'user_id', 'venue_requested', 'updated_at'])
                             ->with([
-                                'user' => fn($qu) => $qu->select(['user_id', 'org_id'])
+                                'user' => fn ($qu) => $qu->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                             ])
                             ->withCount('attachments'),
                         'eventSchedules:schedule_id,event_id,start_date,start_time,venue',
                         'eventType:event_type_id,type_name',
                     ])
-                    ->whereHas('ticket', fn($query) => $query->where('status', 'completed'))
-                    ->when($this->search, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('title', 'like', '%' . $this->search . '%')))
-                    ->when($this->statusFilter, fn($query) => $query->whereHas('ticket', fn($q) => $q->where('status', $this->statusFilter)))
-                    ->when($this->organizationFilter, fn($query) => $query->whereHas('ticket.user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-                    ->when($this->yearFilter, fn($query) => $query->whereYear('created_at', $this->yearFilter))
-                    ->when($this->eventTypeFilter, fn($query) => $query->where('event__type_id', $this->eventTypeFilter))
+                    ->whereHas('ticket', fn ($query) => $query->where('status', 'completed'))
+                    ->when($this->search, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')))
+                    ->when($this->statusFilter, fn ($query) => $query->whereHas('ticket', fn ($q) => $q->where('status', $this->statusFilter)))
+                    ->when($this->organizationFilter, fn ($query) => $query->whereHas('ticket.user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                    ->when($this->yearFilter, fn ($query) => $query->whereYear('created_at', $this->yearFilter))
+                    ->when($this->eventTypeFilter, fn ($query) => $query->where('event__type_id', $this->eventTypeFilter))
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
             }
@@ -144,7 +146,7 @@ class Archive extends Component
     #[Computed]
     public function availableYears()
     {
-        return \App\Services\Cache\ArchiveCacheService::getAvailableYears('osa', function () {
+        return ArchiveCacheService::getAvailableYears('osa', function () {
             return Event::selectRaw('YEAR(created_at) as year')
                 ->distinct()
                 ->orderBy('year', 'desc')
@@ -155,8 +157,8 @@ class Archive extends Component
     #[Computed(persist: true, seconds: 3600)]
     public function organizations()
     {
-        return \Illuminate\Support\Facades\Cache::remember('osa_organizations_list', 3600, function () {
-            return \App\Models\Student_Organization::select(['org_id', 'org_name'])
+        return Cache::remember('osa_organizations_list', 3600, function () {
+            return Student_Organization::select(['org_id', 'org_name'])
                 ->orderBy('org_name')
                 ->get();
         });

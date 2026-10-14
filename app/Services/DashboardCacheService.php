@@ -4,6 +4,11 @@ namespace App\Services;
 
 use App\Models\Office_Approval;
 use App\Models\Ticket;
+use App\Services\Cache\ArchiveCacheService;
+use App\Services\Cache\CalendarCacheService;
+use App\Services\Cache\DashboardCacheService as CurrentDashboardCache;
+use App\Services\Cache\EventCacheService;
+use App\Services\Cache\ReportCacheService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -45,6 +50,8 @@ class DashboardCacheService
         // OSA report caches use composite date/filter keys
         static::flushPrefixed('osa_report_');
 
+        static::flushCurrentCaches();
+
         Log::debug('DashboardCacheService: Invalidated caches for ticket', [
             'ticket_id' => $ticket->ticket_id,
         ]);
@@ -74,10 +81,26 @@ class DashboardCacheService
         Cache::forget('superadmin_dashboard_stats');
         Cache::forget('superadmin_dashboard_attention');
 
+        static::flushCurrentCaches();
+
         Log::debug('DashboardCacheService: Invalidated caches for approval', [
             'approval_id' => $approval->id,
             'office_id' => $officeId,
         ]);
+    }
+
+    /**
+     * Clear the caches the dashboards, request lists, calendar, archive and reports
+     * actually read today. The key names above predate App\Services\Cache and
+     * are kept only for caches that still use them.
+     */
+    protected static function flushCurrentCaches(): void
+    {
+        CurrentDashboardCache::clearAllDashboards();
+        EventCacheService::clearRequestLists();
+        CalendarCacheService::clearAllCalendar();
+        ArchiveCacheService::clearAllArchives();
+        ReportCacheService::clearAllReports();
     }
 
     /**
