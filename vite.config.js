@@ -47,5 +47,9 @@ export default defineConfig({
         hmr: {
             overlay: false, // Disable error overlay for faster dev
         },
+        watch: {
+            // Composer packages and runtime files never feed the bundle
+            ignored: ["**/vendor/**", "**/storage/**"],
+        },
     },
 });
