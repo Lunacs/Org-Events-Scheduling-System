@@ -59,22 +59,43 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            try { $table->dropIndex('tickets_user_status_idx'); } catch (\Throwable $e) {}
-            try { $table->dropIndex('tickets_status_updated_idx'); } catch (\Throwable $e) {}
-        });
+        $this->dropIndexSafely('tickets', 'tickets_user_status_idx');
+        $this->dropIndexSafely('tickets', 'tickets_status_updated_idx');
+        $this->dropIndexSafely('events', 'events_ticket_created_idx');
+        $this->dropIndexSafely('event_schedules', 'schedules_event_date_idx');
+        $this->dropIndexSafely('attachments', 'attachments_ticket_id_idx');
+        $this->dropIndexSafely('attachments', 'attachments_created_at_idx');
+    }
 
-        Schema::table('events', function (Blueprint $table) {
-            try { $table->dropIndex('events_ticket_created_idx'); } catch (\Throwable $e) {}
-        });
+    /**
+     * Drop an index if it exists. MySQL silently drops a foreign key's own
+     * index once another index covers its columns, and then refuses to drop
+     * that covering index (error 1553), so restore a plain index for any
+     * foreign key that would be left without one.
+     */
+    private function dropIndexSafely(string $table, string $index): void
+    {
+        $indexes = collect(Schema::getIndexes($table));
+        $target = $indexes->firstWhere('name', $index);
 
-        Schema::table('event_schedules', function (Blueprint $table) {
-            try { $table->dropIndex('schedules_event_date_idx'); } catch (\Throwable $e) {}
-        });
+        if (! $target) {
+            return;
+        }
 
-        Schema::table('attachments', function (Blueprint $table) {
-            try { $table->dropIndex('attachments_ticket_id_idx'); } catch (\Throwable $e) {}
-            try { $table->dropIndex('attachments_created_at_idx'); } catch (\Throwable $e) {}
+        $others = $indexes->reject(fn (array $i) => $i['name'] === $index);
+        $covers = fn (array $i, array $columns) => array_slice($i['columns'], 0, count($columns)) === $columns;
+
+        $orphaned = collect(Schema::getForeignKeys($table))->filter(
+            fn (array $fk) => $covers($target, $fk['columns'])
+                && ! $others->contains(fn (array $i) => $covers($i, $fk['columns']))
+        );
+
+        Schema::table($table, function (Blueprint $table) use ($index, $orphaned) {
+            foreach ($orphaned as $fk) {
+                $table->index($fk['columns'], $fk['name']);
+            }
+
+            $table->dropIndex($index);
         });
     }
 };
