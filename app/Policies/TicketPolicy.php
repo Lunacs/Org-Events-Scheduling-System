@@ -71,6 +71,40 @@ class TicketPolicy
     }
 
     /**
+     * Determine whether the user can revise and resubmit a ticket OSA sent back.
+     */
+    public function resubmit(User $user, Ticket $ticket): bool
+    {
+        return $user->can('tickets.create')
+            && $ticket->status === 'for_revision'
+            && $this->belongsToUsersOrganization($user, $ticket);
+    }
+
+    /**
+     * Determine whether the user can request a new date for an approved event.
+     */
+    public function reschedule(User $user, Ticket $ticket): bool
+    {
+        return $user->can('tickets.reschedule')
+            && $ticket->status === 'approved'
+            && $this->belongsToUsersOrganization($user, $ticket);
+    }
+
+    /**
+     * Determine whether the ticket was submitted by a member of the user's organization.
+     */
+    protected function belongsToUsersOrganization(User $user, Ticket $ticket): bool
+    {
+        if (! $user->org_id) {
+            return false;
+        }
+
+        $ownerOrgId = $ticket->user()->value('org_id');
+
+        return (int) $ownerOrgId === (int) $user->org_id;
+    }
+
+    /**
      * Determine whether the user can approve a ticket.
      */
     public function approve(User $user, Ticket $ticket): bool

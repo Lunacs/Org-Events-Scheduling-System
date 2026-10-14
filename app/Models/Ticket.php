@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
 {
-    /** @use HasFactory<\Database\Factories\TicketFactory> */
+    /** @use HasFactory<TicketFactory> */
     use HasFactory, SoftDeletes;
 
     /**
@@ -241,8 +243,8 @@ class Ticket extends Model
     public function getScheduleVenueAttribute()
     {
         return $this->events
-            ->flatMap(fn($event) => $event->schedules)
-            ->where('status', 'active')
+            ->flatMap(fn ($event) => $event->eventSchedules)
+            ->where('status', 'approved')
             ->first()
             ?->venue;
     }
@@ -260,7 +262,6 @@ class Ticket extends Model
         // Otherwise, get the venue name from the relationship
         return $this->venue?->venue_name;
     }
-
 
     public function alternateVenue()
     {
@@ -332,7 +333,7 @@ class Ticket extends Model
         // Check if event end date has passed
         if ($this->date_to) {
             try {
-                $endDate = \Carbon\Carbon::parse($this->date_to);
+                $endDate = Carbon::parse($this->date_to);
 
                 return now()->isAfter($endDate->endOfDay());
             } catch (\Throwable) {
@@ -343,7 +344,7 @@ class Ticket extends Model
         // If no end date, check start date
         if ($this->date_from) {
             try {
-                $startDate = \Carbon\Carbon::parse($this->date_from);
+                $startDate = Carbon::parse($this->date_from);
 
                 return now()->isAfter($startDate->endOfDay());
             } catch (\Throwable) {

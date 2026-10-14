@@ -4,6 +4,7 @@ namespace App\Livewire\StudentOrg;
 
 use App\Models\Ticket;
 use App\Support\Concerns\InteractsWithToasts as Toast;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,8 +17,6 @@ class TicketDetails extends Component
     #[Title('Ticket Details - Student Organization')]
     #[Layout('components.layouts.student-org-layout')]
     public Ticket $ticket;
-
-    public $showEditDrawer = false;
 
     public function mount($ticketNumber)
     {
@@ -98,14 +97,11 @@ class TicketDetails extends Component
         $this->ticket = $query->firstOrFail();
     }
 
-    public function openEditDrawer()
+    public function reviseAndResubmit()
     {
-        $this->showEditDrawer = true;
-    }
+        Gate::authorize('resubmit', $this->ticket);
 
-    public function closeEditDrawer()
-    {
-        $this->showEditDrawer = false;
+        return redirect()->route('student-org.submit-ticket', ['amend' => $this->ticket->ticket_number]);
     }
 
     /**

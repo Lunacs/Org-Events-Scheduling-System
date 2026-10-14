@@ -7,7 +7,7 @@ use App\Models\ContentSection;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Venue;
-use App\Notifications\TicketSubmittedNotification;
+use App\Services\TicketWorkflowService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -65,6 +65,9 @@ class Reschedule extends Component
 
     #[Validate('nullable|array|max:10')]
     public $supportingDocuments = [];
+
+    /** The file currently being uploaded; appended to $supportingDocuments once valid. */
+    public $newSupportingDocument;
 
     // Constants
     private const MIN_RESCHEDULE_DAYS = 1;
@@ -300,37 +303,33 @@ class Reschedule extends Component
         }
     }
 
-    public function updatedSupportingDocuments()
+    /**
+     * The file input uploads one file at a time (the S3 driver doesn't support
+     * multiple), so each upload is validated here and appended to the list.
+     */
+    public function updatedNewSupportingDocument(): void
     {
-        // Handle single file upload (S3 driver doesn't support multiple)
-        // Wrap single file in array for consistent processing
-        $files = $this->supportingDocuments;
-        if (! is_array($files)) {
-            $files = $files ? [$files] : [];
-        }
-
-        // If no files, return early
-        if (empty($files)) {
+        if (! $this->newSupportingDocument) {
             return;
         }
 
-        // Get existing documents that are already validated
-        $existingDocs = collect($this->supportingDocuments)->filter(fn ($doc) => is_object($doc) && $doc !== $files[0] ?? null)->values()->all();
-
-        // Temporarily set as array for validation
-        $this->supportingDocuments = $files;
-
         $this->validate([
-            'supportingDocuments' => 'array|max:10',
-            'supportingDocuments.*' => [
+            'newSupportingDocument' => [
                 'file',
                 'max:'.self::MAX_FILE_SIZE,
                 'mimes:'.self::ALLOWED_MIMES,
             ],
         ]);
 
-        // Append new files to existing documents
-        $this->supportingDocuments = array_merge($existingDocs, $files);
+        if (count($this->supportingDocuments) >= 10) {
+            $this->addError('newSupportingDocument', 'You can attach up to 10 supporting documents.');
+            $this->reset('newSupportingDocument');
+
+            return;
+        }
+
+        $this->supportingDocuments[] = $this->newSupportingDocument;
+        $this->reset('newSupportingDocument');
     }
 
     public function removeAttachment($index)
@@ -416,30 +415,37 @@ class Reschedule extends Component
         DB::beginTransaction();
 
         try {
-            // Final validation
-            $this->validateCurrentStep();
+            // Re-run every step's rules: earlier steps can be changed from the browser after they passed.
+            $submittedStep = $this->currentStep;
+            for ($step = 1; $step <= $this->totalSteps; $step++) {
+                $this->currentStep = $step;
+                $this->validateCurrentStep();
+            }
+            $this->currentStep = $submittedStep;
 
-            // Load and authorize ticket
-            $ticket = auth()->user()->tickets()->lockForUpdate()->findOrFail($this->selectedEventId);
-            $this->authorize('update', $ticket);
+            // Load and authorize ticket (org-mates may reschedule, but only an approved event)
+            $ticket = Ticket::query()->lockForUpdate()->findOrFail($this->selectedEventId);
+            $this->authorize('reschedule', $ticket);
 
             // Validate timing constraints
             $this->validateRescheduleTiming($ticket);
 
             // Apply changes
             $changes = $this->applyScheduleChanges($ticket);
+            $ticket->save();
 
             // Store supporting documents
             if (! empty($this->supportingDocuments)) {
                 $this->storeSupportingDocuments($ticket);
             }
 
-            // Update ticket status
-            $ticket->status = 'amended';
-            $ticket->save();
-
-            // Notify OSA admins
-            $this->notifyOSAAdmins($ticket);
+            // Status → amended, OSA decision → pending, history, audit log, OSA notified.
+            // The approved schedule stays on the calendar until OSA approves the new details.
+            app(TicketWorkflowService::class)->recordReschedule(
+                $ticket,
+                auth()->user(),
+                collect($changes)->map(fn (array $change, string $field) => "{$field}: ".($change['old'] ?? 'none').' → '.($change['new'] ?? 'none'))->values()->all(),
+            );
 
             DB::commit();
 
@@ -578,24 +584,6 @@ class Reschedule extends Component
                 'file_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
             ]);
-        }
-    }
-
-    private function notifyOSAAdmins(Ticket $ticket): void
-    {
-        $osaUsers = User::query()->inPortal('osa')
-            ->get();
-
-        foreach ($osaUsers as $osaUser) {
-            try {
-                $osaUser->notify(new TicketSubmittedNotification($ticket));
-            } catch (\Exception $e) {
-                Log::error('Failed to notify OSA admin', [
-                    'admin_id' => $osaUser->user_id,
-                    'ticket_id' => $ticket->ticket_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
         }
     }
 

@@ -47,7 +47,7 @@
                     @endif
                 </div>
                 @if ($needsRevision)
-                    <button type="button" class="btn btn-primary btn-sm" wire:click="openEditDrawer">
+                    <button type="button" class="btn btn-primary btn-sm" wire:click="reviseAndResubmit">
                         <x-ui.icon name="o-pencil-square" class="size-4" aria-hidden="true" />
                         Revise and resubmit
                     </button>
@@ -164,46 +164,6 @@
         </div>
     </div>
 
-    {{-- Edit Drawer --}}
-    <x-ui.drawer wire:model="showEditDrawer" title="{{ 'Edit Ticket - ' . $ticket->ticket_number }}"
-        subtitle="Revise your event request" separator with-close-button close-on-escape right
-        class="w-11/12 lg:w-2/3 overflow-hidden" @close="$wire.closeEditDrawer()">
-
-        <div x-data="{ isLoading: true }" x-init="$watch('$wire.showEditDrawer', value => {
-            if (value) {
-                isLoading = true;
-                setTimeout(() => {
-                    const checkInterval = setInterval(() => {
-                        const form = document.querySelector('[wire\\:submit=\'updateTicket\']');
-                        if (form) {
-                            clearInterval(checkInterval);
-                            isLoading = false;
-                        }
-                    }, 50);
-        
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        isLoading = false;
-                    }, 2000);
-                }, 100);
-            } else {
-                isLoading = true;
-            }
-        });">
-            <div x-show="isLoading" class="flex items-center justify-center py-16">
-                <div class="flex flex-col items-center gap-3">
-                    <x-ui.loading class="loading-lg text-primary" />
-                    <p class="text-sm text-base-content/70">Loading form…</p>
-                </div>
-            </div>
-
-            <div x-show="!isLoading" x-cloak x-transition>
-                @if ($showEditDrawer)
-                    <livewire:student-org.edit-ticket :ticketId="$ticket->ticket_id" :key="'edit-ticket-' . $ticket->ticket_id" />
-                @endif
-            </div>
-        </div>
-    </x-ui.drawer>
 
     {{-- JavaScript for attachment handling --}}
     <script>

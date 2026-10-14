@@ -162,7 +162,7 @@
                                 <select x-model="status" class="select select-bordered w-full">
                                     <option value="all">All Events</option>
                                     <option value="approved">Approved</option>
-                                    <option value="rescheduled">Rescheduled</option>
+                                    <option value="amended">Reschedule pending</option>
                                     <option value="completed">Completed</option>
                                 </select>
                             </div>
@@ -213,7 +213,7 @@
                                     $activeFilters[] =
                                         collect([
                                             ['id' => 'approved', 'name' => 'Approved'],
-                                            ['id' => 'rescheduled', 'name' => 'Rescheduled'],
+                                            ['id' => 'amended', 'name' => 'Reschedule pending'],
                                             ['id' => 'completed', 'name' => 'Completed'],
                                         ])->firstWhere('id', $statusFilter)['name'] ?? $statusFilter;
                                 }
@@ -666,9 +666,9 @@
                             <span class="badge"
                                 :class="{
  'badge-success ': (data?.status || '') === 'approved',
- 'badge-warning ': (data?.status || '') === 'rescheduled',
+ 'badge-warning ': (data?.status || '') === 'amended',
  'badge-info ': (data?.status || '') === 'completed',
- 'badge-primary ': ['approved', 'rescheduled'].indexOf(data?.status ||
+ 'badge-primary ': ['approved', 'amended'].indexOf(data?.status ||
  '') === -1
  }"
                                 x-text="(data?.status||'').replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())"></span>
