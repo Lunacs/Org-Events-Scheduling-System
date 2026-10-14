@@ -2,10 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\OSA_Approval;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OSA_Approval>
+ * @extends Factory<OSA_Approval>
  */
 class OSAApprovalFactory extends Factory
 {
@@ -20,7 +23,7 @@ class OSAApprovalFactory extends Factory
             'approved',
             'for_revision',
             'pending',
-            'need_revision',
+            'forwarded',
         ];
 
         $approvalRemarks = [
@@ -37,8 +40,8 @@ class OSAApprovalFactory extends Factory
         ];
 
         return [
-            'ticket_id' => \App\Models\Ticket::factory(),
-            'user_id' => \App\Models\User::factory()->state(['role' => 'osa']),
+            'ticket_id' => Ticket::factory(),
+            'user_id' => User::factory()->state(fn () => ['role_id' => User::getRoleId('osa')]),
             'decision' => fake()->randomElement($decisions),
             'remarks' => fake()->optional(0.8)->randomElement($approvalRemarks),
         ];
@@ -49,7 +52,7 @@ class OSAApprovalFactory extends Factory
      */
     public function approved(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'approved',
             'remarks' => 'Approved. All requirements are met.',
         ]);
@@ -60,7 +63,7 @@ class OSAApprovalFactory extends Factory
      */
     public function for_revision(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'for_revision',
             'remarks' => 'Needs revision due to incomplete documentation.',
         ]);
@@ -71,7 +74,7 @@ class OSAApprovalFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'pending',
             'remarks' => 'Pending review by the committee.',
         ]);
@@ -82,8 +85,8 @@ class OSAApprovalFactory extends Factory
      */
     public function needRevision(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'decision' => 'need_revision',
+        return $this->state(fn (array $attributes) => [
+            'decision' => 'for_revision',
             'remarks' => 'Please revise the proposal and resubmit.',
         ]);
     }

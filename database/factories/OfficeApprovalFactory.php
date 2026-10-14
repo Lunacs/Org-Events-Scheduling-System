@@ -2,10 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\Office;
+use App\Models\Office_Approval;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Office_Approval>
+ * @extends Factory<Office_Approval>
  */
 class OfficeApprovalFactory extends Factory
 {
@@ -20,7 +24,6 @@ class OfficeApprovalFactory extends Factory
             'approved',
             'for_revision',
             'pending',
-            'conditional',
         ];
 
         $officeRemarks = [
@@ -37,9 +40,9 @@ class OfficeApprovalFactory extends Factory
         ];
 
         return [
-            'ticket_id' => \App\Models\Ticket::factory(),
-            'office_id' => \App\Models\Office::factory(),
-            'user_id' => \App\Models\User::factory()->state(['role' => 'gso']),
+            'ticket_id' => Ticket::factory(),
+            'office_id' => Office::factory(),
+            'user_id' => User::factory()->state(fn () => ['role_id' => User::getRoleId('gso')]),
             'decision' => fake()->randomElement($decisions),
             'remarks' => fake()->optional(0.8)->randomElement($officeRemarks),
         ];
@@ -50,7 +53,7 @@ class OfficeApprovalFactory extends Factory
      */
     public function approved(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'approved',
             'remarks' => 'Approved. All office requirements are met.',
         ]);
@@ -61,7 +64,7 @@ class OfficeApprovalFactory extends Factory
      */
     public function for_revision(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'for_revision',
             'remarks' => 'Needs revision due to resource constraints.',
         ]);
@@ -72,20 +75,9 @@ class OfficeApprovalFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'decision' => 'pending',
             'remarks' => 'Pending review and coordination.',
-        ]);
-    }
-
-    /**
-     * Indicate that the approval is conditional.
-     */
-    public function conditional(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'decision' => 'conditional',
-            'remarks' => 'Conditional approval pending additional requirements.',
         ]);
     }
 }
