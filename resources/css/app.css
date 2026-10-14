@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @plugin '@tailwindcss/forms';
 @plugin "daisyui";
 
@@ -83,10 +83,14 @@
     --noise: 0;
 }
 
+/*
+ * Only scan where class names live. Auto-detection also scanned tests,
+ * migrations and seeders, which made every dev-server compile slower.
+ */
+@source '../views';
+@source '../js';
+@source '../../app';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source './storage/framework/views/*.php';
-@source './resources/views/**/*.blade.php';
-@source '../../app/Support/TicketStatus.php';
 
 /* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
