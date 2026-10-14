@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gso;
 
+use App\Livewire\Gso\Concerns\ResolvesOfficeContext;
 use App\Models\Office_Approval;
 use App\Models\Ticket;
 use App\Models\User;
@@ -19,6 +20,7 @@ use Livewire\Component;
 
 class Details extends Component
 {
+    use ResolvesOfficeContext;
     use Toast;
 
     #[Title('Ticket Details - GSO')]
@@ -40,7 +42,11 @@ class Details extends Component
             'officeApprovals.user' => fn ($q) => $q->withTrashed(),
             'approvalHistory.user' => fn ($q) => $q->withTrashed(),
             'approvalHistory.office',
-        ])->where('ticket_number', $ticketNumber)->firstOrFail();
+        ])
+            ->where('ticket_number', $ticketNumber)
+            // Only tickets OSA has forwarded to this user's office.
+            ->whereHas('officeApprovals', fn ($q) => $q->where('office_id', $this->resolveOfficeId(Auth::user())))
+            ->firstOrFail();
     }
 
     public function render()
@@ -133,7 +139,7 @@ class Details extends Component
         Gate::authorize('approve', $this->ticket);
 
         $this->validate([
-            'approvalRemarks' => 'required|string|min:3',
+            'approvalRemarks' => 'required|string|min:3|max:255',
         ], [
             'approvalRemarks.required' => 'Please provide remarks for approval.',
             'approvalRemarks.min' => 'Remarks must be at least 3 characters.',
@@ -147,7 +153,7 @@ class Details extends Component
             ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
-            $officeId = Auth::user()->office_id;
+            $officeId = $this->resolveOfficeId(Auth::user());
 
             $this->ticket->update(['status' => 'pending_osa_approval']);
 
@@ -187,8 +193,7 @@ class Details extends Component
                 'GSO has approved your ticket and it is now awaiting final OSA approval.'
             ));
 
-            $osaRoleId = User::getRoleId('osa');
-            $osaUsers = User::where('role_id', $osaRoleId)->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
 
             Notification::sendNow(
                 $osaUsers,
@@ -237,7 +242,7 @@ class Details extends Component
         Gate::authorize('requestRevision', $this->ticket);
 
         $this->validate([
-            'revisionRemarks' => 'required|string|min:10',
+            'revisionRemarks' => 'required|string|min:10|max:255',
         ], [
             'revisionRemarks.required' => 'Please provide detailed remarks explaining what needs to be revised.',
             'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
@@ -251,7 +256,7 @@ class Details extends Component
             ])->lockForUpdate()->find($this->ticket->ticket_id);
 
             $oldStatus = $this->ticket->status;
-            $officeId = Auth::user()->office_id;
+            $officeId = $this->resolveOfficeId(Auth::user());
 
             $this->ticket->update(['status' => 'pending_osa_approval']);
 
@@ -291,8 +296,7 @@ class Details extends Component
                 'GSO has reviewed your ticket and forwarded it to OSA for a final decision.'
             ));
 
-            $osaRoleId = User::getRoleId('osa');
-            $osaUsers = User::where('role_id', $osaRoleId)->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
 
             Notification::sendNow(
                 $osaUsers,
@@ -341,6 +345,8 @@ class Details extends Component
      */
     public function previewAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {
@@ -359,6 +365,8 @@ class Details extends Component
      */
     public function downloadAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {

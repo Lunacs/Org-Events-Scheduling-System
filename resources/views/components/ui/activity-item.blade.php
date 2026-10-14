@@ -16,10 +16,10 @@
     <div class="flex-1 pb-4">
         <p class="text-sm font-medium">{{ $title }}</p>
         @if ($description)
-            <p class="text-xs text-gray-500">{{ $description }}</p>
+            <p class="text-xs text-base-content/60">{{ $description }}</p>
         @endif
         @if ($timestamp)
-            <p class="text-xs text-gray-400 mt-1">{{ $timestamp }}</p>
+            <p class="text-xs text-base-content/60 mt-1">{{ $timestamp }}</p>
         @endif
     </div>
 </div>

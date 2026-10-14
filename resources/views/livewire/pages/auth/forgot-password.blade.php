@@ -53,9 +53,9 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-8 text-center">
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Reset Password</h1>
-        <p class="text-base text-gray-500 dark:text-gray-400">
+    <div class="mb-7">
+        <h1 class="text-2xl font-semibold tracking-[-0.015em] text-base-content">Reset Password</h1>
+        <p class="mt-1.5 text-sm text-base-content/70">
             {{ __('Enter your email address and we\'ll send you a link to reset your password.') }}
         </p>
     </div>
@@ -65,31 +65,26 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
     @if (session('error'))
         <div
-            class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400">
+            class="mb-5 rounded-field border border-error/30 bg-error/[0.08] px-3 py-2.5 text-sm text-error" role="alert">
             {{ session('error') }}
         </div>
     @endif
 
     <form wire:submit="sendPasswordResetLink" class="space-y-6">
         <!-- Email Address -->
-        <div class="space-y-1">
-            <label for="email" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Email
-                Address</label>
-            <div class="relative group">
-                <div
-                    class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-accent">
-                    <i class="fas fa-envelope text-gray-400 group-focus-within:text-accent transition-colors"></i>
-                </div>
+        <div>
+            <label for="email" class="mb-1.5 block text-[0.8125rem] font-medium text-base-content">Email address</label>
+            <label class="input w-full">
+                <i class="fas fa-envelope text-base-content/60" aria-hidden="true"></i>
                 <input wire:model="email" id="email" type="email" name="email" placeholder="name@plv.edu.ph"
-                    required autofocus
-                    class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-accent/30 focus:border-accent focus:bg-white dark:focus:bg-gray-900 transition-all duration-200 sm:text-sm" />
-            </div>
-            <x-ui.input-error :messages="$errors->get('email')" class="mt-1.5 ml-1" />
+                    required autofocus autocomplete="email" spellcheck="false" class="min-w-0 grow" />
+            </label>
+            <x-ui.input-error :messages="$errors->get('email')" class="mt-1.5" />
         </div>
 
         <div class="pt-2">
             <button type="submit" wire:loading.attr="disabled"
-                class="relative w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-base font-bold text-white bg-primary hover:bg-primary/85 active:bg-primary/70 focus:outline-none focus:ring-4 focus:ring-accent/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
+                class="btn btn-primary btn-block h-11">
                 <span wire:loading.remove wire:target="sendPasswordResetLink" class="flex items-center">
                     {{ __('Email Password Reset Link') }}
                     <i
@@ -97,7 +92,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
                 </span>
                 <span wire:loading wire:target="sendPasswordResetLink" class="flex items-center">
                     <span class="loading loading-spinner loading-sm"></span>
-                    Sending...
+                    Sending…
                 </span>
             </button>
         </div>
@@ -105,9 +100,9 @@ new #[Layout('components.layouts.guest')] class extends Component {
 
     <div class="mt-8 text-center">
         <a href="{{ route('login') }}"
-            class="text-gray-600 dark:text-gray-300 inline-flex justify-center items-center border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-colors duration-300 ease-in-out rounded-xl w-full py-3 px-6"
+            class="btn btn-ghost btn-block"
             wire:navigate>
-            Back to Login
+            Back to sign in
         </a>
     </div>
 </div>

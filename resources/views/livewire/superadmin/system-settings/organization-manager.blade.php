@@ -1,9 +1,9 @@
 <div>
-    <x-ui.card shadow class="border-none bg-slate-50/50 dark:bg-base-100/50">
+    <x-ui.card shadow class="border-none bg-base-200/50 dark:bg-base-100/50">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-                <h2 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">Student Organizations</h2>
-                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Authorized campus groups and
+                <h2 class="text-lg sm:text-xl font-bold text-base-content">Student Organizations</h2>
+                <p class="text-[10px] sm:text-xs text-base-content/60 mt-0.5">Authorized campus groups and
                     clubs</p>
             </div>
             <x-ui.button icon="o-plus" label="Register Org" class="btn-primary btn-sm shadow-sm w-full sm:w-auto"
@@ -14,13 +14,13 @@
             {{-- Academic Organizations Section --}}
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <x-ui.icon name="o-academic-cap" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Academic
+                    <x-ui.icon name="o-academic-cap" class="w-5 h-5 text-primary " />
+                    <h3 class="text-sm sm:text-base font-semibold text-base-content/80">Academic
                         Organizations</h3>
                     {{-- <span
-                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full font-medium">{{ count($academicOrgs) }}</span> --}}
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-primary-100  text-primary-700  rounded-full font-medium">{{ count($academicOrgs) }}</span> --}}
                     <span
-                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">{{ count($academicOrgs) }}</span>
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-primary/10  text-primary  rounded-full font-medium">{{ count($academicOrgs) }}</span>
                 </div>
 
                 @if (count($academicOrgs) > 0)
@@ -34,11 +34,11 @@
                     </div>
                 @else
                     <div
-                        class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
+                        class="text-center py-8 bg-base-100 dark:bg-base-200 border border-dashed border-base-300 dark:border-base-300 rounded-xl">
                         <x-ui.icon name="o-academic-cap"
-                            class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No academic organizations</p>
-                        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Organizations linked to specific
+                            class="w-10 h-10 mx-auto mb-2 text-base-content/40" />
+                        <p class="text-base-content/60 font-medium text-sm">No academic organizations</p>
+                        <p class="text-base-content/60 text-xs mt-1">Organizations linked to specific
                             courses will appear here.</p>
                     </div>
                 @endif
@@ -47,11 +47,11 @@
             {{-- Non-Academic Organizations Section --}}
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <x-ui.icon name="o-globe-alt" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    <h3 class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">Non-Academic
+                    <x-ui.icon name="o-globe-alt" class="w-5 h-5 text-primary " />
+                    <h3 class="text-sm sm:text-base font-semibold text-base-content/80">Non-Academic
                         Organizations</h3>
                     <span
-                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">{{ count($nonAcademicOrgs) }}</span>
+                        class="text-[10px] sm:text-xs px-1.5 py-0.5 bg-primary/10  text-primary  rounded-full font-medium">{{ count($nonAcademicOrgs) }}</span>
                 </div>
 
                 @if (count($nonAcademicOrgs) > 0)
@@ -65,12 +65,12 @@
                     </div>
                 @else
                     <div
-                        class="text-center py-8 bg-white dark:bg-base-200 border border-dashed border-slate-300 dark:border-base-300 rounded-xl">
+                        class="text-center py-8 bg-base-100 dark:bg-base-200 border border-dashed border-base-300 dark:border-base-300 rounded-xl">
                         <x-ui.icon name="o-globe-alt"
-                            class="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">No non-academic organizations
+                            class="w-10 h-10 mx-auto mb-2 text-base-content/40" />
+                        <p class="text-base-content/60 font-medium text-sm">No non-academic organizations
                         </p>
-                        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Institutional organizations (e.g.,
+                        <p class="text-base-content/60 text-xs mt-1">Institutional organizations (e.g.,
                             Red Cross Youth) will appear here.</p>
                     </div>
                 @endif
@@ -108,7 +108,7 @@
                 {{-- Loading indicator --}}
                 <div wire:loading wire:target="newOrgLogo" class="flex items-center gap-2 text-sm text-base-content/70">
                     <span class="loading loading-spinner loading-sm"></span>
-                    <span>Processing image...</span>
+                    <span>Processing image…</span>
                 </div>
 
                 {{-- Preview --}}
@@ -120,7 +120,7 @@
                             <p class="text-sm font-medium text-success">Logo ready to upload</p>
                             <p class="text-xs text-base-content/60">Will be compressed to WebP format</p>
                         </div>
-                        <x-ui.button icon="o-x-mark" class="btn-ghost btn-sm" wire:click="$set('newOrgLogo', null)" />
+                        <x-ui.button icon="o-x-mark" aria-label="Remove selected logo" class="btn-ghost btn-sm" wire:click="$set('newOrgLogo', null)" />
                     </div>
                 @endif
             </div>
@@ -168,7 +168,7 @@
                                 <p class="text-sm font-medium">Organization Logo</p>
                                 <p class="text-xs text-base-content/60">Click delete to remove</p>
                             </div>
-                            <x-ui.button icon="o-trash" class="btn-ghost btn-error btn-sm hover:"
+                            <x-ui.button icon="o-trash" aria-label="Delete current logo" class="btn-ghost btn-error btn-sm hover:"
                                 wire:click="deleteCurrentOrgLogo" spinner="deleteCurrentOrgLogo" />
                         </div>
                     </div>
@@ -185,7 +185,7 @@
                     <div wire:loading wire:target="orgLogo"
                         class="flex items-center gap-2 text-sm text-base-content/70">
                         <span class="loading loading-spinner loading-sm"></span>
-                        <span>Processing image...</span>
+                        <span>Processing image…</span>
                     </div>
 
                     {{-- New Logo Preview --}}
@@ -197,7 +197,7 @@
                                 <p class="text-sm font-medium text-success">New logo ready</p>
                                 <p class="text-xs text-base-content/60">Will replace current logo when saved</p>
                             </div>
-                            <x-ui.button icon="o-x-mark" class="btn-ghost btn-sm"
+                            <x-ui.button icon="o-x-mark" aria-label="Remove selected logo" class="btn-ghost btn-sm"
                                 wire:click="$set('orgLogo', null)" />
                         </div>
                     @endif
@@ -217,19 +217,19 @@
         <x-ui.modal-dialog wire:model="deleteOrgModalOpen" title="Delete Student Organization Confirmation"
             subtitle="This action cannot be undone" separator with-close-button close-on-escape>
             <div class="space-y-4">
-                <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div class="bg-error/10  border border-error/30  rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor"
+                        <svg class="w-5 h-5 text-error  mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
                         </svg>
-                        <p class="text-red-800 dark:text-red-200 font-medium">Warning: This action is permanent</p>
+                        <p class="text-error  font-medium">Warning: This action is permanent</p>
                     </div>
                 </div>
 
-                <p class="text-gray-700 dark:text-slate-300">
+                <p class="text-base-content/80">
                     You are about to delete <strong class="dark:text-white">{{ $deletingOrgName }}</strong>. This will
                     permanently remove all
                     data

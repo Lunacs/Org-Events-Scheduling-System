@@ -31,13 +31,43 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // Drop indexes in reverse order
-            $table->dropIndex('idx_users_office_id');
-            $table->dropIndex('idx_users_org_id');
-            $table->dropIndex('idx_users_role_verified');
-            $table->dropIndex('idx_users_email_verified_at');
-            $table->dropIndex('idx_users_role');
+        // Drop indexes in reverse order
+        $this->dropIndexSafely('users', 'idx_users_office_id');
+        $this->dropIndexSafely('users', 'idx_users_org_id');
+        $this->dropIndexSafely('users', 'idx_users_role_verified');
+        $this->dropIndexSafely('users', 'idx_users_email_verified_at');
+        $this->dropIndexSafely('users', 'idx_users_role');
+    }
+
+    /**
+     * Drop an index if it exists. MySQL silently drops a foreign key's own
+     * index once another index covers its columns, and then refuses to drop
+     * that covering index (error 1553), so restore a plain index for any
+     * foreign key that would be left without one.
+     */
+    private function dropIndexSafely(string $table, string $index): void
+    {
+        $indexes = collect(Schema::getIndexes($table));
+        $target = $indexes->firstWhere('name', $index);
+
+        if (! $target) {
+            return;
+        }
+
+        $others = $indexes->reject(fn (array $i) => $i['name'] === $index);
+        $covers = fn (array $i, array $columns) => array_slice($i['columns'], 0, count($columns)) === $columns;
+
+        $orphaned = collect(Schema::getForeignKeys($table))->filter(
+            fn (array $fk) => $covers($target, $fk['columns'])
+                && ! $others->contains(fn (array $i) => $covers($i, $fk['columns']))
+        );
+
+        Schema::table($table, function (Blueprint $table) use ($index, $orphaned) {
+            foreach ($orphaned as $fk) {
+                $table->index($fk['columns'], $fk['name']);
+            }
+
+            $table->dropIndex($index);
         });
     }
 };

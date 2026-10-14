@@ -21,7 +21,7 @@
                     {{ $user->role_display }}
                 </span>
                 @if ($user->email_verified_at)
-                    <span class="badge badge-lg badge-success text-white">
+                    <span class="badge badge-lg badge-success">
                         <x-ui.icon name="s-check-circle" class="w-4 h-4 mr-1" />
                         Verified
                     </span>

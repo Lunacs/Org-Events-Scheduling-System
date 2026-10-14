@@ -1,5 +1,5 @@
 {{-- Dashboard Skeleton --}}
-<div class="p-6 space-y-6">
+<div class="space-y-6">
     {{-- Header Skeleton --}}
     <div class="flex items-center justify-between mb-6 animate-pulse">
         <div class="h-8 bg-base-300 rounded w-48"></div>
@@ -9,7 +9,7 @@
     {{-- Stats Grid Skeleton --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 animate-pulse">
         @for ($i = 0; $i < 4; $i++)
-            <div class="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-200">
+            <div class="bg-base-100 rounded-box p-6 border border-base-200">
                 <div class="flex items-start justify-between">
                     <div>
                         <div class="h-4 bg-base-300 rounded w-24 mb-2"></div>
@@ -24,7 +24,7 @@
     {{-- Main Content Grid Skeleton --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
         {{-- Pending Approvals Table --}}
-        <div class="col-span-1 lg:col-span-2 bg-base-100 rounded-2xl shadow-sm border border-base-200 overflow-hidden">
+        <div class="col-span-1 lg:col-span-2 bg-base-100 rounded-box border border-base-200 overflow-hidden">
             <div class="p-6 border-b border-base-200">
                 <div class="h-6 bg-base-300 rounded w-40"></div>
             </div>
@@ -42,7 +42,7 @@
         </div>
 
         {{-- Recent Activity List --}}
-        <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
+        <div class="bg-base-100 rounded-box border border-base-200 p-6">
             <div class="h-6 bg-base-300 rounded w-32 mb-6"></div>
             <div class="space-y-6">
                 @for ($i = 0; $i < 5; $i++)

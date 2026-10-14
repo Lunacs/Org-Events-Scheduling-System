@@ -4,7 +4,7 @@
 
         <x-ui.card>
             <div class="flex items-center gap-2 mb-4">
-                <x-ui.input placeholder="Search archived items..." class="w-full" />
+                <x-ui.input placeholder="Search archived items…" class="w-full" />
                 <x-ui.select :options="['Events', 'Tickets', 'Users']" label="Type" />
             </div>
             <x-ui.table :headers="['Type', 'Title/Ref', 'Archived At', 'Actions']">

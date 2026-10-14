@@ -1,40 +1,23 @@
 <div>
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">SuperAdmin Dashboard</h1>
-                        <p class="text-sm text-base-content/70 mt-1">
-                            Overview of system activity and items requiring attention
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="SuperAdmin Dashboard" subtitle="System health at a glance: tickets that need follow-up, upcoming events, and recent activity." />
 
         {{-- Attention Required Alert --}}
         @if ($attentionRequired['total_attention'] > 0)
-            <div class="alert alert-warning shadow-lg">
-                <x-ui.icon name="o-exclamation-triangle" class="w-6 h-6" />
-                <div>
-                    <h3 class="font-bold">Attention Required</h3>
-                    <div class="text-sm">{{ $attentionRequired['total_attention'] }} item(s) need your attention</div>
-                </div>
-                <a href="{{ route('superadmin.tickets') }}" class="btn btn-sm btn-ghost">View All</a>
+            <div role="status" class="flex flex-wrap items-center gap-3 rounded-box border border-warning/30 bg-warning/[0.06] px-4 py-3">
+                <x-ui.icon name="o-exclamation-triangle" class="size-5 shrink-0 text-warning" aria-hidden="true" />
+                <p class="min-w-0 flex-1 text-sm text-base-content">
+                    <span class="font-semibold">{{ $attentionRequired['total_attention'] }} {{ Str::plural('ticket', $attentionRequired['total_attention']) }} need follow-up</span>
+                    <span class="text-base-content/70">— tickets waiting longer than expected.</span>
+                </p>
+                <a href="{{ route('superadmin.tickets') }}" wire:navigate class="btn btn-sm">Review tickets</a>
             </div>
         @endif
 
         {{-- Quick Stats Overview --}}
         <div>
-            <h2 class="text-lg font-semibold text-base-content mb-3 flex items-center gap-2">
-                <x-ui.icon name="o-chart-bar" class="w-5 h-5 text-primary" />
-                System Overview
-            </h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <x-ui.metric-card label="Total Users" value="{{ number_format($stats['totalUsers']) }}"
                     icon="o-users" color="primary" />
 
@@ -46,27 +29,6 @@
 
                 <x-ui.metric-card label="Pending Review" value="{{ number_format($stats['pendingTickets']) }}"
                     icon="o-clock" color="warning" />
-            </div>
-        </div>
-
-        {{-- Quick Actions --}}
-        <div>
-            <h2 class="text-lg font-semibold text-base-content mb-3 flex items-center gap-2">
-                <x-ui.icon name="o-bolt" class="w-5 h-5 text-accent" />
-                Quick Actions
-            </h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <x-ui.quick-action label="Review Tickets" description="{{ $stats['pendingTickets'] }} pending"
-                    icon="o-ticket" color="primary" link="{{ route('superadmin.tickets') }}" />
-
-                <x-ui.quick-action label="View Calendar" description="{{ $stats['eventsThisWeek'] }} this week"
-                    icon="o-calendar" color="secondary" link="{{ route('superadmin.calendar') }}" />
-
-                <x-ui.quick-action label="Manage Users" description="{{ $stats['totalUsers'] }} users"
-                    icon="o-user-group" color="accent" link="{{ route('superadmin.users') }}" />
-
-                <x-ui.quick-action label="View Reports" description="Analytics & exports" icon="o-chart-pie"
-                    color="info" link="{{ route('superadmin.reports') }}" />
             </div>
         </div>
 
@@ -101,7 +63,7 @@
                                         <span>•</span>
                                         <span>{{ $event['time'] }}</span>
                                     </div>
-                                    <div class="text-xs text-base-content/50 flex items-center gap-1 mt-1">
+                                    <div class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
                                         <x-ui.icon name="o-map-pin" class="w-3 h-3" />
                                         {{ $event['venue'] }}
                                     </div>
@@ -110,8 +72,8 @@
                         @endforeach
                     </div>
                 @else
-                    <x-ui.empty-state title="No Upcoming Events"
-                        description="No events scheduled for the next 7 days." icon="o-calendar" />
+                    <x-ui.empty-state title="No events this week"
+                        description="Approved events in the next 7 days appear here." icon="o-calendar" />
                 @endif
             </x-ui.card>
         </div>
@@ -129,7 +91,7 @@
                         @if (count($attentionRequired['pending_osa_review']) > 0)
                             <div>
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="badge badge-warning badge-sm">Pending Review</span>
+                                    <span class="badge badge-soft badge-info badge-sm">Waiting on OSA</span>
                                     <span
                                         class="text-xs text-base-content/60">{{ count($attentionRequired['pending_osa_review']) }}
                                         tickets</span>
@@ -147,7 +109,7 @@
                         @if (count($attentionRequired['stuck_gso_review']) > 0)
                             <div>
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="badge badge-info badge-sm">Stuck in GSO</span>
+                                    <span class="badge badge-soft badge-info badge-sm">Waiting on GSO</span>
                                     <span
                                         class="text-xs text-base-content/60">{{ count($attentionRequired['stuck_gso_review']) }}
                                         tickets</span>
@@ -180,13 +142,13 @@
                         @endif
                     </div>
                     <div class="mt-4 pt-4 border-t border-base-200">
-                        <a href="{{ route('superadmin.tickets') }}" class="btn btn-sm btn-primary btn-block">
-                            View All Tickets
+                        <a href="{{ route('superadmin.tickets') }}" wire:navigate class="btn btn-sm btn-block">
+                            View all tickets
                         </a>
                     </div>
                 @else
-                    <x-ui.empty-state title="All Clear!" description="No items require immediate attention."
-                        icon="o-check-badge" tone="success" iconColor="text-success" />
+                    <x-ui.empty-state title="Nothing needs follow-up" icon="o-check-circle"
+                        description="Tickets that wait too long with OSA or GSO appear here." />
                 @endif
             </x-ui.card>
         </div>

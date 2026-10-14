@@ -54,8 +54,10 @@ class TicketFactory extends Factory
             'gso_review',
             'approved',
             'for_revision',
-            'needs_revision',
         ];
+
+        $dateFrom = fake()->dateTimeBetween('+1 week', '+2 months');
+        $startHour = fake()->numberBetween(7, 15);
 
         // Generate realistic ticket number (e.g., TKT-2024-0001)
         $ticketNumber = 'TKT-'.date('Y').'-'.str_pad(fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT);
@@ -85,10 +87,10 @@ class TicketFactory extends Factory
             'oc_transportation_type' => fake()->optional()->word(),
             'oc_vehicle_plate_number' => fake()->optional()->bothify('???-####'),
             'oc_driver_contact_number' => fake()->optional()->phoneNumber(),
-            'date_from' => fake()->dateTimeBetween('+1 week', '+2 months')->format('Y-m-d'),
-            'date_to' => fake()->dateTimeBetween('+1 week', '+2 months')->format('Y-m-d'),
-            'time_from' => fake()->time('H:i'),
-            'time_to' => fake()->time('H:i'),
+            'date_from' => $dateFrom->format('Y-m-d'),
+            'date_to' => (clone $dateFrom)->modify('+'.fake()->numberBetween(0, 2).' days')->format('Y-m-d'),
+            'time_from' => sprintf('%02d:00', $startHour),
+            'time_to' => sprintf('%02d:00', $startHour + fake()->numberBetween(1, 5)),
             'estimated_budget' => fake()->randomFloat(2, 5000, 50000),
             'budget_breakdown' => fake()->optional()->paragraph(),
             'additional_notes' => fake()->optional()->paragraph(),

@@ -1,5 +1,5 @@
 <div x-data="{
-    firstLoad: true,
+    firstLoad: false,
     show: false,
     processingTickets: new Set(),
     optimisticUpdate(ticketId, action) {
@@ -30,36 +30,23 @@
     </div>
 
     {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    <div x-show="!firstLoad">
         {{-- Toasts are rendered by the layout-level <x-ui.toast /> host. --}}
 
         {{-- Header --}}
         @persist('ticket-management-header')
-            <section
-                class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-3xl font-heading font-bold text-base-content">Ticket Management</h1>
-                            <p class="text-base-content/70 mt-1">View and manage all submitted tickets from Student
-                                Organizations
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-2 relative z-10">
-                            <x-ui.badge value="{{ $tickets->total() }} Total Tickets" class="badge-primary" />
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <x-ui.page-heading title="Ticket Management" subtitle="View and manage all submitted tickets from Student Organizations">
+                <x-slot:actions>
+                    <x-ui.badge value="{{ $tickets->total() }} Total Tickets" class="badge-primary" />
+                </x-slot:actions>
+            </x-ui.page-heading>
         @endpersist
 
         {{-- Filters --}}
-        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6 mb-6">
+        <div class="bg-base-100 border border-base-300 rounded-box p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                    <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets…"
                         icon="o-magnifying-glass" />
                 </div>
 
@@ -92,7 +79,7 @@
         </div>
 
         {{-- Tickets Table --}}
-        <div class="bg-base-100 border border-base-300 rounded-box shadow-sm overflow-hidden">
+        <div class="bg-base-100 border border-base-300 rounded-box overflow-hidden">
             <!-- Skeleton Loading State -->
             <div wire:loading.delay wire:target="search,statusFilter,organizationFilter,dateFilter,clearFilters">
                 <div class="overflow-x-auto hidden md:block">
@@ -110,27 +97,27 @@
                             @for ($i = 0; $i < 5; $i++)
                                 <tr>
                                     <td>
-                                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                                        <div class="h-4 bg-base-300 rounded w-20"></div>
                                     </td>
                                     <td>
                                         <div class="space-y-2">
-                                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                                            <div class="h-3 bg-gray-200 rounded w-full"></div>
+                                            <div class="h-4 bg-base-300 rounded w-3/4"></div>
+                                            <div class="h-3 bg-base-300 rounded w-full"></div>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                            <div class="h-4 bg-gray-200 rounded w-32"></div>
+                                            <div class="w-8 h-8 bg-base-300 rounded-full"></div>
+                                            <div class="h-4 bg-base-300 rounded w-32"></div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="h-6 bg-gray-200 rounded w-24"></div>
+                                        <div class="h-6 bg-base-300 rounded w-24"></div>
                                     </td>
                                     <td>
                                         <div class="space-y-1">
-                                            <div class="h-4 bg-gray-200 rounded w-20"></div>
-                                            <div class="h-3 bg-gray-200 rounded w-16"></div>
+                                            <div class="h-4 bg-base-300 rounded w-20"></div>
+                                            <div class="h-3 bg-base-300 rounded w-16"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -158,13 +145,14 @@
                                 @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr class="hover:cursor-pointer hover:bg-base-200 transition-colors duration-200"
                                     wire:key="ticket-{{ $ticket->ticket_id }}"
-                                    title="Ticket: {{ $ticket->title }} | Organization: {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }} | Status: {{ ucfirst(str_replace('_', ' ', $ticket->status)) }} | Click to view details"
+                                    title="Ticket: {{ $ticket->title }} | Organization: {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }} | Status: {{ \App\Support\TicketStatus::label($ticket->status) }}"
                                     onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
                                     <td>
-                                        <span class="font-mono text-sm">#{{ $ticket->ticket_number }}</span>
+                                        <span class="whitespace-nowrap font-mono text-sm">{{ $ticket->ticket_number }}</span>
                                     </td>
                                     <td>
-                                        <div class="font-semibold">{{ $ticket->title }}</div>
+                                        <a href="{{ route('osa.ticket-review.show', $ticket->ticket_number) }}" wire:navigate
+                                            class="font-semibold hover:underline" onclick="event.stopPropagation()">{{ $ticket->title }}</a>
                                         <div class="text-sm text-base-content/70">
                                             {{ Str::limit($ticket->description, 60) }}
                                         </div>
@@ -187,7 +175,7 @@
                                             </div>
                                             <div>
                                                 <div
-                                                    class="font-medium {{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                                    class="font-medium {{ $orgDeleted ? 'italic text-base-content/60' : '' }}">
                                                     {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
                                                 </div>
                                             </div>
@@ -203,8 +191,7 @@
                                                 'for_revision' => 'badge-warning',
                                             ];
                                         @endphp
-                                        <x-ui.badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                                            class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-md w-[10rem] justify-center truncate" />
+                                        <x-tickets.progress-badge :status="$ticket->status" size="sm" />
                                     </td>
                                     <td>
                                         <div>{{ $ticket->created_at?->format('M d, Y') ?? 'N/A' }}</div>
@@ -234,7 +221,7 @@
                             wire:key="mobile-ticket-{{ $ticket->ticket_id }}"
                             onclick="window.location='{{ route('osa.ticket-review.show', $ticket->ticket_number) }}'">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="font-mono text-xs opacity-70">#{{ $ticket->ticket_number }}</span>
+                                <span class="whitespace-nowrap font-mono text-xs text-base-content/70">{{ $ticket->ticket_number }}</span>
                                 @php
                                     $statusClasses = [
                                         'received' => 'badge-info',
@@ -244,8 +231,7 @@
                                         'for_revision' => 'badge-warning',
                                     ];
                                 @endphp
-                                <x-ui.badge value="{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}"
-                                    class="{{ $statusClasses[$ticket->status] ?? 'badge-neutral' }} text-white badge-sm" />
+                                <x-tickets.progress-badge :status="$ticket->status" size="sm" />
                             </div>
 
                             <h3 class="font-semibold text-lg">{{ $ticket->title }}</h3>
@@ -269,7 +255,7 @@
                                     </div>
                                 </div>
                                 <span
-                                    class="font-medium truncate {{ $mobileOrgDeleted ? 'italic text-base-content/50' : '' }}">{{ $mobileOrgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}</span>
+                                    class="font-medium truncate {{ $mobileOrgDeleted ? 'italic text-base-content/60' : '' }}">{{ $mobileOrgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}</span>
                             </div>
 
                             <div class="text-xs text-base-content/60 mt-3">

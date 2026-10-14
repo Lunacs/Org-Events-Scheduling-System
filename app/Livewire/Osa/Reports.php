@@ -4,13 +4,15 @@ namespace App\Livewire\Osa;
 
 use App\Models\Student_Organization;
 use App\Models\Ticket;
-use App\Models\Event_Type;
+use App\Services\Cache\ReportCacheService;
+use App\Support\TicketStatus;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -65,6 +67,8 @@ class Reports extends Component
 
     public function generateReport()
     {
+        Gate::authorize('reports.export');
+
         $this->validate([
             'reportType' => 'required|in:approved_events,for_revision_events,org_participation,monthly_summary',
             'dateFrom' => 'required|date',
@@ -98,7 +102,9 @@ class Reports extends Component
             ->get();
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    // Not persisted: Livewire's persist key ignores the filters, so a cached result would
+    // outlive a change of report type or dates. ReportCacheService already caches per filter.
+    #[Computed]
     public function reportData()
     {
         if (empty($this->dateFrom) || empty($this->dateTo)) {
@@ -108,66 +114,67 @@ class Reports extends Component
         $dateFrom = Carbon::parse($this->dateFrom);
         $dateTo = Carbon::parse($this->dateTo)->endOfDay();
 
-        return \App\Services\Cache\ReportCacheService::getReport(
+        return ReportCacheService::getReport(
             $this->reportType,
             $dateFrom->toDateString(),
             $dateTo->toDateString(),
             $this->organizationFilter,
             function () use ($dateFrom, $dateTo) {
-            switch ($this->reportType) {
-                case 'approved_events':
-                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                        ->with([
-                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                                ->with('studentOrganization:org_id,org_name,logo'),
-                            'events:event_id,ticket_id',
-                            'eventType:event_type_id,type_name',
-                        ])
-                        ->where('status', 'approved')
-                        ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-                        ->orderBy('created_at', 'desc')
-                        ->limit(1000) // Add limit for performance
-                        ->get();
+                switch ($this->reportType) {
+                    case 'approved_events':
+                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'updated_at', 'user_id', 'event_type_id'])
+                            ->with([
+                                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                    ->with('studentOrganization:org_id,org_name,logo'),
+                                'events:event_id,ticket_id',
+                                'eventType:event_type_id,type_name',
+                            ])
+                            // Approved events become completed a week after they end.
+                            ->whereIn('status', ['approved', 'completed'])
+                            ->whereBetween('created_at', [$dateFrom, $dateTo])
+                            ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                            ->orderBy('created_at', 'desc')
+                            ->limit(1000) // Add limit for performance
+                            ->get();
 
-                case 'for_revision_events':
-                    return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
-                        ->with([
-                            'user' => fn($q) => $q->select(['user_id', 'org_id'])
-                                ->with('studentOrganization:org_id,org_name,logo'),
-                            'events:event_id,ticket_id',
-                            'eventType:event_type_id,type_name',
-                        ])
-                        ->where('status', 'for_revision')
-                        ->whereBetween('created_at', [$dateFrom, $dateTo])
-                        ->when($this->organizationFilter, fn($query) => $query->whereHas('user', fn($q) => $q->where('org_id', $this->organizationFilter)))
-                        ->orderBy('created_at', 'desc')
-                        ->limit(1000) // Add limit for performance
-                        ->get();
+                    case 'for_revision_events':
+                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'updated_at', 'user_id', 'event_type_id'])
+                            ->with([
+                                'user' => fn ($q) => $q->select(['user_id', 'org_id'])
+                                    ->with('studentOrganization:org_id,org_name,logo'),
+                                'events:event_id,ticket_id',
+                                'eventType:event_type_id,type_name',
+                            ])
+                            ->where('status', 'for_revision')
+                            ->whereBetween('created_at', [$dateFrom, $dateTo])
+                            ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
+                            ->orderBy('created_at', 'desc')
+                            ->limit(1000) // Add limit for performance
+                            ->get();
 
-                case 'org_participation':
-                    return Student_Organization::select(['org_id', 'org_name', 'org_code'])
-                        ->withCount([
-                            'tickets' => fn($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
-                        ])
-                        ->when($this->organizationFilter, fn($query) => $query->where('org_id', $this->organizationFilter))
-                        ->orderBy('tickets_count', 'desc')
-                        ->limit(100) // Add limit for performance
-                        ->get();
+                    case 'org_participation':
+                        return Student_Organization::select(['org_id', 'org_name', 'org_code'])
+                            ->withCount([
+                                'tickets' => fn ($query) => $query->whereBetween('tickets.created_at', [$dateFrom, $dateTo]),
+                            ])
+                            ->when($this->organizationFilter, fn ($query) => $query->where('org_id', $this->organizationFilter))
+                            ->orderBy('tickets_count', 'desc')
+                            ->limit(100) // Add limit for performance
+                            ->get();
 
-                case 'monthly_summary':
-                    // Use more efficient counting
-                    return [
-                        'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                        'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                        'for_revision_tickets' => Ticket::where('status', 'for_revision')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                        'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                    ];
+                    case 'monthly_summary':
+                        // Use more efficient counting
+                        return [
+                            'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                            'approved_tickets' => Ticket::whereIn('status', ['approved', 'completed'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                            'for_revision_tickets' => Ticket::where('status', 'for_revision')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                            'pending_tickets' => Ticket::whereIn('status', ['received', 'amended', 'gso_review', 'pending_osa_approval'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                        ];
 
-                default:
-                    return collect();
-            }
-        });
+                    default:
+                        return collect();
+                }
+            });
     }
 
     protected function export()
@@ -192,7 +199,7 @@ class Reports extends Component
 
     protected function exportCsv($data)
     {
-        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.csv';
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');
@@ -254,7 +261,7 @@ class Reports extends Component
             throw new \RuntimeException('PDF export requires the barryvdh/laravel-dompdf package.');
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.osa.summary-pdf', [
+        $pdf = Pdf::loadView('reports.osa.summary-pdf', [
             'reportType' => $this->reportType,
             'data' => $data,
             'dateFrom' => $this->dateFrom,
@@ -263,9 +270,9 @@ class Reports extends Component
             'generatedAt' => now(),
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'osa-' . $this->reportType . '-' . now()->format('YmdHis') . '.pdf';
+        $fileName = 'osa-'.$this->reportType.'-'.now()->format('YmdHis').'.pdf';
 
-        return response()->streamDownload(fn() => print($pdf->output()), $fileName, [
+        return response()->streamDownload(fn () => print ($pdf->output()), $fileName, [
             'Content-Type' => 'application/pdf',
         ]);
     }
@@ -280,10 +287,10 @@ class Reports extends Component
         $dateTo = Carbon::now()->endOfDay();
 
         $this->chartData = [
-            'eventsByMonth' => \App\Services\Cache\ReportCacheService::getChartData('eventsByMonth', fn() => $this->getEventsByMonth($dateFrom, $dateTo)),
-            'eventsByType' => \App\Services\Cache\ReportCacheService::getChartData('eventsByType', fn() => $this->getEventsByType($dateFrom, $dateTo)),
-            'statusDistribution' => \App\Services\Cache\ReportCacheService::getChartData('statusDistribution', fn() => $this->getStatusDistribution()),
-            'topOrganizations' => \App\Services\Cache\ReportCacheService::getChartData('topOrganizations', fn() => $this->getTopOrganizations()),
+            'eventsByMonth' => ReportCacheService::getChartData('eventsByMonth', fn () => $this->getEventsByMonth($dateFrom, $dateTo)),
+            'eventsByType' => ReportCacheService::getChartData('eventsByType', fn () => $this->getEventsByType($dateFrom, $dateTo)),
+            'statusDistribution' => ReportCacheService::getChartData('statusDistribution', fn () => $this->getStatusDistribution()),
+            'topOrganizations' => ReportCacheService::getChartData('topOrganizations', fn () => $this->getTopOrganizations()),
         ];
     }
 
@@ -302,7 +309,7 @@ class Reports extends Component
             ->get();
 
         return [
-            'labels' => $tickets->pluck('month')->map(fn($m) => Carbon::parse($m)->format('M Y'))->toArray(),
+            'labels' => $tickets->pluck('month')->map(fn ($m) => Carbon::parse($m)->format('M Y'))->toArray(),
             'data' => $tickets->pluck('count')->toArray(),
         ];
     }
@@ -335,24 +342,15 @@ class Reports extends Component
             ->groupBy('status')
             ->get();
 
-        // Define status colors and labels
-        $statusConfig = [
-            'approved' => ['label' => 'Approved', 'color' => 'rgb(34, 197, 94)'],
-            'pending' => ['label' => 'Pending', 'color' => 'rgb(251, 191, 36)'],
-            'under_review' => ['label' => 'Under Review', 'color' => 'rgb(59, 130, 246)'],
-            'for_revision' => ['label' => 'For Revision', 'color' => 'rgb(239, 68, 68)'],
-            'cancelled' => ['label' => 'Cancelled', 'color' => 'rgb(156, 163, 175)'],
-        ];
-
+        // Same labels and tones as the status badges (App\Support\TicketStatus).
         $labels = [];
         $data = [];
         $colors = [];
 
         foreach ($tickets as $ticket) {
-            $config = $statusConfig[$ticket->status] ?? ['label' => ucfirst(str_replace('_', ' ', $ticket->status)), 'color' => 'rgb(168, 85, 247)'];
-            $labels[] = $config['label'];
+            $labels[] = TicketStatus::label($ticket->status);
             $data[] = $ticket->count;
-            $colors[] = $config['color'];
+            $colors[] = TicketStatus::chartColor($ticket->status);
         }
 
         return [

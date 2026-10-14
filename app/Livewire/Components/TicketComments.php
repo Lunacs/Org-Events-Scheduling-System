@@ -8,7 +8,8 @@ use App\Models\TicketComment;
 use App\Models\User;
 use App\Notifications\TicketCommentNotification;
 use App\Support\Concerns\InteractsWithToasts as Toast;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
@@ -53,6 +54,8 @@ class TicketComments extends Component
 
     public function addComment(): void
     {
+        Gate::authorize('tickets.comment');
+
         // Prevent comments on completed events or past event dates
         if ($this->ticket->areCommentsDisabled()) {
             if ($this->ticket->status === 'completed') {
@@ -116,7 +119,7 @@ class TicketComments extends Component
 
         // Ensure ticket user relationship is loaded
         if (! $this->ticket->relationLoaded('user')) {
-            $this->ticket->load('user:user_id,name,email,role_id');
+            $this->ticket->load('user');
         }
 
         $ticketOwner = $this->ticket->user;
@@ -131,21 +134,13 @@ class TicketComments extends Component
 
         // If commenter is Student Org, notify OSA users
         if ($commenter->isStudentOrg()) {
-            $osaUsers = Cache::remember('osa_users_notifications', 3600, function () {
-                return User::select(['user_id', 'name', 'email', 'role_id'])
-                    ->where('role_id', User::getRoleId('osa'))
-                    ->get();
-            });
+            $osaUsers = $this->portalRecipients('osa');
             $usersToNotify = $usersToNotify->merge($osaUsers);
         }
 
         // If commenter is GSO, notify OSA users
-        if ($commenter->role_id === User::getRoleId('gso')) {
-            $osaUsers = Cache::remember('osa_users_notifications', 3600, function () {
-                return User::select(['user_id', 'name', 'email', 'role_id'])
-                    ->where('role_id', User::getRoleId('osa'))
-                    ->get();
-            });
+        if ($commenter->isGSO()) {
+            $osaUsers = $this->portalRecipients('osa');
             $usersToNotify = $usersToNotify->merge($osaUsers);
         }
 
@@ -154,11 +149,7 @@ class TicketComments extends Component
             $hasGsoInvolvement = $this->ticketHasGsoInvolvement();
 
             if ($hasGsoInvolvement) {
-                $gsoUsers = Cache::remember('gso_users_notifications', 3600, function () {
-                    return User::select(['user_id', 'name', 'email', 'role_id'])
-                        ->where('role_id', User::getRoleId('gso'))
-                        ->get();
-                });
+                $gsoUsers = $this->portalRecipients('gso');
                 $usersToNotify = $usersToNotify->merge($gsoUsers);
             }
         }
@@ -167,15 +158,11 @@ class TicketComments extends Component
         // (This handles cases where non-OSA users comment on GSO review tickets)
         if (
             in_array($this->ticket->status, ['gso_review', 'pending_osa_approval']) &&
-            $commenter->role_id !== User::getRoleId('gso') &&
+            ! $commenter->isGSO() &&
             ! $commenter->isOSA() &&
             ! $commenter->isSuperAdmin()
         ) {
-            $gsoUsers = Cache::remember('gso_users_notifications', 3600, function () {
-                return User::select(['user_id', 'name', 'email', 'role_id'])
-                    ->where('role_id', User::getRoleId('gso'))
-                    ->get();
-            });
+            $gsoUsers = $this->portalRecipients('gso');
             $usersToNotify = $usersToNotify->merge($gsoUsers);
         }
 
@@ -184,8 +171,10 @@ class TicketComments extends Component
             // immediate
             $user->notifyNow(new TicketCommentNotification($this->ticket, $comment, $commenter, ['database', 'broadcast']));
 
-            // queued mail only
-            $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
+            // queued mail only, for users who have not turned email off
+            if ($user->shouldReceiveEmailNotification('ticket_updates')) {
+                $user->notify(new TicketCommentNotification($this->ticket, $comment, $commenter, ['mail']));
+            }
         });
 
         // Dispatch real-time notification event
@@ -201,6 +190,19 @@ class TicketComments extends Component
      * - Ticket status is 'gso_review' or 'pending_osa_approval', OR
      * - Ticket has any Office_Approval records for GSO office
      */
+    /**
+     * Current users of a portal, queried fresh so new staff are included and
+     * removed staff are not, with their notification preferences.
+     *
+     * @return Collection<int, User>
+     */
+    private function portalRecipients(string $portal)
+    {
+        return User::select(['user_id', 'name', 'email', 'role_id', 'notification_preferences'])
+            ->inPortal($portal)
+            ->get();
+    }
+
     private function ticketHasGsoInvolvement(): bool
     {
         // Check ticket status

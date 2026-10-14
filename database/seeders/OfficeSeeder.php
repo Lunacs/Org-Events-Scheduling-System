@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Office;
 use Illuminate\Database\Seeder;
 
 class OfficeSeeder extends Seeder
@@ -25,7 +26,7 @@ class OfficeSeeder extends Seeder
         ];
 
         foreach ($offices as $office) {
-            \App\Models\Office::create($office);
+            Office::updateOrCreate(['office_code' => $office['office_code']], $office);
         }
     }
 }

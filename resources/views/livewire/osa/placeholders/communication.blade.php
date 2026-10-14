@@ -1,5 +1,5 @@
 {{-- Communication Form Skeleton --}}
-<div class="p-6">
+<div>
     {{-- Header --}}
     <div class="animate-pulse mb-6">
         <div class="h-8 bg-base-200 rounded w-1/3 mb-2"></div>
@@ -7,7 +7,7 @@
     </div>
 
     {{-- Form Skeleton --}}
-    <div class="bg-base-100 rounded-box p-6 shadow-lg animate-pulse space-y-6">
+    <div class="bg-base-100 rounded-box p-6 animate-pulse space-y-6 border border-base-300">
         {{-- Form Fields --}}
         @for ($i = 0; $i < 5; $i++)
             <div>

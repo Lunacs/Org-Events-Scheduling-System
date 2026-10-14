@@ -1,32 +1,20 @@
 <div>
-    <div class="p-6 space-y-6">
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Transaction Logs</h1>
-                        <p class="text-sm text-base-content/70 mt-1">
-                            Review system transaction events and user actions logs
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-ui.button icon="o-arrow-down-tray" class="btn-outline bg-base-100" wire:click="exportLogs">
-                            Export
-                        </x-ui.button>
-                        <x-ui.button icon="o-trash" class="btn-error" wire:click="clearLogs">
-                            Clear Old Logs
-                        </x-ui.button>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <div class="space-y-6">
+        <x-ui.page-heading title="Transaction Logs" subtitle="Review system transaction events and user actions logs">
+            <x-slot:actions>
+                <x-ui.button icon="o-arrow-down-tray" class="btn-outline bg-base-100" wire:click="exportLogs">
+                    Export
+                </x-ui.button>
+                <x-ui.button icon="o-trash" class="btn-error" wire:click="clearLogs">
+                    Clear Old Logs
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <x-ui.input label="Search Logs" wire:model.live.debounce.300ms="search"
-                    placeholder="Search by action, user, or details..." icon="o-magnifying-glass" />
+                    placeholder="Search by action, user, or details…" icon="o-magnifying-glass" />
 
                 <x-ui.input label="From Date" wire:model.live="dateFrom" type="date" />
 
@@ -42,7 +30,7 @@
                                     <div class="text-sm">
                                         <div class="font-medium">
                                             {{ $log->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
-                                        <div class="text-gray-500">
+                                        <div class="text-base-content/60">
                                             {{ $log->created_at->setTimezone('Asia/Manila')->format('g:i A') }}</div>
                                     </div>
                                 </x-ui.table-column>
@@ -51,10 +39,10 @@
                                     @if ($log->user)
                                         <div class="text-sm">
                                             <div class="font-medium">{{ $log->user->name }}</div>
-                                            <div class="text-gray-500">{{ $log->user->email }}</div>
+                                            <div class="text-base-content/60">{{ $log->user->email }}</div>
                                         </div>
                                     @else
-                                        <span class="text-gray-500">System</span>
+                                        <span class="text-base-content/60">System</span>
                                     @endif
                                 </x-ui.table-column>
 
@@ -85,7 +73,7 @@
                                         class="w-8 h-8 text-base-content/30" />
                                 </div>
                                 <h3 class="text-lg font-bold text-base-content/70">No logs found</h3>
-                                <p class="text-sm text-base-content/50">Try adjusting your search or filters.</p>
+                                <p class="text-sm text-base-content/60">Try adjusting your search or filters.</p>
                             </div>
                         </x-slot:empty>
                     </x-ui.table>

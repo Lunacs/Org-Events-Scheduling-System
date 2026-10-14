@@ -1,154 +1,147 @@
-<div>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-base-content leading-tight">
-            {{ __('Student Organization Dashboard') }}
-        </h2>
-    </x-slot>
+@php
+    // One status vocabulary (App\Support\TicketStatus): active = with an office, attention = org must act.
+    $activeStatuses = ['received', 'pending', 'amended', 'gso_review', 'pending_osa_approval'];
+    $needsAction = $tickets->whereIn('status', ['for_revision', 'needs_revision']);
+    $activeCount = $tickets->whereIn('status', $activeStatuses)->count();
+    $approvedCount = $tickets->where('status', 'approved')->count();
+    $canCreate = auth()->user()?->can('tickets.create');
+    $organization = auth()->user()->studentOrganization?->org_name;
+@endphp
 
-    <div class="py-8 sm:py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            {{-- Welcome Card --}}
-            @persist('student-dashboard-header')
-                <section
-                    class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                    <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                    <div class="relative p-6 sm:p-8">
-                        <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div class="flex items-start space-x-4">
-                                <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                                    <x-ui.icon name="s-building-office" class="w-6 h-6 text-primary" />
-                                </span>
-                                <div>
-                                    <h1 class="text-2xl md:text-3xl font-bold font-heading text-base-content">
-                                        Welcome back, {{ auth()->user()->name ?? 'Student Organization' }}
-                                    </h1>
-                                    <p class="text-sm text-base-content/70 mt-1">
-                                        Overview of your requests, approvals, and upcoming activities.
-                                    </p>
+<div class="space-y-6">
+    <x-ui.page-heading>
+        <x-slot:heading>Welcome back, {{ auth()->user()->name ?? 'Student Organization' }}</x-slot:heading>
+        <x-slot:subtitle>
+            {{ $organization ? $organization . ' · ' : '' }}Track your event requests and what needs your attention.
+        </x-slot:subtitle>
+        @if ($canCreate)
+            <x-slot:actions>
+                <x-ui.button label="Submit a ticket" icon="o-plus" class="btn-primary"
+                    link="{{ route('student-org.submit-ticket') }}" />
+            </x-slot:actions>
+        @endif
+    </x-ui.page-heading>
+
+    {{-- Needs your action: unfinished work first (Zeigarnik effect) --}}
+    @if ($needsAction->isNotEmpty())
+        <section aria-labelledby="needs-action-heading"
+            class="rounded-box border border-warning/40 bg-warning/[0.06] p-4 sm:p-5">
+            <div class="flex items-start gap-3">
+                <x-ui.icon name="o-pencil-square" class="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
+                <div class="min-w-0 flex-1">
+                    <h2 id="needs-action-heading" class="text-base font-semibold text-base-content">
+                        {{ $needsAction->count() === 1 ? '1 request needs your revision' : $needsAction->count() . ' requests need your revision' }}
+                    </h2>
+                    <p class="mt-0.5 text-sm text-base-content/70">
+                        OSA asked for changes. Open the request, read the remarks, then update and resubmit it.
+                    </p>
+                    <ul class="mt-3 divide-y divide-warning/20">
+                        @foreach ($needsAction->take(5) as $ticket)
+                            <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-medium text-base-content">
+                                        {{ $ticket->event_name ?? $ticket->title }}</p>
+                                    <p class="font-mono text-xs text-base-content/70">{{ $ticket->ticket_number }}</p>
                                 </div>
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <div class="text-xs text-base-content/60 hidden md:block">
-                                    Last updated: <span class="font-medium">{{ now()->format('h:i A') }}</span>
-                                </div>
-
-                                <x-ui.button icon="o-arrow-path"
-                                    class="btn-primary btn-sm data-loading:opacity-50 data-loading:pointer-events-none"
-                                    wire:click.async="$refresh" spinner>
-                                    Refresh
-                                </x-ui.button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            @endpersist
-
-            {{-- Stats Cards --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <x-ui.metric-card label="Total Tickets" meta="Submitted requests" value="{{ $tickets->count() }}"
-                    icon="s-ticket" color="primary" />
-
-                <x-ui.metric-card label="Pending" meta="Awaiting approval"
-                    value="{{ $tickets->whereNotIn('status', ['approved'])->count() }}" icon="s-clock"
-                    color="warning" />
-
-                <x-ui.metric-card label="Approved" meta="Ready to proceed"
-                    value="{{ $tickets->where('status', 'approved')->count() }}" icon="s-check-circle"
-                    color="success" />
-
-                <x-ui.metric-card label="Upcoming Events" meta="Next 30 days" value="{{ $upcomingEventsCount }}"
-                    icon="s-calendar-days" color="info" />
+                                <x-ui.button label="Review changes" icon-right="o-arrow-right" class="btn-sm"
+                                    link="{{ route('student-org.ticket-details', ['ticketNumber' => $ticket->ticket_number]) }}" />
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
+        </section>
+    @endif
 
-            {{-- Recent Tickets --}}
-            <x-ui.card title="Recent Ticket Submissions"
-                subtitle="The latest event requests from your organization: {{ auth()->user()->studentOrganization->org_name }}">
-                <x-slot:menu>
-                    <x-ui.button label="View All" link="/student-org/my-tickets" icon="s-eye" class="btn-sm btn-ghost"
-                        wire:navigate />
-                </x-slot:menu>
+    {{-- Status strip --}}
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <x-ui.metric-card label="In review" value="{{ $activeCount }}" meta="With OSA or GSO" icon="o-clock"
+            color="info" link="{{ route('student-org.my-tickets', ['status' => 'under_review']) }}"
+            link-label="View requests in review" />
+        <x-ui.metric-card label="Needs revision" value="{{ $needsAction->count() }}" meta="Waiting on you"
+            icon="o-pencil-square" color="warning"
+            link="{{ route('student-org.my-tickets', ['status' => 'for_revision']) }}"
+            link-label="View requests that need revision" />
+        <x-ui.metric-card label="Approved" value="{{ $approvedCount }}" meta="All time" icon="o-check-circle"
+            color="success" link="{{ route('student-org.my-tickets', ['status' => 'approved']) }}"
+            link-label="View approved requests" />
+        <x-ui.metric-card label="Upcoming events" value="{{ $upcomingEventsCount }}" meta="Next 30 days"
+            icon="o-calendar-days" link="{{ route('student-org.calendar') }}" link-label="Open the event calendar" />
+    </div>
 
-                {{-- Desktop --}}
-                <div class="hidden md:block">
+    <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
+        {{-- Recent tickets --}}
+        <x-ui.card title="Recent requests" subtitle="Your latest event requests and where each one stands."
+            class="xl:col-span-2">
+            <x-slot:menu>
+                <x-ui.button label="View all" icon-right="o-arrow-right" link="{{ route('student-org.my-tickets') }}"
+                    class="btn-ghost btn-sm" />
+            </x-slot:menu>
+
+            @if ($recentTickets->isEmpty())
+                <x-ui.empty-state icon="o-document-text" title="No requests yet"
+                    description="Event requests you submit appear here with their current status and next step."
+                    :actionLabel="$canCreate ? 'Submit a ticket' : null"
+                    :actionLink="$canCreate ? route('student-org.submit-ticket') : null" primary />
+            @else
+                {{-- Desktop table --}}
+                <div class="-mx-4 hidden sm:-mx-5 md:block">
                     <x-ui.table :headers="[
-                        ['key' => 'id', 'label' => '#'],
-                        ['key' => 'title', 'label' => 'Event Title'],
-                        ['key' => 'date', 'label' => 'Requested Date'],
+                        ['key' => 'title', 'label' => 'Event'],
+                        ['key' => 'date', 'label' => 'Event date'],
                         ['key' => 'status', 'label' => 'Status'],
                         ['key' => 'submitted', 'label' => 'Submitted'],
                     ]">
-                        @forelse ($recentTickets as $recentTicket)
-                            <tr>
-                                <x-ui.table-column>{{ $recentTicket->ticket_number }}</x-ui.table-column>
-                                <x-ui.table-column>{{ $recentTicket->event_name ?? $recentTicket->title }}</x-ui.table-column>
-                                <x-ui.table-column>{{ \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') ?? 'N/A' }}</x-ui.table-column>
+                        @foreach ($recentTickets as $recentTicket)
+                            <tr wire:key="recent-{{ $recentTicket->ticket_id }}" class="hover:bg-base-200/50">
                                 <x-ui.table-column>
-                                    <x-tickets.progress-badge :status="$recentTicket->status" />
+                                    <a href="{{ route('student-org.ticket-details', ['ticketNumber' => $recentTicket->ticket_number]) }}"
+                                        wire:navigate class="font-medium text-base-content hover:underline">
+                                        {{ $recentTicket->event_name ?? $recentTicket->title }}
+                                    </a>
+                                    <p class="font-mono text-xs text-base-content/70">{{ $recentTicket->ticket_number }}</p>
                                 </x-ui.table-column>
-                                <x-ui.table-column>{{ $recentTicket->created_at->format('Y-m-d') }}</x-ui.table-column>
+                                <x-ui.table-column class="whitespace-nowrap">
+                                    {{ $recentTicket->date_from ? \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') : '—' }}
+                                </x-ui.table-column>
+                                <x-ui.table-column>
+                                    <x-tickets.progress-badge :status="$recentTicket->status" size="sm" />
+                                </x-ui.table-column>
+                                <x-ui.table-column class="whitespace-nowrap text-base-content/70">
+                                    {{ $recentTicket->created_at->format('M j, Y') }}
+                                </x-ui.table-column>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="text-center text-base-content/60 py-6">No recent tickets found.</div>
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </x-ui.table>
                 </div>
 
-                {{-- Mobile --}}
-                <div class="md:hidden space-y-3">
-                    @forelse($recentTickets as $recentTicket)
-                        <div class="border border-base-300 rounded-lg p-4 space-y-2">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="mb-2">
-                                        <x-tickets.progress-badge :status="$recentTicket->status" />
-                                    </div>
-                                    <p class="text-xs text-base-content/60">#{{ $recentTicket->ticket_number }}</p>
-                                    <h4 class="font-semibold text-base-content">
-                                        {{ $recentTicket->event_name ?? $recentTicket->title }}</h4>
+                {{-- Mobile list --}}
+                <ul class="-mx-4 divide-y divide-base-300 border-t border-base-300 md:hidden">
+                    @foreach ($recentTickets as $recentTicket)
+                        <li wire:key="recent-m-{{ $recentTicket->ticket_id }}">
+                            <a href="{{ route('student-org.ticket-details', ['ticketNumber' => $recentTicket->ticket_number]) }}"
+                                wire:navigate class="flex items-start justify-between gap-3 px-4 py-3 active:bg-base-200">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-medium text-base-content">
+                                        {{ $recentTicket->event_name ?? $recentTicket->title }}</p>
+                                    <p class="mt-0.5 text-xs text-base-content/70">
+                                        <span class="font-mono">{{ $recentTicket->ticket_number }}</span>
+                                        &middot;
+                                        {{ $recentTicket->date_from ? \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') : 'No date' }}
+                                    </p>
                                 </div>
-                            </div>
-                            <div class="text-sm text-base-content/70">
-                                <p>
-                                    Requested:
-                                    {{ \Carbon\Carbon::parse($recentTicket->date_from)->format('M j, Y') ?? 'N/A' }}
-                                </p>
-                                <p>Submitted: {{ $recentTicket->created_at->format('Y-m-d') }}</p>
-                            </div>
-                        </div>
-                    @empty
-                        <x-ui.empty-state title="No recent tickets yet"
-                            description="Your newest submissions will appear here once you create an event request."
-                            icon="o-document-text" tone="primary" iconColor="text-primary" actionLabel="Submit a Ticket"
-                            actionLink="/student-org/submit-ticket" />
-                    @endforelse
-                </div>
-            </x-ui.card>
+                                <x-tickets.progress-badge :status="$recentTicket->status" size="sm" class="shrink-0" />
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-ui.card>
 
-            {{-- Upcoming Events (deferred child component) --}}
+        {{-- Side column: schedule + updates (deferred) --}}
+        <div class="space-y-6">
             <livewire:student-org.dashboard.upcoming-events defer.bundle />
-
-            {{-- Quick Actions --}}
-            <x-ui.card title="Quick Actions" subtitle="Frequently used actions">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <x-ui.quick-action label="Submit New Ticket" description="Start a new event request"
-                        icon="s-document-plus" color="primary" link="/student-org/submit-ticket" />
-
-                    <x-ui.quick-action label="Check My Tickets" description="Track your submissions"
-                        icon="s-ticket" color="secondary" link="/student-org/my-tickets" />
-
-                    <x-ui.quick-action label="Request Reschedule" description="Move an approved event"
-                        icon="s-arrow-path" color="accent" link="/student-org/reschedule" />
-                </div>
-            </x-ui.card>
-
-            {{-- Recent Notifications (deferred child component) --}}
             <livewire:student-org.dashboard.recent-notifications defer.bundle />
         </div>
     </div>
-
 </div>

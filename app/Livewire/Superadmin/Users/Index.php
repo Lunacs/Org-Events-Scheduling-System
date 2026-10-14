@@ -12,9 +12,16 @@ use App\Models\User;
 use App\Notifications\UserCreatedNotification;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
@@ -47,6 +54,273 @@ class Index extends Component
     public CreateUserForm $createForm;
 
     public EditUserForm $editForm;
+
+    /** @var array<int, int|null> */
+    public array $selectedRoleIds = [];
+
+    public ?int $pendingSelfRoleChangeUserId = null;
+
+    public ?int $pendingSelfRoleChangeRoleId = null;
+
+    public ?int $pendingSelfRoleChangeOriginalRoleId = null;
+
+    public bool $showSelfRoleChangeConfirmation = false;
+
+    public function saveUserRole(int $userId): void
+    {
+        Gate::authorize('manage-rbac');
+
+        $roleId = $this->selectedRoleId($userId);
+        $user = User::query()
+            ->select(['user_id', 'role_id'])
+            ->find($userId);
+
+        if (! $user) {
+            $this->addError("selectedRoleIds.{$userId}", 'The selected user could not be found.');
+            $this->error('User not found.', position: 'toast-top');
+
+            return;
+        }
+
+        if ($user->role_id !== null && (int) $user->role_id === $roleId) {
+            $this->info('This user already has the selected role.', position: 'toast-top');
+
+            return;
+        }
+
+        if (Auth::id() !== null && (int) Auth::id() === (int) $user->user_id) {
+            $this->pendingSelfRoleChangeUserId = $user->user_id;
+            $this->pendingSelfRoleChangeRoleId = $roleId;
+            $this->pendingSelfRoleChangeOriginalRoleId = $user->role_id === null ? null : (int) $user->role_id;
+            $this->showSelfRoleChangeConfirmation = true;
+
+            return;
+        }
+
+        $this->persistUserRoleChange($user->user_id, $roleId);
+    }
+
+    public function confirmSelfRoleChange(): void
+    {
+        Gate::authorize('manage-rbac');
+
+        if ($this->pendingSelfRoleChangeUserId === null || $this->pendingSelfRoleChangeRoleId === null) {
+            $this->error('There is no role change awaiting confirmation.', position: 'toast-top');
+
+            return;
+        }
+
+        if (Auth::id() === null || (int) Auth::id() !== $this->pendingSelfRoleChangeUserId) {
+            $this->cancelSelfRoleChange();
+            $this->error('You can only confirm your own role change.', position: 'toast-top');
+
+            return;
+        }
+
+        $this->selectedRoleIds[$this->pendingSelfRoleChangeUserId] = $this->pendingSelfRoleChangeRoleId;
+
+        $this->persistUserRoleChange(
+            $this->pendingSelfRoleChangeUserId,
+            $this->selectedRoleId($this->pendingSelfRoleChangeUserId),
+        );
+    }
+
+    public function cancelSelfRoleChange(): void
+    {
+        if ($this->pendingSelfRoleChangeUserId !== null && $this->pendingSelfRoleChangeOriginalRoleId !== null) {
+            $this->selectedRoleIds[$this->pendingSelfRoleChangeUserId] = $this->pendingSelfRoleChangeOriginalRoleId;
+        }
+
+        $this->clearSelfRoleChangeConfirmation();
+    }
+
+    private function selectedRoleId(int $userId): int
+    {
+        $validated = $this->validate([
+            "selectedRoleIds.{$userId}" => [
+                'required',
+                'integer',
+                Rule::exists('roles', 'role_id'),
+            ],
+        ]);
+
+        return (int) $validated['selectedRoleIds'][$userId];
+    }
+
+    /**
+     * @return array{previousRoleId: int|null, status: 'changed'|'unchanged'|'last_superadmin'|'missing_affiliation', missing?: string}
+     */
+    private function changeUserRole(int $userId, int $roleId): array
+    {
+        return DB::transaction(function () use ($userId, $roleId): array {
+            $user = User::query()
+                ->lockForUpdate()
+                ->findOrFail($userId);
+            $role = Roles::query()
+                ->lockForUpdate()
+                ->findOrFail($roleId);
+            $previousRoleId = $user->role_id === null ? null : (int) $user->role_id;
+            $targetRoleId = (int) $role->role_id;
+
+            if ($previousRoleId === $targetRoleId) {
+                return [
+                    'previousRoleId' => $previousRoleId,
+                    'status' => 'unchanged',
+                ];
+            }
+
+            $superadminRoleId = Roles::query()
+                ->where('role_name', 'superadmin')
+                ->lockForUpdate()
+                ->value('role_id');
+
+            if (
+                $superadminRoleId !== null
+                && $previousRoleId === (int) $superadminRoleId
+                && $targetRoleId !== (int) $superadminRoleId
+                && User::query()
+                    ->where('role_id', $superadminRoleId)
+                    ->lockForUpdate()
+                    ->get(['user_id'])
+                    ->count() <= 1
+            ) {
+                return [
+                    'previousRoleId' => $previousRoleId,
+                    'status' => 'last_superadmin',
+                ];
+            }
+
+            if ($missing = $role->missingAffiliationFor($user)) {
+                return [
+                    'previousRoleId' => $previousRoleId,
+                    'status' => 'missing_affiliation',
+                    'missing' => $missing,
+                ];
+            }
+
+            $user->role_id = $targetRoleId;
+            $user->save();
+
+            TransactionLogService::logRbacOperation('RBAC_USER_ROLE_CHANGED', [
+                'record_id' => $user->user_id,
+                'before' => ['role_id' => $previousRoleId],
+                'after' => ['role_id' => $targetRoleId],
+                'timestamp' => now()->utc()->toISOString(),
+            ]);
+
+            $this->revokeUserCredentials($user);
+
+            return [
+                'previousRoleId' => $previousRoleId,
+                'status' => 'changed',
+            ];
+        });
+    }
+
+    private function revokeUserCredentials(User $user): void
+    {
+        $user->forceFill([
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->user_id)
+                ->delete();
+        }
+    }
+
+    private function logoutCurrentUser(): void
+    {
+        Auth::guard('web')->logout();
+        Session::invalidate();
+        Session::regenerateToken();
+    }
+
+    private function persistUserRoleChange(int $userId, int $roleId): void
+    {
+        $isCurrentUser = Auth::id() !== null && (int) Auth::id() === $userId;
+
+        try {
+            $roleChange = $this->changeUserRole($userId, $roleId);
+        } catch (\Throwable $exception) {
+            $this->restoreSelectedRoleId($userId);
+            $this->clearSelfRoleChangeConfirmation();
+
+            Log::error('RBAC user role change failed.', [
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'error' => $exception->getMessage(),
+            ]);
+            $this->error("Unable to update the user's role. Please try again.", position: 'toast-top');
+
+            return;
+        }
+
+        if ($roleChange['status'] === 'unchanged') {
+            $this->clearSelfRoleChangeConfirmation();
+            $this->info('This user already has the selected role.', position: 'toast-top');
+
+            return;
+        }
+
+        if ($roleChange['status'] === 'last_superadmin') {
+            $this->restoreSelectedRoleId($userId);
+            $this->clearSelfRoleChangeConfirmation();
+            $this->error('Cannot remove the last superadmin user.', position: 'toast-top');
+
+            return;
+        }
+
+        if ($roleChange['status'] === 'missing_affiliation') {
+            $this->restoreSelectedRoleId($userId);
+            $this->clearSelfRoleChangeConfirmation();
+            $this->error("That role needs the user to belong to an {$roleChange['missing']}. Use Edit user to set it together with the role.", position: 'toast-top');
+
+            return;
+        }
+
+        $this->clearSelfRoleChangeConfirmation();
+
+        if ($isCurrentUser) {
+            $this->logoutCurrentUser();
+        }
+
+        unset($this->users);
+        $this->success('User role updated successfully.', position: 'toast-top');
+    }
+
+    /**
+     * Reset a row's role selector to the role currently stored for the user.
+     */
+    private function restoreSelectedRoleId(int $userId): void
+    {
+        $storedRoleId = User::query()->whereKey($userId)->value('role_id');
+
+        $this->selectedRoleIds[$userId] = $storedRoleId === null ? null : (int) $storedRoleId;
+    }
+
+    /**
+     * Seed role selector state for users on the current page that have no selection yet.
+     */
+    private function fillSelectedRoleIds(LengthAwarePaginator $users): void
+    {
+        foreach ($users as $user) {
+            if (! array_key_exists($user->user_id, $this->selectedRoleIds)) {
+                $this->selectedRoleIds[$user->user_id] = $user->role_id === null ? null : (int) $user->role_id;
+            }
+        }
+    }
+
+    private function clearSelfRoleChangeConfirmation(): void
+    {
+        $this->reset([
+            'pendingSelfRoleChangeUserId',
+            'pendingSelfRoleChangeRoleId',
+            'pendingSelfRoleChangeOriginalRoleId',
+            'showSelfRoleChangeConfirmation',
+        ]);
+    }
 
     public function updated($property, $value)
     {
@@ -185,8 +459,10 @@ class Index extends Component
         ]);
     }
 
-    public function createUser()
+    public function createUser(): void
     {
+        Gate::authorize('manage-rbac');
+
         // Validate with the rules() method
         $this->createForm->validate();
 
@@ -235,17 +511,17 @@ class Index extends Component
             ];
 
             // Add role-specific data
-            if ($this->createForm->role === 'student-org') {
+            if ($this->createForm->portal() === 'student-org') {
                 $userData['org_id'] = $this->createForm->org_name;
                 $userData['position_id'] = $this->createForm->position;
                 $userData['office_id'] = null;
-            } elseif ($this->createForm->role === 'osa') {
+            } elseif ($this->createForm->portal() === 'osa') {
                 // Automatically assign OSA office
                 $osaOffice = Office::where('office_code', 'OSA')->first();
                 $userData['office_id'] = $osaOffice?->office_id;
                 $userData['org_id'] = null;
                 $userData['position_id'] = null;
-            } elseif ($this->createForm->role === 'gso') {
+            } elseif ($this->createForm->portal() === 'gso') {
                 // Automatically assign GSO office
                 $gsoOffice = Office::where('office_code', 'GSO')->first();
                 $userData['office_id'] = $gsoOffice?->office_id;
@@ -286,6 +562,8 @@ class Index extends Component
 
     public function updateUser()
     {
+        Gate::authorize('manage-rbac');
+
         $user = User::findOrFail($this->editForm->user_id);
 
         // Store original values for change tracking
@@ -316,13 +594,23 @@ class Index extends Component
             // Only update role if not superadmin
             if (! $user->isSuperAdmin()) {
                 $newRoleId = User::getRoleId($this->editForm->role);
+
+                if ($newRoleId === null) {
+                    throw new \RuntimeException('The selected role could not be found.');
+                }
+
                 if ($originalUser['role_id'] !== $newRoleId) {
+                    $roleChange = $this->changeUserRole($user->user_id, $newRoleId);
+
+                    if ($roleChange['status'] === 'last_superadmin') {
+                        throw new \RuntimeException('Cannot remove the last superadmin user.');
+                    }
+
                     $changes[] = 'Role changed';
                 }
-                $user->role_id = $newRoleId;
 
                 // Update role-specific data
-                if ($this->editForm->role === 'student-org') {
+                if ($this->editForm->portal() === 'student-org') {
                     $user->org_id = $this->editForm->org_name;
                     $user->position_id = $this->editForm->position;
                     $user->office_id = null;
@@ -332,7 +620,7 @@ class Index extends Component
                     if ($originalUser['position_id'] !== $this->editForm->position) {
                         $changes[] = 'Position changed';
                     }
-                } elseif ($this->editForm->role === 'osa') {
+                } elseif ($this->editForm->portal() === 'osa') {
                     // Automatically assign OSA office
                     $osaOffice = Office::where('office_code', 'OSA')->first();
                     $user->office_id = $osaOffice?->office_id;
@@ -341,7 +629,7 @@ class Index extends Component
                     if ($originalUser['office_id'] !== $user->office_id) {
                         $changes[] = 'Office automatically assigned to OSA';
                     }
-                } elseif ($this->editForm->role === 'gso') {
+                } elseif ($this->editForm->portal() === 'gso') {
                     // Automatically assign GSO office
                     $gsoOffice = Office::where('office_code', 'GSO')->first();
                     $user->office_id = $gsoOffice?->office_id;
@@ -371,6 +659,9 @@ class Index extends Component
             TransactionLogService::logUserOperation('updated', $user, $changes);
 
             DB::commit();
+
+            // Re-read the role selector for this row on the next render
+            unset($this->selectedRoleIds[$user->user_id]);
 
             // Reset and close
             $this->editForm->reset();
@@ -428,8 +719,10 @@ class Index extends Component
         $this->reset(['deletingUserId', 'deletingUserName']);
     }
 
-    public function confirmDelete()
+    public function confirmDelete(): void
     {
+        Gate::authorize('manage-rbac');
+
         // Fetch the user to delete
         $user = User::select(['user_id', 'name', 'role_id'])->find($this->deletingUserId);
 
@@ -460,7 +753,7 @@ class Index extends Component
             $this->closeDeleteModal();
 
             // Clear computed cache and refresh
-            unset($this->users);
+            unset($this->users, $this->selectedRoleIds[$user->user_id]);
             $this->resetPage();
 
             $this->success('User deleted successfully!', position: 'toast-top');
@@ -561,11 +854,14 @@ class Index extends Component
 
     public function render()
     {
+        $this->fillSelectedRoleIds($this->users);
+
         return view('livewire.superadmin.users.index')
             ->with([
                 'users' => $this->users,
                 'headers' => $this->headers,
                 'roles' => $this->roles,
+                'availableRoles' => $this->availableRoles,
                 'positions' => $this->positions,
                 'organizations' => $this->organizations,
                 'hasActiveFilters' => $this->hasActiveFilters(),
@@ -577,6 +873,15 @@ class Index extends Component
     {
         return Roles::select(['role_id', 'role_name'])
             ->where('role_name', '!=', 'superadmin')
+            ->get();
+    }
+
+    #[Computed]
+    public function availableRoles(): Collection
+    {
+        return Roles::query()
+            ->select(['role_id', 'role_name'])
+            ->orderBy('role_name')
             ->get();
     }
 

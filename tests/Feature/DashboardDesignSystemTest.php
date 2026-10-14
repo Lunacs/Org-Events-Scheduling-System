@@ -20,65 +20,64 @@ function appCss(): string
     return file_get_contents(resource_path('css/app.css'));
 }
 
-it('wires Inter as the body sans font while keeping Poppins for headings', function () {
+it('wires IBM Plex Sans for all UI text and Plex Mono for identifiers', function () {
     $css = appCss();
 
+    // DESIGN.md "The One Family Rule": font-heading is an alias of the same family.
     expect($css)->toContain('--font-sans:')
-        ->and($css)->toContain('"Inter"')
-        ->and($css)->toContain('--font-heading: "Poppins", sans-serif;');
+        ->and($css)->toContain('"IBM Plex Sans"')
+        ->and($css)->toContain('--font-heading: "IBM Plex Sans"')
+        ->and($css)->toContain('--font-mono: "IBM Plex Mono"')
+        ->and($css)->not->toContain('Poppins');
 });
 
 it('exposes a visible keyboard-focus ring instead of blanket focus removal', function () {
     $css = appCss();
 
-    // The visible focus-visible ring must exist.
-    expect($css)->toContain(':focus-visible')
-        ->and($css)->toContain('outline: 2px solid var(--color-primary);');
+    // The visible focus-visible ring must exist, in the contrast-checked focus color.
+    expect($css)->toContain(':focus-visible {')
+        ->and($css)->toContain('outline: 2px solid var(--color-focus);')
+        ->and($css)->toContain('--color-focus:');
 
     // The old blanket removals that killed keyboard focus must be gone.
     expect($css)->not->toContain('[class*="focus:ring"]:focus')
-        ->and($css)->not->toContain('ring: none !important;');
+        ->and($css)->not->toContain('ring: none !important;')
+        ->and($css)->not->toContain('outline: none !important;');
 });
 
-it('defines the dashboard type-scale tokens', function () {
-    $css = appCss();
-
-    expect($css)->toContain('--text-dash-title:')
-        ->and($css)->toContain('--text-dash-stat:')
-        ->and($css)->toContain('--text-dash-meta:');
-});
-
-it('keeps every sidebar expanded state aligned with its drawer checkbox', function () {
+it('routes every portal through the shared shell, which never opens the mobile drawer on load', function () {
     $layouts = [
-        'views/components/layouts/app.blade.php' => 'osa-sidebar-expanded',
-        'views/components/layouts/student-org-layout.blade.php' => 'student-sidebar-expanded',
-        'views/components/layouts/gso-layout.blade.php' => 'gso-sidebar-expanded',
-        'views/components/layouts/superadmin.blade.php' => 'superadmin-sidebar-expanded',
+        'app.blade.php' => 'osa',
+        'student-org-layout.blade.php' => 'student-org',
+        'gso-layout.blade.php' => 'gso',
+        'superadmin.blade.php' => 'superadmin',
+        'viewer-layout.blade.php' => 'viewer',
     ];
 
-    foreach ($layouts as $path => $storageKey) {
-        $layout = file_get_contents(resource_path($path));
-        $persistExpression = "\$persist(true).as('{$storageKey}')";
+    foreach ($layouts as $file => $portal) {
+        $layout = file_get_contents(resource_path("views/components/layouts/{$file}"));
 
-        expect($layout)->toContain($persistExpression)
-            ->and($layout)->toContain(':checked="sidebarExpanded"')
-            ->and($layout)->toContain('@change="sidebarExpanded = $event.target.checked"')
-            ->and($layout)->toContain("localStorage.getItem('{$storageKey}') === 'true'")
-            ->and($layout)->not->toContain(':checked="!sidebarExpanded"')
-            ->and($layout)->not->toContain('@change="sidebarExpanded = !$event.target.checked"');
+        expect($layout)->toContain("<x-layouts.portal portal=\"{$portal}\"");
     }
+
+    $shell = file_get_contents(resource_path('views/components/layouts/portal.blade.php'));
+
+    // Desktop restores the remembered expanded/collapsed state; mobile always starts closed.
+    expect($shell)->toContain('toggle.checked = desktop.matches ? saved() : false;')
+        ->and($shell)->toContain('<main id="main"')
+        ->and($shell)->toContain('Skip to main content')
+        ->and($shell)->not->toContain('$persist(true)');
 });
 
-it('does not force white text onto tinted (opacity) colored backgrounds', function () {
+it('never forces white text onto brand or status fills', function () {
     $css = appCss();
 
-    // The broad wildcard used to force white on bg-primary/10 icon chips; it must be gone.
+    // Each fill owns its *-content color (white on navy, dark ink on dark-mode cyan).
     expect($css)->not->toContain('[class*="bg-primary"]')
-        ->and($css)->not->toContain('[class*="bg-secondary"]')
-        ->and($css)->not->toContain('[class*="bg-accent"]');
-
-    // Solid backgrounds are still handled, but opacity tints are excluded.
-    expect($css)->toContain('.bg-primary:not([class*="/"])');
+        ->and($css)->not->toContain('.bg-primary:not([class*="/"])')
+        ->and($css)->not->toContain('color: white !important')
+        ->and($css)->toContain('--color-primary-content:')
+        ->and($css)->toContain('--color-warning-content:');
 });
 
 it('renders the OSA dashboard component without errors', function () {

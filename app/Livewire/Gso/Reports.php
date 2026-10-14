@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -40,6 +41,8 @@ class Reports extends Component
 
     public function export(string $format, string $timePeriod, ?string $start = null, ?string $end = null, ?string $search = null)
     {
+        Gate::authorize('reports.export');
+
         // Instead of returning a binary response directly from Livewire (which
         // won't trigger a browser file download), generate a temporary signed
         // URL to a controller route that will produce the streamed download.

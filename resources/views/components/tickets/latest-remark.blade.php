@@ -1,57 +1,42 @@
 @props(['status', 'ticket'])
 
-@if(in_array(strtolower($status), ['received', 'amended', 'gso_review']) && $ticket->comments->isNotEmpty())
-    <div class="bg-info/10 p-3 rounded-lg">
-        <div class="flex items-start gap-3">
-            <x-ui.icon name="s-chat-bubble-left" class="w-5 h-5 text-info mt-0.5"/>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-info">Latest Update
-                    from {{ $ticket->latestComment->namingConvention() }}</p>
-                <p class="text-sm text-base-content/70 mt-1">{{ $ticket->latestComment->content }}</p>
-                <p class="text-xs text-base-content/50 mt-2">{{ $ticket->latestComment->updated_at->diffForHumans() }}</p>
-            </div>
+{{--
+    The one remark that matters for a ticket right now: OSA's decision remarks for
+    approved / needs-revision tickets, otherwise the latest comment while it is in review.
+--}}
+@php
+    $status = strtolower((string) $status);
+    $remark = $ticket->latestOsaApproval?->remarks;
+@endphp
+
+@if (in_array($status, ['received', 'amended', 'gso_review', 'pending_osa_approval'], true) && $ticket->comments->isNotEmpty())
+    <div class="mt-4 flex items-start gap-2.5 rounded-field bg-base-200 p-3 text-sm">
+        <x-ui.icon name="o-chat-bubble-left" class="mt-0.5 size-4 shrink-0 text-base-content/60" aria-hidden="true" />
+        <div class="min-w-0 flex-1">
+            <p class="font-medium text-base-content">Latest comment from {{ $ticket->latestComment->namingConvention() }}</p>
+            <p class="mt-0.5 line-clamp-3 text-base-content/80">{{ $ticket->latestComment->content }}</p>
+            <p class="mt-1 text-xs text-base-content/70">{{ $ticket->latestComment->updated_at->diffForHumans() }}</p>
         </div>
     </div>
-@elseif(strtolower($status) == 'approved')
-    <div class="bg-success/10 p-3 rounded-lg">
-        <div class="flex items-start gap-3">
-            <x-ui.icon name="s-check-circle" class="w-5 h-5 text-success mt-0.5"/>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-success">Event Approved!</p>
-                <p class="text-sm text-base-content/70 mt-1">Congratulations! Your event has been
-                    approved. You may now proceed with your preparations.
-                    Please ensure to follow all safety guidelines and submit a post-event
-                    report.</p>
-                @if($ticket->latestOsaApproval?->remarks)
-                    <p class="text-sm font-medium text-success mt-2">Latest Remark from OSA:</p>
-                    <p class="text-sm text-base-content/70 mt-1">{{ $ticket->latestOsaApproval->remarks }}</p>
-                @endif
-                <p class="text-xs text-base-content/50 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
-            </div>
+@elseif ($status === 'approved')
+    <div class="mt-4 flex items-start gap-2.5 rounded-field border border-success/30 bg-success/[0.06] p-3 text-sm">
+        <x-ui.icon name="s-check-circle" class="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
+        <div class="min-w-0 flex-1">
+            <p class="font-medium text-base-content">Approved and on the calendar</p>
+            <p class="mt-0.5 text-base-content/80">
+                {{ $remark ?: 'Follow the safety guidelines during the event and submit your post-event report afterwards.' }}
+            </p>
         </div>
     </div>
-@elseif(in_array(strtolower($status), ['for_revision']))
-    <div class="bg-warning/10 p-3 rounded-lg">
-        <div class="flex items-start gap-3">
-            <x-ui.icon name="s-exclamation-triangle"
-                         class="w-5 h-5 text-warning mt-0.5"/>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-warning">
-                    For Revision
-                </p>
-                @if($ticket->latestOsaApproval?->remarks)
-                    <p class="text-sm text-base-content/70 mt-1">{{ $ticket->latestOsaApproval->remarks }}</p>
-                @else
-                    <p class="text-sm text-base-content/70 mt-1">Event for revision. It may be due to different concerns from
-                        the
-                        offices, or time conflicts. Submit another ticket and try again.</p>
-                @endif
-                <p class="text-xs text-base-content/50 mt-2">{{ $ticket->updated_at->diffForHumans() }}</p>
-                    <x-ui.button label="Submit Revision" icon="s-arrow-up"
-                                   class="btn-sm btn-primary mt-2"
-                                   tooltip="Revise Event"
-                                   wire:click="$dispatch('resubmit-ticket', { ticketId: {{ $ticket->ticket_id }} })"/>
-            </div>
+@elseif (in_array($status, ['for_revision', 'needs_revision'], true))
+    <div class="mt-4 flex items-start gap-2.5 rounded-field border border-warning/30 bg-warning/[0.06] p-3 text-sm">
+        <x-ui.icon name="s-pencil-square" class="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+        <div class="min-w-0 flex-1">
+            <p class="font-medium text-base-content">OSA requested changes</p>
+            <p class="mt-0.5 whitespace-pre-line text-base-content/80">
+                {{ $remark ?: 'Open the request and read the comments to see what needs to change, then revise and resubmit it.' }}
+            </p>
+            <p class="mt-1 text-xs text-base-content/70">{{ $ticket->updated_at->diffForHumans() }}</p>
         </div>
     </div>
 @endif

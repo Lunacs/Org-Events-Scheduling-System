@@ -6,14 +6,14 @@
         <div x-data="{ show: false }" class="relative mt-1">
             <div
                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-secondary">
-                <i class="fas {{ $iconClass }} text-gray-400 group-focus-within:text-secondary transition-colors"></i>
+                <i class="fas {{ $iconClass }} text-base-content/60 group-focus-within:text-secondary transition-colors"></i>
             </div>
 
             <input :type="show ? 'text' : 'password'" @disabled($disabled)
-                {{ $attributes->merge(['class' => 'block w-full pl-10 pr-10 py-2 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm']) }}>
+                {{ $attributes->merge(['class' => 'block w-full pl-10 pr-10 py-2 border-base-300 dark:border-gray-700 dark:bg-gray-900 dark:text-base-content/40 focus:border-primary  focus:ring-primary/40  rounded-md shadow-sm']) }}>
 
             <button type="button" @click="show = !show"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors duration-200"
                 tabindex="-1">
                 {{-- <i class="fas fa-eye" x-show="!show"></i>
                 <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}
@@ -26,14 +26,14 @@
     <div x-data="{ show: false }" class="relative">
         <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-secondary">
-            <i class="fas {{ $iconClass }} text-gray-400 group-focus-within:text-secondary transition-colors"></i>
+            <i class="fas {{ $iconClass }} text-base-content/60 group-focus-within:text-secondary transition-colors"></i>
         </div>
 
         <input :type="show ? 'text' : 'password'" @disabled($disabled)
-            {{ $attributes->merge(['class' => 'block w-full pl-10 pr-10 py-2 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm']) }}>
+            {{ $attributes->merge(['class' => 'block w-full pl-10 pr-10 py-2 border-base-300 dark:border-gray-700 dark:bg-gray-900 dark:text-base-content/40 focus:border-primary  focus:ring-primary/40  rounded-md shadow-sm']) }}>
 
         <button type="button" @click="show = !show"
-            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors duration-200"
             tabindex="-1">
             {{-- <i class="fas fa-eye" x-show="!show"></i>
             <i class="fas fa-eye-slash" x-show="show" style="display: none;"></i> --}}

@@ -4,7 +4,7 @@
 
         <x-ui.card>
             <div class="flex items-center gap-2 mb-4">
-                <x-ui.input placeholder="Search logs..." class="w-full" />
+                <x-ui.input placeholder="Search logs…" class="w-full" />
                 <x-ui.select :options="['All', 'Info', 'Warning', 'Error']" label="Level" />
             </div>
             <x-ui.table :headers="['When', 'Who', 'Action', 'Target', 'Details']">

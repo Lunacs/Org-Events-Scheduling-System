@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TicketComment extends Model
@@ -26,7 +25,7 @@ class TicketComment extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     public function namingConvention()
@@ -39,27 +38,27 @@ class TicketComment extends Model
         $user = $this->user;
 
         // Prepare naming parts
-        $text = $user->name . ' (';
+        $text = $user->name.' (';
         $close = ')';
 
         // Default values
-        $osa = 'OSA';;
+        $osa = 'OSA';
         $gso = $user->office?->office_code ?? 'GSO';
-        $studentOrg = $user->studentOrganization?->org_code  ?? 'Student Org';
+        $studentOrg = $user->studentOrganization?->org_code ?? 'Student Org';
         $admin = 'Admin';
 
         // Position for student org users
         $position = $user->position?->position_name;
         // Load role relationship if not already loaded
-        if (!$user->relationLoaded('role')) {
+        if (! $user->relationLoaded('role')) {
             $user->load('role');
         }
 
         // Return based on user's role
         return match ($user->role?->role_name) {
-            'osa' => $text . $osa . $close,
-            'gso' => $text . $gso . $close,
-            'student-org' => $text . $studentOrg . ' - ' . $position . $close,
+            'osa' => $text.$osa.$close,
+            'gso' => $text.$gso.$close,
+            'student-org' => $text.$studentOrg.' - '.$position.$close,
             'superadmin' => $admin,
             default => $user->name,
         };

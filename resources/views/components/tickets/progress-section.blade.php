@@ -53,16 +53,16 @@
         <div class="flex-1 h-0.5 bg-base-300"></div>
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-base-300 rounded-full flex items-center justify-center">
-                <x-ui.icon name="s-clock" class="w-4 h-4 text-base-content/40" />
+                <x-ui.icon name="s-clock" class="w-4 h-4 text-base-content/60" />
             </div>
-            <span class="text-sm text-base-content/40">GSO Review</span>
+            <span class="text-sm text-base-content/60">GSO Review</span>
         </div>
         <div class="flex-1 h-0.5 bg-base-300"></div>
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-base-300 rounded-full flex items-center justify-center">
-                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/40" />
+                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/60" />
             </div>
-            <span class="text-sm text-base-content/40">Approved</span>
+            <span class="text-sm text-base-content/60">Approved</span>
         </div>
         @elseif(strtolower($status) == 'gso_review')
         <div class="flex items-center gap-2">
@@ -88,9 +88,9 @@
         <div class="flex-1 h-0.5 bg-base-300"></div>
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-base-300 rounded-full flex items-center justify-center">
-                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/40" />
+                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/60" />
             </div>
-            <span class="text-sm text-base-content/40">Approved</span>
+            <span class="text-sm text-base-content/60">Approved</span>
         </div>
         @elseif(strtolower($status) == 'approved')
         <div class="flex items-center gap-2">
@@ -137,16 +137,16 @@
         <div class="flex-1 h-0.5 bg-base-300"></div>
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-base-300 rounded-full flex items-center justify-center">
-                <x-ui.icon name="s-clock" class="w-4 h-4 text-base-content/40" />
+                <x-ui.icon name="s-clock" class="w-4 h-4 text-base-content/60" />
             </div>
-            <span class="text-sm text-base-content/40">GSO Review</span>
+            <span class="text-sm text-base-content/60">GSO Review</span>
         </div>
         <div class="flex-1 h-0.5 bg-base-300"></div>
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-base-300 rounded-full flex items-center justify-center">
-                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/40" />
+                <x-ui.icon name="s-check-circle" class="w-4 h-4 text-base-content/60" />
             </div>
-            <span class="text-sm text-base-content/40">Approved</span>
+            <span class="text-sm text-base-content/60">Approved</span>
         </div>
         @endif
     </div>

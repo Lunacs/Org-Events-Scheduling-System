@@ -14,15 +14,19 @@ use App\Models\TicketDraftAttachment;
 use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\TicketSubmittedNotification;
+use App\Services\TicketWorkflowService;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
@@ -38,7 +42,12 @@ class SubmitTicket extends Component
     // Step tracking
     public $currentStep = 1;
 
+    #[Locked]
     public $totalSteps = 6;
+
+    /** The for_revision ticket being revised, when the form was opened with ?amend=. */
+    #[Locked]
+    public ?int $amendingTicketId = null;
 
     #[Validate('required|accepted')]
     public $agreeToTerms = false;
@@ -62,9 +71,6 @@ class SubmitTicket extends Component
     #[Validate('numeric', message: 'The adviser contact number must contain only numbers.')]
     #[Validate('digits:11', message: 'The adviser contact number must be 11 digits.')]
     public $adviser_contact = '09';
-
-    #[Validate('required|boolean')]
-    public $is_amended = false;
 
     // Step 2: Event Details
     #[Validate('required|string|max:255|min:5|regex:/^[^0-9][a-z0-9\\s]*$/i')]
@@ -259,7 +265,6 @@ class SubmitTicket extends Component
         return match ($this->currentStep) {
             1 => [
                 'adviser_contact' => 'required|string|digits:11|regex:/^[0-9]+$/',
-                'is_amended' => 'required|boolean',
             ],
             2 => [
                 'eventTitle' => 'required|string|max:255|min:5',
@@ -547,7 +552,9 @@ class SubmitTicket extends Component
 
         // Create temporary attachment objects for preview
         // Fetch the authoritative list of current attachments via the IDs managed by FilePond.
-        $draftAttachments = TicketDraftAttachment::whereIn('id', $this->uploadedFileIds)->get();
+        $draftAttachments = TicketDraftAttachment::whereIn('id', $this->uploadedFileIds)
+            ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
+            ->get();
 
         $previewAttachments = $draftAttachments->map(function ($file, int $index) {
             $attachment = new Attachment;
@@ -601,16 +608,13 @@ class SubmitTicket extends Component
         Cache::forget('fund_sources_all');
         $this->fundingSource = $naFundSource->source_id;
 
-        // Load resubmit data if available (may override fundingSource with a saved value)
-        if (session()->has('resubmit_ticket')) {
-            $data = session()->pull('resubmit_ticket');
-            foreach ($data as $key => $value) {
-                if (property_exists($this, $key)) {
-                    $this->{$key} = $value;
-                }
-            }
+        $amendTicketNumber = request()->query('amend');
+
+        if (is_string($amendTicketNumber) && $amendTicketNumber !== '') {
+            // Revising a ticket OSA sent back: prefill from the ticket itself, never from a draft.
+            $this->startAmending($amendTicketNumber);
         } else {
-            // No resubmit session — check for an existing server-side draft for this user.
+            // Check for an existing server-side draft for this user.
             // Dispatches a `draft-found` browser event so the JS layer can show the resume modal.
             $existingDraft = TicketDraft::where('user_id', auth()->id())->first();
             if ($existingDraft) {
@@ -684,6 +688,14 @@ class SubmitTicket extends Component
                 return;
             }
 
+            if ($this->amendingTicketId) {
+                $this->saveAmendment($currentUser);
+
+                return;
+            }
+
+            $attachments = $this->ownedDraftAttachments();
+
             \DB::beginTransaction();
             $orgCode = $currentUserinfo->org_code;
             $lastTicket = Ticket::lockForUpdate()
@@ -698,57 +710,22 @@ class SubmitTicket extends Component
             // Generate unique ticket number with locking
             $ticketCode = "TKT-{$orgCode}-".str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-            // Helper function to convert empty strings to null for nullable fields
-            $nullIfEmpty = fn ($value) => ($value === '' || $value === null) ? null : $value;
-            $nullIfEmptyInt = fn ($value) => ($value === '' || $value === null) ? null : (int) $value;
-
             $ticket = Ticket::create([
+                ...$this->ticketAttributes(),
                 'user_id' => $currentUser->user_id,
                 'ticket_number' => $ticketCode,
-                'event_type_id' => (int) $this->eventType,
-                'plv_participants' => (int) $this->expectedPLVParticipants,
-                'external_participants' => $nullIfEmptyInt($this->expectedNonPLVParticipants),
-                'title' => $this->eventTitle,
-                'description' => $this->eventDescription,
-                'proponent_contact' => $this->proponent_contact,
-                'adviser_contact' => $this->adviser_contact,
-                'igp_requested' => $this->igp_requested === 'true',
-                'igp_details' => $nullIfEmpty($this->igp_details),
-                'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
-                'oc_tsp' => $nullIfEmpty($this->oc_tsp),
-                'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
-                'oc_transportation_type' => $nullIfEmpty($this->oc_transportation_type),
-                'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
-                'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
-                'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
-                'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
-                'venue_requested' => $this->preferredVenue === 'other' ? null : $nullIfEmptyInt($this->preferredVenue),
-                'venue_other' => $this->preferredVenue === 'other' ? $this->preferredVenueOther : $nullIfEmpty($this->preferredVenueOther),
-                'alternate_venue' => $this->alternativeVenue === 'other' ? null : $nullIfEmptyInt($this->alternativeVenue),
-                'alternate_venue_other' => $this->alternativeVenue === 'other' ? $this->alternativeVenueOther : $nullIfEmpty($this->alternativeVenueOther),
-                'special_requirements' => $nullIfEmpty($this->specialRequirements),
-                'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
-                'fund_source_id' => (int) $this->fundingSource,
-                'date_from' => $this->eventStartDate,
-                'date_to' => $this->eventEndDate,
-                'time_from' => $this->eventStartTime,
-                'time_to' => $this->eventEndTime,
-                'additional_notes' => $nullIfEmpty($this->additionalNotes),
-                'status' => $this->is_amended ? 'amended' : 'received',
+                'status' => 'received',
             ]);
 
-            // Sync any FilePond uploads into $this->attachments before processing
-            $this->syncFilePondUploads();
-
             // Dispatch job to process file attachments asynchronously
-            ProcessTicketAttachments::dispatch($ticket->ticket_id, $this->attachments)->afterCommit();
+            ProcessTicketAttachments::dispatch($ticket->ticket_id, $attachments->toArray())->afterCommit();
 
             // Log transaction
             // Note: autoCleanup() does a COUNT+DELETE periodically and may be worth moving to a scheduled command later.
             TransactionLogService::logTicketOperation('created', $ticket);
 
             // Notify OSA admins about the new ticket
-            $osaUsers = User::where('role_id', User::getRoleId('osa'))->get();
+            $osaUsers = User::query()->inPortal('osa')->get();
             Notification::send($osaUsers, new TicketSubmittedNotification($ticket));
 
             \DB::commit();
@@ -834,6 +811,164 @@ class SubmitTicket extends Component
                 $lock->release();
             }
         }
+    }
+
+    /**
+     * The ticket columns filled from the form, shared by new tickets and amendments.
+     *
+     * @return array<string, mixed>
+     */
+    private function ticketAttributes(): array
+    {
+        $nullIfEmpty = fn ($value) => ($value === '' || $value === null) ? null : $value;
+        $nullIfEmptyInt = fn ($value) => ($value === '' || $value === null) ? null : (int) $value;
+
+        return [
+            'event_type_id' => (int) $this->eventType,
+            'plv_participants' => (int) $this->expectedPLVParticipants,
+            'external_participants' => $nullIfEmptyInt($this->expectedNonPLVParticipants),
+            'title' => $this->eventTitle,
+            'description' => $this->eventDescription,
+            'proponent_contact' => auth()->user()->phone ?? '',
+            'adviser_contact' => $this->adviser_contact,
+            'igp_requested' => $this->igp_requested === 'true',
+            'igp_details' => $nullIfEmpty($this->igp_details),
+            'oc_accommodation' => $nullIfEmpty($this->oc_accommodation),
+            'oc_tsp' => $nullIfEmpty($this->oc_tsp),
+            'oc_driver_name' => $nullIfEmpty($this->oc_driver_name),
+            'oc_transportation_type' => $nullIfEmpty($this->oc_transportation_type),
+            'oc_vehicle_plate_number' => $nullIfEmpty($this->oc_vehicle_plate_number),
+            'oc_driver_contact_number' => $nullIfEmpty($this->oc_driver_contact_number),
+            'estimated_budget' => $this->totalBudget ? (float) $this->totalBudget : null,
+            'budget_breakdown' => $nullIfEmpty($this->budgetBreakdown),
+            'venue_requested' => $this->preferredVenue === 'other' ? null : $nullIfEmptyInt($this->preferredVenue),
+            'venue_other' => $this->preferredVenue === 'other' ? $this->preferredVenueOther : $nullIfEmpty($this->preferredVenueOther),
+            'alternate_venue' => $this->alternativeVenue === 'other' ? null : $nullIfEmptyInt($this->alternativeVenue),
+            'alternate_venue_other' => $this->alternativeVenue === 'other' ? $this->alternativeVenueOther : $nullIfEmpty($this->alternativeVenueOther),
+            'special_requirements' => $nullIfEmpty($this->specialRequirements),
+            'total_participants' => (int) $this->expectedPLVParticipants + (int) ($this->expectedNonPLVParticipants ?: 0),
+            'fund_source_id' => (int) $this->fundingSource,
+            'date_from' => $this->eventStartDate,
+            'date_to' => $this->eventEndDate,
+            'time_from' => $this->eventStartTime,
+            'time_to' => $this->eventEndTime,
+            'additional_notes' => $nullIfEmpty($this->additionalNotes),
+        ];
+    }
+
+    /**
+     * The uploaded files to attach, resolved server-side from the current user's
+     * own draft rows so a tampered client payload cannot point at other files.
+     *
+     * @return Collection<int, TicketDraftAttachment>
+     */
+    private function ownedDraftAttachments(): Collection
+    {
+        $this->syncFilePondUploads();
+
+        $ids = collect($this->attachments)
+            ->map(fn ($attachment) => is_array($attachment) ? ($attachment['id'] ?? null) : null)
+            ->merge($this->uploadedFileIds)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return TicketDraftAttachment::query()
+            ->whereIn('id', $ids)
+            ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
+            ->get(['id', 'file_name', 'file_path', 'file_type', 'file_size']);
+    }
+
+    /**
+     * Load a ticket OSA sent back for revision into the form.
+     */
+    private function startAmending(string $ticketNumber): void
+    {
+        $ticket = Ticket::query()->where('ticket_number', $ticketNumber)->firstOrFail();
+
+        Gate::authorize('resubmit', $ticket);
+
+        $this->amendingTicketId = $ticket->ticket_id;
+
+        $hasOffCampusDetails = collect([
+            $ticket->oc_accommodation, $ticket->oc_tsp, $ticket->oc_driver_name,
+            $ticket->oc_transportation_type, $ticket->oc_vehicle_plate_number, $ticket->oc_driver_contact_number,
+        ])->filter()->isNotEmpty();
+
+        $this->fill([
+            'adviser_contact' => $ticket->adviser_contact,
+            'eventTitle' => $ticket->title,
+            'eventDescription' => $ticket->description,
+            'eventType' => $ticket->event_type_id,
+            'expectedPLVParticipants' => $ticket->plv_participants,
+            'expectedNonPLVParticipants' => $ticket->external_participants ?? 0,
+            'eventStartDate' => $ticket->date_from,
+            'eventEndDate' => $ticket->date_to,
+            'eventStartTime' => substr((string) $ticket->time_from, 0, 5),
+            'eventEndTime' => substr((string) $ticket->time_to, 0, 5),
+            'preferredVenue' => $ticket->venue_requested ?? ($ticket->venue_other ? 'other' : null),
+            'preferredVenueOther' => $ticket->venue_other,
+            'alternativeVenue' => $ticket->alternate_venue ?? ($ticket->alternate_venue_other ? 'other' : null),
+            'alternativeVenueOther' => $ticket->alternate_venue_other,
+            'specialRequirements' => $ticket->special_requirements ?? '',
+            'is_oc' => $hasOffCampusDetails,
+            'oc_accommodation' => $ticket->oc_accommodation ?? '',
+            'oc_tsp' => $ticket->oc_tsp,
+            'oc_driver_name' => $ticket->oc_driver_name ?? '',
+            'oc_driver_contact_number' => $ticket->oc_driver_contact_number ?? '',
+            'oc_transportation_type' => $ticket->oc_transportation_type ?? '',
+            'oc_vehicle_plate_number' => $ticket->oc_vehicle_plate_number ?? '',
+            'totalBudget' => $ticket->estimated_budget ?? 0,
+            'fundingSource' => $ticket->fund_source_id,
+            'budgetBreakdown' => $ticket->budget_breakdown ?? '',
+            'igp_requested' => $ticket->igp_requested ? 'true' : 'false',
+            'igp_details' => $ticket->igp_details ?? '',
+            'additionalNotes' => $ticket->additional_notes ?? '',
+        ]);
+    }
+
+    /**
+     * Save the revised form onto the same ticket and send it back to OSA.
+     */
+    private function saveAmendment(User $currentUser): void
+    {
+        $ticket = Ticket::query()->findOrFail($this->amendingTicketId);
+
+        Gate::authorize('resubmit', $ticket);
+
+        $attachments = $this->ownedDraftAttachments();
+
+        \DB::transaction(function () use ($ticket, $currentUser): void {
+            $ticket->update($this->ticketAttributes());
+
+            app(TicketWorkflowService::class)->resubmit($ticket, $currentUser);
+        });
+
+        if ($attachments->isNotEmpty()) {
+            ProcessTicketAttachments::dispatch($ticket->ticket_id, $attachments->toArray());
+
+            // The job moves the files; drop the draft rows without touching the files.
+            TicketDraftAttachment::query()->whereIn('id', $attachments->pluck('id'))->delete();
+        }
+
+        $this->attachments = [];
+        $this->uploadedFileIds = [];
+        $this->dispatch('clear-draft-immediate');
+
+        $this->toast(
+            type: 'success',
+            title: 'Ticket Resubmitted',
+            description: "Your revised ticket {$ticket->ticket_number} has been sent back to OSA.",
+            position: 'toast-top toast-end',
+            icon: 'o-check-circle',
+            css: 'alert-success',
+            timeout: 3000,
+            redirectTo: route('student-org.ticket-details', ['ticketNumber' => $ticket->ticket_number])
+        );
     }
 
     public function loadDraft($draftData)
@@ -945,7 +1080,10 @@ class SubmitTicket extends Component
 
         // If this is a DB-backed draft attachment, clean up disk + DB record.
         if ($attachment && is_array($attachment) && isset($attachment['id'])) {
-            $record = TicketDraftAttachment::find($attachment['id']);
+            $record = TicketDraftAttachment::query()
+                ->whereKey($attachment['id'])
+                ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
+                ->first();
             if ($record) {
                 Storage::delete($record->file_path);
                 $record->delete();
@@ -1015,6 +1153,8 @@ class SubmitTicket extends Component
             'isProcessing',
             'venues',
             'draftId',
+            'totalSteps',
+            'amendingTicketId',
             // User-profile autofills — never persist to draft:
             'organizationName',
             'organizationCourse',
@@ -1046,7 +1186,13 @@ class SubmitTicket extends Component
     public function updated(string $property): void
     {
         // Skip file upload properties — they are managed by FilePond/Alpine
-        if (in_array($property, ['uploadedFileIds', 'attachments', 'draftId'])) {
+        if (in_array($property, ['uploadedFileIds', 'attachments', 'draftId', 'isProcessing'])) {
+            return;
+        }
+
+        // Don't auto-save while a submission is in flight, or over the user's
+        // new-ticket draft while they are revising an existing ticket.
+        if ($this->isProcessing || $this->amendingTicketId) {
             return;
         }
 
@@ -1106,7 +1252,9 @@ class SubmitTicket extends Component
      */
     protected function draftAttachmentFileList(): array
     {
+        // Scope to the current user's draft — uploadedFileIds is client-controlled
         return TicketDraftAttachment::whereIn('id', $this->uploadedFileIds ?? [])
+            ->whereHas('draft', fn ($q) => $q->where('user_id', auth()->id()))
             ->get()
             ->map(fn ($attachment) => $attachment->toArray())
             ->all();

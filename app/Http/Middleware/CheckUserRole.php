@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Roles;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,55 +11,32 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckUserRole
 {
     /**
-     * Handle an incoming request.
+     * Allow the request only when the user's role works in the given portal.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * The `role:` parameter names a portal (`superadmin`, `osa`, `gso`,
+     * `student-org` or `viewer`); custom roles belong to their base portal.
+     *
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
+        $knownPortals = [...Roles::BUILT_IN_ROLE_NAMES, Roles::VIEWER_PORTAL];
 
-        // Check if user has the required role
-        switch ($role) {
-            case 'superadmin':
-                if (!$user->isSuperAdmin()) {
-                    Auth::guard()->logout();
-                    return redirect()->route('superadmin.login')->withErrors([
-                        'email' => 'You are not authorized to access this area.'
-                    ]);
-                }
-                break;
-            case 'osa':
-                if (!$user->isOSA()) {
-                    Auth::guard()->logout();
-                    return redirect()->route('admin.login')->withErrors([
-                        'email' => 'You are not authorized to access this area.'
-                    ]);
-                }
-                break;
-            case 'gso':
-                if (!$user->isGSO()) {
-                    Auth::guard()->logout();
-                    return redirect()->route('gso.login')->withErrors([
-                        'email' => 'You are not authorized to access this area.'
-                    ]);
-                }
-                break;
-            case 'student_org':
-                if (!$user->isStudentOrg()) {
-                    Auth::guard()->logout();
-                    return redirect()->route('student-org.login')->withErrors([
-                        'email' => 'You are not authorized to access this area.'
-                    ]);
-                }
-                break;
+        if (! in_array($role, $knownPortals, true)) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'You are not authorized to access this area.',
+            ]);
+        }
 
-            default:
-                return redirect()->route('login');
+        if (! $user->inPortal($role)) {
+            return redirect()->route($user->getDashboardRoute())->withErrors([
+                'email' => 'You are not authorized to access this area.',
+            ]);
         }
 
         return $next($request);

@@ -59,8 +59,8 @@ new class extends Component {
                             <span class="font-medium">{{ $activity['user'] }}</span>
                             <span class="text-base-content/70">{{ $activity['action'] }}</span>
                         </div>
-                        <div class="text-xs text-base-content/50 truncate">{{ $activity['details'] }}</div>
-                        <div class="text-xs text-base-content/40 mt-1">{{ $activity['time_ago'] }}</div>
+                        <div class="text-xs text-base-content/60 truncate">{{ $activity['details'] }}</div>
+                        <div class="text-xs text-base-content/60 mt-1">{{ $activity['time_ago'] }}</div>
                     </div>
                 </div>
             @endforeach
@@ -68,7 +68,7 @@ new class extends Component {
     @else
         <div class="text-center py-12">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                <x-ui.icon name="o-document-text" class="w-8 h-8 text-base-content/40" />
+                <x-ui.icon name="o-document-text" class="w-8 h-8 text-base-content/60" />
             </div>
             <p class="text-sm text-base-content/60 font-medium">No recent activity</p>
         </div>

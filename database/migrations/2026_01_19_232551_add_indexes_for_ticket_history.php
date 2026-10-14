@@ -37,16 +37,39 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('o_s_a__approvals', function (Blueprint $table) {
-            try { $table->dropIndex('idx_osa_ticket_updated'); } catch (\Throwable $e) {}
-        });
+        $this->dropIndexSafely('o_s_a__approvals', 'idx_osa_ticket_updated');
+        $this->dropIndexSafely('event_schedules', 'idx_schedules_event_status');
+    }
 
-        Schema::table('tickets', function (Blueprint $table) {
-            try { $table->dropIndex('idx_tickets_user_status'); } catch (\Throwable $e) {}
-        });
+    /**
+     * Drop an index if it exists. MySQL silently drops a foreign key's own
+     * index once another index covers its columns, and then refuses to drop
+     * that covering index (error 1553), so restore a plain index for any
+     * foreign key that would be left without one.
+     */
+    private function dropIndexSafely(string $table, string $index): void
+    {
+        $indexes = collect(Schema::getIndexes($table));
+        $target = $indexes->firstWhere('name', $index);
 
-        Schema::table('event_schedules', function (Blueprint $table) {
-            try { $table->dropIndex('idx_schedules_event_status'); } catch (\Throwable $e) {}
+        if (! $target) {
+            return;
+        }
+
+        $others = $indexes->reject(fn (array $i) => $i['name'] === $index);
+        $covers = fn (array $i, array $columns) => array_slice($i['columns'], 0, count($columns)) === $columns;
+
+        $orphaned = collect(Schema::getForeignKeys($table))->filter(
+            fn (array $fk) => $covers($target, $fk['columns'])
+                && ! $others->contains(fn (array $i) => $covers($i, $fk['columns']))
+        );
+
+        Schema::table($table, function (Blueprint $table) use ($index, $orphaned) {
+            foreach ($orphaned as $fk) {
+                $table->index($fk['columns'], $fk['name']);
+            }
+
+            $table->dropIndex($index);
         });
     }
 };

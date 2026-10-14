@@ -92,15 +92,18 @@
 
 @if ($isEmpty)
     {{-- Placeholder shown when there is no data to plot. --}}
-    <div {{ $attributes->except(['wire:model', 'wire:model.live'])->class(['flex items-center justify-center rounded-box text-base-content/50']) }}
+    <div {{ $attributes->except(['wire:model', 'wire:model.live'])->class(['flex items-center justify-center rounded-box text-base-content/60']) }}
         style="{{ $heightStyle }}">
-        <span class="text-sm">No data available</span>
+        <span class="text-sm">No data for the selected period</span>
     </div>
 @elseif ($hasWireModel)
     {{-- wire:model mode: entangle the full Chart.js config into Alpine. --}}
     <div wire:ignore x-data="chartComponent({ settings: @entangle($attributes->wire('model')) })"
         {{ $attributes->except(['wire:model', 'wire:model.live'])->class(['relative']) }} style="{{ $heightStyle }}">
-        <canvas x-ref="canvas"></canvas>
+        <canvas x-ref="canvas" x-show="!empty"></canvas>
+        <p x-show="empty" x-cloak class="absolute inset-0 flex items-center justify-center text-sm text-base-content/70">
+            No data for the selected period
+        </p>
     </div>
 @else
     {{-- Static mode: pass the server-built config to Alpine. --}}

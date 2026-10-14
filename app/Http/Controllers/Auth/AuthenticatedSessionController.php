@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Services\TransactionLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,12 +22,12 @@ class AuthenticatedSessionController extends Controller
             TransactionLogService::logAuthEvent('logout', $user);
         }
 
-        $redirectRoute = match ($user->role_id ?? null) {
-            User::getRoleId('superadmin') => 'superadmin.login',
-            User::getRoleId('osa') => 'admin.login',
-            User::getRoleId('gso') => 'gso.login',
-            User::getRoleId('student-org') => 'student-org.login',
-            default => 'admin.login',
+        $redirectRoute = match ($user?->portal()) {
+            'superadmin' => 'superadmin.login',
+            'osa' => 'admin.login',
+            'gso' => 'gso.login',
+            'student-org' => 'student-org.login',
+            default => 'login',
         };
 
         Auth::guard('web')->logout();

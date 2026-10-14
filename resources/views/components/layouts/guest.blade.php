@@ -2,120 +2,82 @@
 <html data-theme="emerald" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <script>
-        (function() {
-            var dark = localStorage.getItem('theme') === 'dark';
-            if (dark) {
-                document.documentElement.setAttribute('data-theme', 'emeraldDark');
-                document.documentElement.classList.add('dark');
-            }
-        })();
-        window.__themeToggleChange = function(input) {
-            var dark = input.checked;
-            localStorage.setItem('theme', dark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', dark ? 'emeraldDark' : 'emerald');
-            document.documentElement.classList.toggle('dark', dark);
-            document.querySelectorAll('input.theme-controller').forEach(function(el) {
-                if (el !== input) el.checked = dark;
-            });
-        };
-        document.addEventListener('livewire:navigated', function() {
-            var dark = localStorage.getItem('theme') === 'dark';
-            if (dark) {
-                document.documentElement.setAttribute('data-theme', 'emeraldDark');
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'emerald');
-                document.documentElement.classList.remove('dark');
-            }
-            document.querySelectorAll('input.theme-controller').forEach(function(el) {
-                el.checked = dark;
-            });
-        });
-    </script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'Laravel') }}</title>
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/webp" href="{{ asset('images/optimized/osa-logo.webp') }}">
-
-    <!-- Preload hero image for LCP -->
-    <link rel="preload" as="image" type="image/webp"
-        imagesrcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
-        imagesizes="(max-width: 1023px) 0px, 55vw">
-
-    <!-- Fonts — single consolidated request, non-render-blocking -->
-    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link href="https://fonts.bunny.net/css?family=poppins:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Scripts — minimal: only core CSS + JS (no avatar, calendar, charts) -->
-    @vite(['resources/css/app.css', 'resources/css/fontawesome.css', 'resources/js/app.js'])
-
+    <x-layouts.partials.head :title="$title ?? null">
+        {{-- Preload the campus photo (desktop only) for LCP --}}
+        <link rel="preload" as="image" type="image/webp"
+            imagesrcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
+            imagesizes="(max-width: 1023px) 0px, 50vw">
+    </x-layouts.partials.head>
 </head>
 
-<body class="font-sans text-base-content antialiased bg-base-200 lg:overflow-hidden">
-    <div class="flex min-h-screen lg:h-screen w-full p-3 sm:p-4 lg:p-6 gap-4">
-        <!-- Left side - Image (Hidden on mobile) -->
-        <div class="hidden lg:flex lg:w-[55%] relative overflow-hidden rounded-3xl shadow-2xl h-full">
-            <div class="absolute inset-0">
-                <picture>
-                    <source type="image/webp"
-                        srcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
-                        sizes="55vw">
-                    <img src="{{ asset('images/suhay husay.png') }}"
-                        class="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-10000 ease-linear"
-                        alt="PLV Background" loading="eager" fetchpriority="high" decoding="async" width="1280"
-                        height="960">
-                </picture>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-tr from-primary/70 via-primary/10 to-black/30"></div>
-            <div class="absolute top-10 left-10 h-1 w-16 rounded-full bg-accent"></div>
-            <div class="absolute bottom-10 left-10 right-10 text-white z-10">
-                <h2 class="text-3xl xl:text-4xl font-black mb-3 drop-shadow-lg">Organization Events Scheduling System
-                </h2>
-                <p class="text-base xl:text-lg font-medium opacity-90 drop-shadow-md max-w-lg">Streamlining event
-                    management and
-                    approvals for a more vibrant campus life.</p>
-            </div>
-        </div>
+{{--
+    Guest shell for sign-in, password reset, and verification (DESIGN.md "The Well-Run Office").
+    Campus photo with the institution's name on large screens; one calm form panel.
+--}}
+<body class="min-h-screen bg-base-200 font-sans text-base-content antialiased">
+    <a href="#main"
+        class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-70 focus:rounded-field focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-content">
+        Skip to form
+    </a>
 
-        <!-- Right side - Login Form -->
-        <div
-            class="flex flex-col justify-start items-center w-full lg:w-[45%] px-2 pt-10 sm:pt-0 sm:p-4 sm:justify-center lg:p-6 lg:h-full lg:overflow-y-auto">
-            <!-- Logo -->
-            <div class="mb-4 sm:mb-6 shrink-0">
-                <a href="/" wire:navigate class="block">
-                    <div class="relative">
-                        <div
-                            class="absolute -inset-1 bg-accent rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200">
-                        </div>
-                        <img src="{{ asset('images/optimized/osa-logo.webp') }}"
-                            class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shadow-2xl border-2 border-white"
-                            alt="OSA Logo" loading="eager" fetchpriority="high" decoding="async" width="200"
-                            height="200">
-                    </div>
-                </a>
-            </div>
-
-            <!-- Login Form Container -->
-            <div class="w-full max-w-lg shrink-0">
-                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 px-5 py-6 sm:p-8 border border-gray-100">
-                    {{ $slot }}
+    <div class="flex min-h-screen w-full">
+        {{-- Campus photo (large screens) --}}
+        <div class="relative hidden w-1/2 overflow-hidden bg-primary lg:block">
+            <picture>
+                <source type="image/webp"
+                    srcset="{{ asset('images/optimized/hero-480w.webp') }} 480w, {{ asset('images/optimized/hero-768w.webp') }} 768w, {{ asset('images/optimized/hero-1024w.webp') }} 1024w, {{ asset('images/optimized/hero-1280w.webp') }} 1280w"
+                    sizes="50vw">
+                <img src="{{ asset('images/suhay husay.png') }}" class="absolute inset-0 size-full object-cover"
+                    alt="Pamantasan ng Lungsod ng Valenzuela main building" loading="eager" fetchpriority="high"
+                    decoding="async" width="1280" height="960">
+            </picture>
+            {{-- Scrim so the caption stays readable on any part of the photo --}}
+            <div class="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-primary/95 via-primary/60 to-transparent"
+                aria-hidden="true"></div>
+            <div class="absolute inset-x-10 bottom-10 text-primary-content xl:inset-x-12 xl:bottom-12">
+                <div class="mb-5 flex items-center gap-3">
+                    <img src="{{ asset('images/optimized/plv-logo.webp') }}" alt="" class="size-11" width="80"
+                        height="80">
+                    <img src="{{ asset('images/optimized/osa-logo.webp') }}" alt="" class="size-11 rounded-full"
+                        width="200" height="200">
                 </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="mt-6 text-center shrink-0">
-                <p class="text-[10px] text-base-content/40 font-medium uppercase tracking-widest">
-                    &copy; {{ date('Y') }} Office of Student Affairs • PLV
+                <p class="text-sm font-medium text-primary-content/80">Pamantasan ng Lungsod ng Valenzuela &middot; Office of
+                    Student Affairs</p>
+                <p class="mt-2 max-w-md text-3xl font-semibold leading-tight tracking-[-0.015em] xl:text-4xl">
+                    Organization Events Scheduling System
+                </p>
+                <p class="mt-3 max-w-md text-[0.9375rem] text-primary-content/85">
+                    Submit event requests, follow every approval step, and see the campus calendar in one place.
                 </p>
             </div>
         </div>
+
+        {{-- Form column --}}
+        <div class="flex w-full flex-col lg:w-1/2">
+            <main id="main" class="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8">
+                <a href="{{ url('/') }}" wire:navigate class="mb-8 flex items-center gap-3 lg:hidden">
+                    <img src="{{ asset('images/optimized/plv-logo.webp') }}" alt="" class="size-10" width="80"
+                        height="80">
+                    <span class="text-left leading-tight">
+                        <span class="block text-sm font-semibold">Event Scheduling</span>
+                        <span class="block text-xs text-base-content/70">PLV Office of Student Affairs</span>
+                    </span>
+                </a>
+
+                <div class="w-full max-w-md rounded-box border border-base-300 bg-base-100 px-5 py-7 sm:px-8 sm:py-9">
+                    {{ $slot }}
+                </div>
+            </main>
+
+            <footer class="px-4 pb-6 text-center text-xs text-base-content/70">
+                &copy; {{ date('Y') }} Office of Student Affairs &middot; Pamantasan ng Lungsod ng Valenzuela
+                <span class="mx-1" aria-hidden="true">&middot;</span>
+                <a href="{{ route('data-privacy') }}" class="hover:text-base-content hover:underline">Data privacy</a>
+            </footer>
+        </div>
     </div>
 
+    <x-ui.toast />
     @stack('scripts')
 </body>
 

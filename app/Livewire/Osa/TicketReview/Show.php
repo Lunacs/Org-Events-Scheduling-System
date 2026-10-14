@@ -2,21 +2,11 @@
 
 namespace App\Livewire\Osa\TicketReview;
 
-use App\Models\Event;
-use App\Models\Event_Schedule;
-use App\Models\Office_Approval;
-use App\Models\OSA_Approval;
 use App\Models\Ticket;
-use App\Models\User;
-use App\Notifications\TicketForwardedToGsoNotification;
-use App\Notifications\TicketStatusUpdatedNotification;
-use App\Services\Cache\CalendarCacheService;
-use App\Services\Cache\DashboardCacheService;
-use App\Services\Cache\EventCacheService;
-use App\Services\TransactionLogService;
+use App\Services\TicketWorkflowService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
@@ -111,398 +101,131 @@ class Show extends Component
 
     public function approveTicket()
     {
-        // Validate remarks
+        Gate::authorize('approve', $this->ticket);
+
         $this->validate([
-            'approvalRemarks' => 'required|string|min:3',
+            'approvalRemarks' => 'required|string|min:3|max:255',
         ], [
             'approvalRemarks.required' => 'Please provide remarks for approval.',
             'approvalRemarks.min' => 'Remarks must be at least 3 characters.',
+            'approvalRemarks.max' => 'Remarks may not be longer than 255 characters.',
         ]);
 
-        $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
-        if (! $lock->get()) {
-            $this->warning('Action is already in progress.');
-
-            return;
-        }
-
-        DB::beginTransaction();
-        try {
-            // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
-
-            $oldStatus = $this->ticket->status;
-
-            // Update ticket status to approved
-            $this->ticket->update(['status' => 'approved']);
-
-            // Update or create current OSA approval state (one record per ticket)
-            OSA_Approval::updateOrCreate(
-                ['ticket_id' => $this->ticket->ticket_id],
-                [
-                    'user_id' => auth()->id(),
-                    'decision' => 'approved',
-                    'remarks' => $this->approvalRemarks,
-                ]
-            );
-
-            // Log to approval history (immutable audit trail)
-            $this->ticket->logApprovalHistory('osa', 'approved', $this->approvalRemarks);
-
-            // Log transaction
-            TransactionLogService::logTicketOperation('approved', $this->ticket, ['Remarks' => $this->approvalRemarks]);
-
-            // Create Event record
-            $event = Event::create([
-                'ticket_id' => $this->ticket->ticket_id,
-                'event__type_id' => $this->ticket->event_type_id,
-                'notes' => 'Event created from approved ticket',
-            ]);
-
-            // Create Event Schedule record
-            Event_Schedule::create([
-                'event_id' => $event->event_id,
-                'start_date' => $this->ticket->date_from,
-                'end_date' => $this->ticket->date_to,
-                'start_time' => $this->ticket->time_from,
-                'end_time' => $this->ticket->time_to,
-                'venue' => $this->ticket->venue_display_name,
-                'status' => 'approved',
-                'remarks' => 'Schedule created from approved ticket',
-            ]);
-
-            DB::commit();
-
-            // Notify ticket owner about status change (after commit)
-            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-                $this->ticket,
-                $oldStatus,
-                'approved',
-                $this->approvalRemarks
-            ));
-
-            // Reload the ticket with fresh approval data
-            $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
-
-            // Dispatch events for instant notifications
-            $this->dispatch('refresh-notifications');
-            $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'approved');
-            $this->dispatch('notification-received', [
-                'title' => 'Ticket Approved',
-                'message' => "Your ticket {$this->ticket->ticket_number} has been approved!",
-                'type' => 'success',
-            ]);
-
-            DashboardCacheService::clearAllDashboards();
-            CalendarCacheService::clearAllCalendar();
-            EventCacheService::clearAllEventRelatedCaches();
-
-            $this->success('Ticket has been approved and event has been created successfully.');
-            $this->dispatch('ticket-approved');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Ticket approval failed', [
-                'ticket_id' => $this->ticket->ticket_id,
-                'error' => $e->getMessage(),
-            ]);
-            $this->error('Failed to approve ticket: '.$e->getMessage());
-        } finally {
-            $lock->release();
-        }
+        $this->runTransition(
+            fn (TicketWorkflowService $workflow) => $workflow->approve($this->ticket, auth()->user(), $this->approvalRemarks),
+            newStatus: 'approved',
+            notice: ['title' => 'Ticket Approved', 'message' => "Your ticket {$this->ticket->ticket_number} has been approved!", 'type' => 'success'],
+            success: 'Ticket has been approved and event has been created successfully.',
+            browserEvent: 'ticket-approved',
+        );
     }
 
     public function forwardToGso()
     {
-        // Validate remarks
+        Gate::authorize('forwardToGso', $this->ticket);
+
         $this->validate([
-            'forwardRemarks' => 'required|string|min:3',
+            'forwardRemarks' => 'required|string|min:3|max:255',
         ], [
             'forwardRemarks.required' => 'Please provide remarks for forwarding to GSO.',
             'forwardRemarks.min' => 'Remarks must be at least 3 characters.',
+            'forwardRemarks.max' => 'Remarks may not be longer than 255 characters.',
         ]);
 
-        $lock = Cache::lock("lock:ticket:forward:{$this->ticket->ticket_id}", 10);
-        if (! $lock->get()) {
-            $this->warning('Action is already in progress.');
-
-            return;
-        }
-
-        DB::beginTransaction();
-        try {
-            // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
-
-            $oldStatus = $this->ticket->status;
-
-            // update ticket status to gso_review
-            $this->ticket->update(['status' => 'gso_review']);
-
-            // Update or create current OSA approval state
-            OSA_Approval::updateOrCreate(
-                ['ticket_id' => $this->ticket->ticket_id],
-                [
-                    'user_id' => auth()->id(),
-                    'decision' => 'forwarded',
-                    'remarks' => $this->forwardRemarks,
-                ]
-            );
-
-            // Update or create current Office approval state for GSO
-            Office_Approval::updateOrCreate(
-                [
-                    'ticket_id' => $this->ticket->ticket_id,
-                    'office_id' => 2, // GSO office ID
-                ],
-                [
-                    'user_id' => auth()->id(),
-                    'decision' => 'pending',
-                    'remarks' => $this->forwardRemarks,
-                ]
-            );
-
-            // Log to approval history (immutable audit trail)
-            $this->ticket->logApprovalHistory('osa', 'forwarded', $this->forwardRemarks);
-            $this->ticket->logApprovalHistory('office', 'pending', $this->forwardRemarks, 1);
-
-            // Log transaction
-            TransactionLogService::logTicketOperation('forwarded', $this->ticket, ['Remarks' => $this->forwardRemarks]);
-
-            DB::commit();
-
-            // Send notifications after commit
-            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-                $this->ticket,
-                $oldStatus,
-                'gso_review',
-                $this->forwardRemarks
-            ));
-
-            // Notify all GSO users in the GSO office about the forwarded ticket
-            $gsoUsers = Cache::remember('gso_users_notifications', 3600, function () {
-                return User::select(['user_id', 'name', 'email', 'role_id', 'office_id'])
-                    ->where('role_id', User::getRoleId('gso'))
-                    ->where('office_id', 1)
-                    ->get();
-            });
-
-            foreach ($gsoUsers as $gsoUser) {
-                $gsoUser->notify(new TicketForwardedToGsoNotification(
-                    $this->ticket,
-                    $this->forwardRemarks
-                ));
-            }
-
-            // Reload the ticket with fresh approval data
-            $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
-
-            // Dispatch events for instant notifications
-            $this->dispatch('refresh-notifications');
-            $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'gso_review');
-            $this->dispatch('notification-received', [
-                'title' => 'Ticket Forwarded to GSO',
-                'message' => "Your ticket {$this->ticket->ticket_number} has been forwarded to GSO for review.",
-                'type' => 'info',
-            ]);
-
-            DashboardCacheService::clearAllDashboards();
-            EventCacheService::clearRequestLists();
-
-            $this->success('Ticket has been forwarded to GSO for approval.');
-            $this->dispatch('ticket-forwarded');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Forward to GSO failed', [
-                'ticket_id' => $this->ticket->ticket_id,
-                'error' => $e->getMessage(),
-            ]);
-            $this->error('Failed to forward ticket: '.$e->getMessage());
-        } finally {
-            $lock->release();
-        }
+        $this->runTransition(
+            fn (TicketWorkflowService $workflow) => $workflow->forwardToGso($this->ticket, auth()->user(), $this->forwardRemarks),
+            newStatus: 'gso_review',
+            notice: ['title' => 'Ticket Forwarded to GSO', 'message' => "Your ticket {$this->ticket->ticket_number} has been forwarded to GSO for review.", 'type' => 'info'],
+            success: 'Ticket has been forwarded to GSO for approval.',
+            browserEvent: 'ticket-forwarded',
+        );
     }
 
     public function finalApproval()
     {
-        // Validate remarks
+        Gate::authorize('finalApprove', $this->ticket);
+
         $this->validate([
-            'finalApprovalRemarks' => 'required|string|min:3',
+            'finalApprovalRemarks' => 'required|string|min:3|max:255',
         ], [
             'finalApprovalRemarks.required' => 'Please provide remarks for final approval.',
             'finalApprovalRemarks.min' => 'Remarks must be at least 3 characters.',
+            'finalApprovalRemarks.max' => 'Remarks may not be longer than 255 characters.',
         ]);
 
-        $lock = Cache::lock("lock:ticket:approve:{$this->ticket->ticket_id}", 10);
-        if (! $lock->get()) {
-            $this->warning('Action is already in progress.');
-
-            return;
-        }
-
-        DB::beginTransaction();
-        try {
-            // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
-
-            $oldStatus = $this->ticket->status;
-
-            // Update ticket status to approved
-            $this->ticket->update(['status' => 'approved']);
-
-            // Update or create current OSA approval state
-            OSA_Approval::updateOrCreate(
-                ['ticket_id' => $this->ticket->ticket_id],
-                [
-                    'user_id' => auth()->id(),
-                    'decision' => 'approved',
-                    'remarks' => $this->finalApprovalRemarks,
-                ]
-            );
-
-            // Log to approval history (immutable audit trail)
-            $this->ticket->logApprovalHistory('osa', 'approved', $this->finalApprovalRemarks);
-
-            // Log transaction
-            TransactionLogService::logTicketOperation('final_approved', $this->ticket, ['Remarks' => $this->finalApprovalRemarks]);
-
-            // Create Event record
-            $event = Event::create([
-                'ticket_id' => $this->ticket->ticket_id,
-                'event__type_id' => $this->ticket->event_type_id,
-                'notes' => 'Event created from approved ticket after GSO review',
-            ]);
-
-            // Create Event Schedule record
-            Event_Schedule::create([
-                'event_id' => $event->event_id,
-                'start_date' => $this->ticket->date_from,
-                'end_date' => $this->ticket->date_to,
-                'start_time' => $this->ticket->time_from,
-                'end_time' => $this->ticket->time_to,
-                'venue' => $this->ticket->venue_display_name,
-                'status' => 'approved',
-                'remarks' => 'Schedule created from approved ticket after GSO review',
-            ]);
-
-            DB::commit();
-
-            // Notify ticket owner about status change (after commit)
-            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-                $this->ticket,
-                $oldStatus,
-                'approved',
-                $this->finalApprovalRemarks
-            ));
-
-            // Reload the ticket with fresh approval data
-            $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
-
-            // Dispatch events for instant notifications
-            $this->dispatch('refresh-notifications');
-            $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'approved');
-            $this->dispatch('notification-received', [
-                'title' => 'Ticket Finally Approved',
-                'message' => "Your ticket {$this->ticket->ticket_number} has been finally approved after GSO review!",
-                'type' => 'success',
-            ]);
-
-            DashboardCacheService::clearAllDashboards();
-            CalendarCacheService::clearAllCalendar();
-            EventCacheService::clearAllEventRelatedCaches();
-
-            $this->success('Ticket has been approved and event has been created successfully.');
-            $this->dispatch('ticket-final-approved');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Final approval failed', [
-                'ticket_id' => $this->ticket->ticket_id,
-                'error' => $e->getMessage(),
-            ]);
-            $this->error('Failed to approve ticket: '.$e->getMessage());
-        } finally {
-            $lock->release();
-        }
+        $this->runTransition(
+            fn (TicketWorkflowService $workflow) => $workflow->approve($this->ticket, auth()->user(), $this->finalApprovalRemarks),
+            newStatus: 'approved',
+            notice: ['title' => 'Ticket Finally Approved', 'message' => "Your ticket {$this->ticket->ticket_number} has been finally approved after GSO review!", 'type' => 'success'],
+            success: 'Ticket has been approved and event has been created successfully.',
+            browserEvent: 'ticket-final-approved',
+        );
     }
 
     public function forRevision()
     {
-        // Validate remarks
+        Gate::authorize('requestRevision', $this->ticket);
+
         $this->validate([
-            'revisionRemarks' => 'required|string|min:10',
+            'revisionRemarks' => 'required|string|min:10|max:255',
         ], [
             'revisionRemarks.required' => 'Please provide detailed remarks explaining what needs to be revised.',
             'revisionRemarks.min' => 'Remarks must be at least 10 characters to provide clear guidance.',
+            'revisionRemarks.max' => 'Remarks may not be longer than 255 characters.',
         ]);
 
-        $lock = Cache::lock("lock:ticket:reject:{$this->ticket->ticket_id}", 10);
+        $this->runTransition(
+            fn (TicketWorkflowService $workflow) => $workflow->requestRevision($this->ticket, auth()->user(), $this->revisionRemarks),
+            newStatus: 'for_revision',
+            notice: ['title' => 'Ticket Needs Revision', 'message' => "Your ticket {$this->ticket->ticket_number} has been sent back for revision.", 'type' => 'warning'],
+            success: 'Ticket has been sent back for revision.',
+            browserEvent: 'ticket-for-revision',
+        );
+    }
+
+    /**
+     * Run a workflow transition, then refresh the page state and tell the browser.
+     *
+     * @param  callable(TicketWorkflowService): Ticket  $transition
+     * @param  array{title: string, message: string, type: string}  $notice
+     */
+    private function runTransition(callable $transition, string $newStatus, array $notice, string $success, string $browserEvent): void
+    {
+        $lock = Cache::lock("lock:ticket:decision:{$this->ticket->ticket_id}", 10);
+
         if (! $lock->get()) {
             $this->warning('Action is already in progress.');
 
             return;
         }
 
-        DB::beginTransaction();
         try {
-            // Lock the ticket to prevent concurrent modifications
-            $this->ticket = Ticket::lockForUpdate()->find($this->ticket->ticket_id);
+            $this->ticket = $transition(app(TicketWorkflowService::class));
+        } catch (\DomainException $e) {
+            $this->error($e->getMessage());
 
-            $oldStatus = $this->ticket->status;
-
-            $this->ticket->update(['status' => 'for_revision']);
-
-            // Update or create current OSA approval state
-            OSA_Approval::updateOrCreate(
-                ['ticket_id' => $this->ticket->ticket_id],
-                [
-                    'user_id' => auth()->id(),
-                    'decision' => 'for_revision',
-                    'remarks' => $this->revisionRemarks,
-                ]
-            );
-
-            // Log to approval history
-            $this->ticket->logApprovalHistory('osa', 'for_revision', $this->revisionRemarks);
-
-            // Log transaction
-            TransactionLogService::logTicketOperation('for_revision', $this->ticket, ['Remarks' => $this->revisionRemarks]);
-
-            DB::commit();
-
-            // Notify ticket owner (after commit)
-            $this->ticket->user->notify(new TicketStatusUpdatedNotification(
-                $this->ticket,
-                $oldStatus,
-                'for_revision',
-                $this->revisionRemarks
-            ));
-
-            // Reload the ticket
-            $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role');
-
-            // Dispatch events
-            $this->dispatch('refresh-notifications');
-            $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: 'for_revision');
-            $this->dispatch('notification-received', [
-                'title' => 'Ticket Needs Revision',
-                'message' => "Your ticket {$this->ticket->ticket_number} has been sent back for revision.",
-                'type' => 'warning',
-            ]);
-
-            DashboardCacheService::clearAllDashboards();
-            EventCacheService::clearRequestLists();
-
-            $this->warning('Ticket has been sent back for revision.');
-            $this->dispatch('ticket-for-revision');
+            return;
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('For revision failed', [
+            \Log::error('Ticket decision failed', [
                 'ticket_id' => $this->ticket->ticket_id,
+                'status' => $newStatus,
                 'error' => $e->getMessage(),
             ]);
-            $this->error('Failed to send ticket for revision: '.$e->getMessage());
+            $this->error('The action could not be completed. Please try again.');
+
+            return;
         } finally {
             $lock->release();
         }
+
+        $this->ticket->load('osaApprovals.user.role', 'officeApprovals.office', 'officeApprovals.user.role', 'events.eventSchedules');
+
+        $this->dispatch('refresh-notifications');
+        $this->dispatch('ticket-status-updated', ticketId: $this->ticket->ticket_id, newStatus: $newStatus);
+        $this->dispatch('notification-received', $notice);
+
+        $newStatus === 'for_revision' ? $this->warning($success) : $this->success($success);
+        $this->dispatch($browserEvent);
     }
 
     /**
@@ -510,6 +233,8 @@ class Show extends Component
      */
     public function previewAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {
@@ -528,6 +253,8 @@ class Show extends Component
      */
     public function downloadAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {

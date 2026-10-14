@@ -56,12 +56,13 @@ new class extends Component
     public function placeholder()
     {
         return <<<'HTML'
-        <div class="col-span-1 space-y-4">
-            <div class="bg-white dark:bg-base-200 rounded-2xl shadow-sm p-6 animate-pulse">
-                <div class="h-5 bg-base-300 rounded w-1/2 mb-4"></div>
+        <div class="space-y-6" aria-hidden="true">
+            <div class="animate-pulse rounded-box border border-base-300 bg-base-100 p-5">
+                <div class="mb-4 h-4 w-1/2 rounded bg-base-200"></div>
                 <div class="space-y-3">
-                    <div class="h-16 bg-base-300 rounded"></div>
-                    <div class="h-16 bg-base-300 rounded"></div>
+                    <div class="h-11 rounded-field bg-base-200"></div>
+                    <div class="h-11 rounded-field bg-base-200"></div>
+                    <div class="h-11 rounded-field bg-base-200"></div>
                 </div>
             </div>
         </div>
@@ -70,82 +71,57 @@ new class extends Component
 };
 ?>
 
-<div class="col-span-1">
+<div class="space-y-6">
     @php
         $upcomingEvents = $this->upcomingEvents;
         $todaysSummary = $this->todaysSummary;
     @endphp
 
-    <x-ui.card class="shadow-md md:sticky top-6" title="Upcoming Events" subtitle="Next 30 days">
+    <x-ui.card title="Upcoming events" subtitle="Approved events in the next 30 days.">
         <x-slot:menu>
-            <x-ui.button icon="o-calendar" link="/admin/calendar" class="btn-sm btn-ghost" wire:navigate />
+            <x-ui.button label="Calendar" link="{{ route('admin.calendar') }}" class="btn-sm btn-ghost" />
         </x-slot:menu>
 
         @if (count($upcomingEvents) > 0)
-            <div class="space-y-3">
+            <ul class="space-y-3">
                 @foreach ($upcomingEvents as $index => $event)
-                    <div class="group p-3 bg-base-200/60 rounded-lg border border-base-300 hover:border-primary/40 transition-colors"
-                        wire:key="upcoming-{{ $index }}">
-                        <div class="flex items-start gap-3">
-                            <div class="text-center bg-primary text-primary-content rounded-lg p-2 min-w-[48px]">
-                                <div class="text-xs font-medium">
-                                    {{ \Carbon\Carbon::parse($event['date'])->format('M') }}
-                                </div>
-                                <div class="text-xl font-bold">
-                                    {{ \Carbon\Carbon::parse($event['date'])->format('d') }}
-                                </div>
-                            </div>
-
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-semibold text-sm text-base-content mb-1 truncate">
-                                    {{ $event['title'] }}
-                                </h4>
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-1 text-xs text-base-content/60">
-                                        <x-ui.icon name="o-user-group" class="w-3 h-3" />
-                                        <span class="truncate">{{ $event['organization'] }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-xs text-base-content/60">
-                                        <x-ui.icon name="o-map-pin" class="w-3 h-3" />
-                                        <span class="truncate">{{ $event['venue'] }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                    @php $date = \Carbon\Carbon::parse($event['date']); @endphp
+                    <li class="flex items-center gap-3" wire:key="upcoming-{{ $index }}">
+                        <div class="flex w-12 shrink-0 flex-col items-center rounded-field border border-base-300 py-1 leading-none"
+                            aria-hidden="true">
+                            <span class="text-[0.6875rem] font-medium text-base-content/70">{{ $date->format('M') }}</span>
+                            <span class="mt-0.5 text-lg font-semibold tabular-nums text-base-content">{{ $date->format('j') }}</span>
                         </div>
-                    </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-medium text-base-content">
+                                <span class="sr-only">{{ $date->format('F j') }}: </span>{{ $event['title'] }}
+                            </p>
+                            <p class="truncate text-xs text-base-content/70">{{ $event['organization'] }}</p>
+                            <p class="truncate text-xs text-base-content/70">{{ $event['venue'] }}</p>
+                        </div>
+                    </li>
                 @endforeach
-            </div>
-
-            <div class="mt-4 pt-4 border-t">
-                <x-ui.button label="View Full Calendar" icon-right="o-arrow-right"
-                    class="btn-sm btn-block btn-outline" link="/admin/calendar" wire:navigate />
-            </div>
+            </ul>
         @else
-            <div class="text-center py-12">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-3">
-                    <x-ui.icon name="o-calendar-days" class="w-8 h-8 text-base-content/40" />
-                </div>
-                <p class="text-sm text-base-content/60 font-medium">No upcoming events</p>
-                <p class="text-xs text-base-content/40 mt-1">Approved events will appear here</p>
-            </div>
+            <x-ui.empty-state compact icon="o-calendar-days" title="No upcoming events"
+                description="Approved events in the next 30 days appear here." />
         @endif
     </x-ui.card>
 
-    <div class="bg-base-100 border border-base-300 rounded-2xl shadow-sm p-5 mt-4">
-        <h3 class="text-md font-bold text-base-content mb-4">Today's Summary</h3>
-        <div class="space-y-3">
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-base-content/60">New Requests</span>
-                <span class="font-bold text-base-content">{{ $todaysSummary['newRequests'] }}</span>
+    <x-ui.card title="Today">
+        <dl class="-my-1 divide-y divide-base-300 text-sm">
+            <div class="flex items-center justify-between py-2">
+                <dt class="text-base-content/70">New requests</dt>
+                <dd class="font-semibold tabular-nums text-base-content">{{ $todaysSummary['newRequests'] }}</dd>
             </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-base-content/60">Processed</span>
-                <span class="font-bold text-success">{{ $todaysSummary['processed'] }}</span>
+            <div class="flex items-center justify-between py-2">
+                <dt class="text-base-content/70">Processed</dt>
+                <dd class="font-semibold tabular-nums text-base-content">{{ $todaysSummary['processed'] }}</dd>
             </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-base-content/60">Pending Review</span>
-                <span class="font-bold text-warning">{{ $todaysSummary['pending'] }}</span>
+            <div class="flex items-center justify-between py-2">
+                <dt class="text-base-content/70">Still in your queue</dt>
+                <dd class="font-semibold tabular-nums text-base-content">{{ $todaysSummary['pending'] }}</dd>
             </div>
-        </div>
-    </div>
+        </dl>
+    </x-ui.card>
 </div>

@@ -3,118 +3,82 @@
     @php
         // Cache computed properties to prevent duplicate cache queries
         $stats = $this->stats;
-        $recentTickets = $this->recentTickets;
         $pendingApprovals = $this->pendingApprovals;
+        $reviewUrl = route('osa.ticket-review.index');
     @endphp
 
-    <div class="p-6 space-y-6">
-        <!-- Header -->
-        @persist('dashboard-header')
-            <section
-                class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-                <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-                <div class="relative p-6 sm:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div class="flex items-start space-x-4">
-                            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
-                                <x-ui.icon name="s-squares-2x2" class="w-6 h-6 text-primary" />
-                            </span>
-                            <div>
-                                <h1 class="text-2xl md:text-3xl font-bold font-heading text-base-content">Dashboard Overview</h1>
-                                <p class="text-sm text-base-content/70 mt-1">
-                                    Welcome back! Here's what's happening with event requests.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        @endpersist
+    <div class="space-y-6">
+        <x-ui.page-heading title="Dashboard">
+            <x-slot:subtitle>
+                {{ now()->timezone('Asia/Manila')->format('l, F j') }} &middot;
+                @if ($stats['pending'] > 0)
+                    {{ $stats['pending'] }} {{ Str::plural('request', $stats['pending']) }} waiting for your review.
+                @else
+                    Your review queue is clear.
+                @endif
+            </x-slot:subtitle>
+            @can('tickets.view')
+                <x-slot:actions>
+                    <x-ui.button label="Open review queue" icon-right="o-arrow-right" class="btn-primary"
+                        link="{{ $reviewUrl }}" />
+                </x-slot:actions>
+            @endcan
+        </x-ui.page-heading>
 
-        <!-- Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <x-ui.metric-card label="Pending Requests" value="{{ number_format($stats['pending']) }}"
-                meta="Awaiting your review" icon="o-clock" color="warning" />
-
-            <x-ui.metric-card label="Forwarded" value="{{ number_format($stats['forwarded']) }}"
-                meta="Sent to other offices" icon="o-paper-airplane" color="info" />
-
+        {{-- Status strip: where every active ticket is right now --}}
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <x-ui.metric-card label="Needs your review" value="{{ number_format($stats['pending']) }}"
+                meta="New, resubmitted, or back from GSO" icon="o-inbox-arrow-down" color="info"
+                link="{{ $reviewUrl }}" link-label="Open the review queue" />
+            <x-ui.metric-card label="With GSO" value="{{ number_format($stats['forwarded']) }}"
+                meta="Waiting on venue approval" icon="o-building-office-2"
+                link="{{ route('osa.ticket-review.index', ['statusFilter' => 'gso_review']) }}"
+                link-label="View tickets with GSO" />
+            <x-ui.metric-card label="Needs revision" value="{{ number_format($stats['for_revision']) }}"
+                meta="Waiting on organizations" icon="o-pencil-square" color="warning"
+                link="{{ route('osa.ticket-review.index', ['statusFilter' => 'for_revision']) }}"
+                link-label="View tickets that need revision" />
             <x-ui.metric-card label="Approved" value="{{ number_format($stats['approved']) }}"
-                meta="All time" icon="o-check-circle" color="success" />
-
-            <x-ui.metric-card label="This Month" value="{{ number_format($stats['thisMonthTickets']) }}"
-                meta="{{ now()->format('F Y') }}" icon="o-calendar-days" color="accent" />
+                meta="{{ number_format($stats['thisMonthTickets']) }} new requests this month" icon="o-check-circle"
+                color="success" link="{{ route('osa.ticket-review.index', ['statusFilter' => 'approved']) }}"
+                link-label="View approved tickets" />
         </div>
 
-        <!-- Secondary stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <x-ui.metric-card label="For Revision" value="{{ number_format($stats['for_revision']) }}"
-                meta="Needs correction" icon="o-x-circle" color="error"
-                :link="$stats['for_revision'] > 0 ? route('osa.ticket-review.index', ['statusFilter' => 'for_revision']) : null" />
-
-            <x-ui.metric-card label="Organizations" value="{{ number_format($stats['totalOrganizations']) }}"
-                meta="Active accounts" icon="o-user-group" color="secondary" />
-
-            <x-ui.metric-card label="Total Tickets"
-                value="{{ number_format($stats['approved'] + $stats['pending'] + $stats['for_revision']) }}"
-                meta="All time" icon="o-ticket" color="primary" />
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: Action Required -->
-            <div class="col-span-1 lg:col-span-2">
-                <x-ui.card title="Action Required" subtitle="Review and process these requests" shadow>
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            <div class="space-y-6 lg:col-span-2">
+                {{-- The queue is the dashboard (Pareto: this is most of OSA's work) --}}
+                <x-ui.card title="Needs your review" subtitle="Open a request to approve it, forward it to GSO, or ask for changes.">
                     <x-slot:menu>
-                        <x-ui.button label="View All" icon-right="o-arrow-right"
-                            link="{{ route('osa.ticket-review.index') }}" class="btn-sm btn-ghost" wire:navigate />
+                        <x-ui.button label="View all" icon-right="o-arrow-right" link="{{ $reviewUrl }}"
+                            class="btn-ghost btn-sm" />
                     </x-slot:menu>
 
                     @if (count($pendingApprovals) > 0)
-                        <div class="space-y-3">
+                        <ul class="-mx-4 -mb-4 divide-y divide-base-300 border-t border-base-300 sm:-mx-5 sm:-mb-5">
                             @foreach ($pendingApprovals as $approval)
-                                <a href="/admin/ticket-review/{{ $approval['ticket_number'] }}" wire:navigate
-                                    wire:key="pending-{{ $approval['id'] }}" class="block">
-                                    <x-ui.approval-queue-item title="{{ $approval['title'] }}"
-                                        label="{{ $approval['status_label'] }}"
-                                        :meta="[
-                                            ['icon' => 'o-building-office', 'text' => $approval['organization']],
-                                            ['icon' => 'o-hashtag', 'text' => $approval['ticket_number']],
-                                        ]" />
-                                </a>
+                                <li wire:key="pending-{{ $approval['id'] }}">
+                                    <a href="{{ route('osa.ticket-review.show', $approval['ticket_number']) }}" wire:navigate
+                                        class="block px-4 transition-colors hover:bg-base-200/60 sm:px-5">
+                                        <x-ui.approval-queue-item :title="$approval['title']" :status="$approval['status']"
+                                            :meta="[
+                                                ['icon' => 'o-building-office', 'text' => $approval['organization']],
+                                                ['icon' => 'o-clock', 'text' => 'Submitted ' . $approval['submitted']],
+                                            ]" :reference="$approval['ticket_number']" />
+                                    </a>
+                                </li>
                             @endforeach
-                        </div>
+                        </ul>
                     @else
-                        <x-ui.empty-state title="All Caught Up!"
-                            description="No pending approvals at the moment." icon="o-check-circle"
-                            tone="success" iconColor="text-success" />
+                        <x-ui.empty-state icon="o-check-circle" title="Your review queue is clear"
+                            description="New and resubmitted requests, and tickets GSO sends back, will appear here." />
                     @endif
                 </x-ui.card>
 
-                <div class="mt-6">
-                    <livewire:osa.dashboard.recent-activity defer.bundle />
-                </div>
+                <livewire:osa.dashboard.recent-activity defer.bundle />
             </div>
 
-            <!-- Right Column: Upcoming Events + Today's Summary (deferred) -->
+            {{-- Upcoming events + today's summary (deferred) --}}
             <livewire:osa.dashboard.sidebar defer.bundle />
         </div>
-
-        <!-- Quick Actions -->
-        @persist('quick-actions')
-            <x-ui.card title="Quick Actions" subtitle="Frequently used features" shadow>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <x-ui.quick-action label="Review Tickets" description="Manage event requests" icon="o-ticket"
-                        color="primary" link="{{ route('osa.ticket-review.index') }}"
-                        :badge="$stats['pending'] > 0 ? $stats['pending'] . ' pending' : null" />
-
-                    <x-ui.quick-action label="Event Calendar" description="View schedule" icon="o-calendar-days"
-                        color="accent" link="/admin/calendar" />
-
-                    <x-ui.quick-action label="Reports" description="Generate insights" icon="o-document-chart-bar"
-                        color="info" link="/admin/reports" />
-                </div>
-            </x-ui.card>
-        @endpersist
     </div>
 </div>

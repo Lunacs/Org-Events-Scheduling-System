@@ -3,25 +3,12 @@
 @endpush
 
 <div x-data="gsoReports()" x-ref="reportsContainer">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div>
         <!-- Page Header -->
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-6">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Reports & Analytics</h1>
-                        <p class="text-sm text-base-content/70 mt-1">
-                            Generate comprehensive reports on event approvals and request trends
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="Reports & Analytics" subtitle="Generate comprehensive reports on event approvals and request trends" />
         <!-- Report Controls -->
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-            <div class="p-6">
+        <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div>
                 <div class="flex flex-wrap justify-between items-end gap-4">
                     <div class="flex items-end space-x-4 w-full md:w-auto">
                         <div class="w-full mr-0 md:w-auto">
@@ -34,22 +21,23 @@
                                 ['id' => 'custom', 'name' => 'Custom Range'],
                             ]" option-value="id" option-label="name"
                                 x-model="timePeriod" @change="generateReport()"
-                                class="select-emerald w-full md:w-auto" />
+                                class="w-full md:w-auto" />
                         </div>
 
                         <div x-show="timePeriod === 'custom'" x-cloak>
                             <x-ui.input label="Start Date" type="date" x-model="customDateRange.start"
-                                class="input-emerald" @change="applyFilters()" />
+                                class="" @change="applyFilters()" />
                         </div>
 
                         <div x-show="timePeriod === 'custom'" x-cloak>
                             <x-ui.input label="End Date" type="date" x-model="customDateRange.end"
-                                class="input-emerald" @change="applyFilters()" />
+                                class="" @change="applyFilters()" />
                         </div>
                     </div>
 
+                    @can('reports.export')
                     <div class="grid grid-cols-1 gap-4 w-full md:w-auto md:flex md:space-x-2">
-                        <button class="btn btn-emerald w-full md:w-auto" @click.prevent="exportReport()">
+                        <button class="btn btn-primary w-full md:w-auto" @click.prevent="exportReport()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -57,7 +45,7 @@
                             </svg>
                             Export PDF
                         </button>
-                        <button class="btn btn-outline btn-emerald w-full md:w-auto" @click.prevent="exportCSV()">
+                        <button class="btn w-full md:w-auto" @click.prevent="exportCSV()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -66,51 +54,52 @@
                             Export CSV
                         </button>
                     </div>
+                    @endcan
                 </div>
             </div>
         </div>
 
         <!-- Quick Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="stats shadow bg-emerald-50 dark:bg-emerald-900/20">
+            <div class="stats border border-base-300 bg-base-100">
                 <div class="stat">
-                    <div class="stat-figure text-emerald-500">
+                    <div class="stat-figure text-primary">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <div class="stat-title text-emerald-700 dark:text-emerald-300">Total Approved</div>
-                    <div class="stat-value text-emerald-600" x-text="stats.totalApproved"></div>
-                    <div class="stat-desc text-emerald-600" x-text="timePeriodLabel"></div>
+                    <div class="stat-title text-base-content">Total Approved</div>
+                    <div class="stat-value text-primary" x-text="stats.totalApproved"></div>
+                    <div class="stat-desc text-primary" x-text="timePeriodLabel"></div>
                 </div>
             </div>
 
-            <div class="stats shadow bg-red-50 dark:bg-red-900/20">
+            <div class="stats shadow bg-error/10 ">
                 <div class="stat">
-                    <div class="stat-figure text-red-500">
+                    <div class="stat-figure text-error">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <div class="stat-title text-red-700 dark:text-red-300">Total For Revision</div>
-                    <div class="stat-value text-red-600" x-text="stats.totalForRevision"></div>
-                    <div class="stat-desc text-red-600" x-text="timePeriodLabel"></div>
+                    <div class="stat-title text-error ">Total For Revision</div>
+                    <div class="stat-value text-error" x-text="stats.totalForRevision"></div>
+                    <div class="stat-desc text-error" x-text="timePeriodLabel"></div>
                 </div>
             </div>
 
-            <div class="stats shadow bg-purple-50 dark:bg-purple-900/20">
+            <div class="stats shadow bg-secondary/10 ">
                 <div class="stat">
-                    <div class="stat-figure text-purple-500">
+                    <div class="stat-figure text-secondary">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                         </svg>
                     </div>
-                    <div class="stat-title text-purple-700 dark:text-purple-300">Approval Rate</div>
-                    <div class="stat-value text-purple-600" x-text="stats.approvalRate + '%'"></div>
-                    <div class="stat-desc text-purple-600" x-text="timePeriodLabel"></div>
+                    <div class="stat-title text-secondary ">Approval Rate</div>
+                    <div class="stat-value text-secondary" x-text="stats.approvalRate + '%'"></div>
+                    <div class="stat-desc text-secondary" x-text="timePeriodLabel"></div>
                 </div>
             </div>
         </div>
@@ -118,21 +107,21 @@
         <!-- Main Report Content -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Chart Section -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="chartTitle">
+                        <h3 class="text-lg font-semibold text-base-content" x-text="chartTitle">
                         </h3>
                         <x-ui.select :options="[
                             ['id' => 'request_types', 'name' => 'Request Type Distribution'],
                             ['id' => 'approvals', 'name' => 'Approval Trends'],
                         ]" option-value="id" option-label="name" x-model="selectedChart"
                             @change="refreshChart({ forceReinit: true })"
-                            class="select-emerald w-full sm:w-60 text-center" />
+                            class="w-full sm:w-60 text-center" />
                     </div>
 
                     <div
-                        class="relative h-64 bg-linear-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg overflow-hidden">
+                        class="relative h-64 bg-base-200 rounded-lg overflow-hidden">
                         <div class="h-full w-full p-3 box-border">
                             <canvas x-ref="approvalChart" class="w-full h-full transition-opacity duration-200"
                                 :class="{ 'opacity-0 pointer-events-none': !hasStatusData }"></canvas>
@@ -140,14 +129,14 @@
 
                         <div x-show="!hasStatusData"
                             class="absolute inset-0 flex flex-col items-center justify-center text-center space-y-2 px-6">
-                            <svg class="mx-auto h-12 w-12 text-emerald-400" fill="none" stroke="currentColor"
+                            <svg class="mx-auto h-12 w-12 text-primary" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                 </path>
                             </svg>
-                            <p class="text-emerald-600 dark:text-emerald-400 font-medium">Interactive Chart</p>
-                            <p class="text-sm text-emerald-500 dark:text-emerald-500">Waiting for approval data
+                            <p class="text-primary font-medium">Interactive Chart</p>
+                            <p class="text-sm text-primary">Waiting for approval data
                                 to display</p>
                         </div>
                     </div>
@@ -155,9 +144,9 @@
             </div>
 
             <!-- Breakdown Section -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Request Type Breakdown
+                    <h3 class="text-lg font-semibold text-base-content mb-4">Request Type Breakdown
                     </h3>
 
                     <div class="space-y-4">
@@ -165,13 +154,13 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-4 h-4 rounded" :style="`background-color: ${item.color}`"></div>
-                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                    <span class="text-sm font-medium text-base-content"
                                         x-text="item.type"></span>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                    <div class="text-sm font-medium text-base-content"
                                         x-text="item.count"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400"
+                                    <div class="text-xs text-base-content/60"
                                         x-text="item.percentage + '%'"></div>
                                 </div>
                             </div>
@@ -182,13 +171,13 @@
         </div>
 
         <!-- Detailed Report Table -->
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
+        <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg mt-6">
             <div class="p-6">
                 <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" x-text="tableTitle"></h3>
+                    <h3 class="text-lg font-semibold text-base-content" x-text="tableTitle"></h3>
                     <div class="md:flex md:space-x-2 w-full md:w-auto">
-                        <x-ui.input placeholder="Search records..." x-model="searchTerm"
-                            @input.debounce.300ms="filterRecords()" class="input-emerald input-sm w-full md:w-auto"
+                        <x-ui.input placeholder="Search records…" x-model="searchTerm"
+                            @input.debounce.300ms="filterRecords()" class="input-sm w-full md:w-auto"
                             icon="o-magnifying-glass" />
                     </div>
                 </div>
@@ -197,19 +186,19 @@
                     <!-- Desktop Table View -->
                     <table class="hidden md:table table-zebra w-full">
                         <thead>
-                            <tr class="bg-emerald-50 dark:bg-emerald-900/20">
-                                <th class="text-emerald-700 dark:text-emerald-300">Date</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Ticket ID</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Event</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Organization</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Request Type</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Decision</th>
-                                <th class="text-emerald-700 dark:text-emerald-300">Actions</th>
+                            <tr class="bg-base-200">
+                                <th class="text-base-content">Date</th>
+                                <th class="text-base-content">Ticket ID</th>
+                                <th class="text-base-content">Event</th>
+                                <th class="text-base-content">Organization</th>
+                                <th class="text-base-content">Request Type</th>
+                                <th class="text-base-content">Decision</th>
+                                <th class="text-base-content">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="record in paginatedRecords" :key="record.id">
-                                <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-900/10">
+                                <tr class="hover:bg-base-200/60">
                                     <td x-text="record.date"></td>
                                     <td>
                                         <span class="font-mono text-sm" x-text="record.ticketId"></span>
@@ -246,12 +235,12 @@
                     <!-- Mobile Card View -->
                     <div class="md:hidden space-y-4">
                         <template x-for="record in paginatedRecords" :key="record.id">
-                            <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 space-y-3">
+                            <div class="bg-base-100 rounded-lg p-4 space-y-3 border border-base-300">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <span class="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100"
+                                        <span class="font-mono text-sm font-semibold text-base-content"
                                             x-text="record.ticketId"></span>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="record.date">
+                                        <p class="text-xs text-base-content/60 mt-1" x-text="record.date">
                                         </p>
                                     </div>
                                     <div class="badge" :class="getDecisionClass(record.decision)"
@@ -260,19 +249,19 @@
 
                                 <div class="space-y-2">
                                     <div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Event</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                        <p class="text-xs text-base-content/60">Event</p>
+                                        <p class="text-sm font-medium text-base-content"
                                             x-text="record.eventName"></p>
                                     </div>
 
                                     <div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Organization</p>
-                                        <p class="text-sm text-gray-900 dark:text-gray-100"
+                                        <p class="text-xs text-base-content/60">Organization</p>
+                                        <p class="text-sm text-base-content"
                                             x-text="record.organization"></p>
                                     </div>
 
                                     <div>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Request Type</p>
+                                        <p class="text-xs text-base-content/60 mb-1">Request Type</p>
                                         <span
                                             :class="'badge border-none h-auto flex-wrap whitespace-normal leading-tight px-3 py-1 text-left text-sm font-medium shadow-sm ' +
                                             getRequestTypeClass(record.requestType)"
@@ -280,7 +269,7 @@
                                     </div>
                                 </div>
 
-                                <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <div class="pt-2 border-t border-base-300">
                                     <button class="btn btn-sm btn-ghost w-full" @click="goToDetails(record)">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -299,7 +288,7 @@
 
                 <!-- Pagination -->
                 <div class="flex justify-between items-center mt-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <div class="text-sm text-base-content/70">
                         Showing
                         <span x-text="filteredRecords.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0"></span>
                         to
@@ -332,33 +321,33 @@
 
         <!-- Performance Metrics (shown when performance report is selected) -->
         <div x-show="selectedReport === 'performance'" x-cloak
-            class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
+            class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg mt-6">
             <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Performance Metrics</h3>
+                <h3 class="text-lg font-semibold text-base-content mb-6">Performance Metrics</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="text-center">
-                        <div class="radial-progress text-emerald-600 border-emerald-200" style="--value:85;"
+                        <div class="radial-progress text-primary border-base-300" style="--value:85;"
                             role="progressbar">85%
                         </div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">On-time Completion</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Meeting deadlines</p>
+                        <p class="mt-2 text-sm font-medium text-base-content">On-time Completion</p>
+                        <p class="text-xs text-base-content/70">Meeting deadlines</p>
                     </div>
 
                     <div class="text-center">
-                        <div class="radial-progress text-blue-600 border-blue-200" style="--value:92;"
+                        <div class="radial-progress text-info border-info/30" style="--value:92;"
                             role="progressbar">92%
                         </div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Accuracy Rate</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Correct decisions</p>
+                        <p class="mt-2 text-sm font-medium text-base-content">Accuracy Rate</p>
+                        <p class="text-xs text-base-content/70">Correct decisions</p>
                     </div>
 
                     <div class="text-center">
-                        <div class="radial-progress text-purple-600 border-purple-200" style="--value:78;"
+                        <div class="radial-progress text-secondary border-secondary/30" style="--value:78;"
                             role="progressbar">78%
                         </div>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Satisfaction Score</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">User feedback</p>
+                        <p class="mt-2 text-sm font-medium text-base-content">Satisfaction Score</p>
+                        <p class="text-xs text-base-content/70">User feedback</p>
                     </div>
                 </div>
             </div>

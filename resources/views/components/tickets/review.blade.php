@@ -39,65 +39,40 @@
         </div>
     @endif
 
-    {{-- Header --}}
-    <div class="mb-8">
-        <x-ui.card>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <a href="{{ $backRoute }}" class="btn btn-ghost btn-sm" wire:navigate>
-                            <x-ui.icon name="o-arrow-left" class="w-4 h-4" />
-                            Back to Tickets
-                        </a>
-                    </div>
-                    <h1 class="text-3xl font-bold text-base-content">Ticket Review</h1>
-                    <p class="text-base-content/70 mt-1">Review event proposal and attached documents</p>
-                </div>
-                @php
-                    $statusOverview = is_array($statusOverview) ? $statusOverview : null;
-                @endphp
-                <div class="flex flex-wrap items-center gap-2">
-                    @php
-                        $currentViewer = auth()->user();
-                        $statusClasses = [
-                            'received' => 'badge-info',
-                            'gso_review' => 'badge-secondary',
-                            'pending_osa_approval' => 'badge-warning',
-                            'amended' => 'badge-info',
-                            'approved' => 'badge-success',
-                            'for_revision' => 'badge-warning',
-                        ];
-                        $ticketStatusLabel = ucfirst(str_replace('_', ' ', $ticket->status));
-                        $ticketBadgeClass = $statusClasses[$ticket->status] ?? 'badge-neutral';
-                        $ticketTextClass = $ticketBadgeClass === 'badge-warning' ? 'text-neutral-900' : 'text-white';
-                        $officeStatusLabel = $statusOverview['status_label'] ?? null;
-                        $officeBadgeClass = $statusOverview['status_badge'] ?? null;
-                        $officeName = $statusOverview['office_name'] ?? null;
-                        $officeLabel = $officeName
-                            ? \Illuminate\Support\Str::headline($officeName) . ' Decision: '
-                            : 'Office Decision: ';
-                        $showTicketStatusBadge = !($currentViewer && $currentViewer->isGSO());
-                    @endphp
-                    @if ($showTicketStatusBadge)
-                        <span class="badge {{ $ticketBadgeClass }} {{ $ticketTextClass }}">Ticket:
-                            {{ $ticketStatusLabel }}</span>
-                    @endif
-                    @if ($officeStatusLabel)
-                        @php
-                            $resolvedOfficeBadge = $officeBadgeClass ?? 'badge-warning';
-                            $resolvedOfficeTextClass =
-                                $resolvedOfficeBadge === 'badge-warning' ? 'text-neutral-900' : 'text-white';
-                        @endphp
-                        <span
-                            class="badge {{ $resolvedOfficeBadge }} {{ $resolvedOfficeTextClass }} whitespace-normal h-auto">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
-                    @endif
-                </div>
-            </div>
-            @if ($statusOverview && !empty($statusOverview['status_detail']))
-                <p class="text-sm text-base-content/70 mt-3">{{ $statusOverview['status_detail'] }}</p>
+    {{-- Header: the ticket itself, where it stands, and which office holds it --}}
+    @php
+        $statusOverview = is_array($statusOverview) ? $statusOverview : null;
+        $currentViewer = auth()->user();
+        $officeStatusLabel = $statusOverview['status_label'] ?? null;
+        $officeName = $statusOverview['office_name'] ?? null;
+        $officeLabel = $officeName ? \Illuminate\Support\Str::headline($officeName) . ': ' : 'Office: ';
+        $showTicketStatusBadge = !($currentViewer && $currentViewer->isGSO());
+        $orgName = $ticket->user?->studentOrganization?->org_name;
+    @endphp
+    <x-ui.page-heading :breadcrumbs="[
+        ['label' => 'Ticket review', 'link' => $backRoute],
+        ['label' => $ticket->ticket_number],
+    ]">
+        <x-slot:heading>{{ $ticket->title }}</x-slot:heading>
+        <x-slot:meta>
+            @if ($showTicketStatusBadge)
+                <x-tickets.progress-badge :status="$ticket->status" />
             @endif
-        </x-ui.card>
-    </div>
+            @if ($officeStatusLabel)
+                <span class="badge badge-soft badge-md whitespace-normal">{{ $officeLabel }}{{ $officeStatusLabel }}</span>
+            @endif
+        </x-slot:meta>
+        <x-slot:subtitle>
+            <span class="font-mono">{{ $ticket->ticket_number }}</span>
+            @if ($orgName)
+                &middot; {{ $orgName }}
+            @endif
+            &middot; Submitted {{ $ticket->created_at?->timezone('Asia/Manila')->format('M j, Y') }}
+        </x-slot:subtitle>
+    </x-ui.page-heading>
+    @if ($statusOverview && !empty($statusOverview['status_detail']))
+        <p class="-mt-3 mb-6 text-sm text-base-content/70">{{ $statusOverview['status_detail'] }}</p>
+    @endif
 
     {{-- Main Content --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -125,8 +100,235 @@
             <livewire:components.ticket-comments :ticket="$ticket" :key="'ticket-comments-' . $ticket->ticket_id" />
         </div>
 
-        {{-- Sidebar --}}
-        <div class="space-y-6">
+        {{-- Sidebar: the decision comes first (serial position), details follow --}}
+        <aside class="space-y-6 lg:sticky lg:top-24">
+            {{-- Actions --}}
+            <x-ui.card title="Decision" subtitle="Choose what happens next with this request.">
+
+                @php
+                    $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
+                    $hasOfficeActions =
+                        in_array('approve', $allowedActions, true) || in_array('reject', $allowedActions, true);
+                    $currentUser = auth()->user();
+
+                    $targetOfficeId = $overviewData['office_id'] ?? null;
+                    $officeApprovalRecord = null;
+
+                    if ($targetOfficeId !== null) {
+                        $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
+                            'office_id',
+                            (int) $targetOfficeId,
+                        );
+                    }
+
+                    if (!$officeApprovalRecord && $currentUser && $currentUser->isGSO()) {
+                        $fallbackOfficeId = $currentUser->office_id;
+
+                        if ($fallbackOfficeId) {
+                            $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
+                                'office_id',
+                                (int) $fallbackOfficeId,
+                            );
+                        }
+                    }
+
+                    $officeDecisionStatus = $officeApprovalRecord
+                        ? \Illuminate\Support\Str::of($officeApprovalRecord->decision)->lower()->toString()
+                        : (isset($overviewData['status'])
+                            ? \Illuminate\Support\Str::of($overviewData['status'])->lower()->toString()
+                            : null);
+
+                    $officeDecisionPending = false;
+
+                    if ($hasOfficeActions) {
+                        if ($officeApprovalRecord) {
+                            $officeDecisionPending = strcasecmp($officeApprovalRecord->decision ?? '', 'pending') === 0;
+                        } elseif ($officeDecisionStatus === 'pending') {
+                            $officeDecisionPending = true;
+                        }
+                    }
+
+                    $canPerformOfficeDecision =
+                        $hasOfficeActions &&
+                        $currentUser &&
+                        $currentUser->isGSO() &&
+                        ($currentUser->can('approve', $ticket) || $currentUser->can('reject', $ticket));
+
+                    $shouldRenderOfficeActions = $officeDecisionPending && $canPerformOfficeDecision;
+
+                    $resolvedGsoApproval = $officeApprovalRecord;
+
+                    if (!$resolvedGsoApproval && $currentUser && $currentUser->isGSO() && $currentUser->office_id) {
+                        $resolvedGsoApproval = $ticket->officeApprovals->firstWhere(
+                            'office_id',
+                            (int) $currentUser->office_id,
+                        );
+                    }
+
+                    $resolvedDecision = $resolvedGsoApproval?->decision;
+
+                    $officeDecisionDetails = null;
+
+                    if ($resolvedGsoApproval && $resolvedDecision && strcasecmp($resolvedDecision, 'pending') !== 0) {
+                        $decisionKey = \Illuminate\Support\Str::of($resolvedDecision)->lower()->toString();
+
+                        $officeDecisionDetails = [
+                            'status' => $decisionKey,
+                            'message' =>
+                                $decisionKey === 'approved'
+                                    ? 'This ticket has been approved.'
+                                    : 'This ticket has been put for revision.',
+                            'wrapper' =>
+                                $decisionKey === 'approved'
+                                    ? 'flex items-start gap-3 rounded-field bg-info/10 border border-info/30 px-4 py-3 text-info'
+                                    : 'flex items-start gap-3 rounded-field bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                            'icon' => $decisionKey === 'approved' ? 'o-check-circle' : 'o-x-circle',
+                        ];
+                    }
+                @endphp
+
+                @if ($ticket->status === 'pending_osa_approval')
+                    {{-- Pending OSA decision; GSO may still need to act --}}
+                    @if ($shouldRenderOfficeActions)
+                        <div class="space-y-3">
+                            @if (in_array('approve', $allowedActions))
+                                @can('approve', $ticket)
+                                    <button
+                                        class="btn btn-primary w-full justify-between"
+                                        @click="showApproval = true">
+                                        Approve Ticket
+                                    </button>
+                                @endcan
+                            @endif
+                        </div>
+                    @else
+                        @if ($officeDecisionDetails)
+                            <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                                <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                                <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
+                            </div>
+                        @endif
+
+                        <div class="space-y-3">
+                            @if (in_array('final_approve', $allowedActions))
+                                @can('finalApprove', $ticket)
+                                    <button
+                                        class="btn btn-primary w-full justify-between"
+                                        @click="showFinalApproval = true">
+                                        Final Approval
+                                    </button>
+                                @endcan
+                            @endif
+
+                            @if (in_array('for_revision', $allowedActions))
+                                @can('requestRevision', $ticket)
+                                    <button
+                                        class="btn w-full justify-between border-base-300 bg-base-100 hover:bg-base-200"
+                                        @click="showRevision = true">
+                                        Request Revision
+                                    </button>
+                                @endcan
+                            @endif
+                        </div>
+                    @endif
+                @elseif ($ticket->status === 'gso_review' || ($officeDecisionPending && $canPerformOfficeDecision))
+                    {{-- GSO Review Actions --}}
+                    <div class="space-y-3">
+                        @if (in_array('approve', $allowedActions))
+                            @can('approve', $ticket)
+                                <button class="btn btn-primary w-full justify-between"
+                                    @click="showApproval = true">
+                                    Approve Ticket
+                                </button>
+                            @endcan
+                        @endif
+
+                        @if (in_array('for_revision', $allowedActions))
+                            @can('requestRevision', $ticket)
+                                <button class="btn w-full justify-between border-base-300 bg-base-100 hover:bg-base-200"
+                                    @click="showRevision = true">
+                                    Request Revision
+                                </button>
+                            @endcan
+                        @endif
+                    </div>
+                @elseif (in_array($ticket->status, ['received', 'amended']))
+                    {{-- Initial Review Actions --}}
+                    <div class="space-y-3">
+                        @if (in_array('approve', $allowedActions))
+                            @can('approve', $ticket)
+                                <button class="btn btn-primary w-full justify-between"
+                                    @click="showApproval = true">
+                                    Approve Ticket
+                                </button>
+                            @endcan
+                        @endif
+
+                        @if (in_array('for_revision', $allowedActions))
+                            @can('requestRevision', $ticket)
+                                <button class="btn w-full justify-between border-base-300 bg-base-100 hover:bg-base-200"
+                                    @click="showRevision = true">
+                                    Request Revision
+                                </button>
+                            @endcan
+                        @endif
+
+                        @if (in_array('forward', $allowedActions))
+                            @can('forwardToGso', $ticket)
+                                <button class="btn w-full justify-between border-base-300 bg-base-100 hover:bg-base-200"
+                                    @click="showForward = true">
+                                    Forward to GSO
+                                </button>
+                            @endcan
+                        @endif
+                    </div>
+                @else
+                    @if ($officeDecisionDetails)
+                        <div class="{{ $officeDecisionDetails['wrapper'] }}">
+                            <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
+                            <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
+                        </div>
+                    @else
+                        @php
+                            $resolvedStatus = \Illuminate\Support\Str::of($ticket->status)->lower()->toString();
+                            $statusConfig = [
+                                'approved' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-field bg-info/10 border border-info/30 px-4 py-3 text-info',
+                                    'icon' => 'o-check-circle',
+                                    'label' => 'This ticket has been approved.',
+                                ],
+                                'for_revision' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-field bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
+                                    'icon' => 'o-arrow-path',
+                                    'label' => 'This ticket has been put for revision.',
+                                ],
+                                'gso_review' => [
+                                    'wrapper' =>
+                                        'flex items-start gap-3 rounded-field bg-secondary/10 border border-secondary/30 px-4 py-3 text-secondary',
+                                    'icon' => 'o-eye',
+                                    'label' => 'Ticket is currently under GSO review.',
+                                ],
+                            ];
+
+                            $statusDisplay = $statusConfig[$resolvedStatus] ?? null;
+                        @endphp
+
+                        @if ($statusDisplay)
+                            <div class="{{ $statusDisplay['wrapper'] }}">
+                                <x-ui.icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
+                                <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
+                            </div>
+                        @else
+                            <div class="alert alert-info">
+                                <x-ui.icon name="o-information-circle" class="w-5 h-5" />
+                                <span>No actions available for current ticket status.</span>
+                            </div>
+                        @endif
+                    @endif
+                @endif
+            </x-ui.card>
             {{-- Ticket Info --}}
             <x-ui.card title="Ticket Details">
                 @php $userDeleted = $ticket->user?->trashed(); @endphp
@@ -138,14 +340,14 @@
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Submitted By</label>
-                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
+                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/60' : '' }}">
                             {{ $userDeleted ? 'Deleted User' : $ticket->user?->name }}
                         </p>
                     </div>
 
                     <div>
                         <label class="text-sm font-medium text-base-content/70">Email</label>
-                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/50' : '' }}">
+                        <p class="text-base-content {{ $userDeleted ? 'italic text-base-content/60' : '' }}">
                             {{ $userDeleted ? 'N/A' : $ticket->user?->email }}
                         </p>
                     </div>
@@ -206,7 +408,7 @@
             @endif
 
             {{-- Approval History Timeline --}}
-            <x-ui.card title="Approval History Timeline"
+            <x-ui.card title="Approval history"
                 subtitle="Complete workflow progression from submission to final decision">
 
                 @php
@@ -357,10 +559,10 @@
                                         {{-- Timestamp --}}
                                         <div
                                             class="mt-3 pt-2 border-t border-base-300 flex items-center justify-between">
-                                            <p class="text-xs text-base-content/50">
+                                            <p class="text-xs text-base-content/60">
                                                 {{ $approval->created_at->format('F d, Y g:i A') }}
                                             </p>
-                                            <p class="text-xs text-base-content/50">
+                                            <p class="text-xs text-base-content/60">
                                                 {{ $approval->created_at->diffForHumans() }}
                                             </p>
                                         </div>
@@ -373,245 +575,18 @@
                     <div class="text-center py-12">
                         <x-ui.icon name="o-clock" class="w-12 h-12 text-base-content/30 mx-auto mb-3" />
                         <p class="text-base-content/70 font-medium">No approval actions yet</p>
-                        <p class="text-sm text-base-content/50 mt-1">This ticket is awaiting initial review by OSA</p>
+                        <p class="text-sm text-base-content/60 mt-1">This ticket is awaiting initial review by OSA</p>
                     </div>
                 @endif
             </x-ui.card>
 
-            {{-- Actions --}}
-            <x-ui.card title="Actions">
-
-                @php
-                    $overviewData = is_array($statusOverview ?? null) ? $statusOverview : [];
-                    $hasOfficeActions =
-                        in_array('approve', $allowedActions, true) || in_array('reject', $allowedActions, true);
-                    $currentUser = auth()->user();
-
-                    $targetOfficeId = $overviewData['office_id'] ?? null;
-                    $officeApprovalRecord = null;
-
-                    if ($targetOfficeId !== null) {
-                        $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
-                            'office_id',
-                            (int) $targetOfficeId,
-                        );
-                    }
-
-                    if (!$officeApprovalRecord && $currentUser && $currentUser->isGSO()) {
-                        $fallbackOfficeId = $currentUser->office_id;
-
-                        if ($fallbackOfficeId) {
-                            $officeApprovalRecord = $ticket->officeApprovals->firstWhere(
-                                'office_id',
-                                (int) $fallbackOfficeId,
-                            );
-                        }
-                    }
-
-                    $officeDecisionStatus = $officeApprovalRecord
-                        ? \Illuminate\Support\Str::of($officeApprovalRecord->decision)->lower()->toString()
-                        : (isset($overviewData['status'])
-                            ? \Illuminate\Support\Str::of($overviewData['status'])->lower()->toString()
-                            : null);
-
-                    $officeDecisionPending = false;
-
-                    if ($hasOfficeActions) {
-                        if ($officeApprovalRecord) {
-                            $officeDecisionPending = strcasecmp($officeApprovalRecord->decision ?? '', 'pending') === 0;
-                        } elseif ($officeDecisionStatus === 'pending') {
-                            $officeDecisionPending = true;
-                        }
-                    }
-
-                    $canPerformOfficeDecision =
-                        $hasOfficeActions &&
-                        $currentUser &&
-                        $currentUser->isGSO() &&
-                        ($currentUser->can('approve', $ticket) || $currentUser->can('reject', $ticket));
-
-                    $shouldRenderOfficeActions = $officeDecisionPending && $canPerformOfficeDecision;
-
-                    $resolvedGsoApproval = $officeApprovalRecord;
-
-                    if (!$resolvedGsoApproval && $currentUser && $currentUser->isGSO() && $currentUser->office_id) {
-                        $resolvedGsoApproval = $ticket->officeApprovals->firstWhere(
-                            'office_id',
-                            (int) $currentUser->office_id,
-                        );
-                    }
-
-                    $resolvedDecision = $resolvedGsoApproval?->decision;
-
-                    $officeDecisionDetails = null;
-
-                    if ($resolvedGsoApproval && $resolvedDecision && strcasecmp($resolvedDecision, 'pending') !== 0) {
-                        $decisionKey = \Illuminate\Support\Str::of($resolvedDecision)->lower()->toString();
-
-                        $officeDecisionDetails = [
-                            'status' => $decisionKey,
-                            'message' =>
-                                $decisionKey === 'approved'
-                                    ? 'This ticket has been approved.'
-                                    : 'This ticket has been put for revision.',
-                            'wrapper' =>
-                                $decisionKey === 'approved'
-                                    ? 'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info'
-                                    : 'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
-                            'icon' => $decisionKey === 'approved' ? 'o-check-circle' : 'o-x-circle',
-                        ];
-                    }
-                @endphp
-
-                @if ($ticket->status === 'pending_osa_approval')
-                    {{-- Pending OSA decision; GSO may still need to act --}}
-                    @if ($shouldRenderOfficeActions)
-                        <div class="space-y-3">
-                            @if (in_array('approve', $allowedActions))
-                                @can('approve', $ticket)
-                                    <button
-                                        class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showApproval = true">
-                                        Approve Ticket
-                                    </button>
-                                @endcan
-                            @endif
-                        </div>
-                    @else
-                        @if ($officeDecisionDetails)
-                            <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                                <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
-                                <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
-                            </div>
-                        @endif
-
-                        <div class="space-y-3">
-                            @if (in_array('final_approve', $allowedActions))
-                                @can('finalApprove', $ticket)
-                                    <button
-                                        class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showFinalApproval = true">
-                                        Final Approval
-                                    </button>
-                                @endcan
-                            @endif
-
-                            @if (in_array('for_revision', $allowedActions))
-                                @can('requestRevision', $ticket)
-                                    <button
-                                        class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                        @click="showRevision = true">
-                                        Request Revision
-                                    </button>
-                                @endcan
-                            @endif
-                        </div>
-                    @endif
-                @elseif ($ticket->status === 'gso_review' || ($officeDecisionPending && $canPerformOfficeDecision))
-                    {{-- GSO Review Actions --}}
-                    <div class="space-y-3">
-                        @if (in_array('approve', $allowedActions))
-                            @can('approve', $ticket)
-                                <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                    @click="showApproval = true">
-                                    Approve Ticket
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('for_revision', $allowedActions))
-                            @can('requestRevision', $ticket)
-                                <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                    @click="showRevision = true">
-                                    Request Revision
-                                </button>
-                            @endcan
-                        @endif
-                    </div>
-                @elseif (in_array($ticket->status, ['received', 'amended']))
-                    {{-- Initial Review Actions --}}
-                    <div class="space-y-3">
-                        @if (in_array('approve', $allowedActions))
-                            @can('approve', $ticket)
-                                <button class="btn btn-success w-full text-base-200 dark:text-white flex justify-between"
-                                    @click="showApproval = true">
-                                    Approve Ticket
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('for_revision', $allowedActions))
-                            @can('requestRevision', $ticket)
-                                <button class="btn btn-warning w-full text-base-200 dark:text-white flex justify-between"
-                                    @click="showRevision = true">
-                                    Request Revision
-                                </button>
-                            @endcan
-                        @endif
-
-                        @if (in_array('forward', $allowedActions))
-                            @can('forwardToGso', $ticket)
-                                <button class="btn btn-info w-full text-base-200 dark:text-white flex justify-between"
-                                    @click="showForward = true">
-                                    Forward to GSO
-                                </button>
-                            @endcan
-                        @endif
-                    </div>
-                @else
-                    @if ($officeDecisionDetails)
-                        <div class="{{ $officeDecisionDetails['wrapper'] }}">
-                            <x-ui.icon :name="$officeDecisionDetails['icon']" class="w-5 h-5 shrink-0" />
-                            <p class="font-medium leading-tight">{{ $officeDecisionDetails['message'] }}</p>
-                        </div>
-                    @else
-                        @php
-                            $resolvedStatus = \Illuminate\Support\Str::of($ticket->status)->lower()->toString();
-                            $statusConfig = [
-                                'approved' => [
-                                    'wrapper' =>
-                                        'flex items-start gap-3 rounded-2xl bg-info/10 border border-info/30 px-4 py-3 text-info',
-                                    'icon' => 'o-check-circle',
-                                    'label' => 'This ticket has been approved.',
-                                ],
-                                'for_revision' => [
-                                    'wrapper' =>
-                                        'flex items-start gap-3 rounded-2xl bg-warning/10 border border-warning/30 px-4 py-3 text-warning',
-                                    'icon' => 'o-arrow-path',
-                                    'label' => 'This ticket has been put for revision.',
-                                ],
-                                'gso_review' => [
-                                    'wrapper' =>
-                                        'flex items-start gap-3 rounded-2xl bg-secondary/10 border border-secondary/30 px-4 py-3 text-secondary',
-                                    'icon' => 'o-eye',
-                                    'label' => 'Ticket is currently under GSO review.',
-                                ],
-                            ];
-
-                            $statusDisplay = $statusConfig[$resolvedStatus] ?? null;
-                        @endphp
-
-                        @if ($statusDisplay)
-                            <div class="{{ $statusDisplay['wrapper'] }}">
-                                <x-ui.icon :name="$statusDisplay['icon']" class="w-5 h-5 shrink-0" />
-                                <span class="font-medium leading-tight">{{ $statusDisplay['label'] }}</span>
-                            </div>
-                        @else
-                            <div class="alert alert-info">
-                                <x-ui.icon name="o-information-circle" class="w-5 h-5" />
-                                <span>No actions available for current ticket status.</span>
-                            </div>
-                        @endif
-                    @endif
-                @endif
-            </x-ui.card>
-        </div>
+        </aside>
     </div>
 
     {{-- Approval Modal (Alpine) --}}
     <div x-show="showApproval" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showApproval=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+        <div class="relative bg-base-100 rounded-box w-full max-w-xl p-6 border border-base-300">
             <h3 class="text-lg font-bold mb-4">Confirm Ticket Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
@@ -622,8 +597,8 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Approval Remarks</label>
-                <textarea x-model="approvalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter your remarks for approving this ticket..."></textarea>
+                <textarea x-model="approvalRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter your remarks for approving this ticket…"></textarea>
                 <p class="text-xs text-base-content/60">Provide a brief explanation for this approval</p>
                 @error('approvalRemarks')
                     <span class="text-error text-sm">{{ $message }}</span>
@@ -631,7 +606,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-ui.button label="Cancel" class="btn" @click="showApproval=false" />
-                <x-ui.button label="Confirm Approval" class="btn-success text-neutral-content"
+                <x-ui.button label="Confirm Approval" class="btn-primary"
                     wire:click="approveTicket" spinner="approveTicket"
                     x-bind:disabled="approvalRemarks.trim().length < 3"
                     @click="$wire.set('approvalRemarks', approvalRemarks)" />
@@ -642,7 +617,7 @@
     {{-- For Revision Modal (unified) --}}
     <div x-show="showRevision" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showRevision=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+        <div class="relative bg-base-100 rounded-box w-full max-w-xl p-6 border border-base-300">
             <h3 class="text-lg font-bold mb-4">Request Ticket Revision</h3>
             <div class="space-y-4">
                 <div class="alert alert-warning">
@@ -653,8 +628,8 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Revision Instructions</label>
-                <textarea x-model="revisionRemarks" class="textarea textarea-bordered w-full" rows="5"
-                    placeholder="Clearly explain what needs to be changed or added..."></textarea>
+                <textarea x-model="revisionRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="5"
+                    placeholder="Clearly explain what needs to be changed or added…"></textarea>
                 <p class="text-xs text-base-content/60">Be specific about what needs to be revised (minimum 10
                     characters)</p>
                 @error('revisionRemarks')
@@ -663,7 +638,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-ui.button label="Cancel" class="btn" @click="showRevision=false" />
-                <x-ui.button label="Request Revision" class="btn-warning text-neutral-content"
+                <x-ui.button label="Request Revision" class="btn-primary"
                     wire:click="forRevision" spinner="forRevision"
                     x-bind:disabled="revisionRemarks.trim().length < 10"
                     @click="$wire.set('revisionRemarks', revisionRemarks)" />
@@ -675,7 +650,7 @@
     {{-- Forward to GSO Modal (Alpine) --}}
     <div x-show="showForward" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showForward=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+        <div class="relative bg-base-100 rounded-box w-full max-w-xl p-6 border border-base-300">
             <h3 class="text-lg font-bold mb-4">Forward to GSO</h3>
             <div class="space-y-4">
                 <div class="alert alert-info">
@@ -687,8 +662,8 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Forwarding Remarks</label>
-                <textarea x-model="forwardRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter remarks for GSO..."></textarea>
+                <textarea x-model="forwardRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter remarks for GSO…"></textarea>
                 <p class="text-xs text-base-content/60">Explain why this needs GSO review or what specific approval is
                     needed</p>
                 @error('forwardRemarks')
@@ -697,7 +672,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-ui.button label="Cancel" class="btn" @click="showForward=false" />
-                <x-ui.button label="Forward to GSO" class="btn-info text-neutral-content" wire:click="forwardToGso"
+                <x-ui.button label="Forward to GSO" class="btn-primary" wire:click="forwardToGso"
                     spinner="forwardToGso" x-bind:disabled="forwardRemarks.trim().length < 3"
                     @click="$wire.set('forwardRemarks', forwardRemarks)" />
             </div>
@@ -707,7 +682,7 @@
     {{-- Final Approval Modal (Alpine) --}}
     <div x-show="showFinalApproval" x-transition class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-base-300/60 backdrop-blur" @click="showFinalApproval=false"></div>
-        <div class="relative bg-base-100 rounded-box shadow-xl w-full max-w-xl p-6">
+        <div class="relative bg-base-100 rounded-box w-full max-w-xl p-6 border border-base-300">
             <h3 class="text-lg font-bold mb-4">Final Approval</h3>
             <div class="space-y-4">
                 <div class="alert alert-success">
@@ -718,8 +693,8 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Final Approval Remarks</label>
-                <textarea x-model="finalApprovalRemarks" class="textarea textarea-bordered w-full" rows="4"
-                    placeholder="Enter your final approval remarks..."></textarea>
+                <textarea x-model="finalApprovalRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
+                    placeholder="Enter your final approval remarks…"></textarea>
                 <p class="text-xs text-base-content/60">Document your final decision after considering GSO's input</p>
                 @error('finalApprovalRemarks')
                     <span class="text-error text-sm">{{ $message }}</span>
@@ -727,7 +702,7 @@
             </div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-ui.button label="Cancel" class="btn" @click="showFinalApproval=false" />
-                <x-ui.button label="Confirm Final Approval" class="btn-success text-neutral-content"
+                <x-ui.button label="Confirm Final Approval" class="btn-primary"
                     wire:click="finalApproval" spinner="finalApproval"
                     x-bind:disabled="finalApprovalRemarks.trim().length < 3"
                     @click="$wire.set('finalApprovalRemarks', finalApprovalRemarks)" />

@@ -17,38 +17,25 @@
         }
 }"
     @user-drawer-close.window="document.getElementById('create-user-drawer-toggle').checked = false; document.getElementById('edit-user-drawer-toggle').checked = false">
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">User Management</h1>
-                        <p class="text-sm text-base-content/70 mt-1">Add, update, and manage system users and roles</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-ui.button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
-                            Create User
-                        </x-ui.button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="User Management" subtitle="Add, update, and manage system users and roles">
+            <x-slot:actions>
+                <x-ui.button icon="o-plus" class="btn-accent w-full sm:w-auto" @click="openCreateUserDrawer()">
+                    Create User
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         <!-- Search and Filter Section -->
         <x-ui.card>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <x-ui.input label="Search Users" wire:model.live.debounce.300ms="search"
-                    placeholder="Search by name or email..." icon="o-magnifying-glass" />
+                    placeholder="Search by name or email…" icon="o-magnifying-glass" />
 
                 <x-ui.select label="Filter by Role" wire:model.live="roleFilter" :options="[
                     ['id' => 'all', 'name' => 'All Roles'],
-                    ['id' => 'superadmin', 'name' => 'Super Admin'],
-                    ['id' => 'osa', 'name' => 'OSA Staff'],
-                    ['id' => 'gso', 'name' => 'GSO Staff'],
-                    ['id' => 'student-org', 'name' => 'Student Organization'],
+                    ...$availableRoles->map(fn ($role) => ['id' => $role->role_name, 'name' => $role->role_name])->all(),
                 ]" option-value="id"
                     option-label="name" />
 
@@ -68,28 +55,30 @@
                 <x-ui.table :headers="$headers" :rows="$users" :sortBy="$sortBy" :per-page-values="[10, 25, 50]" :paginate="false"
                     class="rounded-lg">
                     @foreach ($users as $user)
-                        @php
-                            $roleString = $user->role?->role_name ?? 'unknown';
-                        @endphp
                         <tr wire:key="user-{{ $user->user_id }}">
                             <x-ui.table-column>{{ $user->name }}</x-ui.table-column>
                             <x-ui.table-column>{{ $user->email }}</x-ui.table-column>
                             <x-ui.table-column>
-                                <x-ui.badge :value="$this->getRoleDisplayName($roleString)" :class="match ($roleString) {
-                                    'superadmin'
-                                        => 'badge-error text-base-200 text-md whitespace-nowrap dark:text-white',
-                                    'osa' => 'badge-primary text-base-200 dark:text-white',
-                                    'gso' => 'badge-info text-base-200 dark:text-white',
-                                    'student-org' => 'badge-success text-base-200 whitespace-nowrap dark:text-white',
-                                    default => 'badge-ghost text-base-200 dark:text-white',
-                                }" />
+                                <div class="flex min-w-72 items-end gap-2">
+                                    <div class="min-w-0 grow">
+                                        <x-ui.select id="user-role-{{ $user->user_id }}"
+                                            wire:model.live="selectedRoleIds.{{ $user->user_id }}" :options="$availableRoles"
+                                            option-value="role_id" option-label="role_name"
+                                            aria-label="Role for {{ $user->name }}" />
+                                    </div>
+                                    <x-ui.button size="sm" class="btn-primary shrink-0"
+                                        wire:click="saveUserRole({{ $user->user_id }})" spinner="saveUserRole"
+                                        aria-label="Save role for {{ $user->name }}">
+                                        Save role
+                                    </x-ui.button>
+                                </div>
                             </x-ui.table-column>
                             <x-ui.table-column>
                                 @if ($user->email_verified_at)
-                                    <x-ui.badge value="Verified" class="badge-success text-base-200 dark:text-white" />
+                                    <x-ui.badge value="Verified" class="badge-success text-base-200" />
                                 @else
                                     <x-ui.badge value="Unverified"
-                                        class="badge-warning text-base-200 dark:text-white" />
+                                        class="badge-warning text-base-200" />
                                 @endif
                             </x-ui.table-column>
                             <x-ui.table-column>
@@ -98,7 +87,7 @@
                                 @elseif($user->office)
                                     <span class="text-sm">{{ $user->office->office_name }}</span>
                                 @else
-                                    <span class="text-sm text-gray-500">N/A</span>
+                                    <span class="text-sm text-base-content/60">N/A</span>
                                 @endif
                             </x-ui.table-column>
                             <x-ui.table-column class="text-center">
@@ -108,7 +97,7 @@
                                         Edit
                                     </x-ui.button>
                                     @if (!$user->isSuperAdmin())
-                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
                                             wire:click="openDeleteModal({{ $user->user_id }}, '{{ addslashes($user->name) }}')">
                                         </x-ui.button>
                                     @endif
@@ -121,7 +110,7 @@
                         <div class="flex flex-col items-center justify-center py-12 text-center">
                             <x-ui.icon name="o-users" class="w-16 h-16 text-base-content/20 mb-4" />
                             <h3 class="text-xl font-bold text-base-content/70">No users found</h3>
-                            <p class="text-base-content/50 max-w-sm mx-auto mt-2">
+                            <p class="text-base-content/60 max-w-sm mx-auto mt-2">
                                 @if ($this->hasActiveFilters())
                                     We couldn't find any users matching "<span
                                         class="font-semibold text-base-content/80">{{ $search }}</span>" or your
@@ -187,7 +176,7 @@
                                 wire:model.live.debounce.300ms="createForm.password_confirmation" ::type="showConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm password" icon="o-lock-closed" required />
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                class="absolute right-3 top-9 h-10 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                 tabindex="-1">
                                 <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showConfirmPassword" />
                                 <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showConfirmPassword" />
@@ -198,7 +187,7 @@
                             option-value="role_name" option-label="role_name" placeholder="Select user role"
                             icon="o-shield-check" required />
 
-                        @if ($createForm->role === 'student-org')
+                        @if ($createForm->portal() === 'student-org')
                             <x-ui.select label="Organization Name"
                                 wire:model.live.debounce.300ms="createForm.org_name" :options="$organizations"
                                 option-value="org_id" option-label="org_name" placeholder="Select organization"
@@ -209,7 +198,7 @@
                                 placeholder="Select organization position" required />
                         @endif
 
-                        @if (in_array($createForm->role, ['osa', 'gso']))
+                        @if (in_array($createForm->portal(), ['osa', 'gso'], true))
                             <div class="alert alert-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     class="stroke-current shrink-0 w-6 h-6">
@@ -277,7 +266,7 @@
                                 wire:model.live.blur="editForm.password_confirmation" ::type="showEditConfirmPassword ? 'text' : 'password'"
                                 placeholder="Confirm new password" icon="o-lock-closed" />
                             <button type="button" @click="showEditConfirmPassword = !showEditConfirmPassword"
-                                class="absolute right-3 top-9 h-10 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                class="absolute right-3 top-9 h-10 flex items-center text-base-content/60 hover:text-base-content/70 transition-colors"
                                 tabindex="-1">
                                 <i class="fas fa-eye-slash text-sm" x-show="!showEditConfirmPassword"></i>
                                 <i class="fas fa-eye text-sm" x-show="showEditConfirmPassword"
@@ -293,7 +282,7 @@
                                 option-value="role_name" option-label="role_name" placeholder="Select user role"
                                 icon="o-shield-check" required />
 
-                            @if ($editForm->role === 'student-org')
+                            @if ($editForm->portal() === 'student-org')
                                 <x-ui.select label="Organization Name"
                                     wire:model.live.debounce.300ms="editForm.org_name" :options="$organizations"
                                     option-value="org_id" option-label="org_name" placeholder="Select organization"
@@ -304,7 +293,7 @@
                                     placeholder="Select organization position" required />
                             @endif
 
-                            @if (in_array($editForm->role, ['osa', 'gso']))
+                            @if (in_array($editForm->portal(), ['osa', 'gso'], true))
                                 <div class="alert alert-info">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         class="stroke-current shrink-0 w-6 h-6">
@@ -331,31 +320,88 @@
         </div>
     </div>
 
+    {{-- Self Role Change Confirmation Modal --}}
+    <dialog
+        x-data="{
+            isOpen: $wire.entangle('showSelfRoleChangeConfirmation').live,
+            previousFocus: null,
+            dismiss() {
+                $wire.cancelSelfRoleChange();
+            },
+            restoreFocus() {
+                this.$nextTick(() => this.previousFocus?.focus());
+            },
+        }"
+        x-effect="
+            if (isOpen && ! $el.open) {
+                previousFocus = document.activeElement;
+                $el.showModal();
+                $nextTick(() => $refs.cancelButton.focus());
+            }
+
+            if (! isOpen && $el.open) {
+                $el.close();
+            }
+        "
+        x-on:cancel.prevent="dismiss()"
+        x-on:close="if (isOpen) { dismiss(); } restoreFocus()"
+        class="modal"
+        aria-labelledby="self-role-change-title"
+        aria-describedby="self-role-change-description"
+    >
+        <div class="modal-box max-w-lg">
+            <h2 id="self-role-change-title" class="text-lg font-semibold text-base-content">Confirm your role change</h2>
+            <p id="self-role-change-description" class="mt-2 text-sm text-base-content/70">
+                You are about to change the role assigned to your own account. Review this change carefully before
+                continuing.
+            </p>
+
+            <div class="alert alert-warning mt-5" role="alert">
+                <span>Confirming may change the access available to you on your next request.</span>
+            </div>
+
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost" x-ref="cancelButton" wire:click="cancelSelfRoleChange"
+                    wire:target="cancelSelfRoleChange" wire:loading.attr="disabled">
+                    Keep current role
+                </button>
+                <button type="button" class="btn btn-primary" wire:click="confirmSelfRoleChange"
+                    wire:target="confirmSelfRoleChange" wire:loading.attr="disabled">
+                    Confirm role change
+                </button>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button type="button" @click="dismiss()" aria-label="Close role change confirmation">Close</button>
+        </form>
+    </dialog>
+
     {{-- Delete Confirmation Modal --}}
     @if ($deletingUserName)
         <x-ui.modal-dialog wire:model="showDeleteModal" title="Delete User Confirmation"
             subtitle="This action cannot be undone">
             <div class="space-y-4">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="bg-error/10 border border-error/30 rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor"
+                        <svg class="w-5 h-5 text-error mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
                         </svg>
-                        <p class="text-red-800 font-medium">Warning: This action is permanent</p>
+                        <p class="text-error font-medium">Warning: This action is permanent</p>
                     </div>
                 </div>
 
-                <p class="text-gray-700">
+                <p class="text-base-content/80">
                     Are you sure you want to delete the user
-                    <strong class="text-gray-900">{{ $deletingUserName }}</strong>?
+                    <strong class="text-base-content">{{ $deletingUserName }}</strong>?
                     <br><br>
                     This will permanently remove:
                 </p>
 
-                <ul class="list-disc list-inside text-sm text-gray-600 ml-4">
+                <ul class="list-disc list-inside text-sm text-base-content/70 ml-4">
                     <li>User account and login access</li>
                     <li>All associated data and permissions</li>
                     <li>Event submissions and history</li>

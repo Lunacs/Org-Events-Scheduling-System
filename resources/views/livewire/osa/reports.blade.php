@@ -1,29 +1,22 @@
-@push('head')
+{{-- This component is #[Lazy]: its view renders in a follow-up request where @push stacks never
+     reach the page, so Chart.js is registered with @assets (loaded once, on any request). --}}
+@assets
     @vite('resources/js/charts.js')
-@endpush
+@endassets
 
 <div>
     {{-- Header --}}
     {{-- Header --}}
-    <section
-        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-        <div class="relative p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-heading font-bold text-base-content">Reports</h1>
-                    <p class="text-base-content/70 mt-1">Generate comprehensive reports on events, approvals, and
-                        organization participation</p>
-                </div>
-                <div class="flex items-center gap-2 relative z-10">
-                    <x-ui.button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
-                        spinner>
-                        Generate Report
-                    </x-ui.button>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-ui.page-heading title="Reports" subtitle="Generate comprehensive reports on events, approvals, and organization participation">
+        <x-slot:actions>
+            @can('reports.export')
+            <x-ui.button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
+                spinner>
+                Generate Report
+            </x-ui.button>
+            @endcan
+        </x-slot:actions>
+    </x-ui.page-heading>
 
     {{-- Analytics Charts Section (Now at top) --}}
     @island(name: 'charts')
@@ -167,7 +160,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {{-- Events by Month Chart --}}
-                <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+                <div class="bg-base-100 border border-base-300 rounded-box p-6">
                     <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
                         <x-ui.icon name="o-chart-bar" class="w-5 h-5 text-primary" />
                         Events by Month
@@ -178,7 +171,7 @@
                 </div>
 
                 {{-- Status Distribution Chart --}}
-                <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+                <div class="bg-base-100 border border-base-300 rounded-box p-6">
                     <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
                         <x-ui.icon name="o-chart-pie" class="w-5 h-5 text-secondary" />
                         Status Distribution
@@ -189,7 +182,7 @@
                 </div>
 
                 {{-- Events by Type Chart --}}
-                <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+                <div class="bg-base-100 border border-base-300 rounded-box p-6">
                     <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
                         <x-ui.icon name="o-squares-2x2" class="w-5 h-5 text-accent" />
                         Events by Type
@@ -200,7 +193,7 @@
                 </div>
 
                 {{-- Top Organizations Chart --}}
-                <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+                <div class="bg-base-100 border border-base-300 rounded-box p-6">
                     <h3 class="font-semibold text-base-content mb-4 flex items-center gap-2">
                         <x-ui.icon name="o-building-office" class="w-5 h-5 text-info" />
                         Top Organizations
@@ -217,7 +210,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {{-- Report Type Selection --}}
         <div class="lg:col-span-2">
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
                 <h2 class="text-lg font-semibold mb-4">Report Configuration</h2>
 
                 <div class="max-md:grid max-md:grid-cols-1 max-md:gap-4 space-y-6">
@@ -286,10 +279,12 @@
                         option-label="name" />
 
                     <div class="flex-row gap-2 sm:flex-col">
+                        @can('reports.export')
                         <x-ui.button wire:click.async="generateReport" class="btn-primary" icon="o-document-arrow-down"
                             spinner>
                             Generate & Download
                         </x-ui.button>
+                        @endcan
                         <x-ui.button wire:click="clearFilters" class="btn-ghost" icon="o-x-mark">
                             Clear Filters
                         </x-ui.button>
@@ -300,7 +295,7 @@
 
         {{-- Quick Stats --}}
         <div class="space-y-4">
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="bg-success/10 p-2 rounded-full">
                         <x-ui.icon name="o-check-circle" class="w-5 h-5 text-success" />
@@ -319,7 +314,7 @@
                 <p class="text-sm text-base-content/70">This period</p>
             </div>
 
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="bg-error/10 p-2 rounded-full">
                         <x-ui.icon name="o-x-circle" class="w-5 h-5 text-error" />
@@ -338,7 +333,7 @@
                 <p class="text-sm text-base-content/70">This period</p>
             </div>
 
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="bg-warning/10 p-2 rounded-full">
                         <x-ui.icon name="o-clock" class="w-5 h-5 text-warning" />
@@ -359,7 +354,7 @@
 
 
     {{-- Report Preview --}}
-    <div class="bg-base-100 border border-base-300 rounded-box shadow-sm">
+    <div class="bg-base-100 border border-base-300 rounded-box">
         <div class="p-6 border-b border-base-300">
             <h2 class="text-lg font-semibold">Report Preview</h2>
             <p class="text-sm text-base-content/70">Preview of {{ ucfirst(str_replace('_', ' ', $reportType)) }}</p>
@@ -376,7 +371,7 @@
             </div>
             <div class="text-center mt-6">
                 <span class="loading loading-spinner loading-lg text-primary"></span>
-                <p class="text-sm text-base-content/70 mt-2">Generating report...</p>
+                <p class="text-sm text-base-content/70 mt-2">Generating report…</p>
             </div>
         </div>
 
@@ -400,13 +395,13 @@
                                 @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr>
                                     <td>{{ $ticket->title }}</td>
-                                    <td class="{{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                    <td class="{{ $orgDeleted ? 'italic text-base-content/60' : '' }}">
                                         {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
                                     </td>
                                     <td>{{ $ticket->events->first()?->created_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
-                                        <x-ui.badge value="Approved" class="badge-success text-white" />
+                                        <x-ui.badge value="Approved" class="badge-success" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -436,13 +431,13 @@
                                 @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
                                 <tr>
                                     <td>{{ $ticket->title }}</td>
-                                    <td class="{{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                    <td class="{{ $orgDeleted ? 'italic text-base-content/60' : '' }}">
                                         {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'No Organization' }}
                                     </td>
                                     <td>{{ $ticket->created_at->format('M d, Y') }}</td>
                                     <td>{{ $ticket->updated_at?->format('M d, Y') ?? 'TBD' }}</td>
                                     <td>
-                                        <x-ui.badge value="For Revision" class="badge-error text-white" />
+                                        <x-ui.badge value="For Revision" class="badge-error" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -509,7 +504,7 @@
                     @endphp
                     <div class="flex items-center gap-4">
                         <div class="flex-1 bg-base-300 rounded-full h-4">
-                            <div class="bg-success h-4 rounded-full transition-all duration-300"
+                            <div class="bg-success h-4 rounded-full transition duration-300"
                                 style="width: {{ $approvalRate }}%"></div>
                         </div>
                         <span class="text-lg font-semibold">{{ $approvalRate }}%</span>
@@ -520,7 +515,7 @@
                 <div class="text-center py-12">
                     <x-ui.icon name="o-document-chart-bar" class="w-16 h-16 text-base-content/30 mx-auto mb-4" />
                     <h3 class="text-lg font-semibold text-base-content/70">No Data Available</h3>
-                    <p class="text-sm text-base-content/50">Select report parameters and generate a report to see
+                    <p class="text-sm text-base-content/60">Select report parameters and generate a report to see
                         data
                     </p>
                 </div>

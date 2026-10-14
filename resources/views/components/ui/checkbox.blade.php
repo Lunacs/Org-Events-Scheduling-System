@@ -16,7 +16,7 @@
     $field = $attributes->whereStartsWith('wire:model')->first();
 
     // Ensure a stable id so the label can be associated via for/id.
-    $checkboxId = $id ?? 'ui-checkbox-' . \Illuminate\Support\Str::random(8);
+    $checkboxId = $id ?? ($field ? 'ui-checkbox-' . \Illuminate\Support\Str::slug($field) : 'ui-checkbox-' . \Illuminate\Support\Str::random(8));
 @endphp
 
 <div>
@@ -27,7 +27,7 @@
     ])>
         {{-- CHECKBOX: forwards wire:model, required verbatim --}}
         <input id="{{ $checkboxId }}" type="checkbox"
-            {{ $attributes->whereDoesntStartWith('id')->class(['checkbox', 'order-2' => $right]) }} />
+            {{ $attributes->whereDoesntStartWith('id')->class(['checkbox checkbox-primary shrink-0', 'order-2' => $right]) }} />
 
         {{-- LABEL --}}
         <div @class(['order-1' => $right])>
@@ -35,14 +35,15 @@
                 <div class="text-sm font-medium">
                     {{ $label }}
                     @if ($attributes->get('required'))
-                        <span class="text-error">*</span>
+                        <span class="text-error" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
                     @endif
                 </div>
             @endif
 
             {{-- HINT --}}
             @if ($hint)
-                <div class="text-xs opacity-60 mt-1">{{ $hint }}</div>
+                <div class="mt-1 text-xs text-base-content/70">{{ $hint }}</div>
             @endif
         </div>
     </label>

@@ -45,33 +45,21 @@
 @endphp
 
 <div>
-    <section
-        class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm mb-8">
-        <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-        <div class="relative p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-base-content font-heading">Ticket Review</h1>
-                    <p class="text-base-content/70 mt-1">Track, prioritize, and review requests assigned to the
-                        General
-                        Services Office.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="badge badge-outline border-primary/60 text-primary">
-                        <span wire:loading.remove wire:target="search,filterStatus,filterType,filterPriority">
-                            {{ number_format($approvalsCount) }} Tickets
-                        </span>
-                        <span wire:loading wire:target="search,filterStatus,filterType,filterPriority"
-                            class="loading loading-spinner loading-xs"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-ui.page-heading title="Ticket Review" subtitle="Track, prioritize, and review requests assigned to the General Services Office.">
+        <x-slot:actions>
+            <span class="badge badge-outline border-primary/60 text-primary">
+                <span wire:loading.remove wire:target="search,filterStatus,filterType,filterPriority">
+                    {{ number_format($approvalsCount) }} Tickets
+                </span>
+                <span wire:loading wire:target="search,filterStatus,filterType,filterPriority"
+                    class="loading loading-spinner loading-xs"></span>
+            </span>
+        </x-slot:actions>
+    </x-ui.page-heading>
 
-    <div class="bg-base-100 rounded-box shadow-lg p-6 mb-6">
+    <div class="bg-base-100 rounded-box p-6 mb-6 border border-base-300">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+            <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search tickets…"
                 icon="o-magnifying-glass" />
 
             <x-ui.select wire:model.live="filterStatus" placeholder="Filter by Status" :options="$statusOptions"
@@ -90,7 +78,7 @@
             class="absolute inset-0 bg-base-100/60 backdrop-blur-sm z-10 items-center justify-center rounded-box">
             <div class="text-center">
                 <span class="loading loading-spinner loading-lg text-primary"></span>
-                <p class="mt-2 text-sm text-base-content/70">Loading tickets...</p>
+                <p class="mt-2 text-sm text-base-content/70">Loading tickets…</p>
             </div>
         </div>
 
@@ -110,7 +98,7 @@
                     : null;
             @endphp
 
-            <div class="flex flex-col bg-base-100 rounded-box shadow-lg overflow-hidden hover:shadow-xl hover:ring-2 ring-primary/20 transition-all duration-200"
+            <div class="flex flex-col bg-base-100 rounded-box overflow-hidden hover:ring-2 ring-primary/20 transition duration-200 border border-base-300"
                 wire:key="approval-card-{{ $ticketKey }}">
                 <div class="p-6 flex-1 flex flex-col">
                     <div class="flex items-start justify-between gap-3 mb-4">
@@ -158,7 +146,7 @@
                             @forelse ($requirements as $requirement)
                                 <span class="badge badge-outline badge-sm">{{ $requirement }}</span>
                             @empty
-                                <span class="text-xs text-base-content/50">No special requirements provided.</span>
+                                <span class="text-xs text-base-content/60">No special requirements provided.</span>
                             @endforelse
                         </div>
                     </div>
@@ -207,7 +195,7 @@
                     </svg>
                     <div>
                         <h3 class="text-lg font-semibold text-base-content/70">No tickets found</h3>
-                        <p class="text-sm text-base-content/50 mt-1">No tickets match your current filters.</p>
+                        <p class="text-sm text-base-content/60 mt-1">No tickets match your current filters.</p>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-<div x-data="{ firstLoad: true }" x-init="$nextTick(() => firstLoad = false)">
+<div x-data="{ firstLoad: false }">
 
     {{-- Skeleton Loading State (First Load Only) --}}
     <div x-show="firstLoad" x-cloak>
@@ -6,8 +6,7 @@
     </div>
 
     {{-- Actual Content --}}
-    <div x-show="!firstLoad" x-cloak x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    <div x-show="!firstLoad">
 
         {{-- Header --}}
         <div class="mb-8">
@@ -27,7 +26,7 @@
 
         {{-- Quick Actions --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm hover:shadow-md transition-shadow p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box transition-shadow p-6">
                 <div class="flex items-center gap-4">
                     <div class="bg-primary/10 p-3 rounded-full">
                         <x-ui.icon name="o-megaphone" class="w-6 h-6 text-primary" />
@@ -39,7 +38,7 @@
                 </div>
             </div>
 
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm hover:shadow-md transition-shadow p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box transition-shadow p-6">
                 <div class="flex items-center gap-4">
                     <div class="bg-warning/10 p-3 rounded-full">
                         <x-ui.icon name="o-exclamation-triangle" class="w-6 h-6 text-warning" />
@@ -51,7 +50,7 @@
                 </div>
             </div>
 
-            <div class="bg-base-100 border border-base-300 rounded-box shadow-sm hover:shadow-md transition-shadow p-6">
+            <div class="bg-base-100 border border-base-300 rounded-box transition-shadow p-6">
                 <div class="flex items-center gap-4">
                     <div class="bg-info/10 p-3 rounded-full">
                         <x-ui.icon name="o-information-circle" class="w-6 h-6 text-info" />
@@ -67,7 +66,7 @@
         {{-- Communication History --}}
         <x-ui.card title="Recent Communications">
             <x-slot:menu>
-                <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search messages..."
+                <x-ui.input wire:model.live.debounce.300ms="search" placeholder="Search messages…"
                     icon="o-magnifying-glass" class="input-sm" />
                 <x-ui.select wire:model.live="typeFilter" placeholder="Type" :options="[
                     ['id' => '', 'name' => 'All Types'],
@@ -97,7 +96,7 @@
                     </div>
                     <p class="text-sm text-base-content/80 mb-3">Updated guidelines for event submission
                         requirements
-                        and approval process...</p>
+                        and approval process…</p>
                     <div class="flex items-center gap-4 text-xs text-base-content/60">
                         <span>✓ Delivered to 15 organizations</span>
                         <span>12 read receipts</span>
@@ -119,7 +118,7 @@
                     </div>
                     <p class="text-sm text-base-content/80 mb-3">Please provide the missing safety protocol
                         documents
-                        for your upcoming event...</p>
+                        for your upcoming event…</p>
                     <div class="flex items-center gap-4 text-xs text-base-content/60">
                         <span>✓ Delivered</span>
                         <span>✓ Read</span>
@@ -173,19 +172,19 @@
                     {{-- Organization Selection --}}
                     @if ($recipientType === 'organization')
                         <x-ui.select wire:model="selectedOrganization" label="Select Organization"
-                            placeholder="Choose an organization..." :options="$organizations" option-value="id"
+                            placeholder="Choose an organization…" :options="$organizations" option-value="id"
                             option-label="name" />
                     @endif
 
                     {{-- Individual User Selection --}}
                     @if ($recipientType === 'individual')
-                        <x-ui.select wire:model="selectedUser" label="Select User" placeholder="Choose a user..."
+                        <x-ui.select wire:model="selectedUser" label="Select User" placeholder="Choose a user…"
                             :options="$users" option-value="id" option-label="name" />
                     @endif
 
                     {{-- Message Details --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <x-ui.input wire:model="subject" label="Subject" placeholder="Enter message subject..." />
+                        <x-ui.input wire:model="subject" label="Subject" placeholder="Enter message subject…" />
 
                         <x-ui.select wire:model="priority" label="Priority" :options="[
                             ['id' => 'low', 'name' => 'Low'],
@@ -198,7 +197,7 @@
 
                     <div>
                         <label for="compose-message" class="block text-sm font-medium mb-1">Message</label>
-                        <textarea id="compose-message" wire:model="message" rows="8" placeholder="Type your message here..."
+                        <textarea id="compose-message" wire:model="message" rows="8" placeholder="Type your message here…"
                             class="textarea textarea-bordered w-full"></textarea>
                         @error('message')
                             <x-ui.input-error :messages="$message" class="mt-1" />

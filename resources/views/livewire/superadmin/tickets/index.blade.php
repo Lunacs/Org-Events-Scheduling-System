@@ -3,41 +3,31 @@
         $wire.closeDetailDrawer();
     }
 }">
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Ticket Management</h1>
-                        <p class="text-sm text-base-content/70 mt-1">View and manage all event tickets</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        @if (count($selectedTickets) > 0)
-                            <x-ui.button icon="o-check-circle" class="btn-success btn-sm"
-                                wire:click="openBulkModal('approve')">
-                                Approve ({{ count($selectedTickets) }})
-                            </x-ui.button>
-                            <x-ui.button icon="o-x-circle" class="btn-error btn-sm"
-                                wire:click="openBulkModal('reject')">
-                                Reject ({{ count($selectedTickets) }})
-                            </x-ui.button>
-                        @endif
-                        <a href="{{ route('superadmin.ticket.create') }}" wire:navigate
-                            class="btn btn-accent btn-sm gap-2 w-full sm:w-auto">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Create Ticket
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="Ticket Management" subtitle="View and manage all event tickets">
+            <x-slot:actions>
+                @if (count($selectedTickets) > 0)
+                    <x-ui.button icon="o-check-circle" class="btn-success btn-sm"
+                        wire:click="openBulkModal('approve')">
+                        Approve ({{ count($selectedTickets) }})
+                    </x-ui.button>
+                    <x-ui.button icon="o-x-circle" class="btn-error btn-sm"
+                        wire:click="openBulkModal('reject')">
+                        Request revision ({{ count($selectedTickets) }})
+                    </x-ui.button>
+                @endif
+                <a href="{{ route('superadmin.ticket.create') }}" wire:navigate
+                    class="btn btn-accent btn-sm gap-2 w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Ticket
+                </a>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         {{-- Filters --}}
         <div class="bg-base-100 rounded-xl border border-base-200 p-4">
@@ -47,13 +37,13 @@
                     <label for="search" class="block text-sm font-medium text-base-content/70 mb-1">Search</label>
                     <div class="relative">
                         <svg xmlns="http://www.w3.org/2000/svg"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" fill="none"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/60" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input id="search" type="text" wire:model.live.debounce.300ms="search"
-                            placeholder="Search by title, ticket #, or organization..."
+                            placeholder="Search by title, ticket #, or organization…"
                             class="input input-bordered w-full pl-10 input-sm" />
                     </div>
                 </div>
@@ -134,26 +124,17 @@
                                 </td>
                                 <td>
                                     @php $orgDeleted = $ticket->user?->studentOrganization?->trashed(); @endphp
-                                    <span class="text-sm {{ $orgDeleted ? 'italic text-base-content/50' : '' }}">
+                                    <span class="text-sm {{ $orgDeleted ? 'italic text-base-content/60' : '' }}">
                                         {{ $orgDeleted ? 'Deleted Organization' : $ticket->user?->studentOrganization?->org_name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <x-ui.badge :value="ucfirst(str_replace('_', ' ', $ticket->status))" :class="match ($ticket->status) {
-                                        'received' => 'badge-info text-white',
-                                        'gso_review' => 'badge-info text-white',
-                                        'pending_osa_approval' => 'badge-error text-white',
-                                        'for_revision' => 'badge-warning text-white',
-                                        'approved' => 'badge-success text-white',
-                                        'amended' => 'badge-info text-white',
-                                        'completed' => 'badge-success text-white',
-                                        default => 'badge-ghost',
-                                    }" />
+                                    <x-tickets.progress-badge :status="$ticket->status" size="sm" />
                                 </td>
                                 <td>
                                     <div class="text-sm">
                                         <div>{{ $ticket->created_at->format('M d, Y') }}</div>
-                                        <div class="text-gray-500">{{ $ticket->created_at->format('g:i A') }}</div>
+                                        <div class="text-base-content/60">{{ $ticket->created_at->format('g:i A') }}</div>
                                     </div>
                                 </td>
                                 <td>
@@ -168,10 +149,7 @@
                                                     d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                             </svg>
                                         </a>
-                                        <x-ui.button size="xs" icon="o-arrow-path-rounded-square" class="btn-ghost"
-                                            wire:click="openReassignModal({{ $ticket->ticket_id }})"
-                                            tooltip="Reassign" />
-                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-red-600"
+                                        <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
                                             wire:click="openDeleteModal({{ $ticket->ticket_id }}, '{{ addslashes($ticket->title) }}')"
                                             tooltip="Delete" />
                                     </div>
@@ -183,7 +161,7 @@
                                     <div class="flex flex-col items-center justify-center py-12 text-center">
                                         <x-ui.icon name="o-ticket" class="w-16 h-16 text-base-content/20 mb-4" />
                                         <h3 class="text-xl font-bold text-base-content/70">No tickets found</h3>
-                                        <p class="text-base-content/50 max-w-sm mx-auto mt-2">
+                                        <p class="text-base-content/60 max-w-sm mx-auto mt-2">
                                             No tickets match your current filters. Try adjusting your search criteria.
                                         </p>
                                     </div>
@@ -229,16 +207,7 @@
                     <div class="flex-1 overflow-y-auto space-y-6">
                         <div>
                             <h3 class="text-lg font-semibold mb-2">{{ $selectedTicket->title }}</h3>
-                            <x-ui.badge :value="ucfirst(str_replace('_', ' ', $selectedTicket->status))" :class="match ($selectedTicket->status) {
-                                'received' => 'badge-info text-white',
-                                'gso_review' => 'badge-info text-white',
-                                'pending_osa_approval' => 'badge-error text-white',
-                                'for_revision' => 'badge-warning text-white',
-                                'approved' => 'badge-success text-white',
-                                'amended' => 'badge-info text-white',
-                                'completed' => 'badge-success text-white',
-                                default => 'badge-ghost',
-                            }" />
+                            <x-tickets.progress-badge :status="$selectedTicket->status" size="sm" />
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -405,29 +374,11 @@
                             </svg>
                             Edit
                         </a>
-                        <x-ui.button label="Reassign" icon="o-arrow-path-rounded-square" class="btn-primary btn-sm"
-                            wire:click="openReassignModal({{ $selectedTicket->ticket_id }})"
-                            @click="closeDetailDrawer()" />
                     </div>
                 @endif
             </div>
         </div>
     </div>
-
-    {{-- ── Reassign Modal ─────────────────────────────────────────── --}}
-    <x-ui.modal-dialog wire:model="showReassignModal" title="Reassign Ticket">
-        <div class="space-y-4">
-            <p>Reassign this ticket to a different office:</p>
-            <x-ui.select label="New Office" wire:model="newOfficeId" :options="$offices" option-value="office_id"
-                option-label="office_name" placeholder="Select office..." required />
-        </div>
-
-        <x-slot:actions>
-            <x-ui.button label="Cancel" @click="$wire.showReassignModal = false" />
-            <x-ui.button label="Reassign" class="btn-primary" wire:click="reassignTicket"
-                spinner="reassignTicket" />
-        </x-slot:actions>
-    </x-ui.modal-dialog>
 
     {{-- ── Bulk Action Modal ──────────────────────────────────────── --}}
     <x-ui.modal-dialog wire:model="showBulkModal" title="Bulk Action Confirmation">
@@ -456,15 +407,15 @@
         <x-ui.modal-dialog wire:model="showDeleteModal" title="Delete Ticket Confirmation"
             subtitle="This action will soft-delete the ticket">
             <div class="space-y-4">
-                <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div class="bg-error/10  border border-error/30  rounded-lg p-4">
                     <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor"
+                        <svg class="w-5 h-5 text-error  mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
                             </path>
                         </svg>
-                        <p class="text-red-800 dark:text-red-300 font-medium">Warning: This will remove the ticket from
+                        <p class="text-error  font-medium">Warning: This will remove the ticket from
                             active view</p>
                     </div>
                 </div>

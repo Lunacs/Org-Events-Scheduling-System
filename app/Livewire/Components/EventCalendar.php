@@ -28,6 +28,12 @@ class EventCalendar extends Component
 
     private const CALENDAR_CACHE_TTL_SECONDS = 600;
 
+    /**
+     * Ticket statuses an approved schedule can belong to. A rescheduled event
+     * goes back through review (amended → …) while its approved schedule stays.
+     */
+    private const SCHEDULED_TICKET_STATUSES = ['approved', 'amended', 'gso_review', 'pending_osa_approval', 'for_revision', 'completed'];
+
     #[Url(except: 'dayGridMonth')]
     public $viewMode = 'dayGridMonth';
 
@@ -311,7 +317,8 @@ class EventCalendar extends Component
                 if ($this->statusFilter && $this->statusFilter !== 'all') {
                     $query->where('status', $this->statusFilter);
                 } else {
-                    $query->whereIn('status', ['approved', 'rescheduled', 'completed']);
+                    // The schedule decides visibility; an approved event with a pending reschedule stays on the calendar.
+                    $query->whereIn('status', self::SCHEDULED_TICKET_STATUSES);
                 }
             })
             ->when($this->organizationFilter, fn ($query) => $query->whereHas('event.ticket.user', fn ($q) => $q->withTrashed()->where('org_id', $this->organizationFilter)))
@@ -571,7 +578,7 @@ class EventCalendar extends Component
             ? $this->currentDate->copy()->startOfMonth()
             : $today;
 
-        $eventSchedules = $this->thisMonthScheduleQuery(['approved', 'rescheduled'], $startDate, $endOfMonth)->get();
+        $eventSchedules = $this->thisMonthScheduleQuery(array_values(array_diff(self::SCHEDULED_TICKET_STATUSES, ['completed'])), $startDate, $endOfMonth)->get();
 
         return $eventSchedules->map(fn ($schedule) => $this->mapScheduleToDisplayArray($schedule))->toArray();
     }

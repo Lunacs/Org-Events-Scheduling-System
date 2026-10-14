@@ -35,46 +35,40 @@ new #[Layout('components.layouts.guest')] class extends Component {
 }; ?>
 
 <div>
-    <div class="mb-8 text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 text-secondary rounded-full mb-4">
-            <i class="fas fa-shield-alt text-2xl"></i>
-        </div>
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Confirm Access</h1>
-        <p class="text-base text-gray-500 dark:text-gray-400">
+    <div class="mb-7">
+        <h1 class="text-2xl font-semibold tracking-[-0.015em] text-base-content">Confirm Access</h1>
+        <p class="mt-1.5 text-sm text-base-content/70">
             {{ __('This is a secure area. Please confirm your password to continue.') }}
         </p>
     </div>
 
     <form wire:submit="confirmPassword" class="space-y-6">
         <!-- Password -->
-        <div class="space-y-1">
-            <label for="password" class="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Password</label>
-            <div class="relative group" x-data="{ showPassword: false }">
-                <div
-                    class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-accent">
-                    <i class="fas fa-lock text-gray-400 group-focus-within:text-accent transition-colors"></i>
-                </div>
+        <div>
+            <label for="password" class="mb-1.5 block text-[0.8125rem] font-medium text-base-content">Password</label>
+            <label class="input w-full" x-data="{ showPassword: false }">
+                <i class="fas fa-lock text-base-content/60" aria-hidden="true"></i>
                 <input wire:model="password" id="password" :type="showPassword ? 'text' : 'password'" name="password"
-                    placeholder="••••••••" required autocomplete="current-password"
-                    class="block w-full pl-11 pr-12 py-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-accent/30 focus:border-accent focus:bg-white dark:focus:bg-gray-900 transition-all duration-200 sm:text-sm" />
-                <button type="button" x-cloak @click="showPassword = !showPassword"
-                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                    <x-ui.icon name="o-eye" class="w-5 h-5" x-show="showPassword" />
-                    <x-ui.icon name="o-eye-slash" class="w-5 h-5" x-show="!showPassword" />
+                    placeholder="••••••••" required autocomplete="current-password" class="min-w-0 grow" />
+                <button type="button" @click="showPassword = !showPassword"
+                    class="-me-1 rounded-field p-1 text-base-content/60 transition-colors hover:text-base-content"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'" :aria-pressed="showPassword">
+                    <x-ui.icon name="o-eye" class="size-5" x-show="!showPassword" aria-hidden="true" />
+                    <x-ui.icon name="o-eye-slash" class="size-5" x-show="showPassword" x-cloak aria-hidden="true" />
                 </button>
-            </div>
-            <x-ui.input-error :messages="$errors->get('password')" class="mt-1.5 ml-1" />
+            </label>
+            <x-ui.input-error :messages="$errors->get('password')" class="mt-1.5" />
         </div>
 
         <div class="pt-2">
             <button type="submit" wire:loading.attr="disabled"
-                class="relative w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-base font-bold text-white bg-primary hover:bg-primary/85 active:bg-primary/70 focus:outline-none focus:ring-4 focus:ring-accent/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group">
+                class="btn btn-primary btn-block h-11">
                 <span wire:loading.remove wire:target="confirmPassword" class="flex items-center">
                     {{ __('Confirm Password') }}
                     <i class="fas fa-unlock-alt ml-2 text-sm group-hover:scale-110 transition-transform"></i>
                 </span>
                 <span wire:loading wire:target="confirmPassword" class="flex items-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 " xmlns="http://www.w3.org/2000/svg"
                         fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                             stroke-width="4"></circle>
@@ -82,7 +76,7 @@ new #[Layout('components.layouts.guest')] class extends Component {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                         </path>
                     </svg>
-                    Verifying...
+                    Verifying…
                 </span>
             </button>
         </div>

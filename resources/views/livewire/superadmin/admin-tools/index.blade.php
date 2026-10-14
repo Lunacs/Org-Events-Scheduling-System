@@ -1,23 +1,13 @@
 <div>
-    <div class="p-6 space-y-6">
+    <div class="space-y-6">
         {{-- Header --}}
-        <section
-            class="relative overflow-hidden rounded-2xl border border-base-300 bg-linear-to-br from-base-100 via-base-100 to-primary/10 shadow-sm">
-            <div class="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/15 blur-2xl"></div>
-            <div class="relative p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-heading font-bold text-base-content">Admin Tools</h1>
-                        <p class="text-sm text-base-content/70 mt-1">System maintenance and management utilities</p>
-                    </div>
-                    <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto">
-                        <x-ui.button icon="o-arrow-path" class="btn-outline w-full sm:w-auto" wire:click="loadSystemStatus; $refresh">
-                            Refresh
-                        </x-ui.button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <x-ui.page-heading title="Admin Tools" subtitle="System maintenance and management utilities">
+            <x-slot:actions>
+                <x-ui.button icon="o-arrow-path" class="btn-outline w-full sm:w-auto" wire:click="loadSystemStatus; $refresh">
+                    Refresh
+                </x-ui.button>
+            </x-slot:actions>
+        </x-ui.page-heading>
 
         {{-- System Status Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -190,10 +180,7 @@
                         </svg>
                         <div class="flex flex-col">
                             <span class="font-semibold">SuperAdmin Bypass Active</span>
-                            <span class="text-sm">You can access admin panel during maintenance using:</span>
-                            <code class="mt-2 bg-base-300 px-2 py-1 rounded text-xs">
-                                {{ url('/superadmin?secret=superadmin-bypass-2025') }}
-                            </code>
+                            <span class="text-sm">Turning maintenance on sends this browser through a one-time bypass link, so you keep full access while everyone else sees the maintenance page. If you lose access, run <code>php artisan up</code> on the server.</span>
                         </div>
                     </div>
 

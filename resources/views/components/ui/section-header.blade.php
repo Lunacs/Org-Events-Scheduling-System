@@ -26,7 +26,7 @@
         </h1>
 
         @if ($subtitle)
-            <p class="text-sm text-gray-600 mt-1">{{ $subtitle }}</p>
+            <p class="text-sm text-base-content/70 mt-1">{{ $subtitle }}</p>
         @endif
     </div>
 

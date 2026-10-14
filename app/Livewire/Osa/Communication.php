@@ -4,6 +4,7 @@ namespace App\Livewire\Osa;
 
 use App\Models\Student_Organization;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -83,7 +84,7 @@ class Communication extends Component
     #[Computed(persist: true, seconds: 3600)]
     public function organizations()
     {
-        return \Illuminate\Support\Facades\Cache::remember('osa_communication_organizations', 3600, function () {
+        return Cache::remember('osa_communication_organizations', 3600, function () {
             return Student_Organization::select(['org_id', 'org_name', 'org_code'])
                 ->where('status', 'active')
                 ->orderBy('org_name')
@@ -94,9 +95,9 @@ class Communication extends Component
     #[Computed(persist: true, seconds: 3600)]
     public function users()
     {
-        return \Illuminate\Support\Facades\Cache::remember('osa_communication_users', 3600, function () {
+        return Cache::remember('osa_communication_users', 3600, function () {
             return User::select(['user_id', 'name', 'email', 'org_id'])
-                ->where('role_id', User::getRoleId('student-org'))
+                ->inPortal('student-org')
                 ->with('studentOrganization:org_id,org_name,logo')
                 ->orderBy('name')
                 ->get();

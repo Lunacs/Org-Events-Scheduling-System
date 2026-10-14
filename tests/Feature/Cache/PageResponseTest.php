@@ -28,7 +28,7 @@ it('loads osa dashboard with cached stats', function () {
 
 it('clears dashboard cache after ticket approval', function () {
     $user = User::factory()->create(['role_id' => User::getRoleId('osa')]);
-    $ticket = Ticket::factory()->create(['status' => 'pending_osa_approval']);
+    $ticket = Ticket::factory()->create(['status' => 'received']);
 
     // Prime the cache
     DashboardCacheService::getDashboardWidget('osa', 'stats', function () {

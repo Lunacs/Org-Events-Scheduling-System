@@ -209,7 +209,9 @@ class CourseManager extends Component
         }
 
         // Check if course has organizations
-        if ($course->studentOrganizations()->count() > 0) {
+        // Organizations (and through them users and tickets) cascade on course delete,
+        // so soft-deleted organizations must block it too.
+        if ($course->studentOrganizations()->withTrashed()->exists()) {
             $this->error('Cannot delete course that has associated organizations!', position: 'toast-top');
 
             return;
