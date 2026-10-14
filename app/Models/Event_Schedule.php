@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
+use Database\Factories\EventSchedulesFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Event_Schedule extends Model
 {
-    /** @use HasFactory<\Database\Factories\EventSchedulesFactory> */
+    /** @use HasFactory<EventSchedulesFactory> */
     use HasFactory;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): EventSchedulesFactory
+    {
+        return EventSchedulesFactory::new();
+    }
 
     /**
      * The table associated with the model.

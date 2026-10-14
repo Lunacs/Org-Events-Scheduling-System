@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
+use Database\Factories\OSAApprovalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class OSA_Approval extends Model
 {
-    /** @use HasFactory<\Database\Factories\OSAApprovalFactory> */
+    /** @use HasFactory<OSAApprovalFactory> */
     use HasFactory;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): OSAApprovalFactory
+    {
+        return OSAApprovalFactory::new();
+    }
 
     /**
      * The table associated with the model.
@@ -80,8 +89,8 @@ class OSA_Approval extends Model
     public function scopeLatestForTicket($query, $ticketId)
     {
         return $query->where('ticket_id', $ticketId)
-                    ->latest('created_at')
-                    ->first();
+            ->latest('created_at')
+            ->first();
     }
 
     /**
