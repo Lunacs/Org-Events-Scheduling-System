@@ -242,7 +242,7 @@
                                 </div>
                             </div>
 
-                            <x-ui.file wire:model="supportingDocuments"
+                            <x-ui.file wire:model="newSupportingDocument"
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx"
                                 hint="Upload one file at a time (PDF, DOC, JPG, PNG, XLS). Max 10MB per file." />
 

@@ -461,7 +461,7 @@
                 if (this.status && this.status !== 'all') {
                     const statusLabels = {
                         'approved': 'Approved',
-                        'rescheduled': 'Rescheduled',
+                        'amended': 'Reschedule pending',
                         'pending': 'Pending',
                         'cancelled': 'Cancelled'
                     };

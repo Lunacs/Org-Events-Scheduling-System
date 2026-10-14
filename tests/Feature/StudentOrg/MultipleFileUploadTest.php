@@ -87,7 +87,6 @@ function fillTicketForm($livewire)
 {
     $livewire->set('currentStep', 1)
         ->set('adviser_contact', '09123456789')
-        ->set('is_amended', false)
         ->set('eventTitle', 'My First Event')
         ->set('eventDescription', 'This event is going to be incredibly fun and educational for everyone involved.')
         ->set('eventType', Event_Type::where('type_name', 'Academic Conference')->value('event_type_id'))

@@ -86,48 +86,7 @@
         @endif
     </div>
 
-    {{-- Edit Drawer - Keep for editing tickets from list view if needed --}}
 
-    <x-ui.drawer wire:model="showEditDrawer"
-        title="{{ $this->selectedTicket ? 'Edit Ticket - ' . $this->selectedTicket->ticket_number : 'Edit Ticket' }}"
-        subtitle="Revise your event request" separator with-close-button close-on-escape right
-        class="w-11/12 lg:w-2/3 overflow-hidden" @close="$wire.closeEditDrawer()">
-
-        <div x-data="{ isLoading: true }" x-init="$watch('$wire.showEditDrawer', value => {
-            if (value) {
-                isLoading = true;
-                setTimeout(() => {
-                    const checkInterval = setInterval(() => {
-                        const form = document.querySelector('[wire\\:submit=\'updateTicket\']');
-                        if (form) {
-                            clearInterval(checkInterval);
-                            isLoading = false;
-                        }
-                    }, 50);
-        
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        isLoading = false;
-                    }, 2000);
-                }, 100);
-            } else {
-                isLoading = true;
-            }
-        });">
-            <div x-show="isLoading" class="flex items-center justify-center py-16">
-                <div class="flex flex-col items-center gap-3">
-                    <x-ui.loading class="loading-lg text-primary" />
-                    <p class="text-sm text-base-content/70">Loading form…</p>
-                </div>
-            </div>
-
-            <div x-show="!isLoading" x-cloak x-transition>
-                @if ($showEditDrawer && $selectedTicketId)
-                    <livewire:student-org.edit-ticket :ticketId="$selectedTicketId" :key="'edit-ticket-' . $selectedTicketId" />
-                @endif
-            </div>
-        </div>
-    </x-ui.drawer>
 
 
     {{-- Add JavaScript for handling attachment preview and download --}}

@@ -12,8 +12,13 @@
 
     <div class="mx-auto w-full max-w-4xl overflow-x-hidden">
         <div class="space-y-6">
-            <x-ui.page-heading title="Submit a ticket"
-                subtitle="Request approval for an event. Your progress is saved as a draft, so you can finish later." />
+            @if ($amendingTicketId)
+                <x-ui.page-heading title="Revise and resubmit"
+                    subtitle="Update the details OSA asked about, then resubmit. The ticket keeps its number and comment thread." />
+            @else
+                <x-ui.page-heading title="Submit a ticket"
+                    subtitle="Request approval for an event. Your progress is saved as a draft, so you can finish later." />
+            @endif
 
             @if ($errors->any())
                 <div role="alert" class="rounded-box border border-error/30 bg-error/[0.06] p-4">
@@ -102,10 +107,6 @@
                     </details>
 
                     <x-ui.card title="Organization" subtitle="Filled in from your account. Only the adviser's contact number is needed.">
-                        <div class="mb-5 rounded-field border border-base-300 p-3">
-                            <x-ui.checkbox label="This request is a revised version of a previous submission"
-                                wire:model.live="is_amended" />
-                        </div>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <x-ui.input label="Organization name" wire:model="organizationName" readonly />
                             <x-ui.input label="Organization course" wire:model="organizationCourse" readonly />
@@ -389,7 +390,7 @@
                             <span class="hidden sm:inline">Next: {{ $stepLabels[$currentStep + 1] }}</span>
                         </x-ui.button>
                     @else
-                        <x-ui.button label="Submit ticket" icon="o-paper-airplane" wire:click="save" class="btn-primary"
+                        <x-ui.button :label="$amendingTicketId ? 'Resubmit ticket' : 'Submit ticket'" icon="o-paper-airplane" wire:click="save" class="btn-primary"
                             :disabled="!$agreeToTerms || $isProcessing" spinner />
                     @endif
                 </div>

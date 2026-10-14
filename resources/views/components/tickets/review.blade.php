@@ -597,7 +597,7 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Approval Remarks</label>
-                <textarea x-model="approvalRemarks" class="textarea textarea-bordered w-full" rows="4"
+                <textarea x-model="approvalRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
                     placeholder="Enter your remarks for approving this ticket…"></textarea>
                 <p class="text-xs text-base-content/60">Provide a brief explanation for this approval</p>
                 @error('approvalRemarks')
@@ -628,7 +628,7 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Revision Instructions</label>
-                <textarea x-model="revisionRemarks" class="textarea textarea-bordered w-full" rows="5"
+                <textarea x-model="revisionRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="5"
                     placeholder="Clearly explain what needs to be changed or added…"></textarea>
                 <p class="text-xs text-base-content/60">Be specific about what needs to be revised (minimum 10
                     characters)</p>
@@ -662,7 +662,7 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Forwarding Remarks</label>
-                <textarea x-model="forwardRemarks" class="textarea textarea-bordered w-full" rows="4"
+                <textarea x-model="forwardRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
                     placeholder="Enter remarks for GSO…"></textarea>
                 <p class="text-xs text-base-content/60">Explain why this needs GSO review or what specific approval is
                     needed</p>
@@ -693,7 +693,7 @@
                     </div>
                 </div>
                 <label class="text-sm font-medium">Final Approval Remarks</label>
-                <textarea x-model="finalApprovalRemarks" class="textarea textarea-bordered w-full" rows="4"
+                <textarea x-model="finalApprovalRemarks" maxlength="255" class="textarea textarea-bordered w-full" rows="4"
                     placeholder="Enter your final approval remarks…"></textarea>
                 <p class="text-xs text-base-content/60">Document your final decision after considering GSO's input</p>
                 @error('finalApprovalRemarks')

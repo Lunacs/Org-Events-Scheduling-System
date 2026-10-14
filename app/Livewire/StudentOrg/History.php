@@ -57,7 +57,9 @@ class History extends Component
             'eventType',
             'fundSource',
             'attachments',
-        ])->findOrFail($ticketId);
+        ])
+            ->whereHas('user', fn ($q) => $q->withTrashed()->where('org_id', $this->getUserOrgId()))
+            ->findOrFail($ticketId);
 
         $this->loadingDetails = false;
     }
@@ -227,7 +229,7 @@ class History extends Component
                     ->orWhereHas('venue', function ($vq) {
                         $vq->where('venue_name', 'like', "%{$this->search}%");
                     })
-                    ->orWhereHas('events.schedules', function ($sq) {
+                    ->orWhereHas('events.eventSchedules', function ($sq) {
                         $sq->where('venue', 'like', "%{$this->search}%");
                     });
             });
@@ -246,7 +248,7 @@ class History extends Component
         if ($this->yearFilter) {
             $query->where(function ($q) {
                 $q->whereYear('date_from', $this->yearFilter)
-                    ->orWhereHas('events.schedules', function ($sq) {
+                    ->orWhereHas('events.eventSchedules', function ($sq) {
                         $sq->whereYear('start_date', $this->yearFilter);
                     });
             });
@@ -291,53 +293,11 @@ class History extends Component
 
     public function resubmitTicket($ticketId)
     {
-        Gate::authorize('tickets.create');
+        $ticket = Ticket::query()->findOrFail($ticketId);
 
-        $ticket = Ticket::query()
-            ->with(['eventType', 'fundSource', 'venue'])
-            ->whereHas('user', function ($q) {
-                $orgId = $this->getUserOrgId();
-                $q->withTrashed()->where('org_id', $orgId);
-            })
-            ->findOrFail($ticketId);
+        Gate::authorize('resubmit', $ticket);
 
-        // Store ticket data in session for pre-filling the submit form
-        session([
-            'resubmit_ticket' => [
-                'is_amended' => true,
-                'original_ticket_id' => $ticket->ticket_id,
-                'proponent_contact' => $ticket->proponent_contact,
-                'adviser_contact' => $ticket->adviser_contact,
-                'eventTitle' => $ticket->title,
-                'eventDescription' => $ticket->description,
-                'eventType' => $ticket->event_type_id,
-                'expectedPLVParticipants' => $ticket->plv_participants,
-                'expectedNonPLVParticipants' => $ticket->external_participants,
-                'eventStartDate' => $ticket->date_from,
-                'eventEndDate' => $ticket->date_to,
-                'eventStartTime' => $ticket->time_from,
-                'eventEndTime' => $ticket->time_to,
-                'preferredVenue' => $ticket->venue_requested ?? 'other',
-                'preferredVenueOther' => $ticket->venue_other,
-                'alternativeVenue' => $ticket->alternate_venue ?? 'other',
-                'alternativeVenueOther' => $ticket->alternate_venue_other,
-                'specialRequirements' => $ticket->special_requirements,
-                'ocAccommodation' => $ticket->oc_accommodation,
-                'ocTsp' => $ticket->oc_tsp,
-                'ocDriverName' => $ticket->oc_driver_name,
-                'ocTransportationType' => $ticket->oc_transportation_type,
-                'ocVehiclePlateNumber' => $ticket->oc_vehicle_plate_number,
-                'ocDriverContactNumber' => $ticket->oc_driver_contact_number,
-                'totalBudget' => $ticket->estimated_budget,
-                'fundingSource' => $ticket->fund_source_id,
-                'igp_requested' => $ticket->igp_requested ? 'true' : 'false',
-                'igp_details' => $ticket->igp_details,
-            ],
-        ]);
-
-        $this->js("localStorage.removeItem('ticket_draft_".auth()->id()."')");
-
-        return redirect()->route('student-org.submit-ticket');
+        return redirect()->route('student-org.submit-ticket', ['amend' => $ticket->ticket_number]);
     }
 
     public function render()
