@@ -75,6 +75,10 @@ class TicketPolicy
      */
     public function approve(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.approve')) {
+            return false;
+        }
+
         // OSA can approve tickets in 'received' or 'amended' status
         if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
@@ -99,6 +103,10 @@ class TicketPolicy
      */
     public function reject(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.reject')) {
+            return false;
+        }
+
         // OSA can reject tickets in 'received' or 'amended' status
         if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
@@ -123,6 +131,10 @@ class TicketPolicy
      */
     public function requestRevision(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.reject')) {
+            return false;
+        }
+
         // OSA can request revisions in received/amended status
         if ($user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true)) {
             return true;
@@ -152,6 +164,10 @@ class TicketPolicy
      */
     public function forwardToGso(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.forward')) {
+            return false;
+        }
+
         return $user->isOSA() && in_array($ticket->status, self::OSA_ACTIONABLE_STATUSES, true);
     }
 
@@ -160,6 +176,10 @@ class TicketPolicy
      */
     public function finalApprove(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.approve')) {
+            return false;
+        }
+
         return $user->isOSA() && $ticket->status === self::PENDING_OSA_STATUS;
     }
 
@@ -197,6 +217,10 @@ class TicketPolicy
      */
     public function finalReject(User $user, Ticket $ticket): bool
     {
+        if (! $user->can('tickets.reject')) {
+            return false;
+        }
+
         return $user->isOSA() && $ticket->status === self::PENDING_OSA_STATUS;
     }
 }

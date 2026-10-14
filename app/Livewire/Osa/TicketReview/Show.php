@@ -17,6 +17,7 @@ use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
@@ -111,6 +112,8 @@ class Show extends Component
 
     public function approveTicket()
     {
+        Gate::authorize('approve', $this->ticket);
+
         // Validate remarks
         $this->validate([
             'approvalRemarks' => 'required|string|min:3',
@@ -213,6 +216,8 @@ class Show extends Component
 
     public function forwardToGso()
     {
+        Gate::authorize('forwardToGso', $this->ticket);
+
         // Validate remarks
         $this->validate([
             'forwardRemarks' => 'required|string|min:3',
@@ -281,7 +286,7 @@ class Show extends Component
             // Notify all GSO users in the GSO office about the forwarded ticket
             $gsoUsers = Cache::remember('gso_users_notifications', 3600, function () {
                 return User::select(['user_id', 'name', 'email', 'role_id', 'office_id'])
-                    ->where('role_id', User::getRoleId('gso'))
+                    ->inPortal('gso')
                     ->where('office_id', 1)
                     ->get();
             });
@@ -324,6 +329,8 @@ class Show extends Component
 
     public function finalApproval()
     {
+        Gate::authorize('finalApprove', $this->ticket);
+
         // Validate remarks
         $this->validate([
             'finalApprovalRemarks' => 'required|string|min:3',
@@ -426,6 +433,8 @@ class Show extends Component
 
     public function forRevision()
     {
+        Gate::authorize('requestRevision', $this->ticket);
+
         // Validate remarks
         $this->validate([
             'revisionRemarks' => 'required|string|min:10',
@@ -510,6 +519,8 @@ class Show extends Component
      */
     public function previewAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {
@@ -528,6 +539,8 @@ class Show extends Component
      */
     public function downloadAttachment(int $attachmentId): void
     {
+        Gate::authorize('tickets.view');
+
         $attachment = $this->ticket->attachments->firstWhere('attachment_id', $attachmentId);
 
         if (! $attachment) {

@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             OfficeSeeder::class,
             PositionsSeeder::class,
             RolesSeeder::class,
+            RbacSeeder::class,
             UserSeeder::class,
             EventTypeSeeder::class,
             FundSourcesSeeder::class,

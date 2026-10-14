@@ -89,7 +89,9 @@ new class extends Component {
 
                 @auth
                     <!-- Notifications Dropdown -->
-                    <livewire:notification-dropdown />
+                    @can('notifications.view')
+                        <livewire:notification-dropdown />
+                    @endcan
 
                     <!-- Profile Dropdown -->
                     <x-ui.dropdown right width="w-72" wire:key="nav-profile-dropdown">

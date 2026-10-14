@@ -67,11 +67,12 @@ use App\Models\User;
 
                 // Fallback to notifications page
                 if (!$url) {
-                $url = match (true) {
-                Auth::user()->isOSA() || Auth::user()->isSuperAdmin() => route('admin.notifications'),
-                Auth::user()->isGSO() => route('gso.notifications'),
-                Auth::user()->isStudentOrg() => route('student-org.notifications'),
-                default => '#',
+                $url = match (Auth::user()->portal()) {
+                'superadmin' => route('superadmin.notifications'),
+                'osa' => route('admin.notifications'),
+                'gso' => route('gso.notifications'),
+                'student-org' => route('student-org.notifications'),
+                default => route('portal.notifications'),
                 };
                 }
                 @endphp
@@ -107,12 +108,12 @@ use App\Models\User;
             {{-- Footer Section --}}
             <div class="shrink-0 border-t border-base-300 rounded-b-box">
                 @php
-                $route = match (Auth::user()->role_id) {
-                User::getRoleId('superadmin') => 'superadmin.notifications',
-                User::getRoleId('osa') => 'admin.notifications',
-                User::getRoleId('gso') => 'gso.notifications',
-                User::getRoleId('student-org') => 'student-org.notifications',
-                default => 'admin.notifications',
+                $route = match (Auth::user()->portal()) {
+                'superadmin' => 'superadmin.notifications',
+                'osa' => 'admin.notifications',
+                'gso' => 'gso.notifications',
+                'student-org' => 'student-org.notifications',
+                default => 'portal.notifications',
                 };
                 @endphp
                 <a href="{{ route($route) }}" wire:navigate

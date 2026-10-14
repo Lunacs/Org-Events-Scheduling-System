@@ -123,8 +123,9 @@
                     @empty
                         <x-ui.empty-state title="No recent tickets yet"
                             description="Your newest submissions will appear here once you create an event request."
-                            icon="o-document-text" tone="primary" iconColor="text-primary" actionLabel="Submit a Ticket"
-                            actionLink="/student-org/submit-ticket" />
+                            icon="o-document-text" tone="primary" iconColor="text-primary"
+                            :actionLabel="auth()->user()?->can('tickets.create') ? 'Submit a Ticket' : null"
+                            :actionLink="auth()->user()?->can('tickets.create') ? '/student-org/submit-ticket' : null" />
                     @endforelse
                 </div>
             </x-ui.card>
@@ -135,14 +136,20 @@
             {{-- Quick Actions --}}
             <x-ui.card title="Quick Actions" subtitle="Frequently used actions">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    @can('tickets.create')
                     <x-ui.quick-action label="Submit New Ticket" description="Start a new event request"
                         icon="s-document-plus" color="primary" link="/student-org/submit-ticket" />
+                    @endcan
 
+                    @can('tickets.view')
                     <x-ui.quick-action label="Check My Tickets" description="Track your submissions"
                         icon="s-ticket" color="secondary" link="/student-org/my-tickets" />
+                    @endcan
 
+                    @can('tickets.reschedule')
                     <x-ui.quick-action label="Request Reschedule" description="Move an approved event"
                         icon="s-arrow-path" color="accent" link="/student-org/reschedule" />
+                    @endcan
                 </div>
             </x-ui.card>
 

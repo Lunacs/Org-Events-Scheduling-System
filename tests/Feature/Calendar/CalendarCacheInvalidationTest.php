@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 
 beforeEach(function () {
+    // phpunit.xml uses the array store; this test specifically covers the database driver
+    config(['cache.default' => 'database']);
     Cache::flush();
 
     $role = Roles::firstOrCreate(['role_name' => 'osa']);

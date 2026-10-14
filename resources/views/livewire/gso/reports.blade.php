@@ -48,6 +48,7 @@
                         </div>
                     </div>
 
+                    @can('reports.export')
                     <div class="grid grid-cols-1 gap-4 w-full md:w-auto md:flex md:space-x-2">
                         <button class="btn btn-emerald w-full md:w-auto" @click.prevent="exportReport()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,6 +67,7 @@
                             Export CSV
                         </button>
                     </div>
+                    @endcan
                 </div>
             </div>
         </div>

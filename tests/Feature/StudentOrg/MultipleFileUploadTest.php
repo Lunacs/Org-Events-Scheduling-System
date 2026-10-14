@@ -1,7 +1,6 @@
 <?php
 
-use App\Jobs\ProcessPostTicketSubmission;
-use App\Jobs\StoreTicketAttachment;
+use App\Jobs\ProcessTicketAttachments;
 use App\Livewire\StudentOrg\SubmitTicket;
 use App\Models\Course;
 use App\Models\Event_Type;
@@ -10,6 +9,8 @@ use App\Models\Positions;
 use App\Models\Roles;
 use App\Models\Student_Organization;
 use App\Models\Ticket;
+use App\Models\TicketDraft;
+use App\Models\TicketDraftAttachment;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Http\UploadedFile;
@@ -24,11 +25,9 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     Cache::flush();
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+    Storage::fake(config('filesystems.default'));
 
-    $course = Course::firstOrCreate([
+    Course::firstOrCreate([
         'course_id' => 1,
     ], [
         'course_name' => 'BS Computer Science',
@@ -47,26 +46,23 @@ beforeEach(function () {
         'position_name' => 'President',
     ]);
 
+    // IDs are auto-increment (not fillable), so tests look them up by name
     Event_Type::create([
-        'event_type_id' => 1,
         'type_name' => 'Academic Conference',
         'description' => 'Academic events',
     ]);
 
     Fund_Sources::create([
-        'source_id' => 1,
         'source_name' => 'Org Funds',
     ]);
 
     Venue::create([
-        'venue_id' => 1,
         'venue_name' => 'Main Hall',
         'venue_location' => 'Building A',
         'is_active' => true,
     ]);
 
     Venue::create([
-        'venue_id' => 2,
         'venue_name' => 'Others (Please Specify)',
         'venue_location' => 'Building B',
         'is_active' => true,
@@ -94,33 +90,67 @@ function fillTicketForm($livewire)
         ->set('is_amended', false)
         ->set('eventTitle', 'My First Event')
         ->set('eventDescription', 'This event is going to be incredibly fun and educational for everyone involved.')
-        ->set('eventType', 1)
+        ->set('eventType', Event_Type::where('type_name', 'Academic Conference')->value('event_type_id'))
         ->set('expectedPLVParticipants', 50)
         ->set('eventStartDate', now()->addDays(2)->format('Y-m-d'))
         ->set('eventEndDate', now()->addDays(2)->format('Y-m-d'))
         ->set('eventStartTime', '08:00')
         ->set('eventEndTime', '12:00')
-        ->set('preferredVenue', 1)
+        ->set('preferredVenue', Venue::where('venue_name', 'Main Hall')->value('venue_id'))
         ->set('totalBudget', 1500)
-        ->set('fundingSource', 1)
+        ->set('fundingSource', Fund_Sources::where('source_name', 'Org Funds')->value('source_id'))
         ->set('igp_requested', 'false')
         ->set('agreeToTerms', true);
 }
 
-function assertToastShown($livewire, string $expectedTitle)
+/**
+ * Create a draft attachment the way TemporaryUploadController does:
+ * a file under draft-attachments/{draftId}/ plus a TicketDraftAttachment row.
+ */
+function createDraftAttachment(User $user, string $fileName = 'document.pdf', string $mime = 'application/pdf', int $size = 1024): TicketDraftAttachment
 {
-    $jsEffects = array_merge(
-        data_get($livewire->effects, 'js', []),
-        data_get($livewire->effects, 'xjs', [])
+    $draft = TicketDraft::firstOrCreate(
+        ['user_id' => $user->user_id],
+        ['current_step' => 1, 'data' => []]
     );
 
-    $found = collect($jsEffects)->contains(function ($js) use ($expectedTitle) {
-        $expression = is_array($js) ? ($js['expression'] ?? '') : $js;
+    $path = "draft-attachments/{$draft->id}/".Str::random(8).'_'.$fileName;
+    Storage::put($path, str_repeat('x', $size));
 
-        return str_contains($expression, 'toast(') && str_contains($expression, $expectedTitle);
-    });
+    return TicketDraftAttachment::create([
+        'ticket_draft_id' => $draft->id,
+        'file_name' => $fileName,
+        'file_path' => $path,
+        'file_type' => $mime,
+        'file_size' => $size,
+    ]);
+}
 
-    expect($found)->toBeTrue();
+function createTicketRecord(string $ticketNumber): Ticket
+{
+    return Ticket::create([
+        'user_id' => createStudentOrgUser()->user_id,
+        'ticket_number' => $ticketNumber,
+        'event_type_id' => Event_Type::where('type_name', 'Academic Conference')->value('event_type_id'),
+        'plv_participants' => 50,
+        'total_participants' => 50,
+        'title' => 'My First Event',
+        'description' => 'Detailed description of this event proposal.',
+        'proponent_contact' => '123',
+        'adviser_contact' => '09123456789',
+        'date_from' => now()->addDays(2),
+        'date_to' => now()->addDays(2),
+        'time_from' => '08:00',
+        'time_to' => '12:00',
+        'venue_requested' => Venue::where('venue_name', 'Main Hall')->value('venue_id'),
+        'fund_source_id' => Fund_Sources::where('source_name', 'Org Funds')->value('source_id'),
+        'status' => 'received',
+    ]);
+}
+
+function assertToastShown($livewire, string $expectedTitle)
+{
+    $livewire->assertDispatched('toast-show', fn ($event, $params) => ($params['message'] ?? null) === $expectedTitle);
 }
 
 /*
@@ -129,40 +159,46 @@ function assertToastShown($livewire, string $expectedTitle)
  * =========================================================================
  */
 
-test('1. test_dropzone_component_renders_on_attachments_step', function () {
+test('1. test_filepond_component_renders_on_attachments_step', function () {
     $user = createStudentOrgUser();
     $component = Livewire::actingAs($user)
         ->test(SubmitTicket::class)
         ->set('currentStep', 5);
 
-    $component->assertSeeHtml('id="submit-ticket-attachments"');
-    $component->assertSeeHtml('Click to upload');
+    $component->assertSeeHtml('id="filepond-upload"');
+    $component->assertSeeHtml('data-process-url="'.route('upload.temp').'"');
 });
 
 test('2. test_single_file_upload_success', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+
+    $response = $this->actingAs($user)->post(route('upload.temp'), [
+        'filepond' => UploadedFile::fake()->create('document.pdf', 500, 'application/pdf'),
+    ]);
+    $response->assertOk();
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [(int) $response->getContent()])
+        ->call('syncFilePondUploads')
         ->assertSet('attachments', function ($attachments) {
-            return count($attachments) === 1 && $attachments[0]->getClientOriginalName() === 'document.pdf';
+            return count($attachments) === 1 && $attachments[0]['file_name'] === 'document.pdf';
         });
 });
 
 test('3. test_multiple_file_upload_success', function () {
     $user = createStudentOrgUser();
-    $file1 = UploadedFile::fake()->create('doc1.pdf', 500);
-    $file2 = UploadedFile::fake()->create('doc2.docx', 800);
+    $first = createDraftAttachment($user, 'doc1.pdf');
+    $second = createDraftAttachment($user, 'doc2.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file1, $file2])
+        ->set('uploadedFileIds', [$first->id, $second->id])
+        ->call('syncFilePondUploads')
         ->assertSet('attachments', function ($attachments) {
             return count($attachments) === 2
-                && $attachments[0]->getClientOriginalName() === 'doc1.pdf'
-                && $attachments[1]->getClientOriginalName() === 'doc2.docx';
+                && $attachments[0]['file_name'] === 'doc1.pdf'
+                && $attachments[1]['file_name'] === 'doc2.docx';
         });
 });
 
@@ -175,20 +211,24 @@ test('4. test_file_list_item_displays_name_extension_and_size', function () {
         ->toContain('2.0 MB');
 });
 
-test('5. test_remove_attachment_removes_from_array', function () {
+test('5. test_remove_attachment_removes_from_array_disk_and_database', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+    $attachment = createDraftAttachment($user);
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [$attachment->id])
+        ->call('syncFilePondUploads')
         ->call('removeAttachment', 0)
         ->assertSet('attachments', []);
+
+    Storage::assertMissing($attachment->file_path);
+    $this->assertDatabaseMissing('ticket_draft_attachments', ['id' => $attachment->id]);
 });
 
 test('6. test_ticket_submission_with_attachments_success', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+    $attachment = createDraftAttachment($user);
 
     Queue::fake();
 
@@ -197,14 +237,18 @@ test('6. test_ticket_submission_with_attachments_success', function () {
 
     fillTicketForm($livewire);
 
-    $livewire->set('newAttachments', [$file])
+    $livewire->set('uploadedFileIds', [$attachment->id])
         ->call('save')
         ->assertHasNoErrors();
 
-    $this->assertDatabaseHas('tickets', [
-        'user_id' => $user->user_id,
-        'title' => 'My First Event',
-    ]);
+    $ticket = Ticket::where('user_id', $user->user_id)->where('title', 'My First Event')->first();
+    expect($ticket)->not->toBeNull();
+
+    Queue::assertPushed(ProcessTicketAttachments::class, function ($job) use ($ticket) {
+        return $job->ticketId === $ticket->ticket_id
+            && count($job->attachments) === 1
+            && $job->attachments[0]['file_name'] === 'document.pdf';
+    });
 });
 
 test('7. test_ticket_submission_without_attachments_success', function () {
@@ -227,22 +271,22 @@ test('7. test_ticket_submission_without_attachments_success', function () {
 
 test('8. test_draft_attachment_preview_url_generation', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+    $attachment = createDraftAttachment($user);
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [$attachment->id])
         ->call('previewDraftAttachment', 0)
         ->assertDispatched('open-attachment-preview');
 });
 
 test('9. test_draft_attachment_download_url_generation', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+    $attachment = createDraftAttachment($user);
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [$attachment->id])
         ->call('downloadDraftAttachment', 0)
         ->assertDispatched('download-attachment');
 });
@@ -251,14 +295,13 @@ test('10. test_preview_draft_attachment_route_streams_file', function () {
     $user = createStudentOrgUser();
     $token = (string) Str::uuid();
 
-    $tempFilePath = tempnam(sys_get_temp_dir(), 'draft_temp');
-    file_put_contents($tempFilePath, 'dummy pdf contents');
+    Storage::put('draft-attachments/1/test.pdf', 'dummy pdf contents');
 
     Cache::put('draft-attachment-preview:'.$token, [
         'user_id' => $user->user_id,
+        'storage_path' => 'draft-attachments/1/test.pdf',
         'file_name' => 'test.pdf',
         'mime' => 'application/pdf',
-        'path' => $tempFilePath,
     ], 300);
 
     $url = URL::temporarySignedRoute('attachments.draft', now()->addMinutes(5), ['token' => $token]);
@@ -268,22 +311,20 @@ test('10. test_preview_draft_attachment_route_streams_file', function () {
     $response->assertStatus(200);
     $response->assertHeader('Content-Type', 'application/pdf');
     $response->assertHeader('Content-Disposition', 'inline; filename=test.pdf');
-
-    @unlink($tempFilePath);
+    expect($response->streamedContent())->toBe('dummy pdf contents');
 });
 
 test('11. test_download_draft_attachment_route_downloads_file', function () {
     $user = createStudentOrgUser();
     $token = (string) Str::uuid();
 
-    $tempFilePath = tempnam(sys_get_temp_dir(), 'draft_temp');
-    file_put_contents($tempFilePath, 'dummy pdf contents');
+    Storage::put('draft-attachments/1/test.pdf', 'dummy pdf contents');
 
     Cache::put('draft-attachment-preview:'.$token, [
         'user_id' => $user->user_id,
+        'storage_path' => 'draft-attachments/1/test.pdf',
         'file_name' => 'test.pdf',
         'mime' => 'application/pdf',
-        'path' => $tempFilePath,
     ], 300);
 
     $url = URL::temporarySignedRoute('attachments.draft', now()->addMinutes(5), ['token' => $token, 'download' => 1]);
@@ -293,90 +334,32 @@ test('11. test_download_draft_attachment_route_downloads_file', function () {
     $response->assertStatus(200);
     $response->assertHeader('Content-Type', 'application/pdf');
     $response->assertHeader('Content-Disposition', 'attachment; filename=test.pdf');
-
-    @unlink($tempFilePath);
 });
 
-test('12. test_store_ticket_attachment_job_moves_file_to_permanent_storage', function () {
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+test('12. test_process_ticket_attachments_job_moves_file_to_permanent_storage', function () {
+    $ticket = createTicketRecord('TKT-TEST-0099');
+    Storage::put('draft-attachments/1/unique_invoice.pdf', 'file content');
 
-    $ticket = Ticket::create([
-        'user_id' => 1,
-        'ticket_number' => 'TKT-TEST-0099',
-        'event_type_id' => 1,
-        'plv_participants' => 50,
-        'total_participants' => 50,
-        'title' => 'My First Event',
-        'description' => 'Detailed description of this event proposal.',
-        'proponent_contact' => '123',
-        'adviser_contact' => '09123456789',
-        'date_from' => now()->addDays(2),
-        'date_to' => now()->addDays(2),
-        'time_from' => '08:00',
-        'time_to' => '12:00',
-        'venue_requested' => 1,
-        'fund_source_id' => 1,
-        'status' => 'received',
-    ]);
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'invoice.pdf',
+        'file_path' => 'draft-attachments/1/unique_invoice.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 12,
+    ]]))->handle();
 
-    $tempFilename = 'livewire-temp-file.pdf';
-    Storage::disk('tmp-for-tests')->put('livewire-tmp/'.$tempFilename, 'file content');
-    Storage::disk('tmp-for-tests')->put($tempFilename, 'file content');
-
-    $job = new StoreTicketAttachment(
-        ticketId: $ticket->ticket_id,
-        tempFilename: $tempFilename,
-        originalName: 'invoice.pdf',
-        storedName: 'unique_invoice.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 12
-    );
-
-    $job->handle();
-
-    Storage::disk($disk)->assertExists('tickets/'.$ticket->ticket_id.'/attachments/unique_invoice.pdf');
+    Storage::assertExists('tickets/'.$ticket->ticket_id.'/attachments/unique_invoice.pdf');
 });
 
-test('13. test_store_ticket_attachment_job_creates_attachment_record', function () {
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+test('13. test_process_ticket_attachments_job_creates_attachment_record', function () {
+    $ticket = createTicketRecord('TKT-TEST-0001');
+    Storage::put('draft-attachments/1/unique_invoice.pdf', 'file content');
 
-    $ticket = Ticket::create([
-        'user_id' => 1,
-        'ticket_number' => 'TKT-TEST-0001',
-        'event_type_id' => 1,
-        'plv_participants' => 50,
-        'total_participants' => 50,
-        'title' => 'My First Event',
-        'description' => 'Detailed description of this event proposal.',
-        'proponent_contact' => '123',
-        'adviser_contact' => '09123456789',
-        'date_from' => now()->addDays(2),
-        'date_to' => now()->addDays(2),
-        'time_from' => '08:00',
-        'time_to' => '12:00',
-        'venue_requested' => 1,
-        'fund_source_id' => 1,
-        'status' => 'received',
-    ]);
-
-    $tempFilename = 'livewire-temp-file.pdf';
-    Storage::disk('tmp-for-tests')->put('livewire-tmp/'.$tempFilename, 'file content');
-    Storage::disk('tmp-for-tests')->put($tempFilename, 'file content');
-
-    $job = new StoreTicketAttachment(
-        ticketId: $ticket->ticket_id,
-        tempFilename: $tempFilename,
-        originalName: 'invoice.pdf',
-        storedName: 'unique_invoice.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 12
-    );
-
-    $job->handle();
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'invoice.pdf',
+        'file_path' => 'draft-attachments/1/unique_invoice.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 12,
+    ]]))->handle();
 
     $this->assertDatabaseHas('attachments', [
         'ticket_id' => $ticket->ticket_id,
@@ -402,7 +385,7 @@ test('14. test_clear_draft_event_is_dispatched_on_successful_ticket_submission',
 
 test('15. test_auto_save_is_disabled_during_ticket_submission_processing', function () {
     $user = createStudentOrgUser();
-    $livewire = Livewire::actingAs($user)
+    Livewire::actingAs($user)
         ->test(SubmitTicket::class)
         ->set('isProcessing', true)
         ->set('eventTitle', 'New Title Title')
@@ -417,85 +400,79 @@ test('15. test_auto_save_is_disabled_during_ticket_submission_processing', funct
 
 test('16. test_file_upload_validation_rejects_unsupported_mimes', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('malicious.exe', 500);
 
-    Livewire::actingAs($user)
-        ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
-        ->assertHasErrors(['newAttachments.*']);
+    $this->actingAs($user)->post(route('upload.temp'), [
+        'filepond' => UploadedFile::fake()->create('malicious.exe', 500, 'application/x-msdownload'),
+    ])->assertSessionHasErrors(['filepond']);
+
+    $this->assertDatabaseCount('ticket_draft_attachments', 0);
 });
 
 test('17. test_file_upload_validation_rejects_file_exceeding_10mb', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('huge.pdf', 10241); // 10241 KB > 10MB
 
-    Livewire::actingAs($user)
-        ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
-        ->assertHasErrors(['newAttachments.*']);
+    $this->actingAs($user)->post(route('upload.temp'), [
+        'filepond' => UploadedFile::fake()->create('huge.pdf', 10241, 'application/pdf'), // 10241 KB > 10MB
+    ])->assertSessionHasErrors(['filepond']);
 });
 
 test('18. test_file_upload_validation_accepts_file_exactly_10mb', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('max_limit.pdf', 10240); // exactly 10MB
 
-    Livewire::actingAs($user)
-        ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
-        ->assertHasNoErrors();
+    $this->actingAs($user)->post(route('upload.temp'), [
+        'filepond' => UploadedFile::fake()->create('max_limit.pdf', 10240, 'application/pdf'), // exactly 10MB
+    ])->assertOk()->assertSessionHasNoErrors();
 });
 
 test('19. test_file_upload_validation_rejects_total_files_exceeding_25', function () {
     $user = createStudentOrgUser();
 
-    $livewire = Livewire::actingAs($user)
-        ->test(SubmitTicket::class);
+    $ids = collect(range(1, 26))
+        ->map(fn ($i) => createDraftAttachment($user, "doc_{$i}.pdf", size: 10)->id)
+        ->all();
 
-    // Prepare 25 files
-    $files = [];
-    for ($i = 0; $i < 25; $i++) {
-        $files[] = UploadedFile::fake()->create("doc_{$i}.pdf", 10);
-    }
-    $livewire->set('newAttachments', $files);
-
-    // Attempting to add 1 more file
-    $extraFile = UploadedFile::fake()->create('doc_26.pdf', 10);
-    $livewire->set('newAttachments', [$extraFile]);
-
-    assertToastShown($livewire, 'You can attach up to 25 files.');
+    Livewire::actingAs($user)
+        ->test(SubmitTicket::class)
+        ->set('currentStep', 5)
+        ->set('uploadedFileIds', $ids)
+        ->call('nextStep')
+        ->assertHasErrors(['uploadedFileIds' => 'max'])
+        ->assertSet('currentStep', 5);
 });
 
 test('20. test_file_upload_validation_accepts_exactly_25_files', function () {
     $user = createStudentOrgUser();
 
-    $livewire = Livewire::actingAs($user)
-        ->test(SubmitTicket::class);
+    $ids = collect(range(1, 25))
+        ->map(fn ($i) => createDraftAttachment($user, "doc_{$i}.pdf", size: 10)->id)
+        ->all();
 
-    $files = [];
-    for ($i = 0; $i < 25; $i++) {
-        $files[] = UploadedFile::fake()->create("doc_{$i}.pdf", 10);
-    }
-
-    $livewire->set('newAttachments', $files)
+    Livewire::actingAs($user)
+        ->test(SubmitTicket::class)
+        ->set('currentStep', 5)
+        ->set('uploadedFileIds', $ids)
+        ->call('nextStep')
         ->assertHasNoErrors()
-        ->assertSet('attachments', function ($attachments) {
-            return count($attachments) === 25;
-        });
+        ->assertSet('currentStep', 6)
+        ->call('syncFilePondUploads')
+        ->assertSet('attachments', fn ($attachments) => count($attachments) === 25);
 });
 
 test('21. test_file_upload_with_duplicate_filenames', function () {
     $user = createStudentOrgUser();
-    $file1 = UploadedFile::fake()->create('same_name.pdf', 100);
-    $file2 = UploadedFile::fake()->create('same_name.pdf', 150);
+    $first = createDraftAttachment($user, 'same_name.pdf', size: 100);
+    $second = createDraftAttachment($user, 'same_name.pdf', size: 150);
+
+    expect($first->file_path)->not->toBe($second->file_path);
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file1])
-        ->set('newAttachments', [$file2])
+        ->set('uploadedFileIds', [$first->id, $second->id])
+        ->call('syncFilePondUploads')
         ->assertSet('attachments', function ($attachments) {
             return count($attachments) === 2
-                && $attachments[0]->getClientOriginalName() === 'same_name.pdf'
-                && $attachments[1]->getClientOriginalName() === 'same_name.pdf';
+                && $attachments[0]['file_name'] === 'same_name.pdf'
+                && $attachments[1]['file_name'] === 'same_name.pdf';
         });
 });
 
@@ -508,22 +485,18 @@ test('22. test_draft_preview_fails_for_non_existent_attachment_index', function 
     assertToastShown($livewire, 'Attachment not found.');
 });
 
-test('23. test_draft_preview_fails_if_temporary_file_is_missing_from_disk', function () {
+test('23. test_draft_preview_fails_if_stored_file_is_missing_from_disk', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('nonexistent.pdf', 100);
+    $attachment = createDraftAttachment($user, 'nonexistent.pdf', size: 100);
 
-    $livewire = Livewire::actingAs($user)->test(SubmitTicket::class);
-    $livewire->set('newAttachments', [$file]);
+    Storage::delete($attachment->file_path);
 
-    // Force deletion of local file path of the temporary file
-    $uploadedFile = $livewire->get('attachments')[0];
-    dd([
-        'class' => get_class($uploadedFile),
-        'exists_before' => $uploadedFile->exists(),
-        'realPath' => $uploadedFile->getRealPath(),
-    ]);
+    $livewire = Livewire::actingAs($user)
+        ->test(SubmitTicket::class)
+        ->set('uploadedFileIds', [$attachment->id])
+        ->call('previewDraftAttachment', 0)
+        ->assertNotDispatched('open-attachment-preview');
 
-    $livewire->call('previewDraftAttachment', 0);
     assertToastShown($livewire, 'File is no longer available. Re-upload if needed.');
 });
 
@@ -544,7 +517,7 @@ test('25. test_draft_attachment_controller_aborts_for_unauthorized_user', functi
         'user_id' => $user1->user_id,
         'file_name' => 'test.pdf',
         'mime' => 'application/pdf',
-        'path' => '/tmp/somefile',
+        'storage_path' => 'draft-attachments/1/somefile.pdf',
     ], 300);
 
     $url = URL::temporarySignedRoute('attachments.draft', now()->addMinutes(5), ['token' => $token]);
@@ -560,7 +533,7 @@ test('26. test_draft_attachment_controller_aborts_for_unsigned_url', function ()
         'user_id' => $user->user_id,
         'file_name' => 'test.pdf',
         'mime' => 'application/pdf',
-        'path' => '/tmp/somefile',
+        'storage_path' => 'draft-attachments/1/somefile.pdf',
     ], 300);
 
     $url = route('attachments.draft', ['token' => $token]);
@@ -569,47 +542,36 @@ test('26. test_draft_attachment_controller_aborts_for_unsigned_url', function ()
     $response->assertStatus(403);
 });
 
-test('27. test_store_ticket_attachment_job_handles_missing_temp_file_gracefully', function () {
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+test('27. test_process_ticket_attachments_job_handles_missing_source_file_gracefully', function () {
+    $ticket = createTicketRecord('TKT-TEST-0027');
 
-    $job = new StoreTicketAttachment(
-        ticketId: 99,
-        tempFilename: 'non_existent_temp.pdf',
-        originalName: 'original.pdf',
-        storedName: 'stored.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 100
-    );
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'original.pdf',
+        'file_path' => 'draft-attachments/1/non_existent.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 100,
+    ]]))->handle();
 
-    $job->handle();
-    Storage::disk($disk)->assertMissing('tickets/99/attachments/stored.pdf');
+    Storage::assertMissing('tickets/'.$ticket->ticket_id.'/attachments/non_existent.pdf');
 });
 
-test('28. test_store_ticket_attachment_job_retries_on_failure', function () {
-    $job = new StoreTicketAttachment(
-        ticketId: 99,
-        tempFilename: 'foo.pdf',
-        originalName: 'foo.pdf',
-        storedName: 'stored.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 100
-    );
+test('28. test_process_ticket_attachments_job_retries_on_failure', function () {
+    $job = new ProcessTicketAttachments(99, []);
 
     expect($job->tries)->toBe(3);
     expect($job->backoff)->toBe(10);
 });
 
-test('29. test_save_fails_if_step_5_has_unresolved_validation_errors', function () {
+test('29. test_step_5_rejects_unknown_uploaded_file_ids', function () {
     $user = createStudentOrgUser();
-    $livewire = Livewire::actingAs($user)
-        ->test(SubmitTicket::class);
 
-    fillTicketForm($livewire);
-
-    $livewire->set('newAttachments', ['not-a-file-object'])
-        ->assertHasErrors(['newAttachments.*']);
+    Livewire::actingAs($user)
+        ->test(SubmitTicket::class)
+        ->set('currentStep', 5)
+        ->set('uploadedFileIds', [999999])
+        ->call('nextStep')
+        ->assertHasErrors(['uploadedFileIds.0' => 'exists'])
+        ->assertSet('currentStep', 5);
 });
 
 test('30. test_rate_limiter_blocks_rapid_submissions', function () {
@@ -628,6 +590,8 @@ test('30. test_rate_limiter_blocks_rapid_submissions', function () {
 
     $livewire->call('save');
     assertToastShown($livewire, 'Too Many Attempts');
+
+    $this->assertDatabaseMissing('tickets', ['user_id' => $user->user_id]);
 });
 
 test('31. test_ticket_locking_prevents_duplicate_submissions', function () {
@@ -661,15 +625,17 @@ test('32. test_submitting_invalid_adviser_contact_fails_validation', function ()
 
 test('33. test_validation_errors_preserve_uploaded_attachments_state', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('document.pdf', 500);
+    $attachment = createDraftAttachment($user);
 
-    $livewire = Livewire::actingAs($user)
+    Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [$attachment->id])
+        ->call('syncFilePondUploads')
         ->set('eventTitle', '123')
         ->set('currentStep', 2)
         ->call('nextStep')
         ->assertHasErrors(['eventTitle'])
+        ->assertSet('uploadedFileIds', [$attachment->id])
         ->assertSet('attachments', function ($attachments) {
             return count($attachments) === 1;
         });
@@ -770,7 +736,7 @@ test('45. test_file_list_item_responsive_padding_classes', function () {
     $file = UploadedFile::fake()->create('report.pdf', 100);
     $html = Blade::render('<x-file-list-item :file="$file" :index="0" />', ['file' => $file]);
 
-    expect($html)->toContain('flex flex-col gap-3')
+    expect($html)->toContain('flex flex-col gap-2')
         ->toContain('sm:flex-row sm:items-center sm:justify-between');
 });
 
@@ -815,130 +781,49 @@ test('50. test_file_list_item_icon_for_other_file', function () {
  * =========================================================================
  */
 
-test('51. test_attachment_stored_in_correct_s3_directory_structure', function () {
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+test('51. test_attachment_stored_in_correct_directory_structure', function () {
+    $ticket = createTicketRecord('TKT-TEST-0045');
+    Storage::put('draft-attachments/7/xyz.pdf', 'content');
 
-    $ticket = Ticket::create([
-        'user_id' => 1,
-        'ticket_number' => 'TKT-TEST-0045',
-        'event_type_id' => 1,
-        'plv_participants' => 50,
-        'total_participants' => 50,
-        'title' => 'My First Event',
-        'description' => 'Detailed description of this event proposal.',
-        'proponent_contact' => '123',
-        'adviser_contact' => '09123456789',
-        'date_from' => now()->addDays(2),
-        'date_to' => now()->addDays(2),
-        'time_from' => '08:00',
-        'time_to' => '12:00',
-        'venue_requested' => 1,
-        'fund_source_id' => 1,
-        'status' => 'received',
-    ]);
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'receipt.pdf',
+        'file_path' => 'draft-attachments/7/xyz.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 7,
+    ]]))->handle();
 
-    $tempFilename = 'file.pdf';
-    Storage::disk('tmp-for-tests')->put('livewire-tmp/'.$tempFilename, 'content');
-    Storage::disk('tmp-for-tests')->put($tempFilename, 'content');
-
-    $job = new StoreTicketAttachment(
-        ticketId: $ticket->ticket_id,
-        tempFilename: $tempFilename,
-        originalName: 'receipt.pdf',
-        storedName: 'xyz.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 100
-    );
-
-    $job->handle();
-
-    Storage::disk($disk)->assertExists('tickets/'.$ticket->ticket_id.'/attachments/xyz.pdf');
+    Storage::assertExists('tickets/'.$ticket->ticket_id.'/attachments/xyz.pdf');
 });
 
 test('52. test_job_handles_disk_configuration_dynamically', function () {
     config(['filesystems.default' => 'public']);
     Storage::fake('public');
-    Storage::fake('tmp-for-tests');
 
-    $ticket = Ticket::create([
-        'user_id' => 1,
-        'ticket_number' => 'TKT-TEST-0010',
-        'event_type_id' => 1,
-        'plv_participants' => 50,
-        'total_participants' => 50,
-        'title' => 'My First Event',
-        'description' => 'Detailed description of this event proposal.',
-        'proponent_contact' => '123',
-        'adviser_contact' => '09123456789',
-        'date_from' => now()->addDays(2),
-        'date_to' => now()->addDays(2),
-        'time_from' => '08:00',
-        'time_to' => '12:00',
-        'venue_requested' => 1,
-        'fund_source_id' => 1,
-        'status' => 'received',
-    ]);
+    $ticket = createTicketRecord('TKT-TEST-0010');
+    Storage::disk('public')->put('draft-attachments/1/stored.pdf', 'content');
 
-    $tempFilename = 'file.pdf';
-    Storage::disk('tmp-for-tests')->put('livewire-tmp/'.$tempFilename, 'content');
-    Storage::disk('tmp-for-tests')->put($tempFilename, 'content');
-
-    $job = new StoreTicketAttachment(
-        ticketId: $ticket->ticket_id,
-        tempFilename: $tempFilename,
-        originalName: 'test.pdf',
-        storedName: 'stored.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 100
-    );
-
-    $job->handle();
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'test.pdf',
+        'file_path' => 'draft-attachments/1/stored.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 7,
+    ]]))->handle();
 
     Storage::disk('public')->assertExists('tickets/'.$ticket->ticket_id.'/attachments/stored.pdf');
 });
 
-test('53. test_job_cleanups_temporary_file_on_success', function () {
-    $disk = config('filesystems.default');
-    Storage::fake($disk);
-    Storage::fake('tmp-for-tests');
+test('53. test_job_cleans_up_draft_file_on_success', function () {
+    $ticket = createTicketRecord('TKT-TEST-0010');
+    Storage::put('draft-attachments/1/file_to_delete.pdf', 'content');
 
-    $ticket = Ticket::create([
-        'user_id' => 1,
-        'ticket_number' => 'TKT-TEST-0010',
-        'event_type_id' => 1,
-        'plv_participants' => 50,
-        'total_participants' => 50,
-        'title' => 'My First Event',
-        'description' => 'Detailed description of this event proposal.',
-        'proponent_contact' => '123',
-        'adviser_contact' => '09123456789',
-        'date_from' => now()->addDays(2),
-        'date_to' => now()->addDays(2),
-        'time_from' => '08:00',
-        'time_to' => '12:00',
-        'venue_requested' => 1,
-        'fund_source_id' => 1,
-        'status' => 'received',
-    ]);
+    (new ProcessTicketAttachments($ticket->ticket_id, [[
+        'file_name' => 'test.pdf',
+        'file_path' => 'draft-attachments/1/file_to_delete.pdf',
+        'file_type' => 'application/pdf',
+        'file_size' => 7,
+    ]]))->handle();
 
-    $tempFilename = 'file_to_delete.pdf';
-    Storage::disk('tmp-for-tests')->put('livewire-tmp/'.$tempFilename, 'content');
-    Storage::disk('tmp-for-tests')->put($tempFilename, 'content');
-
-    $job = new StoreTicketAttachment(
-        ticketId: $ticket->ticket_id,
-        tempFilename: $tempFilename,
-        originalName: 'test.pdf',
-        storedName: 'stored.pdf',
-        mimeType: 'application/pdf',
-        fileSize: 100
-    );
-
-    $job->handle();
-
-    Storage::disk('tmp-for-tests')->assertMissing('livewire-tmp/'.$tempFilename);
+    Storage::assertMissing('draft-attachments/1/file_to_delete.pdf');
 });
 
 test('54. test_database_transaction_rollbacks_on_submission_failure', function () {
@@ -970,13 +855,13 @@ test('54. test_database_transaction_rollbacks_on_submission_failure', function (
 
 test('55. test_draft_attachment_preview_uses_cache_with_5_minutes_ttl', function () {
     $user = createStudentOrgUser();
-    $file = UploadedFile::fake()->create('report.pdf', 100);
+    $attachment = createDraftAttachment($user, 'report.pdf', size: 100);
 
     $cacheMock = Cache::spy();
 
     Livewire::actingAs($user)
         ->test(SubmitTicket::class)
-        ->set('newAttachments', [$file])
+        ->set('uploadedFileIds', [$attachment->id])
         ->call('previewDraftAttachment', 0);
 
     $cacheMock->shouldHaveReceived('put')
@@ -1000,9 +885,11 @@ test('56. test_save_ticket_clears_draft_immediate', function () {
 
     $livewire->call('save')
         ->assertDispatched('clear-draft-immediate');
+
+    $this->assertDatabaseMissing('ticket_drafts', ['user_id' => $user->user_id]);
 });
 
-test('57. test_process_post_ticket_submission_job_is_dispatched', function () {
+test('57. test_process_ticket_attachments_job_is_dispatched_on_submission', function () {
     $user = createStudentOrgUser();
     Queue::fake();
 
@@ -1013,7 +900,7 @@ test('57. test_process_post_ticket_submission_job_is_dispatched', function () {
 
     $livewire->call('save');
 
-    Queue::assertPushed(ProcessPostTicketSubmission::class);
+    Queue::assertPushed(ProcessTicketAttachments::class, 1);
 });
 
 test('58. test_transaction_log_is_recorded_on_ticket_creation', function () {
@@ -1032,7 +919,7 @@ test('58. test_transaction_log_is_recorded_on_ticket_creation', function () {
     ]);
 });
 
-test('59. test_ticket_number_generation_uses_lock_for_uniqueness', function () {
+test('59. test_ticket_number_generation_is_sequential_per_org', function () {
     $user = createStudentOrgUser();
     Queue::fake();
 
@@ -1048,19 +935,34 @@ test('59. test_ticket_number_generation_uses_lock_for_uniqueness', function () {
     $this->assertDatabaseHas('tickets', ['ticket_number' => 'TKT-TESTORG-0002']);
 });
 
-test('60. test_multiple_attachments_store_jobs_are_all_queued', function () {
+test('60. test_multiple_attachments_are_queued_in_a_single_job', function () {
     $user = createStudentOrgUser();
     Queue::fake();
 
-    $file1 = UploadedFile::fake()->create('file1.pdf', 100);
-    $file2 = UploadedFile::fake()->create('file2.png', 200);
+    $first = createDraftAttachment($user, 'file1.pdf', size: 100);
+    $second = createDraftAttachment($user, 'file2.png', 'image/png', 200);
 
     $livewire = Livewire::actingAs($user)->test(SubmitTicket::class);
     fillTicketForm($livewire);
 
-    $livewire->set('newAttachments', [$file1])
-        ->set('newAttachments', [$file2])
+    $livewire->set('uploadedFileIds', [$first->id, $second->id])
         ->call('save');
 
-    Queue::assertPushed(StoreTicketAttachment::class, 2);
+    Queue::assertPushed(ProcessTicketAttachments::class, function ($job) {
+        return collect($job->attachments)->pluck('file_name')->sort()->values()->all() === ['file1.pdf', 'file2.png'];
+    });
+});
+
+test('61. test_cannot_preview_another_users_draft_attachment', function () {
+    $owner = createStudentOrgUser();
+    $attacker = createStudentOrgUser();
+    $attachment = createDraftAttachment($owner, 'private.pdf');
+
+    $livewire = Livewire::actingAs($attacker)
+        ->test(SubmitTicket::class)
+        ->set('uploadedFileIds', [$attachment->id])
+        ->call('previewDraftAttachment', 0)
+        ->assertNotDispatched('open-attachment-preview');
+
+    assertToastShown($livewire, 'Attachment not found.');
 });

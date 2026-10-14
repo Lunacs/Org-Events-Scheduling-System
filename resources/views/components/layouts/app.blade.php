@@ -117,50 +117,7 @@
 
                     {{-- MENU --}}
                     @php
-                        $menuItems = [
-                            [
-                                'title' => 'Dashboard',
-                                'icon' => 'fa-solid fa-table-columns',
-                                'link' => '/admin/dashboard',
-                                'pattern' => 'admin/dashboard*',
-                            ],
-                            [
-                                'title' => 'Ticket Management',
-                                'icon' => 'fa-solid fa-ticket',
-                                'link' => '/admin/tickets',
-                                'pattern' => 'admin/tickets*',
-                            ],
-                            [
-                                'title' => 'Ticket Review & Approvals',
-                                'icon' => 'fa-solid fa-clipboard-check',
-                                'link' => '/admin/ticket-review',
-                                'pattern' => 'admin/ticket-review*',
-                            ],
-                            [
-                                'title' => 'Event Calendar',
-                                'icon' => 'fa-solid fa-calendar-days',
-                                'link' => '/admin/calendar',
-                                'pattern' => 'admin/calendar*',
-                            ],
-                            [
-                                'title' => 'Notifications',
-                                'icon' => 'fa-solid fa-bell',
-                                'link' => '/admin/notifications',
-                                'pattern' => 'admin/notifications*',
-                            ],
-                            [
-                                'title' => 'Reports',
-                                'icon' => 'fa-solid fa-chart-bar',
-                                'link' => '/admin/reports',
-                                'pattern' => 'admin/reports*',
-                            ],
-                            [
-                                'title' => 'Archives',
-                                'icon' => 'fa-solid fa-box-archive',
-                                'link' => '/admin/archive',
-                                'pattern' => 'admin/archive*',
-                            ],
-                        ];
+                        $menuItems = \App\Support\PortalNavigation::itemsFor(auth()->user());
                     @endphp
 
                     <ul class="menu w-full grow font-heading mt-2 gap-2">
