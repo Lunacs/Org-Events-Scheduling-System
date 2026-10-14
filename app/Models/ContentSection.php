@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Tonysm\RichTextLaravel\Models\Traits\HasRichText;
 
@@ -167,6 +168,7 @@ class ContentSection extends Model
             ['id' => 'osa', 'name' => 'OSA Staff'],
             ['id' => 'gso', 'name' => 'GSO Staff'],
             ['id' => 'superadmin', 'name' => 'Superadmins'],
+            ['id' => 'viewer', 'name' => 'Viewer portal (custom read-only roles)'],
         ];
     }
 
@@ -189,21 +191,14 @@ class ContentSection extends Model
             return false;
         }
 
-        // Load role if not already loaded
-        if (! $user->relationLoaded('role')) {
-            $user->load('role');
-        }
-
-        $userRole = $user->role?->role_name;
-
-        // Check if user's role is in target roles
-        return in_array($userRole, $this->target_roles);
+        // Targets are portals, so custom roles reach the same audience as their base portal.
+        return in_array($user->portal(), $this->target_roles, true);
     }
 
     /**
      * Get active sections of a specific type, filtered by user role
      */
-    public static function getActiveByTypeForUser(string $type, ?User $user): \Illuminate\Support\Collection
+    public static function getActiveByTypeForUser(string $type, ?User $user): Collection
     {
         return static::getActiveByType($type)->filter(function ($section) use ($user) {
             return $section->isVisibleToUser($user);

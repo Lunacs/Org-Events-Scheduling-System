@@ -12,7 +12,7 @@ new class extends Component {
         return Cache::remember('superadmin_dashboard_pending_approvals', 180, function () {
             return Ticket::select(['ticket_id', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
                 ->with(['eventType:event_type_id,type_name', 'user:user_id,name'])
-                ->whereIn('status', ['pending', 'gso_review', 'pending_osa_approval'])
+                ->whereIn('status', ['received', 'amended', 'gso_review', 'pending_osa_approval'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()

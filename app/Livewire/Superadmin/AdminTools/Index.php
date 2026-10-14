@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -129,7 +130,14 @@ class Index extends Component
         try {
             $count = Transaction_Logs::count();
 
-            // Keep only last 100 logs
+            // Keep only last 100 logs. A negative limit is ignored by the query
+            // builder, which would delete every log, so stop when there is nothing to trim.
+            if ($count <= 100) {
+                $this->info('There are 100 logs or fewer, so nothing was removed.', position: 'toast-top');
+
+                return;
+            }
+
             $logsToDelete = Transaction_Logs::orderBy('created_at', 'asc')
                 ->limit($count - 100)
                 ->pluck('log_id');
@@ -215,33 +223,36 @@ class Index extends Component
                 Artisan::call('route:clear');
 
                 $this->maintenanceMode = false;
-                $message = 'SuperAdmin disabled maintenance mode';
 
-                $this->success($message.'!', position: 'toast-top');
+                TransactionLogService::log(
+                    'MAINTENANCE',
+                    'SuperAdmin disabled maintenance mode',
+                    Auth::user()->user_id
+                );
+
+                $this->success('SuperAdmin disabled maintenance mode!', position: 'toast-top');
 
                 // Redirect to refresh the entire page and clear any cached state
                 return redirect()->route('superadmin.admin-tools');
             } else {
-                // Enable maintenance mode with a secret bypass token
-                // SuperAdmin can access by visiting: /superadmin?secret=superadmin-bypass-2025
+                // Laravel's bypass works by visiting /{secret}, which sets a cookie that lets
+                // this browser through on every request, including Livewire's update requests.
+                $secret = Str::random(40);
+
                 Artisan::call('down', [
-                    '--secret' => 'superadmin-bypass-2025',
+                    '--secret' => $secret,
                     '--render' => 'errors.503',
                 ]);
                 $this->maintenanceMode = true;
-                $message = 'SuperAdmin enabled maintenance mode';
 
-                $this->success($message.'!', position: 'toast-top');
+                TransactionLogService::log(
+                    'MAINTENANCE',
+                    'SuperAdmin enabled maintenance mode',
+                    Auth::user()->user_id
+                );
 
-                // Important: Inform SuperAdmin about bypass URL
-                $this->info('To access admin panel during maintenance, use: /superadmin?secret=superadmin-bypass-2025', position: 'toast-top', timeout: 10000);
+                return redirect('/'.$secret);
             }
-
-            TransactionLogService::log(
-                'MAINTENANCE',
-                $message,
-                Auth::user()->user_id
-            );
         } catch (\Exception $e) {
             $this->error('Failed to toggle maintenance mode: '.$e->getMessage(), position: 'toast-top');
         }

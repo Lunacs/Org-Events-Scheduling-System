@@ -148,7 +148,7 @@ class Index extends Component
     }
 
     /**
-     * @return array{previousRoleId: int|null, status: 'changed'|'unchanged'|'last_superadmin'}
+     * @return array{previousRoleId: int|null, status: 'changed'|'unchanged'|'last_superadmin'|'missing_affiliation', missing?: string}
      */
     private function changeUserRole(int $userId, int $roleId): array
     {
@@ -187,6 +187,14 @@ class Index extends Component
                 return [
                     'previousRoleId' => $previousRoleId,
                     'status' => 'last_superadmin',
+                ];
+            }
+
+            if ($missing = $role->missingAffiliationFor($user)) {
+                return [
+                    'previousRoleId' => $previousRoleId,
+                    'status' => 'missing_affiliation',
+                    'missing' => $missing,
                 ];
             }
 
@@ -260,6 +268,14 @@ class Index extends Component
             $this->restoreSelectedRoleId($userId);
             $this->clearSelfRoleChangeConfirmation();
             $this->error('Cannot remove the last superadmin user.', position: 'toast-top');
+
+            return;
+        }
+
+        if ($roleChange['status'] === 'missing_affiliation') {
+            $this->restoreSelectedRoleId($userId);
+            $this->clearSelfRoleChangeConfirmation();
+            $this->error("That role needs the user to belong to an {$roleChange['missing']}. Use Edit user to set it together with the role.", position: 'toast-top');
 
             return;
         }

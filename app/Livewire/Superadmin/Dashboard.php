@@ -41,7 +41,7 @@ class Dashboard extends Component
     public function stats(): array
     {
         return DashboardCacheService::getDashboardWidget('superadmin', 'stats', function () {
-            $pendingTickets = Ticket::where('status', 'pending')->count();
+            $pendingTickets = Ticket::whereIn('status', ['received', 'amended', 'pending_osa_approval'])->count();
             $gsoReviewTickets = Ticket::where('status', 'gso_review')->count();
             $forRevisionTickets = Ticket::where('status', 'for_revision')->count();
 
@@ -90,7 +90,7 @@ class Dashboard extends Component
     {
         return DashboardCacheService::getDashboardWidget('superadmin', 'attention_required', function () {
             // Tickets awaiting OSA review (pending status)
-            $pendingOsaReview = Ticket::where('status', 'pending')
+            $pendingOsaReview = Ticket::whereIn('status', ['received', 'amended', 'pending_osa_approval'])
                 ->orderBy('created_at', 'asc')
                 ->limit(5)
                 ->get()

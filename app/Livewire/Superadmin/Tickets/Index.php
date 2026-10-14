@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Superadmin\Tickets;
 
-use App\Models\Office;
 use App\Models\Ticket;
+use App\Services\TicketWorkflowService;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +19,6 @@ class Index extends Component
 {
     use Toast, WithPagination;
 
-    private const STATUS_REJECTED = 'for_revision';
-
     #[Title('Ticket Management - SuperAdmin')]
     #[Layout('components.layouts.superadmin')]
 
@@ -34,13 +32,6 @@ class Index extends Component
     public $selectedTicket = null;
 
     public $showDetailDrawer = false;
-
-    // Reassignment
-    public $showReassignModal = false;
-
-    public $reassignTicketId = null;
-
-    public $newOfficeId = null;
 
     // Bulk actions
     public $selectedTickets = [];
@@ -179,51 +170,6 @@ class Index extends Component
         }
     }
 
-    // ── Reassign ─────────────────────────────────────────────────────
-
-    public function openReassignModal(int $ticketId): void
-    {
-        $this->reassignTicketId = $ticketId;
-        $this->newOfficeId = null;
-        $this->showReassignModal = true;
-    }
-
-    public function reassignTicket(): void
-    {
-        $this->validate([
-            'newOfficeId' => 'required|exists:offices,office_id',
-        ]);
-
-        try {
-            $ticket = Ticket::find($this->reassignTicketId);
-
-            if (! $ticket) {
-                $this->error('Ticket not found!', position: 'toast-top');
-
-                return;
-            }
-
-            $oldOffice = $ticket->office->office_name ?? 'None';
-            $newOffice = Office::find($this->newOfficeId)->office_name;
-
-            $ticket->update(['office_id' => $this->newOfficeId]);
-
-            TransactionLogService::log(
-                'REASSIGN',
-                "SuperAdmin reassigned ticket {$ticket->ticket_number} from {$oldOffice} to {$newOffice}",
-                Auth::user()->user_id
-            );
-
-            $this->success('Ticket reassigned successfully!', position: 'toast-top');
-            $this->showReassignModal = false;
-            $this->reassignTicketId = null;
-            $this->newOfficeId = null;
-            $this->refreshTickets();
-        } catch (\Exception $e) {
-            $this->error('Failed to reassign ticket: '.$e->getMessage(), position: 'toast-top');
-        }
-    }
-
     // ── Bulk Actions ─────────────────────────────────────────────────
 
     public function openBulkModal(string $action): void
@@ -246,48 +192,49 @@ class Index extends Component
             return;
         }
 
-        try {
-            $count = count($this->selectedTickets);
+        if (! in_array($this->bulkAction, ['approve', 'reject'], true)) {
+            $this->warning('Invalid action!', position: 'toast-top');
 
-            switch ($this->bulkAction) {
-                case 'approve':
-                    Ticket::whereIn('ticket_id', $this->selectedTickets)
-                        ->update(['status' => 'approved']);
-                    $message = "Bulk approved {$count} tickets";
-                    break;
+            return;
+        }
 
-                case 'reject':
-                    Ticket::whereIn('ticket_id', $this->selectedTickets)
-                        ->update(['status' => self::STATUS_REJECTED]);
-                    $message = "Bulk rejected {$count} tickets";
-                    break;
+        // Each ticket goes through the same workflow as an OSA decision, so approved
+        // tickets get their event and schedule, history, audit log and notifications.
+        $workflow = app(TicketWorkflowService::class);
+        $actor = Auth::user();
+        $remarks = $this->bulkAction === 'approve'
+            ? 'Approved by the superadmin (bulk action).'
+            : 'Sent back for revision by the superadmin (bulk action).';
 
-                case 'cancel':
-                    Ticket::whereIn('ticket_id', $this->selectedTickets)
-                        ->update(['status' => 'cancelled']);
-                    $message = "Bulk cancelled {$count} tickets";
-                    break;
+        $tickets = Ticket::query()->whereIn('ticket_id', $this->selectedTickets)->get();
+        $done = 0;
 
-                default:
-                    $this->warning('Invalid action!', position: 'toast-top');
-
-                    return;
+        foreach ($tickets as $ticket) {
+            if (! in_array($ticket->status, TicketWorkflowService::OSA_DECIDABLE_STATUSES, true)) {
+                continue;
             }
 
-            TransactionLogService::log(
-                'BULK_ACTION',
-                $message,
-                Auth::user()->user_id
-            );
-
-            $this->success($message.' successfully!', position: 'toast-top');
-            $this->selectedTickets = [];
-            $this->showBulkModal = false;
-            $this->bulkAction = '';
-            $this->refreshTickets();
-        } catch (\Exception $e) {
-            $this->error('Failed to execute bulk action: '.$e->getMessage(), position: 'toast-top');
+            try {
+                $this->bulkAction === 'approve'
+                    ? $workflow->approve($ticket, $actor, $remarks)
+                    : $workflow->requestRevision($ticket, $actor, $remarks);
+                $done++;
+            } catch (\DomainException) {
+                // The ticket moved on since the list was loaded; leave it as it is.
+            }
         }
+
+        $verb = $this->bulkAction === 'approve' ? 'approved' : 'sent back for revision';
+        $skipped = count($this->selectedTickets) - $done;
+        $message = "Bulk {$verb} {$done} tickets".($skipped > 0 ? " ({$skipped} skipped: not awaiting an OSA decision)" : '');
+
+        TransactionLogService::log('BULK_ACTION', $message, $actor->user_id);
+
+        $done > 0 ? $this->success($message.'.', position: 'toast-top') : $this->warning($message.'.', position: 'toast-top');
+        $this->selectedTickets = [];
+        $this->showBulkModal = false;
+        $this->bulkAction = '';
+        $this->refreshTickets();
     }
 
     // ── Filter Hooks ─────────────────────────────────────────────────
@@ -311,16 +258,6 @@ class Index extends Component
         unset($this->tickets);
     }
 
-    // ── Computed Dropdown Data ───────────────────────────────────────
-
-    #[Computed(persist: true, seconds: 1800)]
-    public function offices()
-    {
-        return Office::select(['office_id', 'office_name', 'office_code'])
-            ->orderBy('office_name')
-            ->get();
-    }
-
     // ── Render ───────────────────────────────────────────────────────
 
     public function render()
@@ -328,7 +265,6 @@ class Index extends Component
         return view('livewire.superadmin.tickets.index')->with([
             'ticketsData' => $this->tickets,
             'headers' => $this->headers,
-            'offices' => $this->offices,
         ]);
     }
 }
