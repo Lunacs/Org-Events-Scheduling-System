@@ -18,13 +18,13 @@
                     wire:key="comment-{{ $comment->id }}">
                     <div class="chat-image avatar">
                         <div class="w-10 rounded-full bg-base-300">
-                            <img data-avatar="{{ $comment->user->avatar_url }}" alt="{{ $comment->user->name }}"
+                            <img data-avatar="{{ $comment->user?->avatar_url }}" alt="{{ $comment->user?->name ?? 'Deleted user' }}"
                                 draggable="false" class="rounded-full w-full h-full object-cover" />
                         </div>
                     </div>
                     <div class="chat-header">
-                        {{ $comment->user->name }}
-                        <x-ui.badge value="{{ $comment->user->role_display }}" class="badge-soft badge-sm ms-1.5" />
+                        {{ $comment->user?->name ?? 'Deleted user' }}
+                        @if ($comment->user)<x-ui.badge value="{{ $comment->user->role_display }}" class="badge-soft badge-sm ms-1.5" />@endif
                         <time class="ms-1 text-xs text-base-content/70" datetime="{{ $comment->created_at->toIso8601String() }}">{{ $comment->created_at->diffForHumans() }}</time>
                     </div>
                     <div @class(['chat-bubble whitespace-pre-line text-sm', 'bg-primary text-primary-content' => $comment->user_id === auth()->id(), 'bg-base-200 text-base-content' => $comment->user_id !== auth()->id()])>{{ $comment->content }}</div>
