@@ -183,13 +183,18 @@ function registerFilePondComponent() {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                             'Accept': 'application/json',
                         },
-                        onload: (id) => {
-                            if (Array.isArray(this.uploadedFileIds)) {
-                                this.uploadedFileIds = this.uploadedFileIds.filter((item) => item !== id);
-                            }
-                        },
                     },
                     restore: input.dataset.restoreUrl,
+                },
+
+                // The revert response body is empty, so drop the ID here instead, where
+                // FilePond still knows which server-side upload the removed file was.
+                onremovefile: (error, file) => {
+                    if (!file?.serverId || !Array.isArray(this.uploadedFileIds)) {
+                        return;
+                    }
+                    const removedId = String(file.serverId);
+                    this.uploadedFileIds = this.uploadedFileIds.filter((item) => String(item) !== removedId);
                 },
 
                 labelFileProcessingError: (error) => {

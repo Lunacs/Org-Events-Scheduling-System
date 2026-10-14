@@ -102,7 +102,9 @@ class Reports extends Component
             ->get();
     }
 
-    #[Computed(persist: true, seconds: 300)]
+    // Not persisted: Livewire's persist key ignores the filters, so a cached result would
+    // outlive a change of report type or dates. ReportCacheService already caches per filter.
+    #[Computed]
     public function reportData()
     {
         if (empty($this->dateFrom) || empty($this->dateTo)) {
@@ -120,14 +122,15 @@ class Reports extends Component
             function () use ($dateFrom, $dateTo) {
                 switch ($this->reportType) {
                     case 'approved_events':
-                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'updated_at', 'user_id', 'event_type_id'])
                             ->with([
                                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
                                 'events:event_id,ticket_id',
                                 'eventType:event_type_id,type_name',
                             ])
-                            ->where('status', 'approved')
+                            // Approved events become completed a week after they end.
+                            ->whereIn('status', ['approved', 'completed'])
                             ->whereBetween('created_at', [$dateFrom, $dateTo])
                             ->when($this->organizationFilter, fn ($query) => $query->whereHas('user', fn ($q) => $q->where('org_id', $this->organizationFilter)))
                             ->orderBy('created_at', 'desc')
@@ -135,7 +138,7 @@ class Reports extends Component
                             ->get();
 
                     case 'for_revision_events':
-                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'user_id', 'event_type_id'])
+                        return Ticket::select(['ticket_id', 'ticket_number', 'title', 'status', 'created_at', 'updated_at', 'user_id', 'event_type_id'])
                             ->with([
                                 'user' => fn ($q) => $q->select(['user_id', 'org_id'])
                                     ->with('studentOrganization:org_id,org_name,logo'),
@@ -163,9 +166,9 @@ class Reports extends Component
                         // Use more efficient counting
                         return [
                             'total_tickets' => Ticket::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                            'approved_tickets' => Ticket::where('status', 'approved')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                            'approved_tickets' => Ticket::whereIn('status', ['approved', 'completed'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
                             'for_revision_tickets' => Ticket::where('status', 'for_revision')->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-                            'pending_tickets' => Ticket::whereIn('status', ['pending', 'under_review'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+                            'pending_tickets' => Ticket::whereIn('status', ['received', 'amended', 'gso_review', 'pending_osa_approval'])->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
                         ];
 
                     default:

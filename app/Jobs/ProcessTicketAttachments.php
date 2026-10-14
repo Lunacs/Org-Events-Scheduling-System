@@ -50,24 +50,38 @@ class ProcessTicketAttachments implements ShouldQueue
                 // Use stream copy instead of move to avoid S3 ACL restrictions on Cloudflare R2
                 $newPath = "tickets/{$this->ticketId}/attachments/".basename($fileData['file_path']);
 
-                if (Storage::exists($fileData['file_path'])) {
+                // On a retry the file may already have been moved by an earlier attempt.
+                if (! Storage::exists($newPath) && Storage::exists($fileData['file_path'])) {
                     $stream = Storage::readStream($fileData['file_path']);
                     if ($stream) {
                         Storage::writeStream($newPath, $stream);
                         if (is_resource($stream)) {
                             fclose($stream);
                         }
-                        Storage::delete($fileData['file_path']);
                     }
                 }
 
-                Attachment::create([
-                    'ticket_id' => $this->ticketId,
-                    'file_name' => $fileData['file_name'],
-                    'file_path' => $newPath,
-                    'file_type' => $fileData['file_type'],
-                    'file_size' => $fileData['file_size'],
-                ]);
+                // Only record files that actually arrived; keep the source otherwise.
+                if (! Storage::exists($newPath)) {
+                    Log::warning('ProcessTicketAttachments: file could not be copied', [
+                        'ticket_id' => $this->ticketId,
+                        'source' => $fileData['file_path'],
+                    ]);
+
+                    continue;
+                }
+
+                Storage::delete($fileData['file_path']);
+
+                // Idempotent, so a retried job does not duplicate rows.
+                Attachment::firstOrCreate(
+                    ['ticket_id' => $this->ticketId, 'file_path' => $newPath],
+                    [
+                        'file_name' => $fileData['file_name'],
+                        'file_type' => $fileData['file_type'],
+                        'file_size' => $fileData['file_size'],
+                    ],
+                );
             }
         }
 

@@ -12,38 +12,41 @@ new class extends Component
     {
         return Cache::remember('osa_dashboard_recent_activity', 300, function () {
             return Transaction_Logs::with('user')
+                // The action names TransactionLogService actually stores.
                 ->whereIn('action', [
-                    'Ticket Approved',
-                    'Ticket Rejected',
-                    'Ticket Forwarded',
-                    'Ticket For Revision',
-                    'Ticket Status Updated',
-                    'New Ticket Submitted',
+                    'TICKET_CREATED',
+                    'TICKET_AMENDED',
+                    'TICKET_APPROVED',
+                    'TICKET_FINAL_APPROVED',
+                    'TICKET_FORWARDED',
+                    'TICKET_FOR_REVISION',
+                    'OFFICE_APPROVED',
+                    'OFFICE_FOR_REVISION',
                 ])
                 ->latest('created_at')
                 ->limit(5)
                 ->get()
                 ->map(function ($log) {
                     $icon = match (true) {
-                        str_contains($log->action, 'Approved') => 'o-check-circle',
-                        str_contains($log->action, 'Rejected'), str_contains($log->action, 'Revision') => 'o-x-circle',
-                        str_contains($log->action, 'Forwarded') => 'o-paper-airplane',
-                        str_contains($log->action, 'Submitted') => 'o-document-plus',
+                        str_contains($log->action, 'APPROVED') => 'o-check-circle',
+                        str_contains($log->action, 'REJECTED'), str_contains($log->action, 'REVISION') => 'o-x-circle',
+                        str_contains($log->action, 'FORWARDED') => 'o-paper-airplane',
+                        str_contains($log->action, 'CREATED') || str_contains($log->action, 'AMENDED') => 'o-document-plus',
                         default => 'o-information-circle',
                     };
 
                     $iconClass = match (true) {
-                        str_contains($log->action, 'Approved') => 'text-success',
-                        str_contains($log->action, 'Rejected') => 'text-error',
-                        str_contains($log->action, 'Revision') => 'text-warning',
-                        str_contains($log->action, 'Forwarded') => 'text-info',
-                        str_contains($log->action, 'Submitted') => 'text-primary',
+                        str_contains($log->action, 'APPROVED') => 'text-success',
+                        str_contains($log->action, 'REJECTED') => 'text-error',
+                        str_contains($log->action, 'REVISION') => 'text-warning',
+                        str_contains($log->action, 'FORWARDED') => 'text-info',
+                        str_contains($log->action, 'CREATED') || str_contains($log->action, 'AMENDED') => 'text-primary',
                         default => 'text-base-content/60',
                     };
 
                     return [
                         'id' => $log->log_id,
-                        'action' => $log->action,
+                        'action' => ucwords(strtolower(str_replace('_', ' ', $log->action))),
                         'details' => $log->details,
                         'time_ago' => $log->created_at?->diffForHumans() ?? 'Just now',
                         'icon' => $icon,

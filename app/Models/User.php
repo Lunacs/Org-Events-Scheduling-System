@@ -222,6 +222,21 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The URL where this user can open a ticket in their own portal, so links in
+     * notifications never send someone to a page their role cannot open.
+     */
+    public function ticketUrl(string $ticketNumber): string
+    {
+        return match ($this->portal()) {
+            'osa' => route('osa.ticket-review.show', ['ticketNumber' => $ticketNumber]),
+            'gso' => route('gso.ticket-details', ['ticketNumber' => $ticketNumber]),
+            'student-org' => route('student-org.ticket-details', ['ticketNumber' => $ticketNumber]),
+            'superadmin' => route('superadmin.tickets', ['search' => $ticketNumber]),
+            default => route('portal.notifications'),
+        };
+    }
+
+    /**
      * Get the route name of the first page the user may open in their portal.
      */
     public function getDashboardRoute(): string
