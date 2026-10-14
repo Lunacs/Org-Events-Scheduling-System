@@ -128,8 +128,8 @@
                                     <td>
                                         <div class="flex items-center gap-2">
                                             <div class="w-8 h-8 shrink-0">
-                                                <img src="{{ $event->ticket->user->studentOrganization->logo_url }}"
-                                                    alt="{{ $event->ticket->user->studentOrganization->org_name }} logo"
+                                                <img src="{{ $event->ticket?->user?->studentOrganization?->logo_url }}"
+                                                    alt="{{ $event->ticket?->user?->studentOrganization?->org_name ?? 'Organization' }} logo"
                                                     class="w-8 h-8 object-cover rounded-full bg-base-200">
                                             </div>
                                             <div>

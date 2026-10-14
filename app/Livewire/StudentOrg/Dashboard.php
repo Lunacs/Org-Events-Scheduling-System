@@ -3,6 +3,7 @@
 namespace App\Livewire\StudentOrg;
 
 use App\Models\Ticket;
+use App\Services\Cache\DashboardCacheService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -48,14 +49,14 @@ class Dashboard extends Component
     {
         $user = auth()->user();
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'tickets', function () {
+        return DashboardCacheService::getDashboardWidget('student_org', 'tickets', function () {
             return $this->getBaseTicketsQuery()
                 ->with(['eventType', 'user' => function ($query) {
                     $query->withTrashed();
                 }])
                 ->orderBy('created_at', 'desc')
                 ->get();
-        });
+        }, $user->user_id, $user->org_id);
     }
 
     #[Computed]
@@ -63,7 +64,7 @@ class Dashboard extends Component
     {
         $user = auth()->user();
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'recent_tickets', function () {
+        return DashboardCacheService::getDashboardWidget('student_org', 'recent_tickets', function () {
             return $this->getBaseTicketsQuery()
                 ->with(['eventType', 'user' => function ($query) {
                     $query->withTrashed();
@@ -71,7 +72,7 @@ class Dashboard extends Component
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
-        });
+        }, $user->user_id, $user->org_id);
     }
 
     #[Computed]
@@ -79,11 +80,11 @@ class Dashboard extends Component
     {
         $user = auth()->user();
 
-        return \App\Services\Cache\DashboardCacheService::getDashboardWidget('student_org', 'upcoming_events', function () {
+        return DashboardCacheService::getDashboardWidget('student_org', 'upcoming_events', function () {
             return $this->getBaseTicketsQuery()
                 ->where('status', 'approved')
                 ->whereBetween('date_from', [now(), now()->addDays(30)])
                 ->count();
-        });
+        }, $user->user_id, $user->org_id);
     }
 }
