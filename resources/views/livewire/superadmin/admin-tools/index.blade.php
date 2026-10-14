@@ -180,10 +180,7 @@
                         </svg>
                         <div class="flex flex-col">
                             <span class="font-semibold">SuperAdmin Bypass Active</span>
-                            <span class="text-sm">You can access admin panel during maintenance using:</span>
-                            <code class="mt-2 bg-base-300 px-2 py-1 rounded text-xs">
-                                {{ url('/superadmin?secret=superadmin-bypass-2025') }}
-                            </code>
+                            <span class="text-sm">Turning maintenance on sends this browser through a one-time bypass link, so you keep full access while everyone else sees the maintenance page. If you lose access, run <code>php artisan up</code> on the server.</span>
                         </div>
                     </div>
 

@@ -14,7 +14,7 @@
                     </x-ui.button>
                     <x-ui.button icon="o-x-circle" class="btn-error btn-sm"
                         wire:click="openBulkModal('reject')">
-                        Reject ({{ count($selectedTickets) }})
+                        Request revision ({{ count($selectedTickets) }})
                     </x-ui.button>
                 @endif
                 <a href="{{ route('superadmin.ticket.create') }}" wire:navigate
@@ -149,9 +149,6 @@
                                                     d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                             </svg>
                                         </a>
-                                        <x-ui.button size="xs" icon="o-arrow-path-rounded-square" class="btn-ghost"
-                                            wire:click="openReassignModal({{ $ticket->ticket_id }})"
-                                            tooltip="Reassign" />
                                         <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
                                             wire:click="openDeleteModal({{ $ticket->ticket_id }}, '{{ addslashes($ticket->title) }}')"
                                             tooltip="Delete" />
@@ -377,29 +374,11 @@
                             </svg>
                             Edit
                         </a>
-                        <x-ui.button label="Reassign" icon="o-arrow-path-rounded-square" class="btn-primary btn-sm"
-                            wire:click="openReassignModal({{ $selectedTicket->ticket_id }})"
-                            @click="closeDetailDrawer()" />
                     </div>
                 @endif
             </div>
         </div>
     </div>
-
-    {{-- ── Reassign Modal ─────────────────────────────────────────── --}}
-    <x-ui.modal-dialog wire:model="showReassignModal" title="Reassign Ticket">
-        <div class="space-y-4">
-            <p>Reassign this ticket to a different office:</p>
-            <x-ui.select label="New Office" wire:model="newOfficeId" :options="$offices" option-value="office_id"
-                option-label="office_name" placeholder="Select office…" required />
-        </div>
-
-        <x-slot:actions>
-            <x-ui.button label="Cancel" @click="$wire.showReassignModal = false" />
-            <x-ui.button label="Reassign" class="btn-primary" wire:click="reassignTicket"
-                spinner="reassignTicket" />
-        </x-slot:actions>
-    </x-ui.modal-dialog>
 
     {{-- ── Bulk Action Modal ──────────────────────────────────────── --}}
     <x-ui.modal-dialog wire:model="showBulkModal" title="Bulk Action Confirmation">

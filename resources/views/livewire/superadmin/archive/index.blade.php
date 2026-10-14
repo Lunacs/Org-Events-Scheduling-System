@@ -17,8 +17,8 @@
 
                 <x-ui.select label="Type" wire:model.live="typeFilter" :options="[
                     ['id' => 'all', 'name' => 'All Items'],
-                    ['id' => 'events', 'name' => 'Events Only'],
-                    ['id' => 'tickets', 'name' => 'Tickets Only'],
+                    ['id' => 'events', 'name' => 'Completed events'],
+                    ['id' => 'tickets', 'name' => 'Deleted tickets'],
                 ]" option-value="id"
                     option-label="name" />
 
@@ -53,8 +53,8 @@
                                     <td>{{ $item['organization'] }}</td>
                                     <td>
                                         <x-ui.badge :value="ucfirst($item['status'])" :class="match ($item['status']) {
-                                            'cancelled' => 'badge-warning',
-                                            'for_revision' => 'badge-error',
+                                            'deleted' => 'badge-warning',
+                                            'completed' => 'badge-success',
                                             default => 'badge-ghost',
                                         }" />
                                     </td>
@@ -65,16 +65,20 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="flex gap-2">
-                                            <x-ui.button size="xs" icon="o-arrow-uturn-left" class="btn-ghost"
-                                                wire:click="openRestoreModal({{ $item['id'] }}, '{{ $item['type'] }}')">
-                                                Restore
-                                            </x-ui.button>
-                                            <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
-                                                wire:click="openDeleteModal({{ $item['id'] }}, '{{ $item['type'] }}')">
-                                                Delete
-                                            </x-ui.button>
-                                        </div>
+                                        @if ($item['type'] === 'ticket')
+                                            <div class="flex gap-2">
+                                                <x-ui.button size="xs" icon="o-arrow-uturn-left" class="btn-ghost"
+                                                    wire:click="openRestoreModal({{ $item['id'] }}, '{{ $item['type'] }}')">
+                                                    Restore
+                                                </x-ui.button>
+                                                <x-ui.button size="xs" icon="o-trash" class="btn-ghost text-error"
+                                                    wire:click="openDeleteModal({{ $item['id'] }}, '{{ $item['type'] }}')">
+                                                    Delete
+                                                </x-ui.button>
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-base-content/60">Kept as record</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

@@ -59,6 +59,7 @@ class LoginForm extends Form
 
         if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
             RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit($this->emailThrottleKey(), 900);
 
             throw ValidationException::withMessages([
                 'form.password' => 'These credentials do not match our records. Please check your email and password and try again.',
@@ -66,6 +67,7 @@ class LoginForm extends Form
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->emailThrottleKey());
     }
 
     /**
@@ -73,16 +75,24 @@ class LoginForm extends Form
      */
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        // The per-email limit holds even when the client IP changes on every request
+        // (the app trusts all proxies, so X-Forwarded-For can be forged).
+        $key = match (true) {
+            RateLimiter::tooManyAttempts($this->throttleKey(), 5) => $this->throttleKey(),
+            RateLimiter::tooManyAttempts($this->emailThrottleKey(), 20) => $this->emailThrottleKey(),
+            default => null,
+        };
+
+        if ($key === null) {
             return;
         }
 
         event(new Lockout(request()));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = RateLimiter::availableIn($key);
 
         throw ValidationException::withMessages([
-            'form.email' => 'Too many login attempts. Please try again in ' . ceil($seconds / 60) . ' minute(s).',
+            'form.email' => 'Too many login attempts. Please try again in '.ceil($seconds / 60).' minute(s).',
         ]);
     }
 
@@ -91,6 +101,14 @@ class LoginForm extends Form
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
+        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+    }
+
+    /**
+     * Throttle key for one account across every IP address.
+     */
+    protected function emailThrottleKey(): string
+    {
+        return 'login-email|'.Str::transliterate(Str::lower($this->email));
     }
 }

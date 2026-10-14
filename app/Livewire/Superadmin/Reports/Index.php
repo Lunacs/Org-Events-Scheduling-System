@@ -290,9 +290,9 @@ class Index extends Component
 
         return [
             'total_events' => (clone $ticketQuery)->whereHas('events')->count(),
-            'approved_events' => (clone $ticketQuery)->where('status', 'approved')->count(),
-            'pending_events' => (clone $ticketQuery)->where('status', 'pending')->count(),
-            'cancelled_events' => (clone $ticketQuery)->where('status', 'cancelled')->count(),
+            'approved_events' => (clone $ticketQuery)->whereIn('status', ['approved', 'completed'])->count(),
+            'pending_events' => (clone $ticketQuery)->whereIn('status', ['received', 'amended', 'gso_review', 'pending_osa_approval'])->count(),
+            'for_revision_events' => (clone $ticketQuery)->where('status', 'for_revision')->count(),
             'total_tickets' => (clone $ticketQuery)->count(),
             'total_users' => User::count(),
             'active_orgs' => Student_Organization::whereHas('tickets', function ($q) {

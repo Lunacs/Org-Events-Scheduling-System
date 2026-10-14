@@ -259,6 +259,20 @@ class Index extends Component
             return;
         }
 
+        // Users moved to the fallback role must be able to work in its portal
+        // (an organization for student-org, an office for GSO).
+        $stranded = User::withTrashed()
+            ->where('role_id', $role->role_id)
+            ->get(['user_id', 'org_id', 'office_id'])
+            ->filter(fn (User $user): bool => $fallbackRole->missingAffiliationFor($user) !== null)
+            ->count();
+
+        if ($stranded > 0) {
+            $this->addError('deletingRoleId', "{$stranded} user(s) in this role have no {$fallbackRole->missingAffiliationFor(new User)} for the fallback role '{$fallbackRole->role_name}'. Reassign them first.");
+
+            return;
+        }
+
         $roleId = $role->role_id;
         $roleName = $role->role_name;
 

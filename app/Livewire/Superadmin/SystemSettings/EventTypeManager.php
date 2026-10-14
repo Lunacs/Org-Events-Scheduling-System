@@ -68,8 +68,10 @@ class EventTypeManager extends Component
         }
 
         // Check if event type is being used
-        if ($eventType->events()->count() > 0) {
-            $this->error('Cannot delete event type that is being used by events!', position: 'toast-top');
+        // Tickets reference event types with ON DELETE CASCADE, so deleting a type in use
+        // would permanently delete those tickets (including soft-deleted ones).
+        if ($eventType->events()->exists() || $eventType->tickets()->withTrashed()->exists()) {
+            $this->error('Cannot delete an event type that tickets or events still use!', position: 'toast-top');
 
             return;
         }

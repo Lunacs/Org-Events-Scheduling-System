@@ -7,6 +7,7 @@ use App\Models\Fund_Sources;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\TicketWorkflowService;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
 use Illuminate\Support\Facades\DB;
@@ -97,7 +98,7 @@ class TicketEditor extends Component
             'plv_participants' => 'required|integer|min:1',
             'external_participants' => 'nullable|integer|min:0',
             'estimated_budget' => 'nullable|numeric|min:0|max:999999999.99',
-            'fund_source_id' => 'nullable',
+            'fund_source_id' => 'required|exists:fund__sources,source_id',
             'budget_breakdown' => 'nullable|string|max:2000',
             'special_requirements' => 'nullable|string|max:2000',
             'additional_notes' => 'nullable|string|max:2000',
@@ -196,6 +197,7 @@ class TicketEditor extends Component
                 }
 
                 $ticket->update($data);
+                $this->syncApprovedSchedule($ticket);
 
                 TransactionLogService::logTicketOperation('updated', $ticket, $changes);
 
@@ -215,8 +217,12 @@ class TicketEditor extends Component
                     : 1;
 
                 $data['ticket_number'] = "TKT-{$orgCode}-".str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                // Both contact columns are required; the editor has no fields for them.
+                $data['proponent_contact'] = $user->phone ?? '';
+                $data['adviser_contact'] = '';
 
                 $ticket = Ticket::create($data);
+                $this->syncApprovedSchedule($ticket);
 
                 TransactionLogService::logTicketOperation('created', $ticket);
 
@@ -229,6 +235,17 @@ class TicketEditor extends Component
             DB::rollBack();
             \Log::error('Ticket save failed', ['error' => $e->getMessage()]);
             $this->error('Failed to save ticket: '.$e->getMessage(), position: 'toast-top');
+        }
+    }
+
+    /**
+     * An approved or completed ticket must have an approved schedule that follows
+     * its dates and venue, otherwise it never appears on the calendar.
+     */
+    private function syncApprovedSchedule(Ticket $ticket): void
+    {
+        if (in_array($ticket->status, ['approved', 'completed'], true)) {
+            app(TicketWorkflowService::class)->syncSchedule($ticket);
         }
     }
 

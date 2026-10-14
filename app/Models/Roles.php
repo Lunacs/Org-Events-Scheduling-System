@@ -94,6 +94,21 @@ class Roles extends Model
         return $roleId === null ? null : app(RolePortals::class)->portalFor($roleId);
     }
 
+    /**
+     * What the user would be missing to work in this role's portal: GSO users
+     * act for an office and student-org users for an organization.
+     *
+     * @return 'office'|'organization'|null
+     */
+    public function missingAffiliationFor(User $user): ?string
+    {
+        return match ($this->portal()) {
+            'gso' => $user->office_id ? null : 'office',
+            'student-org' => $user->org_id ? null : 'organization',
+            default => null,
+        };
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'role_id');

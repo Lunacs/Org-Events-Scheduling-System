@@ -8,6 +8,7 @@ use App\Notifications\AnnouncementNotification;
 use App\Notifications\SystemSettingsUpdatedNotification;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
+use App\Support\RolePortals;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -96,7 +97,7 @@ class ContentSectionEditor extends Component
             'isActive' => 'boolean',
             'displayOrder' => 'integer|min:0',
             'targetRoles' => 'nullable|array',
-            'targetRoles.*' => 'string|in:student-org,osa,gso,superadmin',
+            'targetRoles.*' => 'string|in:student-org,osa,gso,superadmin,viewer',
         ];
 
         // Add unique validation for section key
@@ -223,14 +224,12 @@ class ContentSectionEditor extends Component
         $usersQuery = User::query();
 
         if (! empty($targetRoles)) {
-            // Get role IDs for the target roles
-            $roleIds = [];
-            foreach ($targetRoles as $roleName) {
-                $roleId = User::getRoleId($roleName);
-                if ($roleId) {
-                    $roleIds[] = $roleId;
-                }
-            }
+            // Targets are portals: include every role (built-in or custom) working in them.
+            $roleIds = collect($targetRoles)
+                ->flatMap(fn (string $portal): array => app(RolePortals::class)->roleIdsFor($portal))
+                ->unique()
+                ->values()
+                ->all();
 
             if (empty($roleIds)) {
                 return; // No valid roles found

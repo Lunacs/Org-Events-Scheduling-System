@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Services\Cache\ArchiveCacheService;
 use App\Services\TransactionLogService;
 use App\Support\Concerns\InteractsWithToasts as Toast;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -57,20 +58,19 @@ class Index extends Component
             $this->dateTo,
             function () {
                 $items = collect();
+                $from = Carbon::parse($this->dateFrom)->startOfDay();
+                $to = Carbon::parse($this->dateTo)->endOfDay();
+                $matchesSearch = fn ($q) => $q->where('title', 'like', "%{$this->search}%")
+                    ->orWhere('ticket_number', 'like', "%{$this->search}%");
 
-                // Get archived/cancelled events
+                // Completed events: the historical record, read-only here.
                 if ($this->typeFilter === 'all' || $this->typeFilter === 'events') {
-                    $events = Event::with(['ticket', 'studentOrganization', 'eventType'])
-                        ->whereHas('ticket', function ($q) {
-                            $q->whereIn('status', ['cancelled', '']);
+                    $events = Event::with(['ticket.user' => fn ($q) => $q->withTrashed()->with('studentOrganization'), 'eventSchedules'])
+                        ->whereHas('ticket', function ($q) use ($from, $to, $matchesSearch) {
+                            $q->where('status', 'completed')
+                                ->whereBetween('updated_at', [$from, $to])
+                                ->when($this->search, fn ($q2) => $q2->where($matchesSearch));
                         })
-                        ->when($this->search, function ($q) {
-                            $q->whereHas('ticket', function ($q2) {
-                                $q2->where('title', 'like', "%{$this->search}%")
-                                    ->orWhere('ticket_number', 'like', "%{$this->search}%");
-                            });
-                        })
-                        ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
                         ->get()
                         ->map(function ($event) {
                             return [
@@ -78,26 +78,22 @@ class Index extends Component
                                 'type' => 'event',
                                 'title' => $event->ticket->title ?? 'Untitled Event',
                                 'identifier' => $event->ticket->ticket_number ?? 'N/A',
-                                'organization' => $event->studentOrganization->org_name ?? 'N/A',
-                                'status' => $event->ticket->status ?? 'cancelled',
-                                'date' => $event->event_date,
-                                'archived_at' => $event->updated_at,
+                                'organization' => $event->ticket?->user?->studentOrganization?->org_name ?? 'N/A',
+                                'status' => $event->ticket->status ?? 'completed',
+                                'date' => $event->eventSchedules->first()?->start_date,
+                                'archived_at' => $event->ticket->updated_at,
                             ];
                         });
 
                     $items = $items->merge($events);
                 }
 
-                // Get cancelled/ tickets (without events)
+                // Deleted tickets: can be restored or permanently deleted.
                 if ($this->typeFilter === 'all' || $this->typeFilter === 'tickets') {
-                    $tickets = Ticket::with(['user.studentOrganization'])
-                        ->whereIn('status', ['cancelled', ''])
-                        ->whereDoesntHave('events')
-                        ->when($this->search, function ($q) {
-                            $q->where('title', 'like', "%{$this->search}%")
-                                ->orWhere('ticket_number', 'like', "%{$this->search}%");
-                        })
-                        ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                    $tickets = Ticket::onlyTrashed()
+                        ->with(['user' => fn ($q) => $q->withTrashed()->with('studentOrganization')])
+                        ->when($this->search, fn ($q) => $q->where($matchesSearch))
+                        ->whereBetween('deleted_at', [$from, $to])
                         ->get()
                         ->map(function ($ticket) {
                             $orgDeleted = $ticket->user?->studentOrganization?->trashed();
@@ -108,9 +104,9 @@ class Index extends Component
                                 'title' => $ticket->title,
                                 'identifier' => $ticket->ticket_number,
                                 'organization' => $orgDeleted ? 'Deleted Organization' : ($ticket->user?->studentOrganization?->org_name ?? 'N/A'),
-                                'status' => $ticket->status,
+                                'status' => 'deleted',
                                 'date' => $ticket->created_at,
-                                'archived_at' => $ticket->updated_at,
+                                'archived_at' => $ticket->deleted_at,
                             ];
                         });
 
@@ -155,38 +151,24 @@ class Index extends Component
             return;
         }
 
+        if ($this->itemToAction['type'] !== 'ticket') {
+            $this->error('Completed events are kept as a record and cannot be restored.', position: 'toast-top');
+
+            return;
+        }
+
         try {
-            DB::beginTransaction();
+            $ticket = Ticket::onlyTrashed()->findOrFail($this->itemToAction['id']);
+            $ticket->restore();
 
-            if ($this->itemToAction['type'] === 'event') {
-                $event = Event::with('ticket')->find($this->itemToAction['id']);
-                if ($event && $event->ticket) {
-                    $event->ticket->update(['status' => 'pending']);
-                    $message = "Restored event: {$event->ticket->title}";
-                }
-            } else {
-                $ticket = Ticket::find($this->itemToAction['id']);
-                if ($ticket) {
-                    $ticket->update(['status' => 'pending']);
-                    $message = "Restored ticket: {$ticket->title}";
-                }
-            }
+            TransactionLogService::log('RESTORE', "Restored ticket: {$ticket->title} ({$ticket->ticket_number})", Auth::user()->user_id);
 
-            // Log action
-            TransactionLogService::log(
-                'RESTORE',
-                $message ?? 'Restored archived item',
-                Auth::user()->user_id
-            );
-
-            DB::commit();
             ArchiveCacheService::clearAllArchives();
-            $this->success('Item restored successfully!', position: 'toast-top');
+            $this->success('Ticket restored successfully!', position: 'toast-top');
             $this->showRestoreModal = false;
             $this->itemToAction = null;
             unset($this->archivedItems);
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->error('Failed to restore item: '.$e->getMessage(), position: 'toast-top');
         }
     }
@@ -199,46 +181,28 @@ class Index extends Component
             return;
         }
 
+        if ($this->itemToAction['type'] !== 'ticket') {
+            $this->error('Completed events are kept as a record and cannot be deleted.', position: 'toast-top');
+
+            return;
+        }
+
         try {
             DB::beginTransaction();
 
-            if ($this->itemToAction['type'] === 'event') {
-                $event = Event::with('ticket', 'eventSchedules')->find($this->itemToAction['id']);
-                if ($event) {
-                    $title = $event->ticket->title ?? 'Unknown Event';
+            $ticket = Ticket::onlyTrashed()->findOrFail($this->itemToAction['id']);
+            $label = "{$ticket->title} ({$ticket->ticket_number})";
 
-                    // Delete schedules
-                    $event->eventSchedules()->delete();
+            // Delete attachment models first so their files are removed from storage;
+            // events, schedules, approvals and comments cascade with the ticket row.
+            $ticket->attachments()->get()->each->delete();
+            $ticket->forceDelete();
 
-                    // Delete ticket
-                    if ($event->ticket) {
-                        $event->ticket->delete();
-                    }
-
-                    // Delete event
-                    $event->delete();
-
-                    $message = "Permanently deleted event: {$title}";
-                }
-            } else {
-                $ticket = Ticket::find($this->itemToAction['id']);
-                if ($ticket) {
-                    $title = $ticket->title;
-                    $ticket->delete();
-                    $message = "Permanently deleted ticket: {$title}";
-                }
-            }
-
-            // Log action
-            TransactionLogService::log(
-                'DELETE',
-                $message ?? 'Permanently deleted archived item',
-                Auth::user()->user_id
-            );
+            TransactionLogService::log('DELETE', "Permanently deleted ticket: {$label}", Auth::user()->user_id);
 
             DB::commit();
             ArchiveCacheService::clearAllArchives();
-            $this->success('Item permanently deleted!', position: 'toast-top');
+            $this->success('Ticket permanently deleted!', position: 'toast-top');
             $this->showDeleteModal = false;
             $this->itemToAction = null;
             unset($this->archivedItems);
